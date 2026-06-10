@@ -20,10 +20,10 @@ import { voiceTools } from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools } from '@/lib/constants/time-keeper-tools'
 import { loveTools } from '@/lib/constants/love-tools'
-import { careerTools } from '@/lib/constants/career-tools'
+import { wealthTools as careerTools } from '@/lib/constants/wealth-tools'
 import { wealthTools } from '@/lib/constants/wealth-tools'
-import { spiritualTools } from '@/lib/constants/spiritual-tools'
-import { healthTools } from '@/lib/constants/health-tools'
+import { wellnessTools as spiritualTools } from '@/lib/constants/wellness-spiritual'
+import { wellnessTools as healthTools } from '@/lib/constants/wellness-spiritual'
 import { lifePathTools } from '@/lib/constants/life-path-tools'
 
 // Combine all tools

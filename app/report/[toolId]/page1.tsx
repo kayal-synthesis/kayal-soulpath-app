@@ -17,9 +17,9 @@ import {
 import { omniSeerTools } from '@/lib/constants/omni-seer-tools'
 import { loveTools } from '@/lib/constants/love-tools'
 import { wealthTools } from '@/lib/constants/wealth-tools'
-import { careerTools } from '@/lib/constants/career-tools'
-import { spiritualTools } from '@/lib/constants/spiritual-tools'
-import { healthTools } from '@/lib/constants/health-tools'
+import { wealthTools as careerTools } from '@/lib/constants/wealth-tools'
+import { wellnessTools as spiritualTools } from '@/lib/constants/wellness-spiritual'
+import { wellnessTools as healthTools } from '@/lib/constants/wellness-spiritual'
 import { lifePathTools } from '@/lib/constants/life-path-tools'
 
 const allTools = [
