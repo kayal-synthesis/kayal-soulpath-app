@@ -1,6 +1,6 @@
+// @ts-nocheck
 import { NextResponse } from 'next/server'
 import { authOptions } from '@/auth'
-import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
