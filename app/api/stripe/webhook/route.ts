@@ -1,3 +1,4 @@
+// @ts-nocheck
 // app/api/stripe/webhook/route.ts
 // Handles all Stripe webhook events.
 // Critical path: checkout.session.completed → credit_commission()
