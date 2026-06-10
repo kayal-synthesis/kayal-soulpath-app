@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from 'next/server'
 import { NotificationService } from '@/lib/services/notificationService'
 

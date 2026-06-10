@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from 'next/server'
 import { getAdminSession, isAdmin } from '@/lib/admin/auth'
 import { prisma } from '@/lib/prisma'

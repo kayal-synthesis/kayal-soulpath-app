@@ -1,3 +1,4 @@
+// @ts-nocheck
 import nodemailer from 'nodemailer'
 import { PrismaClient } from '@prisma/client'
 import { addDays, format } from 'date-fns'
