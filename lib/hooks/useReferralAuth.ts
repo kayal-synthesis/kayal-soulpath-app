@@ -1,0 +1,1 @@
+export const useReferralAuth = () => ({ user: null, isLoading: false, isAuthenticated: false })
