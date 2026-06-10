@@ -1,0 +1,125 @@
+openapi: 3.0.0
+info:
+  title: Kayal LifeOS API
+  version: 1.0.0
+  description: Complete API documentation for Kayal LifeOS
+
+servers:
+  - url: https://api.kayallifeos.com/v1
+    description: Production server
+  - url: https://staging-api.kayallifeos.com/v1
+    description: Staging server
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Users
+    description: User management
+  - name: Reports
+    description: Report generation and retrieval
+  - name: Referrals
+    description: Referral program management
+  - name: Payments
+    description: Payment processing
+  - name: Admin
+    description: Admin-only endpoints
+
+paths:
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        401:
+          description: Invalid credentials
+
+  /reports/{id}:
+    get:
+      tags: [Reports]
+      summary: Get report by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Report retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        404:
+          description: Report not found
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, premium, admin]
+        createdAt:
+          type: string
+          format: date-time
+    
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Section'
+        downloadUrl:
+          type: string
+    
+    Section:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        shareable:
+          type: boolean

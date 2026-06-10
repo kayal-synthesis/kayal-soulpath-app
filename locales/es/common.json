@@ -1,0 +1,23 @@
+{
+  "welcome": "Bienvenido a Kayal LifeOS",
+  "daily_insight": "Percepción Diaria",
+  "purchase": "Comprar Ahora",
+  "referral": "Programa de Referidos",
+  "settings": "Configuración",
+  "profile": "Perfil",
+  "logout": "Cerrar Sesión",
+  "language": "Idioma",
+  "currency": "Moneda",
+  
+  "tool": {
+    "the_seer": "EL VIDENTE",
+    "the_love_map": "EL MAPA DEL AMOR",
+    "the_wealth_code": "EL CÓDIGO DE LA RIQUEZA"
+  },
+  
+  "errors": {
+    "not_found": "Página no encontrada",
+    "unauthorized": "No autorizado",
+    "server_error": "Error del servidor"
+  }
+}

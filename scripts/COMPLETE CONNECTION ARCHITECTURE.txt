@@ -1,0 +1,193 @@
+📡 COMPLETE CONNECTION ARCHITECTURE
+text
+┌─────────────────────────────────────────────────────────────────┐
+│                      FRONTEND (Next.js)                         │
+│                         localhost:3000                          │
+│                                                                 │
+│   ┌───────────────┐  ┌───────────────┐  ┌───────────────┐     │
+│   │   Login Page  │  │  Dashboard    │  │  Report View  │     │
+│   └───────┬───────┘  └───────┬───────┘  └───────┬───────┘     │
+│           │                  │                  │              │
+│           └──────────────────┼──────────────────┘              │
+│                              ▼                                  │
+│                    ┌───────────────────┐                       │
+│                    │   API Client      │                       │
+│                    │  lib/api/client.ts│                       │
+│                    └─────────┬─────────┘                       │
+│                              │                                   │
+│                              ▼                                   │
+│                    ┌───────────────────┐                       │
+│                    │  http://127.0.0.1:8000 │                    │
+│                    │    (YOUR FASTAPI)   │                       │
+│                    └─────────┬─────────┘                       │
+└──────────────────────────────┼──────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      BACKEND (FastAPI)                          │
+│                       localhost:8000                            │
+│                                                                 │
+│   ┌─────────────────────────────────────────────────────────┐ │
+│   │                    ROUTERS                               │ │
+│   │  ┌────────┬────────┬────────┬────────┬────────────┐    │ │
+│   │  │ /auth  │ /users │ /reports│/analyze│ /referral │    │ │
+│   │  └────────┴────────┴────────┴────────┴────────────┘    │ │
+│   │                         │                                 │ │
+│   │                         ▼                                 │ │
+│   │  ┌─────────────────────────────────────────────────┐    │ │
+│   │  │           CORE LOGIC ENGINES                     │    │ │
+│   │  │  ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │    │ │
+│   │  │  │ Numerology  │ │  Palmistry  │ │Physiognomy│ │    │ │
+│   │  │  │   Engine    │ │   Engine    │ │  Engine   │ │    │ │
+│   │  │  └─────────────┘ └─────────────┘ └───────────┘ │    │ │
+│   │  │  ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │    │ │
+│   │  │  │Compatibility│ │  Referral   │ │  Chat/AI  │ │    │ │
+│   │  │  │   Engine    │ │   Engine    │ │  Engine   │ │    │ │
+│   │  │  └─────────────┘ └─────────────┘ └───────────┘ │    │ │
+│   │  └─────────────────────────────────────────────────┘    │ │
+│   │                         │                                 │ │
+│   │                         ▼                                 │ │
+│   │  ┌─────────────────────────────────────────────────┐    │ │
+│   │  │              DATABASE (PostgreSQL)               │    │ │
+│   │  │  ┌────────────┐ ┌────────────┐ ┌────────────┐  │    │ │
+│   │  │  │   users    │ │  reports   │ │ referrals  │  │    │ │
+│   │  │  └────────────┘ └────────────┘ └────────────┘  │    │ │
+│   │  └─────────────────────────────────────────────────┘    │ │
+│   └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+🔌 ALL API ENDPOINTS GO TO YOUR FASTAPI
+Base URL Configuration
+typescript
+// lib/api/client.ts
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+// All requests go to: http://127.0.0.1:8000/...
+Every Request Hits Your FastAPI
+Frontend File	Makes Request To
+app/login/page.tsx	POST http://127.0.0.1:8000/auth/login
+app/register/page.tsx	POST http://127.0.0.1:8000/auth/register
+app/dashboard/page.tsx	GET http://127.0.0.1:8000/users/dashboard
+app/account/page.tsx	GET http://127.0.0.1:8000/users/profile
+app/report/[toolId]/page.tsx	GET http://127.0.0.1:8000/reports/{toolId}
+app/onboarding/upload/page.tsx	POST http://127.0.0.1:8000/users/upload-hand
+app/purchase/[toolId]/page.tsx	POST http://127.0.0.1:8000/analyze/complete
+app/compatibility/page.tsx	POST http://127.0.0.1:8000/compatibility/calculate
+app/referral/page.tsx	GET http://127.0.0.1:8000/referral/stats
+app/admin/page.tsx	GET http://127.0.0.1:8000/admin/stats
+app/chat/[toolId]/page.tsx	ws://127.0.0.1:8000/ws/chat/{toolId}
+📋 COMPLETE ENDPOINT LIST
+Authentication Endpoints
+text
+POST   http://127.0.0.1:8000/auth/register
+POST   http://127.0.0.1:8000/auth/login
+POST   http://127.0.0.1:8000/auth/logout
+POST   http://127.0.0.1:8000/auth/refresh
+POST   http://127.0.0.1:8000/auth/forgot-password
+POST   http://127.0.0.1:8000/auth/reset-password
+GET    http://127.0.0.1:8000/auth/verify-email/{token}
+User Endpoints
+text
+GET    http://127.0.0.1:8000/users/me
+PUT    http://127.0.0.1:8000/users/profile
+GET    http://127.0.0.1:8000/users/dashboard
+POST   http://127.0.0.1:8000/users/upload-hand
+POST   http://127.0.0.1:8000/users/upload-face
+GET    http://127.0.0.1:8000/users/images
+GET    http://127.0.0.1:8000/users/stats
+PUT    http://127.0.0.1:8000/users/settings
+Analysis Endpoints
+text
+POST   http://127.0.0.1:8000/analyze/basic
+POST   http://127.0.0.1:8000/analyze/hand
+POST   http://127.0.0.1:8000/analyze/face
+POST   http://127.0.0.1:8000/analyze/complete
+GET    http://127.0.0.1:8000/analyze/status/{task_id}
+Report Endpoints
+text
+GET    http://127.0.0.1:8000/reports/free
+GET    http://127.0.0.1:8000/reports/purchased
+GET    http://127.0.0.1:8000/reports/{report_id}
+GET    http://127.0.0.1:8000/reports/{report_id}/download
+POST   http://127.0.0.1:8000/reports/{report_id}/share
+Domain Endpoints
+text
+GET    http://127.0.0.1:8000/domains/{domain}
+GET    http://127.0.0.1:8000/domains/{domain}/tools
+GET    http://127.0.0.1:8000/tools/{tool_id}
+Referral Endpoints
+text
+GET    http://127.0.0.1:8000/referral/link
+GET    http://127.0.0.1:8000/referral/stats
+GET    http://127.0.0.1:8000/referral/rewards
+POST   http://127.0.0.1:8000/referral/claim
+GET    http://127.0.0.1:8000/referral/list
+GET    http://127.0.0.1:8000/referral/leaderboard
+POST   http://127.0.0.1:8000/referral/track-click
+GET    http://127.0.0.1:8000/referral/info/{code}
+Compatibility Endpoints
+text
+POST   http://127.0.0.1:8000/compatibility/calculate
+GET    http://127.0.0.1:8000/compatibility/history
+GET    http://127.0.0.1:8000/compatibility/{result_id}
+Payment Endpoints
+text
+POST   http://127.0.0.1:8000/payments/create-checkout
+POST   http://127.0.0.1:8000/payments/webhook
+GET    http://127.0.0.1:8000/subscription/status
+POST   http://127.0.0.1:8000/subscription/cancel
+GET    http://127.0.0.1:8000/payments/invoices
+Admin Endpoints
+text
+GET    http://127.0.0.1:8000/admin/stats
+GET    http://127.0.0.1:8000/admin/users
+GET    http://127.0.0.1:8000/admin/users/{user_id}
+PUT    http://127.0.0.1:8000/admin/users/{user_id}/suspend
+GET    http://127.0.0.1:8000/admin/referrals
+GET    http://127.0.0.1:8000/admin/payouts
+POST   http://127.0.0.1:8000/admin/payouts/process
+GET    http://127.0.0.1:8000/admin/analytics
+GET    http://127.0.0.1:8000/admin/export
+WebSocket Endpoints
+text
+ws://127.0.0.1:8000/ws/chat/{tool_id}
+ws://127.0.0.1:8000/ws/notifications
+ws://127.0.0.1:8000/ws/admin
+🔧 How It's Configured
+1. Environment Variable
+bash
+# .env.local
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_WS_URL=ws://127.0.0.1:8000
+2. API Client
+typescript
+// lib/api/client.ts
+import axios from 'axios'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
+export const api = axios.create({
+  baseURL: API_BASE,  // ALL requests go here
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+3. Next.js Proxy (Optional)
+javascript
+// next.config.js
+async rewrites() {
+  return [
+    {
+      source: '/api/:path*',
+      destination: 'http://127.0.0.1:8000/:path*', // Proxy to FastAPI
+    },
+  ]
+}
+🚀 Production vs Development
+Environment	API URL	WebSocket URL
+Development	http://127.0.0.1:8000	ws://127.0.0.1:8000
+Production	https://api.yourdomain.com	wss://api.yourdomain.com
+✅ Key Takeaway
+YES! Every single backend operation - authentication, user management, report generation, palm reading, face analysis, referrals, payments, admin analytics - ALL go through your FastAPI server at http://127.0.0.1:8000/ during development.
+
+The frontend is just a presentation layer. All the real work happens in your FastAPI backend! 🚀
+

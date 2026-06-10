@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-notifications",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-expired",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/abandoned-cart",
+      "schedule": "0 10,15,20 * * *"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_APP_URL": "https://kayallifeos.com"
+  }
+}

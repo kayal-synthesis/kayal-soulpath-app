@@ -1,0 +1,663 @@
+/* ============================================
+   PROFESSIONAL DESIGN SYSTEM
+   Kayal LifeOS - Elegant & Classy
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Cormorant+SC:wght@300;400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
+
+@import '../styles/theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   DESIGN TOKENS - Professional Palette
+   ============================================ */
+
+@layer base {
+  :root {
+    /* 🎨 Primary - Deep Purple (Sophisticated) */
+    --primary-50: #F5F3FF;
+    --primary-100: #EDE9FE;
+    --primary-200: #DDD6FE;
+    --primary-300: #C4B5FD;
+    --primary-400: #A78BFA;
+    --primary-500: #8B5CF6;
+    --primary-600: #7C3AED;
+    --primary-700: #6D28D9;
+    --primary-800: #5B21B6;
+    --primary-900: #4C1D95;
+
+    /* ✨ Secondary - Warm Gold (Elegant) */
+    --secondary-50: #FEFCE8;
+    --secondary-100: #FEF9C3;
+    --secondary-200: #FEF08A;
+    --secondary-300: #FDE047;
+    --secondary-400: #FACC15;
+    --secondary-500: #EAB308;
+    --secondary-600: #CA8A04;
+    --secondary-700: #A16207;
+    --secondary-800: #854D0E;
+    --secondary-900: #713F12;
+
+    /* 🤍 Neutral - Warm Gray (Professional) */
+    --neutral-50: #FAFAF9;
+    --neutral-100: #F5F5F4;
+    --neutral-200: #E7E5E4;
+    --neutral-300: #D6D3D1;
+    --neutral-400: #A8A29E;
+    --neutral-500: #78716C;
+    --neutral-600: #57534E;
+    --neutral-700: #44403C;
+    --neutral-800: #292524;
+    --neutral-900: #1C1917;
+
+    /* ✅ Semantic Colors */
+    --success-50: #F0FDF4;
+    --success-100: #DCFCE7;
+    --success-500: #22C55E;
+    --success-600: #16A34A;
+
+    --warning-50: #FEFCE8;
+    --warning-100: #FEF9C3;
+    --warning-500: #EAB308;
+    --warning-600: #CA8A04;
+
+    --error-50: #FEF2F2;
+    --error-100: #FEE2E2;
+    --error-500: #EF4444;
+    --error-600: #DC2626;
+
+    --info-50: #EFF6FF;
+    --info-100: #DBEAFE;
+    --info-500: #3B82F6;
+    --info-600: #2563ED;
+
+    /* 🎯 Domain Colors - Sophisticated */
+    --domain-love: #EC4899;
+    --domain-love-light: #FCE7F3;
+    --domain-career: #3B82F6;
+    --domain-career-light: #DBEAFE;
+    --domain-wealth: #F59E0B;
+    --domain-wealth-light: #FEF3C7;
+    --domain-spiritual: #8B5CF6;
+    --domain-spiritual-light: #EDE9FE;
+    --domain-health: #10B981;
+    --domain-health-light: #D1FAE5;
+    --domain-life-path: #7C3AED;
+    --domain-life-path-light: #EDE9FE;
+
+    /* 📏 Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+    --space-32: 8rem;
+
+    /* 📐 Border Radius */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+    --radius-3xl: 2rem;
+    --radius-full: 9999px;
+
+    /* 💡 Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05);
+    --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.02);
+    --shadow-elegant: 0 20px 40px -15px rgba(124, 58, 237, 0.15);
+    --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.02);
+
+    /* 🖋️ Typography */
+    --font-serif: 'Cormorant Garamond', serif;
+    --font-sans: 'Inter', sans-serif;
+
+    /* ⚡ Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ============================================
+       KAYAL MINERAL DARK TOKENS
+       Used exclusively by the app/ session pages:
+       ChatSession, VoiceSession, ToolShell,
+       AppShell, home, conversations, saved, profile
+       These do NOT affect your marketing/public pages.
+       ============================================ */
+
+    /* Mineral dark base palette */
+    --mineral-1: #0d0b0f;
+    --mineral-2: #121018;
+    --mineral-3: #171522;
+    --mineral-4: #1e1c2c;
+    --mineral-5: #252338;
+    --mineral-6: #2e2c42;
+    --mineral-7: #3d3a54;
+
+    /* Domain background temperatures */
+    --bg-base:      #0d0b0f;
+    --bg-love:      #110a09;
+    --bg-wealth:    #0f0c07;
+    --bg-spiritual: #09080f;
+    --bg-health:    #090f0a;
+    --bg-purpose:   #08090f;
+    --bg-grief:     #0a0b0e;
+    --bg-timing:    #0a0f09;
+    --bg-voice:     #0f0c07;
+
+    /* Oracle text scale — warm parchment tones */
+    --text-parchment: #efe6d6;
+    --text-vellum:    #c8baa6;
+    --text-scroll:    #9a8c7a;
+    --text-stone:     #6a6056;
+    --text-fossil:    #44403a;
+    --text-void:      #2e2c28;
+
+    /* Oracle gold accent */
+    --gold:         #c9a96e;
+    --gold-bright:  #e0c48a;
+    --gold-muted:   #a07840;
+    --gold-glow:    rgba(201, 169, 110, 0.10);
+    --gold-border:  rgba(201, 169, 110, 0.18);
+    --gold-surface: rgba(201, 169, 110, 0.07);
+
+    /* Oracle domain accents */
+    --oracle-love:         #d4856a;
+    --oracle-love-dim:     rgba(212, 133, 106, 0.12);
+    --oracle-love-border:  rgba(212, 133, 106, 0.20);
+    --oracle-love-glow:    rgba(212, 133, 106, 0.08);
+
+    --oracle-wealth:        #c9a96e;
+    --oracle-wealth-dim:    rgba(201, 169, 110, 0.12);
+    --oracle-wealth-border: rgba(201, 169, 110, 0.20);
+    --oracle-wealth-glow:   rgba(201, 169, 110, 0.08);
+
+    --oracle-spiritual:        #a48ac4;
+    --oracle-spiritual-dim:    rgba(164, 138, 196, 0.12);
+    --oracle-spiritual-border: rgba(164, 138, 196, 0.20);
+    --oracle-spiritual-glow:   rgba(164, 138, 196, 0.08);
+
+    --oracle-health:        #7aaa8a;
+    --oracle-health-dim:    rgba(122, 170, 138, 0.12);
+    --oracle-health-border: rgba(122, 170, 138, 0.20);
+    --oracle-health-glow:   rgba(122, 170, 138, 0.08);
+
+    --oracle-purpose:        #7a9ac4;
+    --oracle-purpose-dim:    rgba(122, 154, 196, 0.12);
+    --oracle-purpose-border: rgba(122, 154, 196, 0.20);
+    --oracle-purpose-glow:   rgba(122, 154, 196, 0.08);
+
+    --oracle-grief:        #8a9aaa;
+    --oracle-grief-dim:    rgba(138, 154, 170, 0.12);
+    --oracle-grief-border: rgba(138, 154, 170, 0.20);
+    --oracle-grief-glow:   rgba(138, 154, 170, 0.08);
+
+    --oracle-timing:        #a0c49a;
+    --oracle-timing-dim:    rgba(160, 196, 154, 0.12);
+    --oracle-timing-border: rgba(160, 196, 154, 0.20);
+    --oracle-timing-glow:   rgba(160, 196, 154, 0.08);
+
+    /* Oracle voice state colours */
+    --state-listening: #4a9b8e;
+    --state-thinking:  #8b7cc8;
+    --state-speaking:  #c9a96e;
+
+    /* Oracle typography */
+    --font-display: 'Cormorant Garamond', 'Palatino Linotype', Georgia, serif;
+    --font-body:    'EB Garamond', 'Palatino Linotype', Georgia, serif;
+    --font-label:   'Cormorant SC', Georgia, serif;
+
+    /* Oracle motion */
+    --ease-oracle: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-reveal:  680ms;
+
+    /* Oracle shell geometry */
+    --sidebar-w:     248px;
+    --sidebar-w-col: 60px;
+    --tabbar-h:      66px;
+    --panel-w:       256px;
+    --panel-w-col:   56px;
+  }
+
+  /* Base Styles — unchanged from original */
+  * {
+    @apply border-neutral-200;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-800 font-sans;
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif font-medium text-neutral-900 tracking-tight;
+    font-family: var(--font-serif);
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+    letter-spacing: -0.01em;
+  }
+
+  h3 { @apply text-2xl md:text-3xl; }
+  h4 { @apply text-xl md:text-2xl; }
+  h5 { @apply text-lg md:text-xl; }
+  h6 { @apply text-base md:text-lg; }
+
+  ::selection {
+    @apply bg-primary-100 text-primary-900;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { @apply bg-neutral-100; }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-400 rounded-full hover:bg-neutral-500 transition-colors;
+  }
+}
+
+/* ============================================
+   DOMAIN THEME CLASSES
+   Applied to the session wrapper divs ONLY —
+   not to <body>. Your marketing pages are unaffected.
+   ============================================ */
+
+.domain-love      { --domain-bg: var(--bg-love);      --domain-accent: var(--oracle-love);      --domain-glow: var(--oracle-love-glow);      --domain-border: var(--oracle-love-border); }
+.domain-wealth    { --domain-bg: var(--bg-wealth);    --domain-accent: var(--oracle-wealth);    --domain-glow: var(--oracle-wealth-glow);    --domain-border: var(--oracle-wealth-border); }
+.domain-spiritual { --domain-bg: var(--bg-spiritual); --domain-accent: var(--oracle-spiritual); --domain-glow: var(--oracle-spiritual-glow); --domain-border: var(--oracle-spiritual-border); }
+.domain-health    { --domain-bg: var(--bg-health);    --domain-accent: var(--oracle-health);    --domain-glow: var(--oracle-health-glow);    --domain-border: var(--oracle-health-border); }
+.domain-purpose   { --domain-bg: var(--bg-purpose);   --domain-accent: var(--oracle-purpose);   --domain-glow: var(--oracle-purpose-glow);   --domain-border: var(--oracle-purpose-border); }
+.domain-grief     { --domain-bg: var(--bg-grief);     --domain-accent: var(--oracle-grief);     --domain-glow: var(--oracle-grief-glow);     --domain-border: var(--oracle-grief-border); }
+.domain-timing    { --domain-bg: var(--bg-timing);    --domain-accent: var(--oracle-timing);    --domain-glow: var(--oracle-timing-glow);    --domain-border: var(--oracle-timing-border); }
+.domain-voice     { --domain-bg: var(--bg-voice);     --domain-accent: var(--gold);             --domain-glow: var(--gold-glow);             --domain-border: var(--gold-border); }
+.domain-all       { --domain-bg: var(--bg-base);      --domain-accent: var(--gold);             --domain-glow: var(--gold-glow);             --domain-border: var(--gold-border); }
+
+/* ============================================
+   GRAIN TEXTURE
+   Used by the oracle session wrapper only.
+   .grain class is applied to the ToolShell div,
+   NOT to <body>, so your light pages are clean.
+   ============================================ */
+
+.grain {
+  position: relative;
+}
+
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================
+   ORACLE ANIMATIONS
+   Scoped — only affect session/tool components.
+   ============================================ */
+
+@keyframes orbBreathe {
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%       { transform: scale(1.07); opacity: 1; }
+}
+
+@keyframes orbRipple {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes orbSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes pulseSpeaking {
+  from { transform: scale(0.93); opacity: 0.5; }
+  to   { transform: scale(1.2);  opacity: 1; }
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40%           { transform: translateY(-5px); }
+}
+
+@keyframes mineralShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes fadeUpOracle {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-breathe      { animation: orbBreathe    3.2s ease-in-out infinite; }
+.animate-ripple       { animation: orbRipple     2s   ease-out    infinite; }
+.animate-spin-oracle  { animation: orbSpin       4s   linear      infinite; }
+.animate-pulse-speak  { animation: pulseSpeaking 0.9s ease-in-out infinite alternate; }
+.animate-fade-up-oracle { animation: fadeUpOracle var(--dur-reveal) var(--ease-oracle) both; }
+
+.typing-dot:nth-child(1) { animation: typingBounce 1.3s 0ms    infinite; }
+.typing-dot:nth-child(2) { animation: typingBounce 1.3s 180ms  infinite; }
+.typing-dot:nth-child(3) { animation: typingBounce 1.3s 360ms  infinite; }
+
+.oracle-delay-1 { animation-delay: 60ms; }
+.oracle-delay-2 { animation-delay: 120ms; }
+.oracle-delay-3 { animation-delay: 180ms; }
+.oracle-delay-4 { animation-delay: 240ms; }
+.oracle-delay-5 { animation-delay: 300ms; }
+
+/* Oracle skeleton loader */
+.oracle-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--mineral-2) 25%,
+    var(--mineral-3) 50%,
+    var(--mineral-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: mineralShimmer 1.8s infinite;
+  border-radius: 8px;
+}
+
+/* Glass panel — used by ToolShell panel */
+.oracle-glass {
+  background:               rgba(255, 255, 255, 0.035);
+  backdrop-filter:          blur(24px) saturate(150%);
+  -webkit-backdrop-filter:  blur(24px) saturate(150%);
+}
+
+/* ============================================
+   COMPONENT STYLES - Professional (unchanged)
+   ============================================ */
+
+@layer components {
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .card {
+    @apply bg-white rounded-xl hover:shadow-elegant
+           transition-all duration-300 p-6 border border-neutral-100;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:-translate-y-1;
+  }
+
+  .card-glass {
+    @apply bg-white/80 backdrop-blur-sm border border-white/50;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .card-elegant {
+    @apply bg-gradient-to-br from-white to-neutral-50/50 border border-neutral-200/50;
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
+           active:scale-[0.98] px-6 py-3;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700
+           focus:ring-primary-500 shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary-500 text-white hover:bg-secondary-600
+           focus:ring-secondary-500 shadow-sm hover:shadow-md;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-primary-300 text-primary-700
+           hover:bg-primary-50 hover:border-primary-400 focus:ring-primary-500;
+  }
+
+  .btn-ghost {
+    @apply btn text-neutral-600 hover:bg-neutral-100 hover:text-primary-600
+           focus:ring-neutral-500 shadow-none hover:shadow-none;
+  }
+
+  .btn-elegant {
+    @apply btn bg-gradient-to-r from-primary-50 to-secondary-50
+           text-primary-700 border border-primary-200 hover:border-primary-300
+           shadow-sm hover:shadow-md;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 bg-white border border-neutral-200 rounded-lg
+           focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400
+           transition-all duration-200 placeholder-neutral-400;
+  }
+
+  .input-error {
+    @apply border-error-300 focus:border-error-500 focus:ring-error-500;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary   { @apply badge bg-primary-100 text-primary-700; }
+  .badge-secondary { @apply badge bg-secondary-100 text-secondary-700; }
+  .badge-success   { @apply badge bg-success-100 text-success-600; }
+  .badge-warning   { @apply badge bg-warning-100 text-warning-600; }
+  .badge-error     { @apply badge bg-error-100 text-error-600; }
+  .badge-info      { @apply badge bg-info-100 text-info-600; }
+
+  .badge-love      { @apply badge; background: var(--domain-love-light); color: var(--domain-love); }
+  .badge-career    { @apply badge; background: var(--domain-career-light); color: var(--domain-career); }
+  .badge-wealth    { @apply badge; background: var(--domain-wealth-light); color: var(--domain-wealth); }
+  .badge-spiritual { @apply badge; background: var(--domain-spiritual-light); color: var(--domain-spiritual); }
+  .badge-health    { @apply badge; background: var(--domain-health-light); color: var(--domain-health); }
+  .badge-life-path { @apply badge; background: var(--domain-life-path-light); color: var(--domain-life-path); }
+
+  .alert         { @apply p-4 rounded-lg flex items-start gap-3 border; }
+  .alert-success { @apply alert bg-success-50 text-success-700 border-success-200; }
+  .alert-warning { @apply alert bg-warning-50 text-warning-700 border-warning-200; }
+  .alert-error   { @apply alert bg-error-50 text-error-700 border-error-200; }
+  .alert-info    { @apply alert bg-info-50 text-info-700 border-info-200; }
+
+  .progress         { @apply h-2 bg-neutral-200 rounded-full overflow-hidden; }
+  .progress-bar     { @apply h-full transition-all duration-500; }
+  .progress-primary { @apply progress-bar bg-primary-500; }
+  .progress-success { @apply progress-bar bg-success-500; }
+
+  .divider       { @apply w-full h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent my-8; }
+  .divider-solid { @apply w-full h-px bg-neutral-200 my-6; }
+
+  .skeleton { @apply animate-pulse bg-neutral-200 rounded; }
+
+  .gradient-text-primary {
+    @apply bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent;
+  }
+  .gradient-text-elegant {
+    @apply bg-gradient-to-r from-primary-800 to-secondary-600 bg-clip-text text-transparent;
+  }
+}
+
+/* ============================================
+   UTILITIES & ANIMATIONS (unchanged)
+   ============================================ */
+
+@layer utilities {
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-5px); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.8; }
+  }
+
+  .animate-float     { animation: float     3s   ease-in-out infinite; }
+  .animate-fade-in   { animation: fadeIn    0.3s ease-out    forwards; }
+  .animate-slide-up  { animation: slideUp   0.3s ease-out    forwards; }
+  .animate-slide-down{ animation: slideDown 0.3s ease-out    forwards; }
+  .animate-scale-in  { animation: scaleIn   0.2s ease-out    forwards; }
+  .animate-pulse-soft{ animation: pulse-soft 2s  ease-in-out infinite; }
+
+  .animation-delay-100  { animation-delay: 100ms; }
+  .animation-delay-200  { animation-delay: 200ms; }
+  .animation-delay-300  { animation-delay: 300ms; }
+  .animation-delay-400  { animation-delay: 400ms; }
+  .animation-delay-500  { animation-delay: 500ms; }
+  .animation-delay-600  { animation-delay: 600ms; }
+  .animation-delay-700  { animation-delay: 700ms; }
+  .animation-delay-800  { animation-delay: 800ms; }
+  .animation-delay-900  { animation-delay: 900ms; }
+  .animation-delay-1000 { animation-delay: 1000ms; }
+  .animation-delay-2000 { animation-delay: 2000ms; }
+
+  .text-balance { text-wrap: balance; }
+  .text-pretty  { text-wrap: pretty; }
+
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  .scrollbar-thin { scrollbar-width: thin; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { @apply bg-neutral-100; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-neutral-400 rounded-full hover:bg-neutral-500; }
+
+  .glass         { @apply bg-white/70 backdrop-blur-sm border border-white/50; }
+  .glass-elegant { @apply bg-white/50 backdrop-blur-md border border-white/60; box-shadow: var(--shadow-soft); }
+
+  .bg-gradient-elegant { @apply bg-gradient-to-br from-primary-50 via-white to-secondary-50; }
+  .bg-gradient-soft    { @apply bg-gradient-to-br from-neutral-50 to-white; }
+
+  .shadow-soft    { box-shadow: var(--shadow-soft); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+
+  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+
+  .aspect-square { aspect-ratio: 1 / 1; }
+  .aspect-video  { aspect-ratio: 16 / 9; }
+
+  .hover-lift         { @apply transition-transform duration-200 hover:-translate-y-1; }
+  .hover-scale        { @apply transition-transform duration-200 hover:scale-105; }
+  .hover-glow         { @apply transition-shadow duration-200 hover:shadow-md; }
+  .hover-glow-elegant { @apply transition-shadow duration-200; } /* hover:shadow-elegant handled inline */
+  .hover-border       { @apply transition-colors duration-200 hover:border-primary-400; }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 640px) {
+  html { font-size: 14px; }
+  h1 { @apply text-3xl; }
+  h2 { @apply text-2xl; }
+  .container-padding { @apply px-4; }
+  .card { @apply p-4; }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  html { font-size: 15px; }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-float, .animate-pulse-soft, .animate-pulse,
+  .animate-breathe, .animate-ripple, .animate-spin-oracle,
+  .animate-pulse-speak { animation: none !important; }
+}
+
+@media (prefers-contrast: high) {
+  .btn-outline { border-width: 2px; }
+  .card { border-width: 1px; border-color: currentColor; }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .no-print { display: none !important; }
+  body { @apply bg-white text-black; }
+  .card { box-shadow: none; border: 1px solid #000; }
+  a { @apply no-underline; }
+}
+
+/* ============================================
+   CUSTOM UTILITIES
+   ============================================ */
+
+.antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.backdrop-blur    { backdrop-filter: blur(8px);  -webkit-backdrop-filter: blur(8px); }
+.backdrop-blur-lg { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.backdrop-blur-xl { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }

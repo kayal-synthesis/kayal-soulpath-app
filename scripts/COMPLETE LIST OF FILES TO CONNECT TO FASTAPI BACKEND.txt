@@ -1,0 +1,647 @@
+📋 COMPLETE LIST OF FILES TO CONNECT TO FASTAPI BACKEND
+Here's a comprehensive list of all files you need to modify to connect your frontend to your FastAPI backend:
+
+📁 ROOT CONFIGURATION FILES
+File Path	Purpose	What to Change
+.env.local	Environment variables	Add your FastAPI URL
+next.config.js	Next.js configuration	Add API proxy settings
+auth.ts	Authentication config	Connect to FastAPI auth endpoints
+📁 API CLIENT FILES (Core Connection)
+#	File Path	Purpose	Endpoints to Connect
+1	lib/api/client.ts	Base API client with axios	Configure baseURL, interceptors, auth headers
+2	lib/api/auth.ts	Authentication API calls	/auth/login, /auth/register, /auth/logout, /auth/refresh, /auth/verify-email
+3	lib/api/user.ts	User profile API calls	/users/me, /users/profile, /users/images, /users/stats, /users/settings
+4	lib/api/reports.ts	Reports and analysis API	/reports, /reports/free, /reports/purchased, /reports/{id}, /analyze/basic, /analyze/hand, /analyze/face
+5	lib/api/referral.ts	Referral program API	/referral/link, /referral/stats, /referral/rewards, /referral/claim, /referral/leaderboard
+6	lib/api/payments.ts	Payment processing API	/payments/create-checkout, /payments/webhook, /subscription/status, /payments/invoices
+7	lib/api/admin.ts	Admin dashboard API	/admin/stats, /admin/users, /admin/referrals, /admin/payouts, /admin/settings
+📁 AUTHENTICATION FILES
+#	File Path	Purpose	Endpoints to Connect
+8	app/api/auth/[...nextauth]/route.ts	NextAuth configuration	Connect to FastAPI for authentication
+9	app/login/page.tsx	Login page	POST to /auth/login
+10	app/register/page.tsx	Registration page	POST to /auth/register
+11	app/forgot-password/page.tsx	Password reset request	POST to /auth/forgot-password
+12	app/reset-password/[token]/page.tsx	Password reset	POST to /auth/reset-password
+13	app/verify-email/page.tsx	Email verification	GET to /auth/verify-email/{token}
+📁 USER & PROFILE FILES
+#	File Path	Purpose	Endpoints to Connect
+14	app/account/page.tsx	Account settings	GET/PUT to /users/me, /users/profile, /users/images
+15	app/onboarding/basic/page.tsx	Initial onboarding	POST to /users/onboarding/basic
+16	app/onboarding/upload/page.tsx	Image upload	POST to /users/upload-hand, /users/upload-face
+17	app/dashboard/page.tsx	User dashboard	GET to /users/dashboard, /users/stats, /users/recent-activity
+18	lib/hooks/useAuth.ts	Auth hook	Connect to auth API
+19	lib/hooks/useUser.ts	User data hook	Connect to user API
+20	lib/store/userStore.ts	User state management	Sync with API responses
+📁 REPORT & ANALYSIS FILES
+#	File Path	Purpose	Endpoints to Connect
+21	app/report/[toolId]/page.tsx	View single report	GET to /reports/{toolId}
+22	app/domain/[domain]/page.tsx	Domain tools listing	GET to /domains/{domain}/tools
+23	app/dashboard/free-reports/page.tsx	Free reports listing	GET to /reports/free
+24	app/purchase/[toolId]/page.tsx	Purchase flow	POST to /analyze/complete, /payments/create-checkout
+25	app/subscribe/[toolId]/page.tsx	Subscription flow	POST to /subscriptions/create, /payments/create-checkout
+26	lib/constants/*.ts	Tool definitions	Replace with API calls to /tools
+📁 CHAT & VOICE FILES
+#	File Path	Purpose	Endpoints to Connect
+27	app/chat/[toolId]/page.tsx	Chat interface	WebSocket connection to /ws/chat/{toolId}
+28	lib/hooks/useChatSocket.ts	WebSocket hook	Connect to FastAPI WebSocket
+29	components/chat/ChatInterface.tsx	Chat component	Send/receive messages via WebSocket
+📁 REFERRAL PROGRAM FILES
+#	File Path	Purpose	Endpoints to Connect
+30	app/referral/page.tsx	Referral dashboard	GET to /referral/stats, /referral/rewards, /referral/list
+31	components/referral/ReferralLink.tsx	Referral link component	GET to /referral/link
+32	components/referral/RewardTracker.tsx	Rewards component	GET to /referral/rewards, POST to /referral/claim
+33	components/referral/Leaderboard.tsx	Leaderboard	GET to /referral/leaderboard
+34	app/r/[code]/page.tsx	Referral redirect	GET to /referral/info/{code}
+📁 COMPATIBILITY FILES
+#	File Path	Purpose	Endpoints to Connect
+35	app/compatibility/page.tsx	Compatibility tool	POST to /compatibility/calculate
+36	app/compatibility/results/[id]/page.tsx	Compatibility results	GET to /compatibility/{id}
+📁 PAYMENT & SUBSCRIPTION FILES
+#	File Path	Purpose	Endpoints to Connect
+37	app/pricing/page.tsx	Pricing page	GET to /plans
+38	app/checkout/[planId]/page.tsx	Checkout page	POST to /payments/create-checkout
+39	app/api/stripe/webhook/route.ts	Stripe webhook	POST to /payments/webhook (forward to FastAPI)
+📁 ADMIN DASHBOARD FILES
+#	File Path	Purpose	Endpoints to Connect
+40	app/admin/page.tsx	Main admin dashboard	GET to /admin/stats, /admin/recent-activity
+41	app/admin/users/page.tsx	User management	GET to /admin/users, PUT to /admin/users/{id}
+42	app/admin/referrals/page.tsx	Referral admin	GET to /admin/referrals, /admin/payouts, POST to /admin/payouts/process
+43	app/admin/analytics/page.tsx	Analytics dashboard	GET to /admin/analytics, /admin/reports
+44	app/admin/settings/page.tsx	Admin settings	GET/PUT to /admin/settings
+📁 MIDDLEWARE & PROXY FILES
+#	File Path	Purpose	What to Change
+45	middleware.ts (or proxy.ts)	Request middleware	Add auth checks, rate limiting
+46	next.config.js	Next.js config	Add API proxy rewrites
+Add to next.config.js:
+
+javascript
+async rewrites() {
+  return [
+    {
+      source: '/api/:path*',
+      destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`, // Proxy to FastAPI
+    },
+  ]
+}
+📁 UTILITY & HOOK FILES
+#	File Path	Purpose	What to Change
+47	lib/hooks/useApi.ts	API hook	Replace mock data with real API calls
+48	lib/hooks/useQuery.ts	React Query hooks	Configure with actual API endpoints
+49	lib/utils/api-helpers.ts	API helpers	Error handling, response parsing
+50	lib/utils/auth-helpers.ts	Auth helpers	Token management, refresh logic
+📋 ENDPOINTS SUMMARY TABLE
+Category	Base Path	Files Affected
+Authentication	/auth/*	8-13
+Users	/users/*	14-20
+Reports	/reports/*, /analyze/*	21-26
+Chat	WebSocket /ws/chat/*	27-29
+Referrals	/referral/*	30-34
+Compatibility	/compatibility/*	35-36
+Payments	/payments/*, /subscriptions/*	37-39
+Admin	/admin/*	40-44
+Tools/Domains	/domains/*, /tools/*	26, 22
+🚀 IMPLEMENTATION STEPS
+Step 1: Configure Environment
+bash
+# .env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000
+Step 2: Update API Client
+Start with lib/api/client.ts - this is the foundation
+
+Step 3: Update Authentication
+Then update auth.ts and the auth API files
+
+Step 4: Update User & Profile
+Then user-related files
+
+Step 5: Update Core Features
+Reports, referrals, compatibility
+
+Step 6: Update Admin Dashboard
+Finally, connect the admin endpoints
+
+📊 PRIORITY ORDER FOR REPLACEMENT
+Priority	Files	Reason
+HIGH	1-8, 14-15, 45-46	Core functionality (auth, API client, user)
+MEDIUM	21-26, 30-36	Feature functionality (reports, referrals)
+LOW	37-44	Admin and payment features
+🎯 QUICK START COMMANDS
+To find all files that need modification:
+
+bash
+# Find all files with mock data
+grep -r "mock" --include="*.ts" --include="*.tsx" ./app ./components ./lib
+
+# Find all files with sample data
+grep -r "sample" --include="*.ts" --include="*.tsx" ./app ./components ./lib
+
+# Find all files with hardcoded data
+grep -r "const .* = \[\]" --include="*.ts" --include="*.tsx" ./app ./components ./lib
+This list contains 50+ files that need to be connected to your FastAPI backend. Start with the high priority files first! 🚀
+
+are all this files connected to my core logic engine?
+✅ YES! All These Files Connect to Your Core Logic Engine
+Let me break down exactly how each file connects to your FastAPI backend core logic engine:
+
+🔥 CORE LOGIC ENGINE ENDPOINTS
+Your FastAPI backend has these main endpoints that power the entire application:
+
+1. Authentication Engine → /auth/*
+User registration, login, token management
+
+Session handling, password reset
+
+Email verification
+
+2. Numerology Engine → /analyze/numerology
+Life Path Number calculation
+
+Destiny Number, Soul Urge, Personality Number
+
+Personal Year, Life Cycles, Pinnacles
+
+3. Palmistry Engine → /analyze/palm
+Hand image analysis
+
+Heart line, Life line, Head line reading
+
+Marriage lines, Money lines, Fate line
+
+4. Physiognomy Engine → /analyze/face
+Face image analysis
+
+Facial feature interpretation
+
+Personality traits from face
+
+5. Report Generation Engine → /reports/*
+PDF report generation
+
+Report personalization
+
+Past-Present-Future formatting
+
+6. Chat/AI Engine → WebSocket /ws/chat/*
+Real-time conversational AI
+
+Context-aware responses
+
+Multi-turn conversations
+
+7. Compatibility Engine → /compatibility/*
+Relationship compatibility calculation
+
+Numerology compatibility
+
+Combined analysis
+
+8. Referral Engine → /referral/*
+Referral link generation
+
+Commission calculation
+
+Payout processing
+
+Referral chain tracking
+
+9. Payment Engine → /payments/*
+Stripe integration
+
+Subscription management
+
+Invoice generation
+
+10. Admin Analytics Engine → /admin/*
+Business intelligence
+
+User analytics
+
+Revenue tracking
+
+Referral analytics
+
+📊 FILE-TO-ENGINE MAPPING
+Here's exactly how each file connects to your core logic:
+
+🔐 AUTHENTICATION ENGINE (/auth/*)
+File	Connects To	What It Sends/Receives
+auth.ts	/auth/login, /auth/register	Credentials → JWT token + user data
+app/login/page.tsx	/auth/login	Email/password → Session token
+app/register/page.tsx	/auth/register	Name/email/password → User object
+app/forgot-password/page.tsx	/auth/forgot-password	Email → Reset token
+app/reset-password/[token]/page.tsx	/auth/reset-password	New password → Success
+app/verify-email/page.tsx	/auth/verify-email	Token → Verified status
+🧮 NUMEROLOGY ENGINE (/analyze/numerology)
+File	Connects To	What It Sends/Receives
+app/report/[toolId]/page.tsx	/analyze/numerology	DOB + Name → Complete numerology report
+app/domain/life-path/page.tsx	/analyze/numerology	User data → Life path tools
+app/compatibility/page.tsx	/compatibility/calculate	Two DOBs → Compatibility score
+✋ PALMISTRY ENGINE (/analyze/palm)
+File	Connects To	What It Sends/Receives
+app/onboarding/upload/page.tsx	/analyze/palm	Hand image → Analysis request
+app/purchase/[toolId]/page.tsx	/analyze/palm	Hand image + tool ID → Report
+app/report/[toolId]/page.tsx	/analyze/palm	Tool ID → Palm reading report
+👤 PHYSIOGNOMY ENGINE (/analyze/face)
+File	Connects To	What It Sends/Receives
+app/onboarding/upload/page.tsx	/analyze/face	Face image → Analysis request
+app/purchase/[toolId]/page.tsx	/analyze/face	Face image + tool ID → Report
+app/report/[toolId]/page.tsx	/analyze/face	Tool ID → Face reading report
+📄 REPORT GENERATION ENGINE (/reports/*)
+File	Connects To	What It Sends/Receives
+app/report/[toolId]/page.tsx	/reports/{toolId}	Tool ID + user data → Complete report
+app/dashboard/free-reports/page.tsx	/reports/free	User ID → List of free reports
+lib/api/reports.ts	/reports/*	Various → Report data
+app/domain/[domain]/page.tsx	/domains/{domain}/tools	Domain name → List of tools
+💬 CHAT/AI ENGINE (WebSocket)
+File	Connects To	What It Sends/Receives
+app/chat/[toolId]/page.tsx	ws://api/chat/{toolId}	Messages → AI responses
+lib/hooks/useChatSocket.ts	ws://api/chat	WebSocket connection → Real-time chat
+components/chat/ChatInterface.tsx	WebSocket	User input → AI responses
+💞 COMPATIBILITY ENGINE (/compatibility/*)
+File	Connects To	What It Sends/Receives
+app/compatibility/page.tsx	/compatibility/calculate	Two profiles → Compatibility score
+app/compatibility/results/[id]/page.tsx	/compatibility/{id}	Result ID → Full compatibility report
+🎁 REFERRAL ENGINE (/referral/*)
+File	Connects To	What It Sends/Receives
+app/referral/page.tsx	/referral/stats, /referral/rewards	User ID → Referral stats
+components/referral/ReferralLink.tsx	/referral/link	User ID → Unique referral link
+components/referral/RewardTracker.tsx	/referral/rewards, /referral/claim	User ID → Rewards
+app/r/[code]/page.tsx	/referral/info/{code}	Code → Referrer info
+app/admin/referrals/page.tsx	/admin/referrals, /admin/payouts	Admin → All referral data
+💰 PAYMENT ENGINE (/payments/*, /subscriptions/*)
+File	Connects To	What It Sends/Receives
+app/purchase/[toolId]/page.tsx	/payments/create-checkout	Tool ID + user → Stripe session
+app/subscribe/[toolId]/page.tsx	/subscriptions/create	Plan ID → Subscription
+app/pricing/page.tsx	/plans	None → List of plans
+app/account/page.tsx	/subscription/status	User ID → Subscription details
+📊 ADMIN ANALYTICS ENGINE (/admin/*)
+File	Connects To	What It Sends/Receives
+app/admin/page.tsx	/admin/stats, /admin/recent-activity	Admin token → All stats
+app/admin/users/page.tsx	/admin/users	Admin token → User list
+app/admin/referrals/page.tsx	/admin/referrals, /admin/payouts	Admin token → Referral data
+app/admin/analytics/page.tsx	/admin/analytics	Admin token → Analytics
+lib/api/admin.ts	/admin/*	Admin actions → Results
+👤 USER PROFILE ENGINE (/users/*)
+File	Connects To	What It Sends/Receives
+app/account/page.tsx	/users/me, /users/profile	User ID → Profile data
+app/onboarding/basic/page.tsx	/users/onboarding/basic	DOB/Name → Anonymous user
+app/onboarding/upload/page.tsx	/users/upload-hand, /users/upload-face	Images → Upload status
+app/dashboard/page.tsx	/users/dashboard, /users/stats	User ID → Dashboard data
+lib/hooks/useUser.ts	/users/*	Various → User data
+lib/store/userStore.ts	/users/me	Token → User state
+🎯 CORE LOGIC FLOW
+text
+Frontend File → API Client → FastAPI Endpoint → Core Logic Engine → Database → Response
+Example Flow for Palm Reading:
+User uploads hand image → app/onboarding/upload/page.tsx
+
+API call → lib/api/user.ts → POST to /users/upload-hand
+
+FastAPI endpoint → /analyze/palm in your backend
+
+Palmistry Engine → Analyzes lines, mounts, shapes
+
+AI/ML Model → Processes image, detects patterns
+
+Report Generation → Creates personalized reading
+
+Response → Returns report data to frontend
+
+Display → Shows in app/report/[toolId]/page.tsx
+
+📋 SUMMARY: 50+ FILES, 10+ ENGINES
+Engine	Files Connected	Core Logic
+Authentication	8 files	User identity
+Numerology	5 files	Number calculations
+Palmistry	4 files	Hand analysis
+Physiognomy	4 files	Face analysis
+Reports	6 files	PDF generation
+Chat/AI	3 files	Conversations
+Compatibility	2 files	Match scoring
+Referral	7 files	Commission tracking
+Payments	5 files	Transactions
+Admin	6 files	Analytics
+User Profile	8 files	User management
+TOTAL: 58 FILES all connected to your core logic engine! 🚀
+
+Each file is a pipeline that sends user data to your FastAPI backend, which processes it through your core logic engines and returns meaningful results. The frontend is just the presentation layer - all the real intelligence happens in your backend!
+
+are database file included e.g if i will use PostgreSQL, meaning if i add live db what files will i replace
+Read 10 web pages
+📁 DATABASE CONNECTION FILES - When Adding Live PostgreSQL
+If you're adding a live PostgreSQL database to your FastAPI backend, here are the specific files you need to create or modify. These are backend files, not frontend files.
+
+🔧 BACKEND FILES TO CREATE/MODIFY
+1. Database Configuration Files (Create these)
+File Path	Purpose	What It Does
+backend/app/database.py	Database connection setup	Creates engine, session factory, and get_db dependency 
+backend/app/models/__init__.py	SQLAlchemy models	Defines all database tables as Python classes
+backend/app/schemas/__init__.py	Pydantic schemas	Defines data validation and serialization
+backend/alembic/	Migration folder	Alembic migrations for schema changes 
+backend/alembic.ini	Alembic configuration	Migration settings
+backend/requirements.txt	Dependencies	Add asyncpg, sqlalchemy, alembic, psycopg2-binary
+2. Example: backend/app/database.py
+python
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Get database URL from environment variable
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/kayal_db")
+
+# Create engine with connection pooling [citation:3]
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=20,           # Connections per worker
+    max_overflow=10,         # Additional connections allowed
+    pool_pre_ping=True,      # Verify connections before using
+    pool_recycle=3600        # Recycle connections every hour
+)
+
+# Create session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base class for models
+Base = declarative_base()
+
+# Dependency to get DB session in routes [citation:1][citation:9]
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+3. Example: backend/app/models/user.py
+python
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Table
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from ..database import Base
+import uuid
+
+def generate_uuid():
+    return str(uuid.uuid4())
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(String, primary_key=True, default=generate_uuid)
+    email = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)
+    role = Column(String, default="user")  # user, admin, superadmin
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    avatar_url = Column(String, nullable=True)
+    referral_code = Column(String, unique=True, index=True)
+    referred_by = Column(String, ForeignKey("users.id"), nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    referrals = relationship("User", backref="referrer", remote_side=[id])
+    purchases = relationship("Purchase", back_populates="user")
+    hand_images = relationship("HandImage", back_populates="user")
+    face_images = relationship("FaceImage", back_populates="user")
+4. Example: backend/app/models/referral.py
+python
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from ..database import Base
+import uuid
+
+class Referral(Base):
+    __tablename__ = "referrals"
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    referrer_id = Column(String, ForeignKey("users.id"), nullable=False)
+    referred_email = Column(String, nullable=False)
+    referred_id = Column(String, ForeignKey("users.id"), nullable=True)
+    status = Column(String, default="pending")  # clicked, signed_up, purchased, qualified, paid
+    
+    clicked_at = Column(DateTime(timezone=True), nullable=True)
+    signed_up_at = Column(DateTime(timezone=True), nullable=True)
+    purchased_at = Column(DateTime(timezone=True), nullable=True)
+    qualified_at = Column(DateTime(timezone=True), nullable=True)
+    
+    purchase_amount = Column(Float, default=0)
+    commission_rate = Column(Float, nullable=False)  # Based on referrer's tier
+    commission_earned = Column(Float, default=0)
+    commission_paid = Column(Boolean, default=False)
+    paid_at = Column(DateTime(timezone=True), nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    referrer = relationship("User", foreign_keys=[referrer_id])
+5. Example: backend/app/schemas/user.py
+python
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
+from datetime import datetime
+
+class UserBase(BaseModel):
+    email: EmailStr
+    name: str
+
+class UserCreate(UserBase):
+    password: str
+    referral_code: Optional[str] = None
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(UserBase):
+    id: str
+    role: str
+    is_active: bool
+    is_verified: bool
+    avatar_url: Optional[str] = None
+    referral_code: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+6. Example: backend/app/routers/auth.py
+python
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from datetime import timedelta
+from .. import models, schemas
+from ..database import get_db
+from ..auth_utils import verify_password, get_password_hash, create_access_token
+
+router = APIRouter(prefix="/auth", tags=["authentication"])
+
+@router.post("/register", response_model=schemas.UserResponse)
+def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+    # Check if user exists
+    existing = db.query(models.User).filter(models.User.email == user_data.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Hash password
+    hashed = get_password_hash(user_data.password)
+    
+    # Create user
+    user = models.User(
+        email=user_data.email,
+        name=user_data.name,
+        hashed_password=hashed,
+        referral_code=f"REF{str(uuid.uuid4())[:8].upper()}"
+    )
+    
+    # Handle referral if provided
+    if user_data.referral_code:
+        referrer = db.query(models.User).filter(
+            models.User.referral_code == user_data.referral_code
+        ).first()
+        if referrer:
+            user.referred_by = referrer.id
+    
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    return user
+
+@router.post("/login")
+def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == credentials.email).first()
+    if not user or not verify_password(credentials.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Update last login
+    user.last_login = datetime.now()
+    db.commit()
+    
+    # Create token
+    access_token = create_access_token(
+        data={"sub": user.id, "role": user.role},
+        expires_delta=timedelta(days=7)
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user
+    }
+7. Environment File (Create)
+bash
+# .env (backend)
+DATABASE_URL=postgresql://username:password@localhost:5432/kayal_db
+SECRET_KEY=your-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_DAYS=7
+DB_POOL_SIZE=20
+DB_MAX_OVERFLOW=10
+DB_POOL_TIMEOUT=60
+DB_POOL_RECYCLE=3600
+8. Requirements.txt Additions
+text
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+asyncpg>=0.29.0
+alembic>=1.13.0
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.7
+9. Alembic Initialization
+bash
+# Initialize migrations
+cd backend
+alembic init alembic
+
+# Create first migration
+alembic revision --autogenerate -m "Initial migration"
+
+# Apply migration
+alembic upgrade head
+10. Docker Compose for Local Development (Optional)
+yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: kayal_postgres
+    environment:
+      POSTGRES_USER: kayal_user
+      POSTGRES_PASSWORD: kayal_password
+      POSTGRES_DB: kayal_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kayal_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: kayal_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@kayal.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+📊 DATABASE TABLES NEEDED
+Table	Purpose
+users	User accounts, profiles, roles
+hand_images	Uploaded palm images
+face_images	Uploaded face images
+purchases	One-time purchases
+subscriptions	Recurring subscriptions
+referrals	Referral tracking chain 
+referral_earnings	Commission tracking
+payouts	Payment history
+reports	Generated reports
+sessions	User sessions
+analytics_events	User activity tracking
+🚀 DEPLOYMENT CHECKLIST
+Install PostgreSQL locally or use cloud service (AWS RDS, Azure DB, Render)
+
+Set DATABASE_URL environment variable in production
+
+Run migrations with alembic upgrade head
+
+Configure connection pooling for production load 
+
+Set up database backups
+
+Enable SSL/TLS for production connections
+
+Create read replicas if needed for scaling
+
+📚 KEY CONCEPTS
+Connection Pooling: FastAPI with PostgreSQL benefits from connection pooling to handle concurrent requests efficiently 
+
+Async Support: Use asyncpg driver for async database operations
+
+Migrations: Alembic tracks schema changes 
+
+Environment Variables: Never hardcode database URLs in code 
+
+These files are all backend-only - your frontend doesn't change. Only the API responses come from real database data instead of mocks! 🚀
+
+

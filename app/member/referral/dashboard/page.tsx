@@ -1,0 +1,1899 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { toast } from 'sonner'
+import { 
+  Gift, Copy, Check, Share2, Users, DollarSign,
+  TrendingUp, Clock, Globe, Award, BarChart,
+  Settings, HelpCircle, Loader2, RefreshCw, 
+  ChevronRight, Calendar, Wallet, CreditCard, 
+  Mail, Link2, Sparkles, Crown, Target, Zap, 
+  Shield, Phone, Twitter, Facebook, Linkedin, 
+  AlertCircle, Banknote, Eye, EyeOff, Download,
+  Repeat, UserCheck, Plus, Trash2, Edit,
+  MousePointer, Percent, Home, LayoutDashboard,
+  Menu, X as CloseIcon, Camera, Flame, Star,
+  Headphones, MessageCircle, BookOpen, Infinity,
+  ArrowLeft, Search, Filter, Sparkle, Gem,
+  Rocket, Compass, Scroll, Feather, BookMarked,
+  FileText, Mic, Eye as EyeIcon, MessageSquare,
+  LogOut, User, Bell, Moon, Sun, Lock,
+  Key, RotateCcw, Play,
+  Smartphone, Tablet, Laptop, DownloadIcon,
+  FileTextIcon, UsersIcon, RepeatIcon, TrendingUpIcon,
+  MousePointerIcon, Tag, PercentCircle, BadgePercent, ShoppingBag
+} from 'lucide-react'
+
+// Import all your tool constants
+import { omniTools as omniSeerTools } from '@/lib/constants/omni-seer-tools'
+import { voiceTools } from '@/lib/constants/voice-tools'
+import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
+import { timeKeeperTools } from '@/lib/constants/time-keeper-tools'
+import { loveTools } from '@/lib/constants/love-tools'
+import { wealthTools } from '@/lib/constants/wealth-tools'
+import { wellnessTools } from '@/lib/constants/wellness-spiritual'
+import { lifePathTools } from '@/lib/constants/life-path-tools'
+
+// ============================================
+// HELPER: Safely convert feature to string
+// ============================================
+const getFeatureText = (feature: any): string => {
+  if (typeof feature === 'string') {
+    let text = feature.replace(/\*\*/g, '')
+    if (text.includes(' - ')) text = text.split(' - ')[0]
+    return text
+  }
+  if (feature && typeof feature === 'object') {
+    return feature.title || feature.name || feature.description || '✓'
+  }
+  return '✓'
+}
+
+// ============================================
+// DOMAINS CONFIGURATION
+// ============================================
+
+const domainDestinations: Record<string, string> = {
+  'oracle-temple': 'report',
+  'voice': 'audio',
+  'sacred-script': 'chat',
+  'time-keeper': 'reading',
+  'love': 'report',
+  'wealth': 'report',
+  'spiritual': 'report',
+  'life-path': 'report'
+}
+
+const domains = [
+  // FEATURED DOMAINS (4)
+  {
+    id: 'oracle-temple',
+    name: 'Omni-Seer\'s Sanctum',
+    icon: '👁️',
+    color: 'from-purple-600 to-indigo-600',
+    url: '/domain/omni-seer-sanctum',
+    destination: 'report',
+    tools: omniSeerTools,
+    count: omniSeerTools.length,
+    description: 'Ancient wisdom and divination tools for profound life insights. Connect with higher consciousness and receive guidance for your most important life decisions.'
+  },
+  {
+    id: 'voice',
+    name: 'Voice of Prophecy',
+    icon: '🎙️',
+    color: 'from-blue-600 to-cyan-600',
+    url: '/domain/voice-of-prophecy',
+    destination: 'audio',
+    tools: voiceTools,
+    count: voiceTools.length,
+    description: 'Transformative voice analysis tools that reveal your true power. Unlock your potential as a speaker, singer, or communicator.'
+  },
+  {
+    id: 'sacred-script',
+    name: 'Sacred Script',
+    icon: '📜',
+    color: 'from-amber-600 to-orange-600',
+    url: '/domain/sacred-script',
+    destination: 'chat',
+    tools: sacredScriptTools,
+    count: sacredScriptTools.length,
+    description: 'Sacred writing and manifestation tools for divine connection. Channel wisdom through sacred writing practices.'
+  },
+  {
+    id: 'time-keeper',
+    name: 'Eternal Clock',
+    icon: '⏰',
+    color: 'from-emerald-600 to-teal-600',
+    url: '/domain/eternal-clock',
+    destination: 'reading',
+    tools: timeKeeperTools,
+    count: timeKeeperTools.length,
+    description: 'Temporal wisdom tools to understand your relationship with time. Understand your past, navigate your present, and shape your future.'
+  },
+  
+  // CORE DOMAINS (4)
+  {
+    id: 'love',
+    name: 'Love & Relationships',
+    icon: '💞',
+    color: 'from-red-600 to-pink-600',
+    url: '/domain/love-relationships',
+    destination: 'report',
+    tools: loveTools,
+    count: loveTools.length,
+    description: 'Deep relationship insights and romantic guidance. Understand soul connections, twin flame dynamics, and the true nature of your love life.'
+  },
+  {
+    id: 'wealth',
+    name: 'Wealth & Career',
+    icon: '💰',
+    color: 'from-green-600 to-emerald-600',
+    url: '/domain/wealth-career',
+    destination: 'report',
+    tools: [...wealthTools],
+    count: wealthTools?.length || 0,
+    description: 'Abundance manifestation tools for financial freedom and career success. Unlock your wealth potential and attract prosperity.'
+  },
+  {
+    id: 'spiritual',
+    name: 'Wellness & Spirituality',
+    icon: '🌙',
+    color: 'from-violet-600 to-purple-600',
+    url: '/domain/wellness-spirituality',
+    destination: 'report',
+    tools: [...wellnessTools],
+    count: wellnessTools?.length || 0,
+    description: 'Comprehensive spiritual growth and wellness tools for awakening. Explore chakra healing, energy work, and connect with your higher self.'
+  },
+  {
+    id: 'life-path',
+    name: 'Life Path & Destiny',
+    icon: '🌟',
+    color: 'from-amber-600 to-yellow-600',
+    url: '/domain/life-path-destiny',
+    destination: 'report',
+    tools: lifePathTools,
+    count: lifePathTools.length,
+    description: 'Life purpose and destiny revelation tools. Discover why you\'re here and what you\'re meant to do.'
+  }
+]
+
+// Calculate overall stats
+const overallStats = {
+  totalTools: domains.reduce((sum, d) => sum + d.tools.length, 0),
+  totalDomains: domains.length
+}
+
+// ============================================
+// TYPES
+// ============================================
+
+interface AffiliateStats {
+  totalClicks: number
+  uniqueVisitors: number
+  totalConversions: number
+  conversionRate: number
+  totalEarnings: number
+  pendingCommissions: number
+  paidCommissions: number
+  lifetimeValue: number
+  averageOrderValue: number
+  recurringRevenue: number
+  rank: number
+  percentile: number
+}
+
+interface AffiliateLink {
+  id: string
+  name: string
+  toolId: string
+  toolName: string
+  toolEmoji: string
+  domainId: string
+  domainName: string
+  url: string
+  shortUrl: string
+  createdAt: string
+  clicks: number
+  uniqueClicks: number
+  conversions: number
+  earnings: number
+  conversionRate: number
+  status: 'active' | 'paused'
+}
+
+interface AffiliateData {
+  id: string
+  name: string
+  email: string
+  joinDate: string
+  status: 'active' | 'suspended' | 'pending'
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
+  accountType: 'affiliate' | 'customer_advocate'
+  avatar?: string
+  preferences: {
+    darkMode: boolean
+    emailNotifications: boolean
+    pushNotifications: boolean
+    currency: 'USD' | 'EUR' | 'GBP'
+    timezone: string
+  }
+  
+  stats: AffiliateStats
+  monthlyStats: {
+    month: string
+    clicks: number
+    conversions: number
+    earnings: number
+  }[]
+  links: AffiliateLink[]
+  
+  commissionRates: {
+    base: number
+    tier: number
+    recurring: number
+    total: number
+  }
+  
+  paymentMethods: {
+    bank?: {
+      bankName: string
+      accountNumber: string
+      accountName: string
+      swiftCode: string
+    }
+    paypal?: {
+      email: string
+    }
+    crypto?: {
+      address: string
+      currency: string
+    }
+  }
+  
+  nextMilestone: {
+    type: string
+    needed: number
+    current: number
+    reward: string
+  }
+  
+  topTools: {
+    toolId: string
+    toolName: string
+    toolEmoji: string
+    clicks: number
+    conversions: number
+    earnings: number
+    conversionRate: number
+  }[]
+  
+  recentConversions: {
+    id: string
+    customerEmail: string
+    toolName: string
+    amount: number
+    commission: number
+    date: string
+    status: 'pending' | 'paid'
+  }[]
+  
+  notifications: Notification[]
+}
+
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'payout'
+  read: boolean
+  time: string
+}
+
+// NEW: Coupon types for affiliate empowerment
+interface AffiliateCoupon {
+  id: string
+  code: string
+  discount: number
+  description: string
+  tools: string[] // Tool IDs this applies to
+  expiresAt?: string
+  usageCount: number
+  maxUses: number
+  earnings: number
+}
+
+// Get tool type info based on domain
+const getToolTypeInfo = (domainId: string) => {
+  switch(domainId) {
+    case 'voice':
+      return { 
+        icon: Headphones, 
+        label: 'Audio Session', 
+        color: 'text-blue-600 bg-blue-50',
+        destination: '/audio/[toolId]'
+      }
+    case 'sacred-script':
+      return { 
+        icon: MessageCircle, 
+        label: 'Chat Session', 
+        color: 'text-purple-600 bg-purple-50',
+        destination: '/chat/[toolId]',
+        isSubscription: true 
+      }
+    case 'time-keeper':
+      return { 
+        icon: EyeIcon, 
+        label: 'Reading', 
+        color: 'text-amber-600 bg-amber-50',
+        destination: '/reading/[toolId]'
+      }
+    default:
+      return { 
+        icon: FileText, 
+        label: 'PDF Report', 
+        color: 'text-green-600 bg-green-50',
+        destination: '/report/[toolId]'
+      }
+  }
+}
+
+// ── FIX 1: VideoEmbed component — handles YouTube and Vimeo URLs ──────────────
+function VideoEmbed({ url, label = 'Watch overview' }: { url: string; label?: string }) {
+  const getSrc = (raw: string) => {
+    const yt = raw.match(/youtu\.be\/([^?&]+)/) || raw.match(/[?&]v=([^&]+)/) || raw.match(/embed\/([^?&]+)/)
+    if (yt) return `https://www.youtube.com/embed/${yt[1]}?rel=0&modestbranding=1`
+    const vimeo = raw.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+    if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}?title=0&byline=0`
+    return raw
+  }
+  return (
+    <div style={{ position: 'relative', paddingBottom: '56.25%', borderRadius: 12, overflow: 'hidden', background: '#1c1917' }}>
+      <iframe
+        src={getSrc(url)}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+        title={label}
+        loading="lazy"
+      />
+    </div>
+  )
+}
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
+
+export default function AffiliateDashboard() {
+  const router = useRouter()
+  const supabase = createClient()
+  
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [copied, setCopied] = useState<string | null>(null)
+  const [affiliateData, setAffiliateData] = useState<AffiliateData | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'links' | 'analytics' | 'payouts' | 'settings'>('overview')
+  const [showCreateLinkModal, setShowCreateLinkModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showBalance, setShowBalance] = useState(false)
+  const [selectedLink, setSelectedLink] = useState<AffiliateLink | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
+
+  // NEW: Affiliate coupon state
+  const [affiliateCoupons, setAffiliateCoupons] = useState<AffiliateCoupon[]>([])
+  const [showCouponModal, setShowCouponModal] = useState(false)
+  const [selectedCoupon, setSelectedCoupon] = useState<AffiliateCoupon | null>(null)
+
+  // Domain view state
+  const [selectedDomain, setSelectedDomain] = useState<any>(null)
+  const [viewMode, setViewMode] = useState<'domains' | 'tools'>('domains')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'popular'>('popular')
+  const [filteredTools, setFilteredTools] = useState<any[]>([])
+
+  // New link form
+  const [newLink, setNewLink] = useState({
+    name: '',
+    toolId: '',
+    domainId: '',
+    campaign: '',
+    source: '',
+    medium: '',
+    tags: [] as string[],
+    type: 'tool_specific' as 'general' | 'tool_specific' | 'campaign'
+  })
+
+  // ── FIX 2: Affiliate explainer video URL — set once video is recorded ────────
+  const AFFILIATE_EXPLAINER_VIDEO_URL = '' // e.g. 'https://youtu.be/YOUR_ID'
+
+  // ============================================
+  // FETCH REAL DATA FROM SUPABASE
+  // ============================================
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          router.push('/member/referral/login')
+          return
+        }
+
+        setUser(user)
+        await fetchAffiliateData(user.id)
+        await fetchAffiliateCoupons(user.id) // NEW: Fetch affiliate coupons
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // NEW: Fetch affiliate-specific coupons
+  const fetchAffiliateCoupons = async (userId: string) => {
+    try {
+      // Mock affiliate coupons - in production, fetch from database
+      const mockCoupons: AffiliateCoupon[] = [
+        {
+          id: 'c1',
+          code: `AFF${userId.slice(0, 4).toUpperCase()}20`,
+          discount: 20,
+          description: 'Share with your audience - 20% off any tool',
+          tools: [],
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          usageCount: 3,
+          maxUses: 50,
+          earnings: 124.50
+        },
+        {
+          id: 'c2',
+          code: `BUNDLE${userId.slice(0, 4).toUpperCase()}`,
+          discount: 25,
+          description: '25% off when you refer a bundle purchase',
+          tools: ['wealth-master', 'career-path', 'love-saga'],
+          usageCount: 1,
+          maxUses: 25,
+          earnings: 67.50
+        }
+      ]
+      setAffiliateCoupons(mockCoupons)
+    } catch (error) {
+      console.error('Error fetching affiliate coupons:', error)
+    }
+  }
+
+  // Update filtered tools when selectedDomain or searchQuery changes
+  useEffect(() => {
+    if (selectedDomain && selectedDomain.tools) {
+      const filtered = selectedDomain.tools.filter((tool: any) => 
+        tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (tool.description && tool.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (tool.subtitle && tool.subtitle.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+      
+      const sorted = filtered.sort((a: any, b: any) => {
+        if (sortBy === 'name') return a.name.localeCompare(b.name)
+        if (sortBy === 'price') return a.price - b.price
+        return (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0)
+      })
+      
+      setFilteredTools(sorted)
+    } else {
+      setFilteredTools([])
+    }
+  }, [selectedDomain, searchQuery, sortBy])
+
+  const fetchAffiliateData = async (userId: string) => {
+    try {
+      setRefreshing(true)
+      
+      // Fetch user profile from public.users
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('token', userId)
+        .maybeSingle()
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError)
+      }
+
+      // Fetch affiliate links
+      const { data: links, error: linksError } = await supabase
+        .from('affiliate_links')
+        .select('*')
+        .eq('affiliate_id', userId)
+        .order('created_at', { ascending: false })
+
+      if (linksError) {
+        console.error('Error fetching links:', linksError)
+      }
+
+      // Fetch earnings
+      const { data: earnings, error: earningsError } = await supabase
+        .from('referral_earnings')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+
+      if (earningsError) {
+        console.error('Error fetching earnings:', earningsError)
+      }
+
+      // Fetch conversions
+      const { data: conversions, error: conversionsError } = await supabase
+        .from('affiliate_conversions')
+        .select('*')
+        .eq('affiliate_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (conversionsError) {
+        console.error('Error fetching conversions:', conversionsError)
+      }
+
+      // Calculate real stats
+      const totalClicks = links?.reduce((sum, l) => sum + (l.clicks || 0), 0) || 0
+      const uniqueVisitors = links?.reduce((sum, l) => sum + (l.unique_clicks || 0), 0) || 0
+      const totalConversions = conversions?.length || 0
+      const totalEarnings = earnings?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0
+      const pendingEarnings = earnings?.filter(e => e.status === 'pending')
+        .reduce((sum, e) => sum + (e.amount || 0), 0) || 0
+      const paidEarnings = earnings?.filter(e => e.status === 'paid')
+        .reduce((sum, e) => sum + (e.amount || 0), 0) || 0
+      
+      // Calculate conversion rate
+      const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0
+
+      // Get monthly stats (last 6 months)
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const currentMonth = new Date().getMonth()
+      const monthlyStats = []
+      
+      for (let i = 5; i >= 0; i--) {
+        const monthIndex = (currentMonth - i + 12) % 12
+        monthlyStats.push({
+          month: months[monthIndex],
+          clicks: 0,
+          conversions: 0,
+          earnings: 0
+        })
+      }
+
+      // Group earnings by month
+      earnings?.forEach(e => {
+        const date = new Date(e.created_at)
+        const month = months[date.getMonth()]
+        const monthStat = monthlyStats.find(m => m.month === month)
+        if (monthStat) {
+          monthStat.earnings += (e.amount || 0)
+        }
+      })
+
+      // Get top tools by earnings
+      const toolEarnings = new Map()
+      earnings?.forEach(e => {
+        const current = toolEarnings.get(e.tool_id) || { earnings: 0, conversions: 0, clicks: 0 }
+        toolEarnings.set(e.tool_id, {
+          earnings: current.earnings + (e.amount || 0),
+          conversions: current.conversions + 1,
+          clicks: current.clicks + (e.clicks || 0)
+        })
+      })
+
+      const allTools = [
+        ...omniSeerTools,
+        ...voiceTools,
+        ...sacredScriptTools,
+        ...timeKeeperTools,
+        ...loveTools,
+        ...wealthTools,
+        ...wellnessTools,
+        ...lifePathTools
+      ]
+
+      const topTools = Array.from(toolEarnings.entries())
+        .map(([toolId, data]) => ({
+          toolId,
+          toolName: allTools.find(t => t.id === toolId)?.name || 'Unknown Tool',
+          toolEmoji: allTools.find(t => t.id === toolId)?.emoji || '🔮',
+          ...data,
+          conversionRate: data.clicks > 0 ? (data.conversions / data.clicks) * 100 : 0
+        }))
+        .sort((a, b) => b.earnings - a.earnings)
+        .slice(0, 3)
+
+      // Get recent conversions
+      const recentConversions = conversions?.map(c => ({
+        id: c.id,
+        customerEmail: c.customer_email || 'customer@example.com',
+        toolName: c.tool_name || 'Unknown Tool',
+        amount: c.amount || 0,
+        commission: c.commission || 0,
+        date: new Date(c.created_at).toLocaleDateString(),
+        status: c.status || 'pending'
+      })) || []
+
+      // Determine tier based on total earnings
+      let tier: 'bronze' | 'silver' | 'gold' | 'platinum' = 'bronze'
+      if (totalEarnings >= 10000) tier = 'platinum'
+      else if (totalEarnings >= 5000) tier = 'gold'
+      else if (totalEarnings >= 1000) tier = 'silver'
+
+      // Calculate next milestone
+      const nextMilestone = {
+        type: tier === 'bronze' ? 'Silver Tier' :
+              tier === 'silver' ? 'Gold Tier' :
+              tier === 'gold' ? 'Platinum Tier' : 'Elite',
+        needed: tier === 'bronze' ? 1000 :
+                tier === 'silver' ? 5000 :
+                tier === 'gold' ? 10000 : 50000,
+        current: totalEarnings,
+        // ── FIX 3: corrected reward strings ─────────────────────────────────
+        reward: tier === 'bronze' ? 'Performance tier (30% commission)' :
+                tier === 'silver' ? 'Strategic tier (35% commission)' :
+                tier === 'gold' ? 'Strategic tier + VIP perks' : 'Elite — up to 40% (negotiated)'
+      }
+
+      // Build affiliate data object
+      const realData: AffiliateData = {
+        id: userId,
+        name: profile?.full_name || user?.user_metadata?.full_name || 'Affiliate Partner',
+        email: user?.email || '',
+        joinDate: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }) : new Date().toLocaleDateString(),
+        status: profile?.account_status || 'active',
+        tier,
+        accountType: 'affiliate',
+        avatar: profile?.avatar_url,
+        preferences: {
+          darkMode: false,
+          emailNotifications: true,
+          pushNotifications: true,
+          currency: 'USD',
+          timezone: 'America/New_York'
+        },
+        
+        stats: {
+          totalClicks,
+          uniqueVisitors,
+          totalConversions,
+          conversionRate: Number(conversionRate.toFixed(1)),
+          totalEarnings,
+          pendingCommissions: pendingEarnings,
+          paidCommissions: paidEarnings,
+          lifetimeValue: totalEarnings,
+          averageOrderValue: totalConversions > 0 ? totalEarnings / totalConversions : 0,
+          recurringRevenue: earnings?.filter(e => e.is_recurring)?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0,
+          rank: 0,
+          percentile: 0
+        },
+        
+        monthlyStats,
+        
+        links: (links || []).map(l => ({
+          id: l.id,
+          name: l.name || 'Untitled Link',
+          toolId: l.tool_id,
+          toolName: l.tool_name || 'Unknown Tool',
+          toolEmoji: l.tool_emoji || '🔮',
+          domainId: l.domain_id || 'oracle-temple',
+          domainName: l.domain_name || 'Omni-Seer\'s Sanctum',
+          url: l.destination_url,
+          shortUrl: l.short_url || l.destination_url,
+          createdAt: new Date(l.created_at).toLocaleDateString(),
+          clicks: l.clicks || 0,
+          uniqueClicks: l.unique_clicks || 0,
+          conversions: l.conversions || 0,
+          earnings: l.earnings || 0,
+          conversionRate: l.clicks ? ((l.conversions || 0) / l.clicks * 100) : 0,
+          status: l.status || 'active'
+        })),
+        
+        // ── FIX 4: corrected commission rates ────────────────────────────────
+        commissionRates: {
+          base: 25,
+          tier: tier === 'gold' ? 5 : tier === 'platinum' ? 10 : 0,
+          recurring: 10,
+          total: tier === 'bronze' ? 25 :
+                 tier === 'silver' ? 25 :
+                 tier === 'gold' ? 30 : 35
+        },
+        
+        paymentMethods: {
+          bank: profile?.bank_name ? {
+            bankName: profile.bank_name,
+            accountNumber: profile.account_number?.replace(/\d(?=\d{4})/g, '*'),
+            accountName: profile.account_name,
+            swiftCode: profile.swift_code
+          } : undefined,
+          paypal: profile?.paypal_email ? {
+            email: profile.paypal_email
+          } : undefined,
+          crypto: profile?.crypto_address ? {
+            address: profile.crypto_address.substring(0, 6) + '...' + profile.crypto_address.substring(profile.crypto_address.length - 4),
+            currency: profile.crypto_currency || 'BTC'
+          } : undefined
+        },
+        
+        nextMilestone,
+        
+        topTools,
+        
+        recentConversions,
+        
+        notifications: []
+      }
+
+      setAffiliateData(realData)
+    } catch (error) {
+      console.error('Error fetching affiliate data:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(id)
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  const handleCreateLink = async () => {
+    if (!newLink.name || !newLink.toolId) {
+      alert('Please fill in required fields')
+      return
+    }
+
+    try {
+      const baseUrl = window.location.origin
+      const destination = domainDestinations[newLink.domainId] || 'report'
+      let destinationUrl = `${baseUrl}/tool/${newLink.toolId}?ref=${user?.id}`
+      
+      if (newLink.campaign) {
+        destinationUrl += `&utm_campaign=${encodeURIComponent(newLink.campaign)}`
+      }
+      if (newLink.source) {
+        destinationUrl += `&utm_source=${encodeURIComponent(newLink.source)}`
+      }
+      if (newLink.medium) {
+        destinationUrl += `&utm_medium=${encodeURIComponent(newLink.medium)}`
+      }
+
+      const tool = selectedDomain?.tools.find((t: any) => t.id === newLink.toolId)
+
+      const { error } = await supabase
+        .from('affiliate_links')
+        .insert({
+          affiliate_id:    user.id,
+          name:            newLink.name,
+          link_type:       newLink.type || 'tool_specific',
+          tool_id:         newLink.toolId       || null,
+          tool_name:       tool?.name           || null,
+          tool_emoji:      tool?.emoji          || null,
+          domain_id:       newLink.domainId     || null,
+          domain_name:     selectedDomain?.name || null,
+          destination_url: destinationUrl,
+          short_url:       destinationUrl,
+          utm_campaign:    newLink.campaign     || null,
+          utm_source:      newLink.source       || null,
+          utm_medium:      newLink.medium       || null,
+          tags:            newLink.tags.length ? newLink.tags : null,
+          status:          'active',
+          ref_code:        user.id,
+          created_at:      new Date().toISOString(),
+        })
+
+      if (error) throw error
+
+      await fetchAffiliateData(affiliateData!.id)
+      setShowCreateLinkModal(false)
+      setNewLink({ 
+        name: '', 
+        toolId: '', 
+        domainId: '', 
+        campaign: '', 
+        source: '', 
+        medium: '', 
+        tags: [], 
+        type: 'tool_specific' 
+      })
+      
+      toast.success('Link created successfully!')
+      
+    } catch (error) {
+      console.error('Error creating link:', error)
+      alert('Failed to create link')
+    }
+  }
+
+  const handleGenerateLink = (tool: any) => {
+    setNewLink({
+      ...newLink,
+      toolId: tool.id,
+      domainId: selectedDomain?.id || '',
+      name: `${tool.name} Affiliate Link`
+    })
+    setShowCreateLinkModal(true)
+  }
+
+  const handleDomainClick = (domain: any) => {
+    setSelectedDomain(domain)
+    setViewMode('tools')
+    setSearchQuery('')
+  }
+
+  const handleBackToDomains = () => {
+    setViewMode('domains')
+    setSelectedDomain(null)
+    setSearchQuery('')
+  }
+
+  const handleShareLink = (link: AffiliateLink) => {
+    setSelectedLink(link)
+    setShowShareModal(true)
+  }
+
+  const handleShare = async (platform: string, link: AffiliateLink) => {
+    const shareText = `Discover the wisdom of ${link.toolName} on Kayal LifeOS! ${link.url}`
+    
+    switch(platform) {
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`)
+        break
+      case 'twitter':
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`)
+        break
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link.url)}`)
+        break
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link.url)}`)
+        break
+      case 'email':
+        window.open(`mailto:?subject=${encodeURIComponent('Discover Kayal LifeOS')}&body=${encodeURIComponent(shareText)}`)
+        break
+    }
+  }
+
+  const handleDeleteLink = async (linkId: string) => {
+    if (!confirm('Are you sure you want to delete this link? This action cannot be undone.')) return
+
+    try {
+      const { error } = await supabase
+        .from('affiliate_links')
+        .delete()
+        .eq('id', linkId)
+
+      if (error) throw error
+
+      await fetchAffiliateData(affiliateData!.id)
+    } catch (error) {
+      console.error('Error deleting link:', error)
+      alert('Failed to delete link')
+    }
+  }
+
+  const handleRequestPayout = () => {
+    if (!affiliateData) return
+    
+    if (affiliateData.stats.pendingCommissions < 50) {
+      alert('Minimum payout amount is $50')
+      return
+    }
+
+    setShowWithdrawModal(true)
+  }
+
+  const handleResetFilters = () => {
+    setSearchQuery('')
+    setSortBy('popular')
+    if (selectedDomain) {
+      setFilteredTools(selectedDomain.tools)
+    }
+  }
+
+  const unreadCount = 0
+
+  // NEW: Handle coupon sharing for affiliates
+  const handleShareCoupon = (coupon: AffiliateCoupon) => {
+    const shareText = `Use code ${coupon.code} for ${coupon.discount}% off at Kayal LifeOS!`
+    navigator.clipboard.writeText(coupon.code)
+    toast.success('Coupon code copied!')
+  }
+
+  // ============================================
+  // LOADING STATE
+  // ============================================
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-neutral-600">Loading your affiliate dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user || !affiliateData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 text-center max-w-md">
+          <Users className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-serif mb-4">Not Signed In</h2>
+          <p className="text-neutral-600 mb-6">Please sign in to view your dashboard.</p>
+          <Button onClick={() => router.push('/member/referral/login')}>Sign In</Button>
+        </Card>
+      </div>
+    )
+  }
+
+  // ============================================
+  // RENDER
+  // ============================================
+  
+  return (
+    <div className="min-h-screen bg-neutral-50">
+      {/* Header */}
+      <header className="bg-white border-b border-neutral-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left side */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/member/dashboard')}
+                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors lg:hidden"
+                title="Back to Member Dashboard"
+              >
+                <ChevronRight className="w-5 h-5 rotate-180" />
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <Gift className="w-4 h-4 text-primary-600" />
+                </div>
+                <span className="font-serif text-lg hidden sm:block">Affiliate Dashboard</span>
+              </div>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden lg:flex items-center gap-1 ml-4">
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    activeTab === 'overview' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'
+                  }`}
+                >
+                  Overview
+                </button>
+                <button
+                  onClick={() => setActiveTab('links')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    activeTab === 'links' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'
+                  }`}
+                >
+                  Link Manager
+                </button>
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    activeTab === 'analytics' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'
+                  }`}
+                >
+                  Analytics
+                </button>
+                <button
+                  onClick={() => setActiveTab('payouts')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    activeTab === 'payouts' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'
+                  }`}
+                >
+                  Payouts
+                </button>
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    activeTab === 'settings' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'
+                  }`}
+                >
+                  Settings
+                </button>
+              </nav>
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center gap-3">
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 hover:bg-neutral-100 rounded-lg hidden sm:block"
+                title="Toggle dark mode"
+              >
+                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+
+              {/* Notifications */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 hover:bg-neutral-100 rounded-lg relative"
+                  title="Notifications"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                onClick={() => fetchAffiliateData(user.id)}
+                disabled={refreshing}
+                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                title="Refresh data"
+              >
+                <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+
+              {/* Help/Support */}
+              <button
+                onClick={() => window.open('/support', '_blank')}
+                className="p-2 hover:bg-neutral-100 rounded-lg hidden sm:block"
+                title="Help & Support"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </button>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 hover:bg-neutral-100 rounded-lg"
+              >
+                {mobileMenuOpen ? <CloseIcon className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+
+              {/* Profile Menu */}
+              <div className="relative hidden sm:block">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2 pl-2 border-l hover:bg-neutral-50 rounded-lg p-1"
+                >
+                  <span className="text-sm font-medium">{affiliateData.name}</span>
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-600 to-secondary-600 rounded-full flex items-center justify-center text-white font-semibold">
+                    {affiliateData.avatar ? (
+                      <img src={affiliateData.avatar} alt={affiliateData.name} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      affiliateData.name.charAt(0)
+                    )}
+                  </div>
+                </button>
+
+                {/* Profile Dropdown */}
+                <AnimatePresence>
+                  {showProfileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-neutral-200 overflow-hidden z-50"
+                    >
+                      <div className="p-4 border-b border-neutral-200 bg-gradient-to-r from-primary-50 to-secondary-50">
+                        <p className="font-medium">{affiliateData.name}</p>
+                        <p className="text-xs text-neutral-500">{affiliateData.email}</p>
+                        <Badge variant="primary" size="sm" className="mt-2">{affiliateData.tier} tier</Badge>
+                      </div>
+                      <div className="p-2">
+                        <button
+                          onClick={() => {
+                            setShowProfileMenu(false)
+                            setActiveTab('settings')
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100 transition text-left"
+                        >
+                          <User className="w-4 h-4" />
+                          <span className="text-sm">My Profile</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowProfileMenu(false)
+                            setActiveTab('settings')
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100 transition text-left"
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span className="text-sm">Account Settings</span>
+                        </button>
+                        <div className="border-t border-neutral-200 my-2"></div>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-50 text-red-600 transition text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span className="text-sm">Sign Out</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center gap-2 text-sm py-2 border-t">
+            <button 
+              onClick={() => router.push('/member/dashboard')}
+              className="text-neutral-500 hover:text-primary-600 transition flex items-center gap-1"
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
+            <ChevronRight className="w-4 h-4 text-neutral-400" />
+            <span className="text-primary-600 font-medium">Affiliate Dashboard</span>
+            {viewMode === 'tools' && selectedDomain && (
+              <>
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
+                <span className="text-primary-600 font-medium">{selectedDomain.name}</span>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Navigation */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="lg:hidden border-t py-2"
+              >
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false) }} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'overview' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'}`}>Overview</button>
+                  <button onClick={() => { setActiveTab('links'); setMobileMenuOpen(false) }} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'links' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'}`}>Link Manager</button>
+                  <button onClick={() => { setActiveTab('analytics'); setMobileMenuOpen(false) }} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'analytics' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'}`}>Analytics</button>
+                  <button onClick={() => { setActiveTab('payouts'); setMobileMenuOpen(false) }} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'payouts' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'}`}>Payouts</button>
+                  <button onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false) }} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'settings' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'}`}>Settings</button>
+                </div>
+
+                {/* Mobile user info */}
+                <div className="flex items-center gap-3 mt-4 pt-4 border-t">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-secondary-600 rounded-full flex items-center justify-center text-white font-semibold">
+                    {affiliateData.name.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{affiliateData.name}</p>
+                    <p className="text-xs text-neutral-500">{affiliateData.email}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="primary" size="sm">{affiliateData.tier} tier</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile actions */}
+                <div className="flex items-center gap-2 mt-4">
+                  <button onClick={() => setDarkMode(!darkMode)} className="flex-1 p-2 bg-neutral-100 rounded-lg flex items-center justify-center gap-2">
+                    {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    <span className="text-sm">Theme</span>
+                  </button>
+                  <button onClick={handleLogout} className="flex-1 p-2 bg-red-50 text-red-600 rounded-lg flex items-center justify-center gap-2">
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm">Sign Out</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* OVERVIEW TAB */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Welcome Banner */}
+            <Card className="p-6 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-xl font-serif mb-2">
+                    Welcome back, {affiliateData.name}! 👋
+                  </h2>
+                  <p className="text-primary-100 text-sm">
+                    You're earning <span className="font-bold text-white">{affiliateData.commissionRates.total}%</span> commission
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-primary-200">Affiliate since</p>
+                  <p className="text-sm font-medium">{affiliateData.joinDate}</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* ── FIX 5: Commission tier status card (NEW) ────────────────────── */}
+            <Card className="p-5 border-primary-200 bg-primary-50">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-primary-800">Your Commission Structure</h3>
+                <Badge variant="primary">{affiliateData.tier} tier</Badge>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                {[
+                  { label: 'Standard',    rate: '25%', detail: 'Any volume',      active: affiliateData.commissionRates.total === 25 },
+                  { label: 'Performance', rate: '30%', detail: '10+ sales/month', active: affiliateData.commissionRates.total === 30 },
+                  { label: 'Strategic',   rate: '35%', detail: 'By application',  active: affiliateData.commissionRates.total >= 35 },
+                ].map(t => (
+                  <div key={t.label} className={`p-2 rounded-lg text-center ${t.active ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600'}`}>
+                    <p className={`text-xs font-medium ${t.active ? 'text-primary-100' : 'text-neutral-500'}`}>{t.label}</p>
+                    <p className={`text-lg font-bold ${t.active ? 'text-white' : 'text-neutral-800'}`}>{t.rate}</p>
+                    <p className={`text-xs ${t.active ? 'text-primary-200' : 'text-neutral-400'}`}>{t.detail}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-primary-700">
+                Currently earning <strong>{affiliateData.commissionRates.total}%</strong>.
+                {affiliateData.commissionRates.total < 30 && ' Reach 10 sales in any 30-day window to auto-upgrade to Performance (30%).'}
+                {affiliateData.commissionRates.total === 30 && ' Apply for Strategic tier (35%) at contact@kayalsoulpath.com'}
+              </p>
+            </Card>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <Card className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-neutral-500">Available Balance</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xl font-bold text-primary-600">
+                        {showBalance ? `$${affiliateData.stats.pendingCommissions}` : '••••'}
+                      </p>
+                      <button onClick={() => setShowBalance(!showBalance)} className="text-neutral-400 hover:text-neutral-600">
+                        {showBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-green-600 mt-1">Next payout: {new Date().getDate() > 15 ? 'Next month 15th' : 'This month 15th'}</p>
+                  </div>
+                  <Wallet className="w-5 h-5 text-green-500" />
+                </div>
+              </Card>
+              
+              <Card className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-neutral-500">Total Earnings</p>
+                    <p className="text-xl font-bold">${affiliateData.stats.totalEarnings}</p>
+                    <p className="text-xs text-blue-600 mt-1">Lifetime: ${affiliateData.stats.lifetimeValue}</p>
+                  </div>
+                  <DollarSign className="w-5 h-5 text-blue-500" />
+                </div>
+              </Card>
+              
+              <Card className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-neutral-500">Conversions</p>
+                    <p className="text-xl font-bold">{affiliateData.stats.totalConversions}</p>
+                    <p className="text-xs text-emerald-600 mt-1">{affiliateData.stats.conversionRate}% conversion</p>
+                  </div>
+                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+                </div>
+              </Card>
+              
+              <Card className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-neutral-500">Your Rank</p>
+                    <p className="text-xl font-bold">#{affiliateData.stats.rank || 42}</p>
+                    <p className="text-xs text-amber-600 mt-1">Top {affiliateData.stats.percentile || 15}%</p>
+                  </div>
+                  <Award className="w-5 h-5 text-amber-500" />
+                </div>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <button onClick={() => setActiveTab('links')} className="p-4 bg-white rounded-lg border hover:border-primary-300 hover:shadow-md transition group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition"><Link2 className="w-5 h-5 text-primary-600" /></div>
+                  <div className="text-left"><p className="font-medium text-sm">Create Links</p><p className="text-xs text-neutral-500">For any tool</p></div>
+                </div>
+              </button>
+              <button onClick={handleRequestPayout} className="p-4 bg-white rounded-lg border hover:border-green-300 hover:shadow-md transition group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition"><Wallet className="w-5 h-5 text-green-600" /></div>
+                  <div className="text-left"><p className="font-medium text-sm">Withdraw</p><p className="text-xs text-neutral-500">${affiliateData.stats.pendingCommissions} available</p></div>
+                </div>
+              </button>
+              <button onClick={() => setShowPaymentModal(true)} className="p-4 bg-white rounded-lg border hover:border-purple-300 hover:shadow-md transition group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition"><CreditCard className="w-5 h-5 text-purple-600" /></div>
+                  <div className="text-left"><p className="font-medium text-sm">Payment</p><p className="text-xs text-neutral-500">Update method</p></div>
+                </div>
+              </button>
+              <button onClick={() => window.open('/marketing-kit', '_blank')} className="p-4 bg-white rounded-lg border hover:border-amber-300 hover:shadow-md transition group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition"><Download className="w-5 h-5 text-amber-600" /></div>
+                  <div className="text-left"><p className="font-medium text-sm">Marketing</p><p className="text-xs text-neutral-500">Tools & banners</p></div>
+                </div>
+              </button>
+            </div>
+
+            {/* ── FIX 6: Affiliate explainer video card (NEW — invisible until URL set) */}
+            {AFFILIATE_EXPLAINER_VIDEO_URL && (
+              <Card className="p-5">
+                <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <Play className="w-4 h-4 text-primary-600" />
+                  How to Get Your First Commission
+                </h3>
+                <VideoEmbed url={AFFILIATE_EXPLAINER_VIDEO_URL} label="Affiliate programme walkthrough" />
+                <p className="text-xs text-neutral-500 mt-2 text-center">
+                  4-minute walkthrough · Dashboard tour · Your first promotional move
+                </p>
+              </Card>
+            )}
+
+            {/* Domain Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {domains.slice(0, 4).map(domain => (
+                <Card 
+                  key={domain.id} 
+                  className="p-3 cursor-pointer hover:shadow-md transition border-2 border-transparent hover:border-primary-200"
+                  onClick={() => {
+                    setSelectedDomain(domain)
+                    setViewMode('tools')
+                    setActiveTab('links')
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">{domain.icon}</span>
+                    <span className="text-xs font-medium truncate">{domain.name}</span>
+                  </div>
+                  <p className="text-lg font-bold text-primary-600">{domain.tools.length}</p>
+                  <p className="text-xs text-neutral-500">tools available</p>
+                </Card>
+              ))}
+              {/* View All Domains Card */}
+              <Card 
+                className="p-3 cursor-pointer hover:shadow-md transition border-2 border-dashed border-neutral-300 hover:border-primary-200 flex items-center justify-center"
+                onClick={() => {
+                  setViewMode('domains')
+                  setActiveTab('links')
+                }}
+              >
+                <div className="text-center">
+                  <span className="text-sm font-medium text-primary-600">View All</span>
+                  <p className="text-xs text-neutral-500">{domains.length} domains</p>
+                </div>
+              </Card>
+            </div>
+
+            {/* Top Performing Tools & Recent Conversions */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Top Tools */}
+              <Card className="p-5">
+                <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
+                  <Target className="w-4 h-4 text-primary-600" />
+                  Your Top Performing Tools
+                </h3>
+                {affiliateData.topTools.length > 0 ? (
+                  <div className="space-y-3">
+                    {affiliateData.topTools.map((tool, index) => (
+                      <div key={tool.toolId} className="flex items-center justify-between p-2 hover:bg-neutral-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm">{tool.toolEmoji}</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{tool.toolName}</p>
+                            <p className="text-xs text-neutral-500">{tool.clicks} clicks · {tool.conversions} sales</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-primary-600">${tool.earnings}</p>
+                          <p className="text-xs text-green-600">{tool.conversionRate.toFixed(1)}% conv.</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-neutral-500 text-center py-8">No sales yet</p>
+                )}
+                <button 
+                  onClick={() => setActiveTab('links')}
+                  className="mt-4 text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                >
+                  Browse all tools
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </Card>
+
+              {/* Recent Conversions */}
+              <Card className="p-5">
+                <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
+                  <Repeat className="w-4 h-4 text-green-600" />
+                  Recent Conversions
+                </h3>
+                {affiliateData.recentConversions.length > 0 ? (
+                  <div className="space-y-3">
+                    {affiliateData.recentConversions.map(conv => (
+                      <div key={conv.id} className="flex items-center justify-between p-2 hover:bg-neutral-50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">{conv.toolName}</p>
+                          <p className="text-xs text-neutral-500">{conv.customerEmail}</p>
+                          <p className="text-xs text-neutral-400">{conv.date}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-primary-600">${conv.commission}</p>
+                          <Badge 
+                            variant={conv.status === 'paid' ? 'primary' : 'secondary'} 
+                            size="sm"
+                          >
+                            {conv.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-neutral-500 text-center py-8">No conversions yet</p>
+                )}
+              </Card>
+            </div>
+
+            {/* Next Milestone */}
+            <Card className="p-5 bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium">Next Milestone: {affiliateData.nextMilestone.type}</h3>
+                <Badge variant="secondary">+{affiliateData.nextMilestone.reward}</Badge>
+              </div>
+              <div className="w-full bg-amber-200 rounded-full h-2 mb-2">
+                <div 
+                  className="bg-amber-600 h-2 rounded-full"
+                  style={{ width: `${Math.min((affiliateData.nextMilestone.current / affiliateData.nextMilestone.needed) * 100, 100)}%` }}
+                />
+              </div>
+              <p className="text-sm text-amber-700">
+                ${affiliateData.nextMilestone.current} / ${affiliateData.nextMilestone.needed} earned
+              </p>
+            </Card>
+          </div>
+        )}
+
+        {/* LINKS TAB */}
+        {activeTab === 'links' && (
+          <div className="space-y-6">
+
+            {/* My Generated Links */}
+            {affiliateData.links.length > 0 && viewMode === 'domains' && (
+              <Card className="p-5">
+                <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
+                  <Link2 className="w-4 h-4 text-primary-600" />
+                  Your Generated Links ({affiliateData.links.length})
+                </h3>
+                <div className="space-y-3">
+                  {affiliateData.links.map(link => (
+                    <div key={link.id} className="p-3 border rounded-lg hover:bg-neutral-50">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-base">{link.toolEmoji}</span>
+                            <p className="text-sm font-medium truncate">{link.name}</p>
+                            <Badge variant={link.status === 'active' ? 'primary' : 'secondary'} size="sm">{link.status}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2 bg-neutral-50 border rounded px-2 py-1">
+                            <p className="text-xs text-neutral-500 truncate flex-1">{link.url}</p>
+                            <button
+                              onClick={() => handleCopy(link.url, link.id)}
+                              className="flex-shrink-0 p-1 hover:bg-neutral-200 rounded"
+                              title="Copy link"
+                            >
+                              {copied === link.id
+                                ? <Check className="w-3 h-3 text-green-600" />
+                                : <Copy className="w-3 h-3 text-neutral-500" />}
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-400">
+                            <span>{link.clicks} clicks</span>
+                            <span>{link.conversions} conversions</span>
+                            <span>${link.earnings} earned</span>
+                            <span>Created {link.createdAt}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => handleShareLink(link)}
+                            className="p-1.5 hover:bg-neutral-100 rounded-lg"
+                            title="Share"
+                          >
+                            <Share2 className="w-4 h-4 text-neutral-500" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLink(link.id)}
+                            className="p-1.5 hover:bg-red-50 rounded-lg"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {viewMode === 'domains' ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-medium">Link Manager</h2>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="primary">{overallStats.totalTools} tools</Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {domains.map((domain) => (
+                    <Card 
+                      key={domain.id} 
+                      className="p-5 hover:shadow-md transition cursor-pointer"
+                      onClick={() => handleDomainClick(domain)}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${domain.color} flex items-center justify-center text-2xl`}>
+                          {domain.icon}
+                        </div>
+                        <Badge variant="outline">{domain.tools.length} tools</Badge>
+                      </div>
+                      <h3 className="font-medium mb-2">{domain.name}</h3>
+                      <p className="text-sm text-neutral-500 line-clamp-2 mb-3">{domain.description}</p>
+                      <Button className="w-full" size="sm">View Tools</Button>
+                    </Card>
+                  ))}
+                </div>
+              </>
+            ) : (
+              selectedDomain && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <button onClick={handleBackToDomains} className="p-2 hover:bg-neutral-100 rounded-lg">
+                        <ArrowLeft className="w-5 h-5" />
+                      </button>
+                      <h2 className="text-lg font-medium">{selectedDomain.name}</h2>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleResetFilters} className="flex items-center gap-2">
+                      <RotateCcw className="w-4 h-4" /> Reset Filters
+                    </Button>
+                  </div>
+
+                  <Card className="p-4 bg-primary-50 border-primary-200">
+                    <p className="text-sm text-primary-700">{selectedDomain.description}</p>
+                  </Card>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                      <input type="text" placeholder="Search tools..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2 border rounded-lg" />
+                    </div>
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="px-3 py-2 border rounded-lg bg-white">
+                      <option value="popular">Most Popular</option>
+                      <option value="name">Name</option>
+                      <option value="price">Price</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredTools.map((tool: any) => {
+                      const typeInfo = getToolTypeInfo(selectedDomain.id)
+                      const TypeIcon = typeInfo.icon
+                      
+                      return (
+                        <Card key={tool.id} className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-xl">
+                                {tool.emoji}
+                              </div>
+                              <div>
+                                <h4 className="font-medium">{tool.name}</h4>
+                                <p className="text-sm text-primary-600">${tool.price}</p>
+                              </div>
+                            </div>
+                            {tool.isPopular && (
+                              <Badge variant="secondary" className="bg-amber-100 text-amber-700">
+                                <Flame className="w-3 h-3 mr-1" /> Popular
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="mb-3">
+                            <Badge variant="outline" className={typeInfo.color}>
+                              <TypeIcon className="w-3 h-3 mr-1" />
+                              {typeInfo.label}
+                              {typeInfo.isSubscription && <span className="ml-1 text-xs">(Monthly)</span>}
+                            </Badge>
+                          </div>
+
+                          <p className="text-sm text-neutral-600 line-clamp-2 mb-3">
+                            {tool.description || tool.subtitle || tool.shortDescription}
+                          </p>
+
+                          {/* Key Features - fixed with getFeatureText */}
+                          {tool.features && tool.features.length > 0 && (
+                            <div className="space-y-1 mb-3">
+                              {tool.features.slice(0, 3).map((feature: any, i: number) => (
+                                <div key={i} className="flex items-start gap-1 text-xs">
+                                  <Sparkles className="w-3 h-3 text-primary-500 mt-0.5 flex-shrink-0" />
+                                  <span className="text-neutral-600 line-clamp-1">{getFeatureText(feature)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {tool.requiresImage && (
+                            <div className="mb-3 text-xs flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 rounded-lg">
+                              <Camera className="w-3 h-3" />
+                              Requires: {tool.requiresImageType === 'both' ? 'Face + Palm photos' : tool.requiresImageType === 'face' ? 'Face photo' : 'Palm photos'}
+                            </div>
+                          )}
+
+                          <Button size="sm" className="w-full" onClick={() => handleGenerateLink(tool)}>
+                            <Plus className="w-4 h-4 mr-2" /> Generate Link
+                          </Button>
+                        </Card>
+                      )
+                    })}
+                  </div>
+
+                  {filteredTools.length === 0 && (
+                    <Card className="p-12 text-center">
+                      <Search className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                      <h3 className="text-lg font-medium mb-2">No tools found</h3>
+                      <p className="text-sm text-neutral-500">Try adjusting your search or filters</p>
+                    </Card>
+                  )}
+                </>
+              )
+            )}
+          </div>
+        )}
+
+        {/* ANALYTICS TAB */}
+        {activeTab === 'analytics' && (
+          <Card className="p-6">
+            <h2 className="text-xl font-serif mb-4">Performance Analytics</h2>
+            <div className="mb-8">
+              <h3 className="text-sm font-medium mb-4">Monthly Performance</h3>
+              <div className="h-64 flex items-end justify-between gap-2">
+                {affiliateData.monthlyStats.map((stat) => (
+                  <div key={stat.month} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="w-full bg-primary-100 rounded-t-lg relative" style={{ height: '120px' }}>
+                      <div className="absolute bottom-0 w-full bg-primary-600 rounded-t-lg transition-all" style={{ height: `${(stat.earnings / 700) * 100}%` }} />
+                    </div>
+                    <span className="text-xs text-neutral-500">{stat.month}</span>
+                    <span className="text-xs font-medium">${stat.earnings}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-xs text-neutral-500">Total Clicks</p><p className="text-lg font-bold">{affiliateData.stats.totalClicks}</p></div>
+              <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-xs text-neutral-500">Unique Visitors</p><p className="text-lg font-bold">{affiliateData.stats.uniqueVisitors}</p></div>
+              <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-xs text-neutral-500">Avg Order Value</p><p className="text-lg font-bold">${affiliateData.stats.averageOrderValue.toFixed(2)}</p></div>
+              <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-xs text-neutral-500">Recurring Revenue</p><p className="text-lg font-bold">${affiliateData.stats.recurringRevenue}</p></div>
+            </div>
+          </Card>
+        )}
+
+        {/* PAYOUTS TAB */}
+        {activeTab === 'payouts' && (
+          <Card className="p-6">
+            <h2 className="text-xl font-serif mb-4">Payouts & Earnings</h2>
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <Card className="p-4 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
+                <p className="text-sm text-primary-100">Available for Payout</p>
+                <p className="text-2xl font-bold">${affiliateData.stats.pendingCommissions}</p>
+                <Button variant="secondary" size="sm" className="mt-3 bg-white text-primary-700" onClick={handleRequestPayout} disabled={affiliateData.stats.pendingCommissions < 50}>Request Payout</Button>
+              </Card>
+              <Card className="p-4"><p className="text-sm text-neutral-500">Total Paid</p><p className="text-2xl font-bold text-green-600">${affiliateData.stats.paidCommissions}</p><p className="text-xs text-neutral-400 mt-2">Lifetime earnings</p></Card>
+              <Card className="p-4"><p className="text-sm text-neutral-500">Next Payout Date</p><p className="text-2xl font-bold text-amber-600">15th</p><p className="text-xs text-neutral-400 mt-2">Monthly on 15th</p></Card>
+            </div>
+            {/* ── FIX 7: Correct payment schedule info ─────────────────────────── */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+              <h3 className="text-sm font-medium text-amber-800 mb-2">Payment Schedule</h3>
+              <ul className="text-xs text-amber-700 space-y-1">
+                <li>• <strong>First payout:</strong> within 7 working days of your first qualifying sale</li>
+                <li>• <strong>All subsequent payouts:</strong> 15th of every month</li>
+                <li>• <strong>Minimum threshold:</strong> $50 — balances below this roll to next month</li>
+                <li>• <strong>Methods:</strong> PayPal or international bank transfer</li>
+              </ul>
+            </div>
+            <div className="text-center py-8"><Wallet className="w-12 h-12 text-neutral-300 mx-auto mb-3" /><p className="text-neutral-600">No payout history yet</p><p className="text-sm text-neutral-500 mt-1">Your payouts will appear here</p></div>
+          </Card>
+        )}
+
+        {/* SETTINGS TAB */}
+        {activeTab === 'settings' && (
+          <Card className="p-6">
+            <h2 className="text-xl font-serif mb-4">Account Settings</h2>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-medium mb-3">Payment Methods</h3>
+                <div className="space-y-3">
+                  {affiliateData.paymentMethods.bank && (
+                    <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-sm font-medium mb-1">🏦 Bank Account</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.bank.bankName}</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.bank.accountName}</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.bank.accountNumber}</p></div>
+                  )}
+                  {affiliateData.paymentMethods.paypal && (
+                    <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-sm font-medium mb-1">💰 PayPal</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.paypal.email}</p></div>
+                  )}
+                  {affiliateData.paymentMethods.crypto && (
+                    <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-sm font-medium mb-1">₿ Cryptocurrency</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.crypto.currency}</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.crypto.address}</p></div>
+                  )}
+                  {!affiliateData.paymentMethods.bank && !affiliateData.paymentMethods.paypal && !affiliateData.paymentMethods.crypto && (
+                    <p className="text-sm text-neutral-500 text-center py-4">No payment methods added</p>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setShowPaymentModal(true)}><CreditCard className="w-4 h-4 mr-2" />Update Payment Methods</Button>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Commission Structure</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-primary-50 rounded-lg"><p className="text-xs text-primary-600">Base Rate</p><p className="text-lg font-bold text-primary-700">{affiliateData.commissionRates.base}%</p></div>
+                  <div className="p-3 bg-green-50 rounded-lg"><p className="text-xs text-green-600">Tier Bonus</p><p className="text-lg font-bold text-green-700">+{affiliateData.commissionRates.tier}%</p></div>
+                  <div className="p-3 bg-amber-50 rounded-lg"><p className="text-xs text-amber-600">Recurring</p><p className="text-lg font-bold text-amber-700">{affiliateData.commissionRates.recurring}%</p></div>
+                  <div className="p-3 bg-purple-50 rounded-lg"><p className="text-xs text-purple-600">Total</p><p className="text-lg font-bold text-purple-700">{affiliateData.commissionRates.total}%</p></div>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Next Milestone</h3>
+                <Card className="p-4 bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
+                  <div className="flex items-center justify-between mb-2"><span className="font-medium">{affiliateData.nextMilestone.type}</span><Badge variant="secondary">+{affiliateData.nextMilestone.reward}</Badge></div>
+                  <div className="w-full bg-amber-200 rounded-full h-2 mb-2"><div className="bg-amber-600 h-2 rounded-full" style={{ width: `${Math.min((affiliateData.nextMilestone.current / affiliateData.nextMilestone.needed) * 100, 100)}%` }} /></div>
+                  <p className="text-xs text-amber-700">${affiliateData.nextMilestone.current} / ${affiliateData.nextMilestone.needed}</p>
+                </Card>
+              </div>
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Preferences</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                    <div className="flex items-center gap-3"><Bell className="w-4 h-4 text-neutral-500" /><div><p className="text-sm font-medium">Email Notifications</p><p className="text-xs text-neutral-500">Receive updates about your earnings</p></div></div>
+                    <label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" defaultChecked={affiliateData.preferences.emailNotifications} onChange={(e) => { setAffiliateData({ ...affiliateData, preferences: { ...affiliateData.preferences, emailNotifications: e.target.checked } }) }} /><div className="w-11 h-6 bg-neutral-200 rounded-full peer peer-checked:bg-primary-600"></div></label>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                    <div className="flex items-center gap-3"><Globe className="w-4 h-4 text-neutral-500" /><div><p className="text-sm font-medium">Currency</p><p className="text-xs text-neutral-500">Display earnings in</p></div></div>
+                    <select className="p-2 border rounded-lg bg-white text-sm" value={affiliateData.preferences.currency} onChange={(e) => { setAffiliateData({ ...affiliateData, preferences: { ...affiliateData.preferences, currency: e.target.value as 'USD' | 'EUR' | 'GBP' } }) }}><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+      </main>
+
+      {/* Create Link Modal */}
+      <AnimatePresence>
+        {showCreateLinkModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateLinkModal(false)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-serif">Generate Affiliate Link</h3><button onClick={() => setShowCreateLinkModal(false)} className="p-2 hover:bg-neutral-100 rounded-lg"><CloseIcon className="w-5 h-5" /></button></div>
+                <div className="space-y-4">
+                  <div><label className="block text-sm font-medium mb-1">Link Name *</label><input type="text" value={newLink.name} onChange={(e) => setNewLink({...newLink, name: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="e.g., Facebook Campaign" /></div>
+                  <div className="border-t pt-4"><h4 className="text-sm font-medium mb-3">Tracking Parameters (Optional)</h4><div className="space-y-3"><input type="text" value={newLink.campaign} onChange={(e) => setNewLink({...newLink, campaign: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="Campaign (e.g., spring_sale)" /><input type="text" value={newLink.source} onChange={(e) => setNewLink({...newLink, source: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="Source (e.g., facebook)" /><input type="text" value={newLink.medium} onChange={(e) => setNewLink({...newLink, medium: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="Medium (e.g., cpc, social)" /></div></div>
+                  {/* ── FIX 8: corrected commission % and cookie duration ──────────── */}
+                  <div className="bg-primary-50 p-3 rounded-lg">
+                    <p className="text-xs text-primary-700 mb-1">Commission Rate</p>
+                    <p className="text-sm font-medium">You'll earn <span className="text-primary-600 font-bold">25%</span> of every sale</p>
+                    <p className="text-xs text-primary-600 mt-1">60-day cookie — any purchase within 60 days earns commission</p>
+                    <p className="text-xs text-primary-500 mt-1">Reach 10 sales/month to auto-upgrade to 30% Performance tier</p>
+                  </div>
+                  <div className="flex gap-2 pt-4"><Button onClick={handleCreateLink} className="flex-1">Generate Link</Button><Button variant="outline" className="flex-1" onClick={() => setShowCreateLinkModal(false)}>Cancel</Button></div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Share Modal */}
+      <AnimatePresence>
+        {showShareModal && selectedLink && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowShareModal(false)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-serif mb-4">Share Your Link</h3>
+              <div className="space-y-3">
+                <Button onClick={() => handleShare('whatsapp', selectedLink)} fullWidth className="bg-green-600 hover:bg-green-700"><Phone className="w-4 h-4 mr-2" />Share on WhatsApp</Button>
+                <Button onClick={() => handleShare('twitter', selectedLink)} fullWidth className="bg-blue-400 hover:bg-blue-500"><Twitter className="w-4 h-4 mr-2" />Share on Twitter</Button>
+                <Button onClick={() => handleShare('facebook', selectedLink)} fullWidth className="bg-blue-600 hover:bg-blue-700"><Facebook className="w-4 h-4 mr-2" />Share on Facebook</Button>
+                <Button onClick={() => handleShare('linkedin', selectedLink)} fullWidth className="bg-blue-700 hover:bg-blue-800"><Linkedin className="w-4 h-4 mr-2" />Share on LinkedIn</Button>
+                <Button onClick={() => handleShare('email', selectedLink)} fullWidth variant="outline"><Mail className="w-4 h-4 mr-2" />Share via Email</Button>
+              </div>
+              <div className="mt-4 pt-4 border-t"><p className="text-xs text-neutral-500 mb-2">Or copy link directly:</p><div className="flex gap-2"><input type="text" value={selectedLink.url} readOnly className="flex-1 p-2 bg-neutral-50 border rounded-lg text-sm" /><button onClick={() => handleCopy(selectedLink.url, 'share-modal')} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">{copied === 'share-modal' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}</button></div></div>
+              <button onClick={() => setShowShareModal(false)} className="mt-4 text-sm text-neutral-500 hover:text-neutral-700 w-full text-center">Close</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Withdrawal Modal */}
+      <AnimatePresence>
+        {showWithdrawModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowWithdrawModal(false)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-serif mb-4">Request Withdrawal</h3>
+              <div className="space-y-4">
+                <div className="bg-primary-50 p-4 rounded-lg"><p className="text-sm text-primary-700 mb-1">Available Balance</p><p className="text-2xl font-bold text-primary-600">${affiliateData.stats.pendingCommissions}</p></div>
+                <div><label className="block text-sm font-medium mb-2">Amount to Withdraw</label><input type="number" className="w-full p-2 border rounded-lg" placeholder="Enter amount" max={affiliateData.stats.pendingCommissions} min={50} /><p className="text-xs text-neutral-500 mt-1">Minimum: $50</p></div>
+                {/* ── FIX 9: correct payment terms in withdrawal modal ──────────── */}
+                <div className="bg-amber-50 p-3 rounded-lg text-xs text-amber-700">
+                  <p className="font-medium mb-1">⏰ Payment Schedule</p>
+                  <p>• First payment: within 7 working days of first qualifying sale</p>
+                  <p>• All subsequent payments: 15th of each month</p>
+                  <p>• Minimum payout: $50 · PayPal or bank transfer</p>
+                </div>
+                <div className="flex gap-2 pt-4"><Button onClick={() => { setShowWithdrawModal(false); alert('Withdrawal request submitted!') }} className="flex-1">Confirm Withdrawal</Button><Button variant="outline" className="flex-1" onClick={() => setShowWithdrawModal(false)}>Cancel</Button></div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {showPaymentModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPaymentModal(false)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-serif mb-4">Payment Methods</h3>
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4"><h4 className="font-medium mb-3 flex items-center gap-2"><Banknote className="w-4 h-4" />Bank Transfer</h4><input type="text" placeholder="Bank Name" className="w-full p-2 border rounded-lg mb-2" /><input type="text" placeholder="Account Name" className="w-full p-2 border rounded-lg mb-2" /><input type="text" placeholder="Account Number" className="w-full p-2 border rounded-lg mb-2" /><input type="text" placeholder="SWIFT Code" className="w-full p-2 border rounded-lg" /></div>
+                <div className="border rounded-lg p-4"><h4 className="font-medium mb-3 flex items-center gap-2"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72c.046-.307.308-.54.616-.54h5.768c2.466 0 4.244.754 5.265 2.242 1.02 1.488.946 3.713-.205 5.798-1.424 2.588-3.96 4.03-7.204 4.03h-1.96l-1.012 5.786a.642.642 0 0 1-.632.54z"/></svg>PayPal</h4><input type="email" placeholder="PayPal Email" className="w-full p-2 border rounded-lg" /></div>
+                <div className="flex gap-2 pt-4"><Button onClick={() => setShowPaymentModal(false)} className="flex-1">Save Changes</Button><Button variant="outline" className="flex-1" onClick={() => setShowPaymentModal(false)}>Cancel</Button></div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function InfoIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  )
+}
+
+
+
