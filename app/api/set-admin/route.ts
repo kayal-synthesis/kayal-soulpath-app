@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { authOptions } from '@/auth'
 
-const prisma = new PrismaClient()
+const prisma = null
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   try {
     const { email } = await request.json()
 
-    const user = await prisma.user.update({
+    const user = await ({} as any).user.update({
       where: { email },
       data: { role: 'admin' }
     })

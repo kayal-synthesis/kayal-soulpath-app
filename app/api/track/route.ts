@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { NextResponse } from 'next/server'
 
-const prisma = new PrismaClient()
+const prisma = null
 
 export async function POST(request: Request) {
   try {
