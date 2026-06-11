@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { ArrowLeft, Search, ArrowRight } from 'lucide-react'
 
 // Import ALL your domain constants
-import { omniSeerTools } from '@/lib/constants/omni-seer-tools'
+import { omniTools } from '@/lib/constants/omni-seer-tools'
 import { voiceTools } from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools } from '@/lib/constants/time-keeper-tools'
@@ -27,7 +27,7 @@ const domains = [
     name: 'Omni-Seer\'s Sanctum',
     icon: '👁️',
     description: 'Ancient wisdom and divination tools for profound life insights. Connect with higher consciousness and receive guidance for your most important life decisions.',
-    toolCount: omniSeerTools.length,
+    toolCount: omniTools.length,
     color: 'from-purple-600 to-indigo-600',
     url: '/domain/omni-seer-sanctum'
   },

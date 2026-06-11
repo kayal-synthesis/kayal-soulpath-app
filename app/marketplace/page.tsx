@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 // Import all your tool constants
-import { omniSeerTools } from '@/lib/constants/omni-seer-tools'
+import { omniTools } from '@/lib/constants/omni-seer-tools'
 import { voiceTools } from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools } from '@/lib/constants/time-keeper-tools'
@@ -28,7 +28,7 @@ import { lifePathTools } from '@/lib/constants/life-path-tools'
 
 // Combine all tools
 const allTools = [
-  ...omniSeerTools,
+  ...omniTools,
   ...voiceTools,
   ...sacredScriptTools,
   ...timeKeeperTools,
@@ -61,7 +61,7 @@ export default function MarketplacePage() {
 
   const categories = [
     { id: 'all', name: 'All Tools', count: allTools.length },
-    { id: 'oracle-temple', name: 'Omni-Seer', count: omniSeerTools.length },
+    { id: 'oracle-temple', name: 'Omni-Seer', count: omniTools.length },
     { id: 'voice', name: 'Voice', count: voiceTools.length },
     { id: 'sacred-script', name: 'Sacred Script', count: sacredScriptTools.length },
     { id: 'time-keeper', name: 'Time Keeper', count: timeKeeperTools.length },
