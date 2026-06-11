@@ -10,7 +10,7 @@ import { ShareButton } from '@/components/ui/ShareButton'
 import { ArrowLeft, Heart, Users } from 'lucide-react'
 
 export default function CompatibilityPage() {
-  const { data: session, status } = useSession()
+  const session = null; const status = 'unauthenticated'
   const router = useRouter()
   const [step, setStep] = useState<'input' | 'result'>('input')
   const [loading, setLoading] = useState(false)
