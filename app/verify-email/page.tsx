@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { Mail, CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function VerifyEmailPage() {
+function VerifyEmailPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -143,5 +144,12 @@ export default function VerifyEmailPage() {
         )}
       </motion.div>
     </div>
+  )
+}
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <VerifyEmailPageInner />
+    </Suspense>
   )
 }

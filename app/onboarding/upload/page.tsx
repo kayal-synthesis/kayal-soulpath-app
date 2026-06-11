@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
@@ -19,7 +20,7 @@ interface UploadedImage {
   }
 }
 
-export default function UploadPage() {
+function UploadPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, onboarding, updateOnboarding } = useUserStore()
@@ -259,5 +260,12 @@ export default function UploadPage() {
         </Button>
       </div>
     </div>
+  )
+}
+export default function UploadPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <UploadPageInner />
+    </Suspense>
   )
 }

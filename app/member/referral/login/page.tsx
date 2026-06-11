@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-export default function ReferralLoginPage() {
+function ReferralLoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -239,5 +240,12 @@ export default function ReferralLoginPage() {
         </Card>
       </motion.div>
     </div>
+  )
+}
+export default function ReferralLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <ReferralLoginPageInner />
+    </Suspense>
   )
 }

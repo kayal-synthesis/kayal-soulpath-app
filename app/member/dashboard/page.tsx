@@ -1,4 +1,5 @@
  'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -112,7 +113,7 @@ function getPersonalDay(dob: string): number {
   return n || 9
 }
 
-export default function MemberDashboard() {
+function MemberDashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -693,5 +694,13 @@ export default function MemberDashboard() {
         onConfirm={handleCancelSubscription}
       />
     </div>
+  )
+}
+
+export default function MemberDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <MemberDashboardInner />
+    </Suspense>
   )
 }

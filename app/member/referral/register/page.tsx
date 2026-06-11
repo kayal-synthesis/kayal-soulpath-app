@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function ReferralRegisterPage() {
+function ReferralRegisterPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -389,5 +390,13 @@ export default function ReferralRegisterPage() {
         </motion.div>
       </div>
     </div>
+  )
+}
+
+export default function ReferralRegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <ReferralRegisterPageInner />
+    </Suspense>
   )
 }

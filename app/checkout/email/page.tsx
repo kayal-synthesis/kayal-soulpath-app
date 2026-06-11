@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
@@ -11,7 +12,7 @@ import { Mail, Lock, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api/client'
 
-export default function EmailCheckoutPage() {
+function EmailCheckoutPageInner() {
   const router = useRouter()
   const { user, updateAnonymousUser } = useAnonymousStore()
   const [email, setEmail] = useState('')
@@ -104,5 +105,12 @@ export default function EmailCheckoutPage() {
         </p>
       </Card>
     </div>
+  )
+}
+export default function EmailCheckoutPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <EmailCheckoutPageInner />
+    </Suspense>
   )
 }

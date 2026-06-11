@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 // app/auth/login/page.tsx
 // Handles all login scenarios:
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const supabase     = createClient()
@@ -268,5 +269,13 @@ export default function LoginPage() {
         </Card>
       </motion.div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <LoginPageInner />
+    </Suspense>
   )
 }

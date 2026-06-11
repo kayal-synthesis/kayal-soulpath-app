@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
@@ -26,7 +27,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-export default function DashboardHelpPage() {
+function DashboardHelpPageInner() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
@@ -350,5 +351,12 @@ export default function DashboardHelpPage() {
         </div>
       </div>
     </div>
+  )
+}
+export default function DashboardHelpPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <DashboardHelpPageInner />
+    </Suspense>
   )
 }

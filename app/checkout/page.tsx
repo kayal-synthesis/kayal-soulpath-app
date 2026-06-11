@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
@@ -279,7 +280,7 @@ const SuccessModal = ({ isOpen, onClose, email, toolName }: SuccessModalProps) =
 // MAIN CHECKOUT PAGE
 // ============================================
 
-export default function CheckoutPage() {
+function CheckoutPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const toolId = searchParams.get('tool') || 'the-seer'
@@ -673,5 +674,12 @@ export default function CheckoutPage() {
         toolName={product.name}
       />
     </>
+  )
+}
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <CheckoutPageInner />
+    </Suspense>
   )
 }

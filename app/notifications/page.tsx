@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
@@ -32,7 +33,7 @@ interface Notification {
   image?: string
 }
 
-export default function NotificationsPage() {
+function NotificationsPageInner() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
@@ -294,5 +295,12 @@ export default function NotificationsPage() {
         </div>
       )}
     </div>
+  )
+}
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <NotificationsPageInner />
+    </Suspense>
   )
 }

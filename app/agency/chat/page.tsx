@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState, useRef, useEffect } from 'react'
@@ -65,7 +66,7 @@ interface Oracle {
   description: string
 }
 
-export default function AgencyChatPage() {
+function AgencyChatPageInner() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -690,5 +691,12 @@ export default function AgencyChatPage() {
         </div>
       </div>
     </div>
+  )
+}
+export default function AgencyChatPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <AgencyChatPageInner />
+    </Suspense>
   )
 }

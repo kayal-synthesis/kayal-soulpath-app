@@ -1,4 +1,5 @@
 'use client'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
@@ -18,7 +19,7 @@ interface Report {
   type: string
 }
 
-export default function FreeReportsPage() {
+function FreeReportsPageInner() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [copied, setCopied] = useState(false)
@@ -150,5 +151,12 @@ export default function FreeReportsPage() {
         </div>
       </Card>
     </div>
+  )
+}
+export default function FreeReportsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <FreeReportsPageInner />
+    </Suspense>
   )
 }
