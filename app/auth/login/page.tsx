@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 'use client'
 // app/auth/login/page.tsx
 // Handles all login scenarios:

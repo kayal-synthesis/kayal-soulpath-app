@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+  experimental: {
+    ...("{experimental}" in require('./package.json') ? {} : {}),
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
