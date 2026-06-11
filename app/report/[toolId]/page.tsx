@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 // app/report/[toolId]/page.tsx
 // Fix: removed non-existent imports (careerTools, spiritualTools, healthTools)
 //      replaced with wellnessTools from wellness-spiritual
