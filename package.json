@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node -e \"const fs=require('fs');if(!fs.existsSync('.next/prerender-manifest.json'))fs.writeFileSync('.next/prerender-manifest.json',JSON.stringify({version:4,routes:{},dynamicRoutes:{},notFoundRoutes:[],preview:{previewModeId:'dev',previewModeSigningKey:'dev',previewModeEncryptionKey:'dev'}}));\"",
     "start": "next start",
     "lint": "next lint",
     "sync-tools": "ts-node scripts/sync-tools.ts"
