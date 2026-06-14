@@ -59,14 +59,14 @@ interface DailyGuidanceProps {
   birthLocation?:     string   // city, country
 }
 
-// Shape returned by GET /guidance/daily
+// Shape returned by GET /daily-card
 interface BackendGuidance {
-  personal_day:        number
+  personalDay:        number
   vibration:           string
-  vibration_meaning:   string
-  energy_level:        number
-  energy_description:  string
-  insight_message:     string
+  vibrationMeaning:   string
+  energyLevel:        number
+  energyDescription:  string
+  insightMessage:     string
   moon_phase?:         string
   universal_day?:      number
   recommended_tools?:  string[]   // tool IDs from synthesis engine
@@ -643,12 +643,12 @@ export const DailyGuidance = ({
   const [loadingTools,     setLoadingTools]     = useState(false)
 
   // ── Resolved values — backend wins, prop is fallback ─────
-  const personalDay       = backendData?.personal_day       ?? personalDayProp
+  const personalDay       = backendData?.personalDay       ?? personalDayProp
   const vibration         = backendData?.vibration          ?? vibrationProp
-  const vibrationMeaning  = backendData?.vibration_meaning  ?? vibrationMeaningProp
-  const energyLevel       = backendData?.energy_level       ?? energyLevelProp
-  const energyDescription = backendData?.energy_description ?? energyDescProp
-  const insightMessage    = backendData?.insight_message    ?? insightMsgProp
+  const vibrationMeaning  = backendData?.vibrationMeaning  ?? vibrationMeaningProp
+  const energyLevel       = backendData?.energyLevel       ?? energyLevelProp
+  const energyDescription = backendData?.energyDescription ?? energyDescProp
+  const insightMessage    = backendData?.insightMessage    ?? insightMsgProp
 
   const arch       = ARCHETYPES[personalDay] ?? ARCHETYPES[5]
   const greetEmoji = greeting.includes('Morning') ? '☀️' : greeting.includes('Afternoon') ? '⛅' : '🌙'
@@ -673,7 +673,7 @@ export const DailyGuidance = ({
       if (birthLocation) params.set('birth_location', birthLocation)
       if (userId)        params.set('user_id',        userId)
 
-      const res = await fetch(`${API_BASE}/guidance/daily?${params.toString()}`, {
+      const res = await fetch(`${API_BASE}/daily-card?${params.toString()}`, {
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(10000), // 10 second timeout
       })
@@ -754,7 +754,7 @@ export const DailyGuidance = ({
       if (userId)        params.set('user_id',        userId ?? '')
       params.set('name', userName)
 
-      const res = await fetch(`${API_BASE}/guidance/pdf?${params.toString()}`, {
+      const res = await fetch(`${API_BASE}/daily-card/pdf?${params.toString()}`, {
         headers: { 'Content-Type': 'application/json' },
       })
 
