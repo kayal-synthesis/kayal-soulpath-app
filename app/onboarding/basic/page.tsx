@@ -557,7 +557,7 @@ export default function BasicInfoPage() {
 
     setLoadingWelcome(true)
     try {
-      const response = await fetch('${process.env.NEXT_PUBLIC_SYNTHESIS_ENGINE_URL}/welcome', {
+      const response = await fetch('https://api.kayalsoulpath.com/welcome', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
