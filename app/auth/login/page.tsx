@@ -65,7 +65,7 @@ function LoginPageInner() {
     setLoading(true)
     setError('')
     try {
-      const callbackUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://app.kayalsoulpath.com") +
+      const callbackUrl = "https://app.kayalsoulpath.com" +
         '/auth/callback?next=' + encodeURIComponent(redirectTo)
       const { error } = await supabase.auth.signInWithOtp({
         email,
