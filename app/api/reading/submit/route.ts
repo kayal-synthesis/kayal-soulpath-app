@@ -25,7 +25,8 @@ const supabaseAdmin = createClient(
 // which is already set to http://127.0.0.1:8000 in your .env.local
 const SYNTHESIS_API = process.env.SYNTHESIS_API_URL
                    || process.env.NEXT_PUBLIC_SYNTHESIS_ENGINE_URL
-                   || 'http://127.0.0.1:8000'
+                   || 'https://api.kayalsoulpath.com'
+                   || 'https://api.kayalsoulpath.com'
 const SYNTHESIS_KEY = process.env.SYNTHESIS_API_KEY
                    || process.env.INTERNAL_API_KEY
                    || ''
@@ -140,7 +141,7 @@ async function processReading(
     const headers: Record<string, string> = {}
     if (SYNTHESIS_KEY) headers['X-API-Key'] = SYNTHESIS_KEY
 
-    const apiResponse = await fetch(`${SYNTHESIS_API}/synthesis`, {
+    const apiResponse = await fetch(`${SYNTHESIS_API}/api/reading/submit`, {
       method:  'POST',
       headers,
       body:    apiForm,
