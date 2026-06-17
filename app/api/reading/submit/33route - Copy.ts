@@ -142,7 +142,7 @@ async function processReading(
     const headers: Record<string, string> = {}
     if (SYNTHESIS_KEY) headers['X-API-Key'] = SYNTHESIS_KEY
 
-    const apiResponse = await fetch(`${SYNTHESIS_API}/predict`, {
+    const apiResponse = await fetch(`${SYNTHESIS_API}/api/reading/submit`, {
       method:  'POST',
       headers,
       body:    apiForm,
