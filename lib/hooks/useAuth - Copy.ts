@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAnonymousStore } from '@/lib/store/anonymousStore'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 interface User {
@@ -39,34 +38,15 @@ export const useAuth = (): AuthReturn => {
         const storedUser = localStorage.getItem('kayal_user')
         if (storedUser) {
           setUser(JSON.parse(storedUser))
-          setIsLoading(false)
-          return
-        }
-
-        // Check Supabase session
-        const supabase = createClient()
-        const { data: { user: sbUser } } = await supabase.auth.getUser()
-        if (sbUser) {
-          const mappedUser: User = {
-            id:        sbUser.id,
-            name:      sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'User',
-            email:     sbUser.email || '',
-            dob:       sbUser.user_metadata?.dob,
-            createdAt: sbUser.created_at,
-          }
-          setUser(mappedUser)
-          localStorage.setItem('kayal_user', JSON.stringify(mappedUser))
-          setIsLoading(false)
-          return
-        }
-
-        // Verify with server
-        const response = await fetch('/api/auth/session')
-        if (response.ok) {
-          const sessionData = await response.json()
-          if (sessionData.user) {
-            setUser(sessionData.user)
-            localStorage.setItem('kayal_user', JSON.stringify(sessionData.user))
+        } else {
+          // Verify with server
+          const response = await fetch('/api/auth/session')
+          if (response.ok) {
+            const sessionData = await response.json()
+            if (sessionData.user) {
+              setUser(sessionData.user)
+              localStorage.setItem('kayal_user', JSON.stringify(sessionData.user))
+            }
           }
         }
       } catch (error) {
@@ -83,30 +63,30 @@ export const useAuth = (): AuthReturn => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        toast.error(error.message || 'Login failed')
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        toast.error(error.error || 'Login failed')
         return false
       }
-      if (data.user) {
-        const mappedUser: User = {
-          id:        data.user.id,
-          name:      data.user.user_metadata?.name || email.split('@')[0],
-          email:     data.user.email || '',
-          dob:       data.user.user_metadata?.dob,
-          createdAt: data.user.created_at,
-        }
-        setUser(mappedUser)
-        localStorage.setItem('kayal_user', JSON.stringify(mappedUser))
-        if (anonymousUser) {
-          await transferAnonymousData(mappedUser.id, anonymousUser)
-          clearAnonymousUser()
-        }
-        toast.success('Welcome back!')
-        return true
+
+      const userData = await response.json()
+      setUser(userData)
+      localStorage.setItem('kayal_user', JSON.stringify(userData))
+      
+      // Transfer anonymous data if exists
+      if (anonymousUser) {
+        await transferAnonymousData(userData.id, anonymousUser)
+        clearAnonymousUser()
       }
-      return false
+      
+      toast.success('Welcome back!')
+      return true
     } catch (error) {
       console.error('Login error:', error)
       toast.error('Login failed. Please try again.')
@@ -120,30 +100,30 @@ export const useAuth = (): AuthReturn => {
   const signUp = async (email: string, password: string, userData?: any): Promise<any> => {
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { name: userData?.name, dob: userData?.dob } }
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          password,
+          name: userData?.name,
+          dob: userData?.dob,
+          ...userData?.onboardingData 
+        })
       })
-      if (error) {
-        toast.error(error.message || 'Registration failed')
+
+      if (!response.ok) {
+        const error = await response.json()
+        toast.error(error.error || 'Registration failed')
         return null
       }
-      if (data.user) {
-        const mappedUser: User = {
-          id:        data.user.id,
-          name:      userData?.name || email.split('@')[0],
-          email:     data.user.email || '',
-          dob:       userData?.dob,
-          createdAt: data.user.created_at,
-        }
-        setUser(mappedUser)
-        localStorage.setItem('kayal_user', JSON.stringify(mappedUser))
-        toast.success('Account created successfully!')
-        return mappedUser
-      }
-      return null
+
+      const newUser = await response.json()
+      setUser(newUser)
+      localStorage.setItem('kayal_user', JSON.stringify(newUser))
+      
+      toast.success('Account created successfully!')
+      return newUser
     } catch (error) {
       console.error('Signup error:', error)
       toast.error('Failed to create account')
@@ -156,8 +136,7 @@ export const useAuth = (): AuthReturn => {
   // Logout function
   const logout = async (): Promise<void> => {
     try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
+      await fetch('/api/auth/logout', { method: 'POST' })
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
@@ -181,6 +160,51 @@ export const useAuth = (): AuthReturn => {
     }
   }
 
+  // Add purchase to user account
+  const addPurchase = async (userId: string, toolId: string, images?: any): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/user/add-purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          toolId,
+          images,
+          purchaseDate: new Date().toISOString()
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to add purchase')
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to add purchase:', error)
+      return false
+    }
+  }
+
+  // Join referral community
+  const joinReferral = async (userId: string, data: any): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/referral/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, ...data })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to join referral')
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to join referral:', error)
+      return false
+    }
+  }
+
   return {
     user,
     isLoading,
@@ -189,26 +213,38 @@ export const useAuth = (): AuthReturn => {
     signUp,
     logout,
     transferAnonymousData,
+    // Additional helper functions (not in return type but useful)
+    // You can add these to the return type if needed
   }
 }
 
+// Optional: Export additional helpers
 export const useAuthHelpers = () => {
   const { user } = useAuth()
-
+  
   const addPurchase = async (toolId: string, images?: any) => {
     if (!user) return false
+    
     try {
       const response = await fetch('/api/user/add-purchase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, toolId, images, purchaseDate: new Date().toISOString() })
+        body: JSON.stringify({
+          userId: user.id,
+          toolId,
+          images,
+          purchaseDate: new Date().toISOString()
+        })
       })
       return response.ok
-    } catch { return false }
+    } catch (error) {
+      return false
+    }
   }
 
   const joinReferral = async (data: any) => {
     if (!user) return false
+    
     try {
       const response = await fetch('/api/referral/create', {
         method: 'POST',
@@ -216,7 +252,9 @@ export const useAuthHelpers = () => {
         body: JSON.stringify({ userId: user.id, ...data })
       })
       return response.ok
-    } catch { return false }
+    } catch (error) {
+      return false
+    }
   }
 
   return { addPurchase, joinReferral }
