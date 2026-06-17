@@ -122,7 +122,7 @@ async function processReading(
     apiForm.append('full_name',     userData.full_name    || '')
     apiForm.append('date_of_birth', userData.date_of_birth || '')
     apiForm.append('job_id',        jobId)
-    apiForm.append('user_token',    userToken || '')
+    apiForm.append('user_token',    userId || '')
 
     if (userData.birth_time)    apiForm.append('birth_time',     userData.birth_time)
     if (userData.birth_location)apiForm.append('birth_location', userData.birth_location)
