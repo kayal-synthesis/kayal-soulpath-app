@@ -673,14 +673,37 @@ export const DailyGuidance = ({
       if (birthLocation) params.set('birth_location', birthLocation)
       if (userId)        params.set('user_id',        userId)
 
-      const res = await fetch(`${API_BASE}/daily-card?${params.toString()}`, {
-        headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(10000), // 10 second timeout
-      })
+      const isPersonal = !!(dob && userId)
+      const endpoint = isPersonal
+        ? `${API_BASE}/daily-insight/${userId}`
+        : `${API_BASE}/daily-card?${params.toString()}`
+      const fetchOptions: RequestInit = isPersonal
+        ? {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: userName || '',
+              dob: dob,
+              birth_time: birthTime || null,
+              birth_location: birthLocation || null,
+            }),
+          }
+        : {
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(10000),
+          }
+      const res = await fetch(endpoint, fetchOptions)
 
       if (!res.ok) throw new Error(`API ${res.status}`)
 
-      const data: BackendGuidance = await res.json()
+      const raw = await res.json()
+      // Normalise field names — /daily-insight uses different keys
+      const data: BackendGuidance = {
+        ...raw,
+        embrace: raw.embrace ?? raw.opportunities ?? undefined,
+        avoid:   raw.avoid   ?? raw.avoidToday    ?? undefined,
+        advice:  raw.advice  ?? raw.insightMessage ?? undefined,
+      }
       setBackendData(data)
       setFetchState('success')
     } catch (err) {
