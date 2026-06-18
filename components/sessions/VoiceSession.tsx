@@ -319,8 +319,8 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
     cleanupAll(); setPhase('ended')
   },[cleanupAll])
 
-  const openWS=useCallback((userId:string)=>{
-    const ws=new WebSocket(`${WS_BASE}/agency/voice/${domain}?session_id=${sessionId}&user_id=${userId}&subscription_tier=voice_access`)
+    const ws=new WebSocket(`${WS_BASE}/agency/voice/${userId}/${toolId}`)
+    const ws=new WebSocket(`${WS_BASE}/agency/voice/${userId}/${toolId}`)
     wsRef.current=ws
     ws.onopen=()=>ws.send(JSON.stringify({type:'history',data:buildHistory()}))
     ws.onmessage=async ev=>{
