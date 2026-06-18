@@ -1,20 +1,20 @@
 'use client'
 
 /**
- * components/sessions/VoiceSession.tsx  — v2
+ * components/sessions/VoiceSession.tsx  â€” v2
  * ============================================
- * Voice of Prophecy — live call interface.
+ * Voice of Prophecy â€” live call interface.
  *
- * Layout (top → bottom, FIXED):
+ * Layout (top â†’ bottom, FIXED):
  *   [Synthesis badge]
- *   [Orb — centred, fills remaining space]
+ *   [Orb â€” centred, fills remaining space]
  *   [Status dot + label]
- *   [Timer bar — only when active]
- *   [Transcript — scrollable, max 3 visible]
- *   [Controls + hint — PINNED TO BOTTOM, never moves]
+ *   [Timer bar â€” only when active]
+ *   [Transcript â€” scrollable, max 3 visible]
+ *   [Controls + hint â€” PINNED TO BOTTOM, never moves]
  *
  * The controls section uses flexShrink:0 and sits
- * at the bottom of a flex column — guaranteed fixed.
+ * at the bottom of a flex column â€” guaranteed fixed.
  */
 
 import {
@@ -72,16 +72,16 @@ async function loadSynthesis(userId:string, domain:string, signal?:AbortSignal):
     const fullName=r.full_name??'', firstName=fullName.split(' ')[0]||'Seeker'
     const pills:string[]=[]
     const lp=r.life_path??num.core?.life_path??null; if(lp) pills.push(`LP ${lp}`)
-    const sun=r.sun_sign??null; if(sun) pills.push(`☉ ${sun}`)
+    const sun=r.sun_sign??null; if(sun) pills.push(`â˜‰ ${sun}`)
     const py=r.personal_year??cyc.personal_year??null; if(py) pills.push(`PY ${py}`)
     const pin=num.pinnacles?.current?.number??null; if(pin) pills.push(`Pinnacle ${pin}`)
     const face=r.face_archetype??r.face_analysis?.archetype??null; if(face) pills.push(face)
-    const palm=r.palm_element??r.palm_analysis?.element??null; if(palm) pills.push(`Palm · ${palm}`)
+    const palm=r.palm_element??r.palm_analysis?.element??null; if(palm) pills.push(`Palm Â· ${palm}`)
     const loc=r.birth_location??null
     const bl=typeof loc==='object'?loc?.place_name??loc?.city??null:loc
     const lines=[
-      `KAYAL SYNTHESIS — ${fullName}`,
-      `Life Path: ${lp??'?'} · Sun: ${sun??'?'} · PY: ${py??'?'}`,
+      `KAYAL SYNTHESIS â€” ${fullName}`,
+      `Life Path: ${lp??'?'} Â· Sun: ${sun??'?'} Â· PY: ${py??'?'}`,
       r.reading?r.reading.slice(0,3000):'',
       'Respond in natural spoken sentences. No bullet points. Specific to this person.',
     ].filter(Boolean)
@@ -89,9 +89,9 @@ async function loadSynthesis(userId:string, domain:string, signal?:AbortSignal):
   } catch(e:any){ if(e?.name==='AbortError') throw e; return empty }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Waveform — radial bars around the orb
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Waveform â€” radial bars around the orb
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Waveform({ accent, state }: { accent:string; state:AmbientState }) {
   const ref=useRef<HTMLCanvasElement>(null), frame=useRef(0), t=useRef(0)
   useEffect(()=>{
@@ -126,9 +126,9 @@ function Waveform({ accent, state }: { accent:string; state:AmbientState }) {
   return <canvas ref={ref} style={{position:'absolute',width:240,height:240,left:'50%',top:'50%',transform:'translate(-50%,-50%)',pointerEvents:'none'}}/>
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Oracle orb
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OracleOrb({ emoji, accent, phase, isDark }: { emoji:string;accent:string;phase:Phase;isDark:boolean }) {
   const state: AmbientState = phase==='speaking'?'speaking':phase==='thinking'?'thinking':phase==='listening'?'listening':'idle'
 
@@ -186,9 +186,9 @@ function OracleOrb({ emoji, accent, phase, isDark }: { emoji:string;accent:strin
   )
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Inner session
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
   const { user, isLoading:authLoading, isAuthenticated } = useAuth()
   const router   = useRouter()
@@ -320,7 +320,6 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
   },[cleanupAll])
 
     const ws=new WebSocket(`${WS_BASE}/agency/voice/${userId}/${toolId}`)
-    const ws=new WebSocket(`${WS_BASE}/agency/voice/${userId}/${toolId}`)
     wsRef.current=ws
     ws.onopen=()=>ws.send(JSON.stringify({type:'history',data:buildHistory()}))
     ws.onmessage=async ev=>{
@@ -380,18 +379,18 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
   const dotColour=phase==='speaking'?accent:phase==='thinking'?'#8b7cc8':phase==='listening'?'#4a9b8e':d('rgba(0,0,0,0.2)','rgba(255,255,255,0.2)')
 
   const phaseLabel:Record<Phase,string>={
-    idle:'Ready to begin',checking:'Checking…',loading:'Loading your synthesis…',
-    connecting:'Connecting to oracle…',ready:'Hold to speak',listening:'Listening…',
-    thinking:'Oracle is thinking…',speaking:'Oracle is speaking',ended:'Session complete',
+    idle:'Ready to begin',checking:'Checkingâ€¦',loading:'Loading your synthesisâ€¦',
+    connecting:'Connecting to oracleâ€¦',ready:'Hold to speak',listening:'Listeningâ€¦',
+    thinking:'Oracle is thinkingâ€¦',speaking:'Oracle is speaking',ended:'Session complete',
   }
 
-  // ── Session ended ──────────────────────────────────────────
+  // â”€â”€ Session ended â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if(phase==='ended') return(
     <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',gap:20,overflowY:'auto'}}>
       <div style={{fontSize:52}}>{tool.emoji}</div>
       <div style={{textAlign:'center'}}>
         <h2 style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:26,fontWeight:400,color:d('rgba(30,22,12,0.88)','rgba(239,230,214,0.9)'),marginBottom:6}}>{limitHit?'Session complete':'Session ended'}</h2>
-        <p style={{fontSize:13,letterSpacing:'0.06em',textTransform:'uppercase',color:d('rgba(0,0,0,0.35)','rgba(255,255,255,0.3)')}}>{fmt(elapsed)} · {turns.length} exchanges{synthesis?.first_name?` · ${synthesis.first_name}`:''}</p>
+        <p style={{fontSize:13,letterSpacing:'0.06em',textTransform:'uppercase',color:d('rgba(0,0,0,0.35)','rgba(255,255,255,0.3)')}}>{fmt(elapsed)} Â· {turns.length} exchanges{synthesis?.first_name?` Â· ${synthesis.first_name}`:''}</p>
       </div>
       {turns.length>0&&(
         <div style={{width:'100%',maxWidth:440,maxHeight:180,overflowY:'auto',borderRadius:16,padding:'14px 16px',background:d('rgba(255,255,255,0.6)','rgba(255,255,255,0.04)'),border:`1px solid ${d('rgba(0,0,0,0.1)','rgba(255,255,255,0.08)')}`,backdropFilter:'blur(12px)'}}>
@@ -399,7 +398,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
           {turns.map(t_=>(
             <div key={t_.id} style={{fontSize:14,lineHeight:1.65,marginBottom:8,fontFamily:"'EB Garamond',Georgia,serif"}}>
               <span style={{fontWeight:600,color:t_.role==='oracle'?accent:d('rgba(0,0,0,0.45)','rgba(255,255,255,0.4)')}}>{t_.role==='oracle'?tool.name:(synthesis?.first_name??'You')}:</span>{' '}
-              <span style={{color:d('rgba(30,22,12,0.72)','rgba(180,168,152,0.78)')}}>{t_.text.length>100?t_.text.slice(0,100)+'…':t_.text}</span>
+              <span style={{color:d('rgba(30,22,12,0.72)','rgba(180,168,152,0.78)')}}>{t_.text.length>100?t_.text.slice(0,100)+'â€¦':t_.text}</span>
             </div>
           ))}
         </div>
@@ -414,7 +413,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
     </div>
   )
 
-  // ── Main ───────────────────────────────────────────────────
+  // â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return(
     <div style={{display:'flex',flexDirection:'column',height:'100%',overflow:'hidden'}}>
 
@@ -423,7 +422,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
         {synthesis?.has_synthesis?(
           <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:14,background:isDark?`${accent}0e`:`${accent}0a`,border:`1px solid ${accent}20`,backdropFilter:'blur(10px)',flexWrap:'wrap'}}>
             <Sparkles style={{width:13,height:13,color:accent,flexShrink:0}}/>
-            <span style={{fontSize:13,color:`${accent}cc`,flex:1,fontFamily:"'EB Garamond',Georgia,serif"}}>{synthesis.first_name}{synthesis.birth_location?` · ${synthesis.birth_location}`:''}</span>
+            <span style={{fontSize:13,color:`${accent}cc`,flex:1,fontFamily:"'EB Garamond',Georgia,serif"}}>{synthesis.first_name}{synthesis.birth_location?` Â· ${synthesis.birth_location}`:''}</span>
             <div style={{display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
               {synthesis.pills.slice(0,5).map(p=>(
                 <span key={p} style={{fontSize:12,padding:'2px 8px',borderRadius:999,background:`${accent}10`,color:`${accent}cc`,border:`1px solid ${accent}1e`}}>{p}</span>
@@ -435,12 +434,12 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
           </div>
         ):(
           <div style={{padding:'8px 14px',borderRadius:12,background:isDark?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)',border:`1px solid ${d('rgba(0,0,0,0.08)','rgba(255,255,255,0.07)')}`,textAlign:'center',backdropFilter:'blur(8px)'}}>
-            <p style={{fontSize:14,color:d('rgba(0,0,0,0.38)','rgba(255,255,255,0.32)')}}>{authLoading?'Loading…':'Complete a reading for a personalised session'}</p>
+            <p style={{fontSize:14,color:d('rgba(0,0,0,0.38)','rgba(255,255,255,0.32)')}}>{authLoading?'Loadingâ€¦':'Complete a reading for a personalised session'}</p>
           </div>
         )}
       </div>
 
-      {/* Oracle stage — fills remaining space */}
+      {/* Oracle stage â€” fills remaining space */}
       <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 24px',gap:14,minHeight:0}}>
 
         <OracleOrb emoji={tool.emoji} accent={accent} phase={phase} isDark={isDark}/>
@@ -460,7 +459,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
             <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:d('rgba(0,0,0,0.3)','rgba(255,255,255,0.28)')}}>
               <span style={{fontFamily:'monospace'}}>{fmt(elapsed)}</span>
               <span>{tool.sessionDurationMinutes} min</span>
-              <span style={{fontFamily:'monospace',color:limitPct>85?'rgba(180,84,84,0.75)':undefined}}>{remaining!==null?fmt(remaining):'∞'}</span>
+              <span style={{fontFamily:'monospace',color:limitPct>85?'rgba(180,84,84,0.75)':undefined}}>{remaining!==null?fmt(remaining):'âˆž'}</span>
             </div>
           </div>
         )}
@@ -504,7 +503,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
         </div>
       )}
 
-      {/* ── CONTROLS — PINNED TO BOTTOM, NEVER MOVES ── */}
+      {/* â”€â”€ CONTROLS â€” PINNED TO BOTTOM, NEVER MOVES â”€â”€ */}
       <div style={{
         padding:        '0 24px 32px',
         flexShrink:     0,
@@ -514,7 +513,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
         gap:            14,
       }}>
 
-        {/* Idle — begin */}
+        {/* Idle â€” begin */}
         {phase==='idle'&&(
           <button onClick={startSession} style={{
             width:'100%',maxWidth:380,padding:'16px',borderRadius:22,
@@ -596,7 +595,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
               </button>
             </div>
 
-            {/* Hint — directly below controls, at the very bottom */}
+            {/* Hint â€” directly below controls, at the very bottom */}
             <p style={{
               fontSize:13,letterSpacing:'0.05em',textTransform:'uppercase',
               color:
@@ -606,10 +605,10 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
                 d('rgba(0,0,0,0.32)','rgba(255,255,255,0.32)'),
               transition:'color 0.4s',
             }}>
-              {phase==='listening'?'Recording · release when done':
-               phase==='thinking' ?'Oracle is responding…':
+              {phase==='listening'?'Recording Â· release when done':
+               phase==='thinking' ?'Oracle is respondingâ€¦':
                phase==='speaking' ?'Oracle is speaking':
-               'Hold to speak · release to send'}
+               'Hold to speak Â· release to send'}
             </p>
           </>
         )}
@@ -618,9 +617,9 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Page export
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function VoiceSession() {
   const params = useParams()
   const toolId = params.toolId as string
