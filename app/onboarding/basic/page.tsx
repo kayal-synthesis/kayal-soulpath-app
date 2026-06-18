@@ -5,399 +5,245 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAnonymousStore } from '@/lib/store/anonymousStore'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { 
-  Sparkles, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  User,
-  ArrowRight,
-  Check,
-  Loader2,
-  Heart,
-  Star,
-  Moon,
-  Compass,
-  Infinity,
-  Feather,
-  Share2,
-  X,
-  Sun,
-  Zap,
-  Brain,
-  Info,
-  ChevronDown,
-  ChevronUp,
-  HelpCircle
+import {
+  Sparkles, Calendar, Clock, MapPin, User, ArrowRight,
+  Check, Loader2, Heart, Star, Moon, Compass, Infinity,
+  Feather, Share2, X, ChevronDown, ChevronUp, Info,
+  HelpCircle, Shield, Users, Zap
 } from 'lucide-react'
 import { format, subYears } from 'date-fns'
 import confetti from 'canvas-confetti'
 import { toast } from 'sonner'
 
-// ============================================
-// WELCOME MODAL - DYNAMIC FROM BACKEND
-// ============================================
+// ─── Animated star field ──────────────────────────────────────
+function StarField() {
+  const stars = Array.from({ length: 80 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2 + 0.5,
+    duration: Math.random() * 4 + 2,
+    delay: Math.random() * 4,
+  }))
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {stars.map(s => (
+        <motion.div
+          key={s.id}
+          className="absolute rounded-full bg-white"
+          style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size }}
+          animate={{ opacity: [0.1, 0.8, 0.1], scale: [1, 1.3, 1] }}
+          transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  )
+}
 
+// ─── Cosmic background ────────────────────────────────────────
+function CosmicBackground() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(135deg, #0f0c29 0%, #1a0533 35%, #24074a 60%, #0d1b3e 100%)'
+      }} />
+      <div className="absolute inset-0 opacity-30" style={{
+        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+        backgroundSize: '32px 32px'
+      }} />
+      <motion.div
+        className="absolute rounded-full"
+        style={{ width: 600, height: 600, top: '-20%', left: '-10%', background: 'radial-gradient(circle, rgba(147,51,234,0.25) 0%, transparent 70%)' }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute rounded-full"
+        style={{ width: 500, height: 500, bottom: '-15%', right: '-10%', background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)' }}
+        animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+      />
+      <motion.div
+        className="absolute rounded-full"
+        style={{ width: 300, height: 300, top: '40%', right: '20%', background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)' }}
+        animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+      />
+      <StarField />
+    </div>
+  )
+}
+
+// ─── Welcome Modal ────────────────────────────────────────────
 interface WelcomeParagraph {
-  icon: string
-  title: string
-  content: string
-  bg: string
-  border: string
-  iconBg: string
+  icon: string; title: string; content: string
+  bg: string; border: string; iconBg: string
 }
 
-interface WelcomeModalProps {
-  isOpen: boolean
-  onClose: () => void
-  welcomeData: {
-    life_path: number
-    age: number
-    paragraphs: WelcomeParagraph[]
-  } | null
+function WelcomeModal({ isOpen, onClose, welcomeData, onShare }: {
+  isOpen: boolean; onClose: () => void
+  welcomeData: { life_path: number; age: number; paragraphs: WelcomeParagraph[] } | null
   onShare: () => void
-}
-
-const WelcomeModal = ({ isOpen, onClose, welcomeData, onShare }: WelcomeModalProps) => {
-  const [isVisible, setIsVisible] = useState(isOpen)
-  const [showAllInsights, setShowAllInsights] = useState(false)
-  const modalRef = useRef<HTMLDivElement>(null)
+}) {
+  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true)
-      confetti({
-        particleCount: 25,
-        spread: 40,
-        origin: { y: 0.5 },
-        colors: ['#5D3FD3', '#D4AF37', '#9F7AEA'],
-        startVelocity: 20,
-        decay: 0.9,
-        ticks: 200
-      })
+      confetti({ particleCount: 60, spread: 70, origin: { y: 0.4 },
+        colors: ['#a855f7', '#D4AF37', '#818cf8', '#38bdf8'], startVelocity: 25, decay: 0.92, ticks: 250 })
     }
   }, [isOpen])
 
-  const handleClose = () => {
-    setIsVisible(false)
-    onClose()
-  }
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) handleClose()
-  }
-
-  const getIcon = (iconName: string) => {
-    const icons: Record<string, React.ReactNode> = {
-      Star: <Star className="w-5 h-5 text-primary-600" />,
-      Heart: <Heart className="w-5 h-5 text-rose-500" />,
-      Compass: <Compass className="w-5 h-5 text-emerald-600" />,
-      Moon: <Moon className="w-5 h-5 text-indigo-500" />,
-      Feather: <Feather className="w-5 h-5 text-amber-600" />,
-      Infinity: <Infinity className="w-5 h-5 text-purple-500" />,
-      Sparkles: <Sparkles className="w-5 h-5 text-secondary-600" />,
+  const getIcon = (name: string) => {
+    const map: Record<string, React.ReactNode> = {
+      Star: <Star className="w-5 h-5 text-amber-400" />,
+      Heart: <Heart className="w-5 h-5 text-rose-400" />,
+      Compass: <Compass className="w-5 h-5 text-emerald-400" />,
+      Moon: <Moon className="w-5 h-5 text-indigo-400" />,
+      Feather: <Feather className="w-5 h-5 text-amber-500" />,
+      Infinity: <Infinity className="w-5 h-5 text-purple-400" />,
+      Sparkles: <Sparkles className="w-5 h-5 text-violet-400" />,
     }
-    return icons[iconName] || <Sparkles className="w-5 h-5 text-primary-600" />
+    return map[name] || <Sparkles className="w-5 h-5 text-violet-400" />
   }
 
-  if (!isVisible || !welcomeData) return null
-
-  const { paragraphs } = welcomeData
-  const firstThree = paragraphs.slice(0, 3)
-  const remaining = paragraphs.slice(3)
+  if (!isOpen || !welcomeData) return null
+  const first = welcomeData.paragraphs.slice(0, 3)
+  const rest  = welcomeData.paragraphs.slice(3)
 
   return (
     <AnimatePresence>
-      {isVisible && (
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: 'rgba(10,5,25,0.85)', backdropFilter: 'blur(12px)' }}
+        onClick={onClose}
+      >
         <motion.div
-          ref={modalRef}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
-          onClick={handleOverlayClick}
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+          className="w-full max-w-lg max-h-[88vh] overflow-hidden flex flex-col rounded-3xl"
+          style={{ background: 'linear-gradient(145deg, #1a0a2e, #0f1a3e)', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 0 60px rgba(168,85,247,0.15)' }}
+          onClick={e => e.stopPropagation()}
         >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 10 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="relative bg-gradient-to-br from-primary-900 via-primary-800 to-secondary-900 px-6 py-6 text-center flex-shrink-0">
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-secondary-400 rounded-full blur-3xl" />
+          {/* Header */}
+          <div className="relative px-6 py-7 text-center flex-shrink-0 overflow-hidden">
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.3), rgba(59,130,246,0.2))' }} />
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)`,
+              backgroundSize: '20px 20px'
+            }} />
+            <button onClick={onClose} className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition text-white/50 hover:text-white z-10">
+              <X className="w-4 h-4" />
+            </button>
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.1, type: 'spring', damping: 12 }}
+              className="relative z-10 w-16 h-16 mx-auto mb-4"
+            >
+              <div className="absolute inset-0 rounded-full blur-lg" style={{ background: 'rgba(168,85,247,0.5)' }} />
+              <div className="relative w-full h-full rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(59,130,246,0.3))', border: '1px solid rgba(168,85,247,0.4)' }}>
+                <Sparkles className="w-7 h-7 text-violet-300" />
               </div>
-              <button
-                onClick={handleClose}
-                className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-white/60 hover:text-white z-10"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: 'spring', damping: 15 }}
-                className="relative z-10 w-14 h-14 mx-auto mb-3"
-              >
-                <div className="absolute inset-0 bg-white/20 rounded-full blur-md" />
-                <div className="relative w-full h-full bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
-                  <Sparkles className="w-6 h-6 text-secondary-300" />
-                </div>
-              </motion.div>
-              <motion.h2 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="text-2xl font-serif text-white mb-1"
-              >
-                Welcome, {welcomeData.life_path ? `Seeker` : `Traveler`}
-              </motion.h2>
-              <motion.p 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-sm text-secondary-300"
-              >
-                Your cosmic signature is ready
-              </motion.p>
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-                className="flex items-center justify-center gap-2 mt-4"
-              >
-                <div className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full flex items-center gap-1.5 border border-white/20">
-                  <Sparkles className="w-3 h-3 text-secondary-300" />
-                  <span className="text-xs text-white">{welcomeData.age} years</span>
-                </div>
-                <div className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full flex items-center gap-1.5 border border-white/20">
-                  <Star className="w-3 h-3 text-secondary-300" />
-                  <span className="text-xs text-white">Life Path {welcomeData.life_path}</span>
-                </div>
-              </motion.div>
-            </div>
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+              className="text-2xl font-serif text-white mb-1 relative z-10"
+              style={{ fontFamily: 'Georgia, serif' }}
+            >
+              Your Blueprint Awaits
+            </motion.h2>
+            <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="text-sm text-violet-300 relative z-10">
+              We already see what makes you distinct
+            </motion.p>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+              className="flex items-center justify-center gap-2 mt-4 relative z-10">
+              <div className="px-3 py-1 rounded-full flex items-center gap-1.5" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                <span className="text-xs text-white">{welcomeData.age} years</span>
+              </div>
+              <div className="px-3 py-1 rounded-full flex items-center gap-1.5" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <Star className="w-3 h-3 text-amber-300" />
+                <span className="text-xs text-white">Life Path {welcomeData.life_path}</span>
+              </div>
+            </motion.div>
+          </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-neutral-200">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-4"
-              >
-                {firstThree.map((p, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.35 + idx * 0.07 }}
-                    className={`flex gap-4 p-4 ${p.bg} rounded-xl border ${p.border} hover:shadow-md transition-all`}
-                  >
-                    <div className={`w-10 h-10 ${p.iconBg} rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                      {getIcon(p.icon)}
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-3" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.3) transparent' }}>
+            {first.map((p, i) => (
+              <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.08 }}
+                className="flex gap-4 p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(168,85,247,0.15)' }}>
+                  {getIcon(p.icon)}
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>{p.title}</h3>
+                  <p className="text-xs text-white/60 leading-relaxed">{p.content}</p>
+                </div>
+              </motion.div>
+            ))}
+            {rest.length > 0 && (
+              <button onClick={() => setShowAll(!showAll)}
+                className="w-full py-3 rounded-xl text-xs text-violet-300 flex items-center justify-center gap-2 transition"
+                style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                {showAll ? <><ChevronUp className="w-3.5 h-3.5" />Show less</> : <><ChevronDown className="w-3.5 h-3.5" />Reveal {rest.length} more insights</>}
+              </button>
+            )}
+            <AnimatePresence>
+              {showAll && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
+                  {rest.map((p, i) => (
+                    <div key={i} className="flex gap-4 p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(168,85,247,0.15)' }}>
+                        {getIcon(p.icon)}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>{p.title}</h3>
+                        <p className="text-xs text-white/60 leading-relaxed">{p.content}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-base font-serif text-neutral-900 mb-1.5">{p.title}</h3>
-                      <p className="text-sm text-neutral-600 leading-relaxed">{p.content}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-                {remaining.length > 0 && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
-                    <button
-                      onClick={() => setShowAllInsights(!showAllInsights)}
-                      className="w-full py-3 px-4 bg-neutral-50 hover:bg-neutral-100 rounded-xl flex items-center justify-center gap-2 text-sm text-neutral-600 transition-colors group"
-                    >
-                      {showAllInsights ? (
-                        <><ChevronUp className="w-4 h-4 group-hover:-translate-y-0.5 transition" />Show less insights</>
-                      ) : (
-                        <><ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition" />Reveal {remaining.length} more {remaining.length === 1 ? 'insight' : 'insights'}</>
-                      )}
-                    </button>
-                  </motion.div>
-                )}
-
-                <AnimatePresence>
-                  {showAllInsights && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-4 overflow-hidden"
-                    >
-                      {remaining.map((p, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1 + idx * 0.05 }}
-                          className={`flex gap-4 p-4 ${p.bg} rounded-xl border ${p.border} hover:shadow-md transition-all`}
-                        >
-                          <div className={`w-10 h-10 ${p.iconBg} rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                            {getIcon(p.icon)}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-base font-serif text-neutral-900 mb-1.5">{p.title}</h3>
-                            <p className="text-sm text-neutral-600 leading-relaxed">{p.content}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="flex justify-center mt-6"
-              >
-                <button
-                  onClick={onShare}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-100 hover:bg-neutral-200 rounded-full text-sm text-neutral-700 transition-colors group"
-                >
-                  <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span>Share this moment</span>
-                </button>
-              </motion.div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-5 bg-neutral-50 border-t border-neutral-200 flex gap-3 flex-shrink-0">
-              <button
-                onClick={handleClose}
-                className="flex-1 px-4 py-3 bg-white border border-neutral-300 rounded-xl text-sm font-medium text-neutral-700 hover:bg-neutral-100 hover:border-neutral-400 active:scale-[0.98] transition-all duration-150"
-              >
-                Maybe Later
-              </button>
-              <button
-                onClick={handleClose}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-xl text-sm font-medium text-white hover:from-primary-700 hover:to-secondary-700 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-150"
-              >
-                Begin Journey
-                <ArrowRight className="w-4 h-4 inline ml-2" />
-              </button>
-            </div>
-          </motion.div>
+          {/* Footer */}
+          <div className="p-5 flex gap-3 flex-shrink-0" style={{ borderTop: '1px solid rgba(168,85,247,0.15)' }}>
+            <button onClick={onShare} className="flex-1 py-3 rounded-2xl text-sm font-medium flex items-center justify-center gap-2 transition"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
+              <Share2 className="w-4 h-4" /> Share
+            </button>
+            <button onClick={onClose} className="flex-[2] py-3 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
+              Begin My Journey <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </motion.div>
-      )}
+      </motion.div>
     </AnimatePresence>
   )
 }
 
-// ============================================
-// ANIMATION VARIANTS
-// ============================================
-
-const fadeInUp = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -10 }
-}
-
-const scaleIn = {
-  initial: { scale: 0.95, opacity: 0 },
-  animate: { scale: 1, opacity: 1 },
-  exit: { scale: 0.95, opacity: 0 }
-}
-
-const dotVariants = {
-  animate: {
-    y: [0, -5, 0],
-    transition: {
-      duration: 1,
-      repeat: Infinity,
-      repeatType: "loop" as const,
-      ease: "easeInOut"
-    }
-  }
-}
-
-// ============================================
-// BACKGROUND
-// ============================================
-
-const ElegantBackground = () => (
-  <div className="fixed inset-0 pointer-events-none overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100" />
-    <div className="absolute inset-0 opacity-[0.02]" 
-      style={{
-        backgroundImage: `radial-gradient(circle at 1px 1px, #5D3FD3 1px, transparent 0)`,
-        backgroundSize: '40px 40px'
-      }} 
-    />
-    <div className="absolute top-20 left-20 w-[500px] h-[500px] bg-primary-100/20 rounded-full blur-[100px]" />
-    <div className="absolute bottom-20 right-20 w-[600px] h-[600px] bg-secondary-100/20 rounded-full blur-[120px]" />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary-50/30 to-secondary-50/30 rounded-full blur-[150px]" />
-    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-200 to-transparent" />
-    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-200 to-transparent" />
-  </div>
-)
-
-// ============================================
-// TOOLTIP & WHY SECTION
-// ============================================
-
-const InfoTooltip = ({ content }: { content: string }) => {
-  const [show, setShow] = useState(false)
-  return (
-    <div className="relative inline-block">
-      <div onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} className="cursor-help">
-        <HelpCircle className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-600 transition" />
-      </div>
-      <AnimatePresence>
-        {show && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-neutral-800 text-white text-xs rounded-lg shadow-lg z-50"
-          >
-            <div className="relative">
-              {content}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                <div className="w-2 h-2 bg-neutral-800 rotate-45" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-const WhySection = ({ title, explanation }: { title: string; explanation: string }) => {
-  const [isOpen, setIsOpen] = useState(false)
+// ─── Why tooltip ──────────────────────────────────────────────
+function WhySection({ explanation }: { explanation: string }) {
+  const [open, setOpen] = useState(false)
   return (
     <div className="mt-2">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 text-xs text-neutral-400 hover:text-neutral-600 transition"
-      >
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-1 text-xs transition" style={{ color: 'rgba(168,85,247,0.6)' }}>
         <Info className="w-3 h-3" />
         <span>Why do we need this?</span>
-        {isOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
       </button>
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="mt-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
-              <p className="text-xs text-neutral-600">{explanation}</p>
+        {open && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+            <div className="mt-2 p-3 rounded-xl text-xs leading-relaxed" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)', color: 'rgba(255,255,255,0.55)' }}>
+              {explanation}
             </div>
           </motion.div>
         )}
@@ -406,187 +252,107 @@ const WhySection = ({ title, explanation }: { title: string; explanation: string
   )
 }
 
-// ============================================
-// MAIN COMPONENT
-// ============================================
-
+// ─── Main Page ────────────────────────────────────────────────
 export default function BasicInfoPage() {
-  const router = useRouter()
+  const router       = useRouter()
   const searchParams = useSearchParams()
-  const { setAnonymousUser, user, hasSeenWelcomeModal, setHasSeenWelcomeModal } = useAnonymousStore()
-  const [step, setStep] = useState(0)
-  const [formData, setFormData] = useState({
-    name: '',
-    dob: '',
-    birthTime: '',
-    birthLocation: ''
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(false)
-  const [welcomeData, setWelcomeData] = useState<any>(null)
-  const [loadingWelcome, setLoadingWelcome] = useState(false)
-  const [mascotMessage, setMascotMessage] = useState("Welcome. Let's begin your journey.")
-  const [isClient, setIsClient] = useState(false)
-  const [error, setError] = useState('')
-  // ── NEW: track whether data came from URL params ──────────────
-  const [prefilled, setPrefilled] = useState(false)
+  const { setAnonymousUser, user, hasSeenWelcomeModal, setHasSeenWelcomeModal, hasCompletedOnboarding } = useAnonymousStore()
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
+  const [step,          setStep]          = useState(0)
+  const [formData,      setFormData]      = useState({ name: '', dob: '', birthTime: '', birthLocation: '' })
+  const [isLoading,     setIsLoading]     = useState(false)
+  const [showWelcome,   setShowWelcome]   = useState(false)
+  const [welcomeData,   setWelcomeData]   = useState<any>(null)
+  const [isClient,      setIsClient]      = useState(false)
+  const [error,         setError]         = useState('')
+  const [prefilled,     setPrefilled]     = useState(false)
 
-  // ── NEW: Read URL params from kayalsoulpath.com free tools ─────
-  // Expected params: ?name=John&dob=1990-05-15&birthTime=14:30&birthLocation=Lagos,Nigeria
+  useEffect(() => { setIsClient(true) }, [])
+
+  // ── Return visit: skip onboarding ──────────────────────────
   useEffect(() => {
     if (!isClient) return
+    if (hasCompletedOnboarding()) {
+      router.replace('/dashboard')
+    }
+  }, [isClient, hasCompletedOnboarding, router])
 
+  // ── Pre-fill from URL params ────────────────────────────────
+  useEffect(() => {
+    if (!isClient) return
     const urlName     = searchParams.get('name')?.trim() || ''
     const urlDob      = searchParams.get('dob') || ''
     const urlTime     = searchParams.get('birthTime') || ''
     const urlLocation = searchParams.get('birthLocation') || ''
-
     if (urlName || urlDob) {
-      setFormData({
-        name:          urlName,
-        dob:           urlDob,
-        birthTime:     urlTime,
-        birthLocation: urlLocation
-      })
+      setFormData({ name: urlName, dob: urlDob, birthTime: urlTime, birthLocation: urlLocation })
       setPrefilled(true)
-
-      if (urlName && urlDob) {
-        // Both required fields present — skip onboarding, go straight to step 3
-        // User just needs to confirm, no typing required
-        setStep(3)
-        setMascotMessage(`Welcome back, ${urlName}. Your details are ready.`)
-      } else if (urlName) {
-        // Only name — skip to DOB step
-        setStep(1)
-        setMascotMessage(`Welcome, ${urlName}. When were you born?`)
-      }
+      if (urlName && urlDob) setStep(3)
+      else if (urlName) setStep(1)
     }
   }, [isClient, searchParams])
 
-  // Show welcome modal once user + welcomeData are both ready
+  // ── Show welcome modal ──────────────────────────────────────
   useEffect(() => {
-    if (user && !hasSeenWelcomeModal && welcomeData) {
-      setShowWelcome(true)
-    }
+    if (user && !hasSeenWelcomeModal && welcomeData) setShowWelcome(true)
   }, [user, hasSeenWelcomeModal, welcomeData])
 
-  // Keyboard navigation
+  // ── Keyboard ────────────────────────────────────────────────
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && canProceed() && !isLoading) handleNext()
-    }
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
+    const handle = (e: KeyboardEvent) => { if (e.key === 'Enter' && canProceed() && !isLoading) handleNext() }
+    window.addEventListener('keydown', handle)
+    return () => window.removeEventListener('keydown', handle)
   }, [step, formData, isLoading])
 
-  // Exit intent
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (formData.name || formData.dob) { e.preventDefault(); e.returnValue = '' }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [formData])
-
-  const messages = [
-    "What name shall I call you?",
-    "When were you born?",
-    "Your birth time?",
-    "Your birthplace?"
-  ]
-
   const calculateAge = (dob: string) => {
-    const today = new Date()
-    const birth = new Date(dob)
+    const today = new Date(), birth = new Date(dob)
     let age = today.getFullYear() - birth.getFullYear()
     const m = today.getMonth() - birth.getMonth()
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
     return age
   }
 
-  const validateStep = () => {
-    if (step === 0 && !formData.name.trim()) { setError('Please enter your name'); return false }
-    if (step === 1 && !formData.dob)         { setError('Please select your birth date'); return false }
-    setError('')
+  const canProceed = () => {
+    if (step === 0) return formData.name.trim()
+    if (step === 1) return formData.dob
     return true
   }
 
   const handleNext = () => {
-    if (!validateStep()) return
+    if (step === 0 && !formData.name.trim()) { setError('Please enter your name'); return }
+    if (step === 1 && !formData.dob)         { setError('Please select your birth date'); return }
+    setError('')
     if (step < 3) {
       setStep(step + 1)
-      setMascotMessage(messages[step + 1])
-      confetti({ particleCount: 15, spread: 35, origin: { y: 0.6 }, colors: ['#5D3FD3', '#D4AF37'] })
+      confetti({ particleCount: 12, spread: 30, origin: { y: 0.6 }, colors: ['#a855f7', '#D4AF37'] })
     } else {
       handleSubmit()
     }
   }
 
-  const handleSkip = () => {
-    if (step === 2 || step === 3) {
-      if (step === 3) { handleSubmit(); return }
-      setStep(step + 1)
-      setMascotMessage(messages[3])
-    }
-  }
-
   const handleSubmit = async () => {
     setIsLoading(true)
-    setMascotMessage("Reading your cosmic signature...")
-
-    await new Promise(resolve => setTimeout(resolve, prefilled ? 1200 : 2000))
-
-    document.cookie = "anonymous-session=true; path=/; max-age=2592000"
-
+    await new Promise(r => setTimeout(r, prefilled ? 1200 : 2000))
+    document.cookie = 'anonymous-session=true; path=/; max-age=2592000'
     const sessionId = Math.random().toString(36).substring(2)
     setAnonymousUser({
-      sessionId,
-      name: formData.name,
-      dob: formData.dob,
-      birthTime: formData.birthTime,
-      birthLocation: formData.birthLocation,
-      firstVisit: new Date(),
-      lastVisit: new Date(),
-      visitCount: 1,
-      viewedTools: []
+      sessionId, name: formData.name, dob: formData.dob,
+      birthTime: formData.birthTime, birthLocation: formData.birthLocation,
+      firstVisit: new Date(), lastVisit: new Date(), visitCount: 1, viewedTools: []
     })
-
-    setLoadingWelcome(true)
     try {
-      const response = await fetch('https://api.kayalsoulpath.com/welcome', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          dob: formData.dob,
-          birth_time: formData.birthTime || null,
-          birth_location: formData.birthLocation || null,
-          session_id: sessionId
-        })
+      const res = await fetch('https://api.kayalsoulpath.com/welcome', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.name, dob: formData.dob, birth_time: formData.birthTime || null, birth_location: formData.birthLocation || null, session_id: sessionId })
       })
-      if (!response.ok) throw new Error('Failed to fetch welcome reading')
-      const data = await response.json()
-      setWelcomeData(data)
-    } catch (err) {
-      console.error(err)
+      if (!res.ok) throw new Error('Failed')
+      setWelcomeData(await res.json())
+    } catch {
       setWelcomeData({
-        life_path: 7,
-        age: calculateAge(formData.dob),
-        paragraphs: [{
-          icon: "Star",
-          title: "Your Journey Begins",
-          content: "We couldn't personalise your welcome reading right now, but your journey is already unfolding. Explore our tools to discover what the universe has in store for you.",
-          bg: "bg-primary-50",
-          border: "border-primary-100",
-          iconBg: "bg-primary-100"
-        }]
+        life_path: 7, age: calculateAge(formData.dob),
+        paragraphs: [{ icon: 'Star', title: 'Your Journey Begins', content: 'Your cosmic blueprint is being prepared. Explore our tools to discover what the universe has in store for you.', bg: '', border: '', iconBg: '' }]
       })
     } finally {
-      setLoadingWelcome(false)
       setIsLoading(false)
     }
   }
@@ -598,261 +364,274 @@ export default function BasicInfoPage() {
   }
 
   const handleShare = () => {
-    const shareText = encodeURIComponent(`I just discovered my Life Path number on Kayal LifeOS. The insights are surprisingly accurate! ✨`)
-    window.open(`https://wa.me/?text=${shareText}`, '_blank')
+    const text = encodeURIComponent(`I just discovered my Life Path number on KAYAL SoulPath. The insights are surprisingly accurate! ✨ https://app.kayalsoulpath.com`)
+    window.open(`https://wa.me/?text=${text}`, '_blank')
     toast.success('Opening WhatsApp...')
-    confetti({ particleCount: 15, spread: 35, origin: { y: 0.6 }, colors: ['#5D3FD3', '#D4AF37'] })
   }
 
-  const canProceed = () => {
-    if (step === 0) return formData.name.trim()
-    if (step === 1) return formData.dob
-    return true
+  if (!isClient) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0c29' }}>
+      <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+    </div>
+  )
+
+  const steps = [
+    { label: 'Name', icon: User },
+    { label: 'Birth', icon: Calendar },
+    { label: 'Time', icon: Clock },
+    { label: 'Place', icon: MapPin },
+  ]
+
+  const inputStyle = {
+    width: '100%', padding: '14px 14px 14px 44px',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(168,85,247,0.25)',
+    borderRadius: 14, color: 'white', fontSize: 15,
+    outline: 'none', transition: 'all 0.2s',
+    WebkitAppearance: 'none' as const,
   }
 
-  if (!isClient) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
-      </div>
-    )
-  }
+  const inputFocusStyle = { borderColor: 'rgba(168,85,247,0.6)', boxShadow: '0 0 0 3px rgba(168,85,247,0.12)' }
 
   return (
     <>
-      <div className="min-h-screen relative overflow-hidden">
-        <ElegantBackground />
-        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
+      <div style={{ minHeight: '100dvh', position: 'relative', overflow: 'hidden' }}>
+        <CosmicBackground />
 
-            {/* Value Props */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex justify-center gap-4 mb-6"
-            >
-              <div className="text-center">
-                <div className="w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <Star className="w-4 h-4 text-primary-600" />
-                </div>
-                <p className="text-xs text-neutral-500">Life Path</p>
-              </div>
-              <div className="text-center">
-                <div className="w-8 h-8 bg-secondary-50 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <Heart className="w-4 h-4 text-secondary-600" />
-                </div>
-                <p className="text-xs text-neutral-500">Purpose</p>
-              </div>
-              <div className="text-center">
-                <div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-1">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
-                </div>
-                <p className="text-xs text-neutral-500">Destiny</p>
-              </div>
+        <div style={{ position: 'relative', zIndex: 10, minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+          <div style={{ width: '100%', maxWidth: 440 }}>
+
+            {/* ── BRAND HEADER ── */}
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+              style={{ textAlign: 'center', marginBottom: 32 }}>
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ fontSize: 48, marginBottom: 12, display: 'block' }}>
+                🔮
+              </motion.div>
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(22px, 5vw, 28px)', fontWeight: 400, color: 'white', marginBottom: 8, letterSpacing: '-0.02em' }}>
+                KAYAL SoulPath
+              </h1>
+              <p style={{ fontSize: 13, color: 'rgba(168,85,247,0.8)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 16 }}>
+                Ancient Wisdom · Modern Synthesis
+              </p>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, maxWidth: 360, margin: '0 auto' }}>
+                We synthesise numerology, astrology, palmistry and physiognomy into one precise, personalised reading — built entirely from your birth data.
+              </p>
             </motion.div>
 
-            {/* Main Card */}
-            <motion.div variants={scaleIn} initial="initial" animate="animate" transition={{ duration: 0.4 }}>
-              <Card className="bg-white/90 backdrop-blur-sm border-neutral-200/60 shadow-xl">
-                <div className="p-6">
+            {/* ── WHAT YOU'LL DISCOVER ── */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
+              {[
+                { emoji: '⭐', label: 'Life Path & Soul Purpose' },
+                { emoji: '💫', label: 'Timing & Current Cycle' },
+                { emoji: '💎', label: 'Wealth, Love & Health' },
+              ].map((item, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}
+                  style={{ textAlign: 'center', padding: '14px 8px', borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(168,85,247,0.15)' }}>
+                  <div style={{ fontSize: 22, marginBottom: 6 }}>{item.emoji}</div>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{item.label}</p>
+                </motion.div>
+              ))}
+            </motion.div>
 
-                  {/* ── NEW: Pre-filled banner ── */}
-                  {prefilled && formData.name && formData.dob && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mb-4 p-3 bg-primary-50 border border-primary-100 rounded-xl flex items-start gap-3"
-                    >
-                      <Check className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-medium text-primary-700">Details carried over from KAYAL SoulPath</p>
-                        <p className="text-xs text-primary-500 mt-0.5">
-                          {formData.name} · {formData.dob}
-                          {formData.birthLocation && ` · ${formData.birthLocation}`}
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
+            {/* ── FORM CARD ── */}
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.3, duration: 0.5 }}
+              style={{ borderRadius: 24, padding: '28px 24px', background: 'rgba(15,12,40,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(168,85,247,0.08)' }}>
 
-                  {/* Step Indicators */}
-                  <div className="flex justify-between mb-6">
-                    {['Name', 'Birth', 'Time', 'Place'].map((label, i) => (
-                      <div key={i} className="flex-1 text-center">
-                        <div className={`text-xs mb-1 transition-colors duration-300 ${i <= step ? 'text-primary-600' : 'text-neutral-300'}`}>
-                          {label}
-                        </div>
-                        <div className={`h-1 rounded-full transition-all duration-300 ${i <= step ? 'bg-primary-600' : 'bg-neutral-200'}`} />
-                      </div>
-                    ))}
+              {/* Pre-filled banner */}
+              {prefilled && formData.name && formData.dob && (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                  style={{ marginBottom: 20, padding: '12px 14px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}>
+                  <Check style={{ width: 14, height: 14, color: '#a855f7', flexShrink: 0 }} />
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: '#a855f7' }}>Details carried over</p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{formData.name} · {formData.dob}</p>
                   </div>
+                </motion.div>
+              )}
 
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={step}
-                      variants={fadeInUp}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={{ duration: 0.2 }}
-                      className="space-y-4"
-                    >
-                      {/* Step 0 - Name */}
-                      {step === 0 && (
-                        <div className="space-y-2">
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                            <input
-                              type="text"
-                              value={formData.name}
-                              onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setError('') }}
-                              className="w-full pl-10 pr-10 py-3 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-all duration-200"
-                              placeholder=" "
-                              autoFocus
-                            />
-                            <label className={`absolute left-10 transition-all duration-200 pointer-events-none ${formData.name ? '-top-2 text-xs bg-white px-1 text-primary-600' : 'top-3 text-sm text-neutral-400'}`}>
-                              Your full name
-                            </label>
-                            {formData.name && (
-                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <Check className="w-4 h-4 text-green-500" />
-                              </motion.div>
-                            )}
-                          </div>
-                          <WhySection title="Why we need your name" explanation="Your name carries vibrational energy that helps us personalise your reading. It's how we'll address you throughout your journey." />
-                        </div>
-                      )}
+              {/* Step indicators */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 24 }}>
+                {steps.map((s, i) => (
+                  <div key={i} style={{ flex: 1 }}>
+                    <div style={{ fontSize: 9, textAlign: 'center', marginBottom: 5, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: i <= step ? '#a855f7' : 'rgba(255,255,255,0.2)', transition: 'color 0.3s' }}>
+                      {s.label}
+                    </div>
+                    <div style={{ height: 3, borderRadius: 2, transition: 'all 0.4s', background: i < step ? '#a855f7' : i === step ? 'linear-gradient(90deg, #a855f7, #7c3aed)' : 'rgba(255,255,255,0.1)' }} />
+                  </div>
+                ))}
+              </div>
 
-                      {/* Step 1 - Date of Birth */}
-                      {step === 1 && (
-                        <div className="space-y-2">
-                          <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                            <input
-                              type="date"
-                              value={formData.dob}
-                              onChange={(e) => { setFormData({ ...formData, dob: e.target.value }); setError('') }}
-                              max={format(new Date(), 'yyyy-MM-dd')}
-                              min={format(subYears(new Date(), 120), 'yyyy-MM-dd')}
-                              className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
-                            />
-                          </div>
-                          {formData.dob && (
-                            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs text-primary-600 flex items-center gap-1">
-                              <Sparkles className="w-3 h-3" />
-                              You'll be {calculateAge(formData.dob)} years young
-                            </motion.p>
-                          )}
-                          <WhySection title="Why we need your birth date" explanation="Your birth date is the key to calculating your Life Path number, which reveals your soul's purpose and the challenges you're meant to overcome." />
-                        </div>
-                      )}
+              {/* Step label */}
+              <AnimatePresence mode="wait">
+                <motion.div key={step} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
 
-                      {/* Step 2 - Birth Time (optional) */}
-                      {step === 2 && (
-                        <div className="space-y-2">
-                          <div className="relative">
-                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                            <input
-                              type="time"
-                              value={formData.birthTime}
-                              onChange={(e) => setFormData({ ...formData, birthTime: e.target.value })}
-                              className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
-                            />
-                          </div>
-                          <button onClick={handleSkip} className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1 mt-1">
-                            Skip this step <ArrowRight className="w-3 h-3" />
-                          </button>
-                          <WhySection title="Why we ask for birth time" explanation="Birth time adds precision to your astrological chart, revealing your rising sign and the exact positions of planets at your birth. Optional but recommended for deeper insights." />
-                        </div>
-                      )}
+                  {/* Step heading */}
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16, textAlign: 'center' }}>
+                    {['What name shall I call you?', 'When were you born?', 'What time were you born?', 'Where were you born?'][step]}
+                  </p>
 
-                      {/* Step 3 - Birth Location (optional) */}
-                      {step === 3 && (
-                        <div className="space-y-2">
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                            <input
-                              type="text"
-                              value={formData.birthLocation}
-                              onChange={(e) => setFormData({ ...formData, birthLocation: e.target.value })}
-                              className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
-                              placeholder="City, Country"
-                            />
-                          </div>
-                          <button onClick={handleSkip} className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1 mt-1">
-                            Skip this step <ArrowRight className="w-3 h-3" />
-                          </button>
-                          <WhySection title="Why we ask for birth location" explanation="Your birthplace provides geographic context for your astrological chart, affecting house positions and adding cultural depth to your reading. Optional but enriches your profile." />
-                        </div>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-
-                  {error && (
-                    <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-xs text-red-500 mt-2">
-                      {error}
-                    </motion.p>
-                  )}
-
-                  {/* Navigation */}
-                  <div className="flex gap-3 mt-6">
-                    {step > 0 && (
-                      <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex-1">
-                        <Button variant="outline" onClick={() => setStep(step - 1)} className="w-full border-neutral-200 active:scale-[0.98] transition-transform">
-                          Back
-                        </Button>
-                      </motion.div>
-                    )}
-                    <motion.div className={step === 0 ? 'flex-1' : 'flex-[2]'} whileTap={{ scale: 0.98 }}>
-                      <Button onClick={handleNext} disabled={!canProceed() || isLoading} className="w-full active:scale-[0.98] transition-transform">
-                        {isLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            {step === 3 ? (prefilled ? 'Complete Setup' : 'Complete') : 'Continue'}
-                            {step < 3 && <ArrowRight className="w-4 h-4 ml-2" />}
-                          </>
+                  {/* Step 0 — Name */}
+                  {step === 0 && (
+                    <div>
+                      <div style={{ position: 'relative' }}>
+                        <User style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(168,85,247,0.6)' }} />
+                        <input
+                          type="text" autoFocus
+                          value={formData.name}
+                          onChange={e => { setFormData({ ...formData, name: e.target.value }); setError('') }}
+                          placeholder="Your full name"
+                          style={{ ...inputStyle, colorScheme: 'dark' }}
+                          onFocus={e => Object.assign(e.target.style, inputFocusStyle)}
+                          onBlur={e => { e.target.style.borderColor = 'rgba(168,85,247,0.25)'; e.target.style.boxShadow = 'none' }}
+                        />
+                        {formData.name && (
+                          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}>
+                            <Check style={{ width: 16, height: 16, color: '#4ade80' }} />
+                          </motion.div>
                         )}
-                      </Button>
-                    </motion.div>
-                  </div>
-
-                  <p className="mt-4 text-center text-xs text-neutral-500 animate-pulse">{mascotMessage}</p>
-
-                  {isLoading && (
-                    <div className="flex justify-center gap-1 mt-2">
-                      {[0, 1, 2].map((i) => (
-                        <motion.div key={i} custom={i} variants={dotVariants} animate="animate" className="w-1 h-1 bg-primary-400 rounded-full" />
-                      ))}
+                      </div>
+                      <WhySection explanation="Your name carries vibrational energy that helps us personalise your reading. It's used to calculate your Destiny and Soul Urge numbers." />
                     </div>
                   )}
+
+                  {/* Step 1 — DOB */}
+                  {step === 1 && (
+                    <div>
+                      <div style={{ position: 'relative' }}>
+                        <Calendar style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(168,85,247,0.6)', zIndex: 1 }} />
+                        <input
+                          type="date" autoFocus
+                          value={formData.dob}
+                          onChange={e => { setFormData({ ...formData, dob: e.target.value }); setError('') }}
+                          max={format(new Date(), 'yyyy-MM-dd')}
+                          min={format(subYears(new Date(), 120), 'yyyy-MM-dd')}
+                          style={{ ...inputStyle, colorScheme: 'dark' }}
+                          onFocus={e => Object.assign(e.target.style, inputFocusStyle)}
+                          onBlur={e => { e.target.style.borderColor = 'rgba(168,85,247,0.25)'; e.target.style.boxShadow = 'none' }}
+                        />
+                      </div>
+                      {formData.dob && (
+                        <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                          style={{ fontSize: 12, color: '#a855f7', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Sparkles style={{ width: 12, height: 12 }} />
+                          You are {calculateAge(formData.dob)} years young
+                        </motion.p>
+                      )}
+                      <WhySection explanation="Your birth date is the foundation of your Life Path number — the most important number in your blueprint. It reveals your soul's core purpose." />
+                    </div>
+                  )}
+
+                  {/* Step 2 — Birth Time */}
+                  {step === 2 && (
+                    <div>
+                      <div style={{ position: 'relative' }}>
+                        <Clock style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(168,85,247,0.6)' }} />
+                        <input
+                          type="time" autoFocus
+                          value={formData.birthTime}
+                          onChange={e => setFormData({ ...formData, birthTime: e.target.value })}
+                          style={{ ...inputStyle, colorScheme: 'dark' }}
+                          onFocus={e => Object.assign(e.target.style, inputFocusStyle)}
+                          onBlur={e => { e.target.style.borderColor = 'rgba(168,85,247,0.25)'; e.target.style.boxShadow = 'none' }}
+                        />
+                      </div>
+                      <button onClick={() => { setStep(3); confetti({ particleCount: 12, spread: 30, origin: { y: 0.6 }, colors: ['#a855f7'] }) }}
+                        style={{ marginTop: 10, fontSize: 12, color: 'rgba(168,85,247,0.6)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        Skip this step <ArrowRight style={{ width: 12, height: 12 }} />
+                      </button>
+                      <WhySection explanation="Birth time enables full astrological chart analysis including your rising sign. Optional but significantly increases reading precision." />
+                    </div>
+                  )}
+
+                  {/* Step 3 — Birth Location */}
+                  {step === 3 && (
+                    <div>
+                      <div style={{ position: 'relative' }}>
+                        <MapPin style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(168,85,247,0.6)' }} />
+                        <input
+                          type="text" autoFocus
+                          value={formData.birthLocation}
+                          onChange={e => setFormData({ ...formData, birthLocation: e.target.value })}
+                          placeholder="City, Country"
+                          style={{ ...inputStyle, colorScheme: 'dark' }}
+                          onFocus={e => Object.assign(e.target.style, inputFocusStyle)}
+                          onBlur={e => { e.target.style.borderColor = 'rgba(168,85,247,0.25)'; e.target.style.boxShadow = 'none' }}
+                        />
+                      </div>
+                      <WhySection explanation="Your birthplace provides geographic context for your astrological chart, affecting house placements and cultural depth. Optional but enriching." />
+                    </div>
+                  )}
+
+                </motion.div>
+              </AnimatePresence>
+
+              {error && (
+                <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  style={{ fontSize: 12, color: '#f87171', marginTop: 8 }}>{error}</motion.p>
+              )}
+
+              {/* Navigation */}
+              <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                {step > 0 && (
+                  <motion.button initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                    onClick={() => setStep(step - 1)}
+                    style={{ flex: 1, padding: '14px', borderRadius: 14, fontSize: 14, fontWeight: 500, cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', transition: 'all 0.2s' }}>
+                    Back
+                  </motion.button>
+                )}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleNext}
+                  disabled={!canProceed() || isLoading}
+                  style={{ flex: step === 0 ? 1 : 2, padding: '14px', borderRadius: 14, fontSize: 14, fontWeight: 600, cursor: canProceed() && !isLoading ? 'pointer' : 'not-allowed', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s', opacity: !canProceed() || isLoading ? 0.5 : 1, background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', boxShadow: canProceed() && !isLoading ? '0 4px 20px rgba(124,58,237,0.4)' : 'none' }}>
+                  {isLoading ? (
+                    <><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />Reading your signature...</>
+                  ) : (
+                    <>{step === 3 ? (prefilled ? 'Complete Setup' : 'Reveal My Blueprint') : 'Continue'}{step < 3 && <ArrowRight style={{ width: 16, height: 16 }} />}</>
+                  )}
+                </motion.button>
+              </div>
+
+              {isLoading && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+                  {[0, 1, 2].map(i => (
+                    <motion.div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#a855f7' }}
+                      animate={{ y: [0, -6, 0] }} transition={{ duration: 0.8, delay: i * 0.15, repeat: Infinity }} />
+                  ))}
                 </div>
-              </Card>
+              )}
             </motion.div>
 
-            {/* Trust Indicators */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-4 text-center text-xs text-neutral-400"
-            >
-              <span className="mx-2">🔒 256-bit</span>
-              <span className="mx-2">✨ 50k+ seekers</span>
-              <span className="mx-2">⭐ 4.9/5</span>
+            {/* ── SOCIAL PROOF ── */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+              style={{ marginTop: 20, textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 10 }}>
+                {[
+                  { icon: '🔒', label: '256-bit encrypted' },
+                  { icon: '✨', label: '50k+ seekers' },
+                  { icon: '⭐', label: '4.9/5 rating' },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 13 }}>{item.icon}</span>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+                Your data is private and never shared with third parties
+              </p>
             </motion.div>
+
           </div>
         </div>
       </div>
 
-      {/* Welcome Modal */}
       {showWelcome && welcomeData && (
-        <WelcomeModal
-          isOpen={showWelcome}
-          onClose={handleWelcomeClose}
-          welcomeData={welcomeData}
-          onShare={handleShare}
-        />
+        <WelcomeModal isOpen={showWelcome} onClose={handleWelcomeClose} welcomeData={welcomeData} onShare={handleShare} />
       )}
     </>
   )
