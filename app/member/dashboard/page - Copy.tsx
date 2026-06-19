@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +44,7 @@ import {
 } from 'lucide-react'
 import { RightWidgetSidebar } from '@/components/dashboard/RightWidgetSidebar'
 
+// Types for purchased tools
 interface PurchasedTool {
   id: string
   tool_id: string
@@ -64,6 +65,7 @@ interface PurchasedTool {
   job_id?: string
 }
 
+// Domain destinations (fallback if not in purchase)
 const domainDestinations: Record<string, string> = {
   'voice': 'audio',
   'oracle-temple': 'report',
@@ -77,8 +79,10 @@ const domainDestinations: Record<string, string> = {
   'sacred-script': 'chat'
 }
 
+// Define which tool types are subscriptions
 const SUBSCRIPTION_TYPES = ['chat', 'reading', 'audio']
 
+// Helper: get device ID (for guest)
 const getDeviceId = () => {
   if (typeof window === 'undefined') return ''
   let deviceId = localStorage.getItem('kayal_device_id')
@@ -89,6 +93,7 @@ const getDeviceId = () => {
   return deviceId
 }
 
+// ── FIX 1: Calculate real Personal Day from DOB + today ──────────────────────
 function getPersonalDay(dob: string): number {
   const today = new Date()
   const born  = new Date(dob)
@@ -104,6 +109,10 @@ function getPersonalDay(dob: string): number {
   return personalDay || 5
 }
 
+
+
+}
+
 function MemberDashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -116,10 +125,13 @@ function MemberDashboardInner() {
   const [activeTab, setActiveTab] = useState<'all' | 'reports' | 'interactive'>('all')
   const [refreshing, setRefreshing] = useState(false)
   const [userContext, setUserContext] = useState<any>(null)
+  
   const [cancellingTool, setCancellingTool] = useState<PurchasedTool | null>(null)
+
   const [jobStatuses, setJobStatuses] = useState<Record<string, { status: string, content?: any }>>({})
   const [pollingIntervals, setPollingIntervals] = useState<Record<string, NodeJS.Timeout>>({})
 
+  // ✅ Updated: poll the correct endpoint /api/reading/result/[jobId]
   const startPolling = useCallback((jobId: string) => {
     if (pollingIntervals[jobId]) return
     const interval = setInterval(async () => {
@@ -145,15 +157,18 @@ function MemberDashboardInner() {
     setPollingIntervals(prev => ({ ...prev, [jobId]: interval }))
   }, [pollingIntervals])
 
+  // Get current user on mount
   useEffect(() => {
     const getUser = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
         if (user) {
+          console.log('✅ User authenticated:', user.id)
           await fetchPurchases(user.id)
           await fetchUserContext(user.id)
         } else {
+          console.log('❌ No user found')
           setLoading(false)
         }
       } catch (error) {
@@ -177,12 +192,14 @@ function MemberDashboardInner() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Cleanup intervals on unmount
   useEffect(() => {
     return () => {
       Object.values(pollingIntervals).forEach(interval => clearInterval(interval))
     }
   }, [pollingIntervals])
 
+  // Handle pending job from URL query parameter
   useEffect(() => {
     const pendingJobId = searchParams.get('pending')
     if (pendingJobId && !jobStatuses[pendingJobId]) {
@@ -193,6 +210,9 @@ function MemberDashboardInner() {
   const fetchPurchases = async (userId: string) => {
     try {
       setLoading(true)
+      console.log('📡 Fetching purchases for user:', userId)
+
+      // purchases table — try user_id (Supabase auth UUID)
       let { data: purchases, error } = await supabase
         .from('purchases')
         .select('*')
@@ -200,9 +220,11 @@ function MemberDashboardInner() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Supabase error:', error)
+        console.error('❌ Supabase error:', error)
         return
       }
+      console.log(`✅ Found ${purchases?.length || 0} purchases`)
+      console.log('📋 Statuses present:', [...new Set((purchases || []).map((p: any) => p.status))])
       setPurchases(purchases || [])
       purchases?.forEach(tool => {
         if (tool.job_id && (tool.tool_type === 'report' || domainDestinations[tool.category] === 'report')) {
@@ -212,7 +234,7 @@ function MemberDashboardInner() {
         }
       })
     } catch (error) {
-      console.error('Error fetching purchases:', error)
+      console.error('❌ Error fetching purchases:', error)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -227,29 +249,35 @@ function MemberDashboardInner() {
         .eq('user_id', userId)
       const totalSpent = purchases?.reduce((sum, p) => sum + (p.price || 0), 0) || 0
 
+      // ── FIX 2: fetch token (PK), dob, birth_time, birth_location + affiliate_status ─
+      // users table has id (uuid) — RLS auto-filters to current user
+      // Select without filter relies on RLS; explicit .eq as fallback
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('id, full_name, name, affiliate_status, dob, birth_time, birth_location')
         .eq('id', userId)
         .maybeSingle()
 
-      if (userError) console.warn('users query error:', userError.message)
+      if (userError) console.warn('⚠ users query error:', userError.message, '— continuing without profile data')
 
       setUserContext({
         userId,
-        name:          userData?.full_name
-                       || userData?.name
-                       || user?.user_metadata?.full_name
-                       || user?.user_metadata?.name
-                       || user?.email?.split('@')[0]
-                       || 'Seeker',
-        purchaseCount:  purchases?.length || 0,
+        // ── display name: prefer DB full_name, then metadata, then email ──
+        name:            userData?.full_name
+                         || userData?.name
+                         || user?.user_metadata?.full_name
+                         || user?.user_metadata?.name
+                         || user?.email?.split('@')[0]
+                         || 'Seeker',
+        purchaseCount:   purchases?.length || 0,
         totalSpent,
-        isAffiliate:    userData?.affiliate_status === 'active',
-        dob:            userData?.dob           || null,
-        birthTime:      userData?.birth_time    || null,
-        birthLocation:  userData?.birth_location || null,
-        personalDay:    userData?.dob ? getPersonalDay(userData.dob) : 5,
+        isAffiliate:     userData?.affiliate_status === 'active',
+        // ── FIX 3: pass birth data so RightWidgetSidebar can calculate personalDay ──
+        dob:             userData?.dob           || null,
+        birthTime:       userData?.birth_time    || null,
+        birthLocation:   userData?.birth_location || null,
+        // ── pre-calculate personalDay so it is ready before RightWidgetSidebar mounts ─
+        personalDay:     userData?.dob ? getPersonalDay(userData.dob) : 5,
       })
     } catch (error) {
       console.error('Error fetching user context:', error)
@@ -292,25 +320,29 @@ function MemberDashboardInner() {
     const response = await fetch('/api/subscription/cancel', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, toolId })
+      body: JSON.stringify({
+        userId: user.id,
+        toolId
+      })
     })
     if (response.ok) {
       await fetchPurchases(user.id)
     }
   }
 
+  // Group purchases by type
   const groupedPurchases = {
     reports: purchases.filter(p => p.tool_type === 'report' || domainDestinations[p.category] === 'report'),
-    chat:    purchases.filter(p => p.tool_type === 'chat'   || domainDestinations[p.category] === 'chat'),
-    reading: purchases.filter(p => p.tool_type === 'reading'|| domainDestinations[p.category] === 'reading'),
-    audio:   purchases.filter(p => p.tool_type === 'audio'  || domainDestinations[p.category] === 'audio')
+    chat: purchases.filter(p => p.tool_type === 'chat' || domainDestinations[p.category] === 'chat'),
+    reading: purchases.filter(p => p.tool_type === 'reading' || domainDestinations[p.category] === 'reading'),
+    audio: purchases.filter(p => p.tool_type === 'audio' || domainDestinations[p.category] === 'audio')
   }
 
   const getFilteredPurchases = () => {
     switch(activeTab) {
-      case 'reports':     return groupedPurchases.reports
+      case 'reports': return groupedPurchases.reports
       case 'interactive': return [...groupedPurchases.chat, ...groupedPurchases.reading, ...groupedPurchases.audio]
-      default:            return purchases
+      default: return purchases
     }
   }
 
@@ -318,10 +350,17 @@ function MemberDashboardInner() {
 
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, any> = {
-      'love': Heart, 'career': Briefcase, 'wealth': TrendingUp,
-      'spiritual': Moon, 'health': Zap, 'life-path': Star,
-      'oracle-temple': Crown, 'time-keeper': Clock,
-      'voice': Mic, 'sacred-script': BookOpen, 'universal': Infinity
+      'love': Heart,
+      'career': Briefcase,
+      'wealth': TrendingUp,
+      'spiritual': Moon,
+      'health': Zap,
+      'life-path': Star,
+      'oracle-temple': Crown,
+      'time-keeper': Clock,
+      'voice': Mic,
+      'sacred-script': BookOpen,
+      'universal': Infinity
     }
     return icons[category] || FileText
   }
@@ -343,18 +382,23 @@ function MemberDashboardInner() {
   }
 
   const getToolRoute = (tool: PurchasedTool) => {
+    // Voice of Prophecy domain
     if (tool.tool_type === 'audio' || tool.category === 'voice') {
       return `/domain/voice-of-prophecy/${tool.tool_id}`
     }
+    // Sacred Script domain
     if (tool.tool_type === 'chat' || tool.category === 'sacred-script') {
       return `/domain/sacred-script/${tool.tool_id}`
     }
+    // Reports — include jobId if available
     if (tool.tool_type === 'report' || tool.destination === 'report' || domainDestinations[tool.category] === 'report') {
       return tool.job_id ? `/report/${tool.tool_id}?jobId=${tool.job_id}` : `/report/${tool.tool_id}`
     }
+    // Reading tools
     if (tool.tool_type === 'reading' || tool.destination === 'reading') {
       return `/reading/${tool.tool_id}`
     }
+    // Fallback
     const destination = tool.destination || domainDestinations[tool.category] || 'report'
     return tool.job_id ? `/${destination}/${tool.tool_id}?jobId=${tool.job_id}` : `/${destination}/${tool.tool_id}`
   }
@@ -362,11 +406,15 @@ function MemberDashboardInner() {
   const formatDate = (dateString?: string) => {
     if (!dateString) return ''
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric'
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     })
   }
 
-  const isSubscription  = (tool: PurchasedTool) => SUBSCRIPTION_TYPES.includes(tool.tool_type)
+  const isSubscription = (tool: PurchasedTool) => {
+    return SUBSCRIPTION_TYPES.includes(tool.tool_type)
+  }
 
   const isExpiringSoon = (expiresAt?: string) => {
     if (!expiresAt) return false
@@ -384,7 +432,7 @@ function MemberDashboardInner() {
   }
 
   const referralData = {
-    clicks:   purchases.length * 10 || 45,
+    clicks: purchases.length * 10 || 45,
     earnings: purchases.reduce((sum, p) => sum + (p.price * 0.15), 0) || 120,
     referrals: Math.floor(purchases.length / 2) || 3
   }
@@ -415,6 +463,7 @@ function MemberDashboardInner() {
 
   return (
     <div className="min-h-screen bg-neutral-50 pb-32">
+      {/* Header */}
       <div className="bg-white border-b border-neutral-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -425,11 +474,12 @@ function MemberDashboardInner() {
               <h1 className="text-2xl font-serif">Your Dashboard</h1>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={handleRefresh} disabled={refreshing} className="p-2 hover:bg-neutral-100 rounded-lg transition-colors">
+              <button onClick={handleRefresh} disabled={refreshing} className="p-2 hover:bg-neutral-100 rounded-lg transition-colors" title="Refresh purchases">
                 <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 mr-2" />Sign Out
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
               </Button>
             </div>
           </div>
@@ -437,6 +487,7 @@ function MemberDashboardInner() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Welcome Section */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
@@ -449,8 +500,11 @@ function MemberDashboardInner() {
           </div>
         </div>
 
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Column */}
           <div className="lg:col-span-3 space-y-6">
+            {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="p-4">
                 <div className="flex items-center justify-between">
@@ -478,22 +532,24 @@ function MemberDashboardInner() {
               </Card>
             </div>
 
+            {/* Tabs */}
             <div className="flex gap-2 mb-6">
               <button onClick={() => setActiveTab('all')} className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'all' ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-100'}`}>All Tools ({purchases.length})</button>
               <button onClick={() => setActiveTab('reports')} className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'reports' ? 'bg-green-600 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-100'}`}>PDF Reports ({groupedPurchases.reports.length})</button>
               <button onClick={() => setActiveTab('interactive')} className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'interactive' ? 'bg-blue-600 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-100'}`}>Subscriptions ({groupedPurchases.chat.length + groupedPurchases.reading.length + groupedPurchases.audio.length})</button>
             </div>
 
+            {/* Tools Grid */}
             {filteredPurchases.length === 0 ? (
               <Card className="text-center py-12">
                 <Gift className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
                 <h3 className="text-xl font-serif mb-2">No Tools Yet</h3>
-                <p className="text-neutral-600 mb-6 max-w-md mx-auto">You have not purchased any tools yet. Explore our domains and start your journey!</p>
+                <p className="text-neutral-600 mb-6 max-w-md mx-auto">You haven't purchased any tools yet. Explore our domains and start your journey!</p>
                 <div className="flex gap-3 justify-center flex-wrap">
-                  <Button onClick={() => router.push('/domain/love-relationships')}>Love and Relationships</Button>
-                  <Button variant="outline" onClick={() => router.push('/domain/wealth-career')}>Wealth and Career</Button>
-                  <Button variant="outline" onClick={() => router.push('/domain/wellness-spirituality')}>Wellness and Spirituality</Button>
-                  <Button variant="outline" onClick={() => router.push('/domain/life-path-destiny')}>Life Path and Destiny</Button>
+                  <Button onClick={() => router.push('/domain/love-relationships')}>Love & Relationships</Button>
+                  <Button variant="outline" onClick={() => router.push('/domain/wealth-career')}>Wealth & Career</Button>
+                  <Button variant="outline" onClick={() => router.push('/domain/wellness-spirituality')}>Wellness & Spirituality</Button>
+                  <Button variant="outline" onClick={() => router.push('/domain/life-path-destiny')}>Life Path & Destiny</Button>
                 </div>
               </Card>
             ) : (
@@ -505,15 +561,17 @@ function MemberDashboardInner() {
                   const isSub = isSubscription(tool)
                   const isExpiring = isExpiringSoon(tool.expires_at)
                   const savings = getSavings(tool)
+
                   const jobId = tool.job_id
                   const jobStatus = jobId ? jobStatuses[jobId] : null
                   const isProcessing = jobStatus && (jobStatus.status === 'pending' || jobStatus.status === 'processing')
                   const isReady = jobStatus && jobStatus.status === 'completed'
                   const isFailed = jobStatus && jobStatus.status === 'failed'
-
+                  
                   return (
                     <motion.div key={tool.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
                       <Card className="h-full hover:shadow-xl transition-all group relative overflow-hidden">
+                        {/* Status Badges */}
                         <div className="absolute top-0 right-0 flex flex-col gap-1 z-10">
                           {isExpiring && isSub && <div className="bg-amber-500 text-white px-3 py-1 rounded-bl-lg text-xs font-medium">Expiring Soon</div>}
                           {isReport && !isProcessing && !isReady && <div className="bg-green-500 text-white px-3 py-1 rounded-bl-lg text-xs font-medium flex items-center gap-1"><Infinity className="w-3 h-3" />Lifetime</div>}
@@ -530,40 +588,27 @@ function MemberDashboardInner() {
                           </div>
                           <h3 className="text-lg font-medium mb-2 group-hover:text-primary-600 transition">{tool.tool_name}</h3>
                           <div className="flex items-center gap-2 mb-3">
-                            {tool.destination === 'report'  && <Badge variant="secondary" size="sm" className="flex items-center gap-1"><FileText className="w-3 h-3" /> PDF Report</Badge>}
-                            {tool.destination === 'chat'    && <Badge variant="secondary" size="sm" className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> Live Chat<span className="ml-1 text-xs bg-blue-100 text-blue-700 px-1 rounded">Monthly</span></Badge>}
+                            {tool.destination === 'report' && <Badge variant="secondary" size="sm" className="flex items-center gap-1"><FileText className="w-3 h-3" /> PDF Report</Badge>}
+                            {tool.destination === 'chat' && <Badge variant="secondary" size="sm" className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> Live Chat<span className="ml-1 text-xs bg-blue-100 text-blue-700 px-1 rounded">Monthly</span></Badge>}
                             {tool.destination === 'reading' && <Badge variant="secondary" size="sm" className="flex items-center gap-1"><Eye className="w-3 h-3" /> Reading<span className="ml-1 text-xs bg-purple-100 text-purple-700 px-1 rounded">Monthly</span></Badge>}
-                            {tool.destination === 'audio'   && <Badge variant="secondary" size="sm" className="flex items-center gap-1"><Headphones className="w-3 h-3" /> Voice Session<span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1 rounded">Monthly</span></Badge>}
+                            {tool.destination === 'audio' && <Badge variant="secondary" size="sm" className="flex items-center gap-1"><Headphones className="w-3 h-3" /> Voice Session<span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1 rounded">Monthly</span></Badge>}
                           </div>
-                          {tool.original_price && tool.original_price > tool.price && (
-                            <div className="flex items-center gap-2 text-xs mb-2">
-                              <span className="text-neutral-400 line-through">${tool.original_price}</span>
-                              <span className="text-green-600 font-medium">${tool.price}</span>
-                              <Badge variant="primary" size="sm">Coupon</Badge>
-                            </div>
-                          )}
+                          {tool.original_price && tool.original_price > tool.price && <div className="flex items-center gap-2 text-xs mb-2"><span className="text-neutral-400 line-through">${tool.original_price}</span><span className="text-green-600 font-medium">${tool.price}</span><Badge variant="primary" size="sm">Coupon</Badge></div>}
                           <div className="flex items-center gap-2 text-xs text-neutral-500 mb-4"><Calendar className="w-3 h-3" />Purchased: {formatDate(tool.purchase_date)}</div>
                           {isSub && tool.expires_at && (
                             <div className={`text-xs mb-4 p-2 rounded-lg ${isExpiring ? 'bg-amber-50 text-amber-600 border border-amber-200' : 'bg-green-50 text-green-600 border border-green-200'}`}>
-                              {isExpiring
-                                ? <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span>Expires {formatDate(tool.expires_at)}</span></div>
-                                : <div className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /><span>Active until {formatDate(tool.expires_at)}</span></div>}
+                              {isExpiring ? <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span>Expires {formatDate(tool.expires_at)}</span></div> : <div className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /><span>Active until {formatDate(tool.expires_at)}</span></div>}
                             </div>
                           )}
                           {tool.images && Object.keys(tool.images).length > 0 && (
-                            <div className="flex gap-1 mb-4">
-                              {Object.entries(tool.images).map(([key]) => (
-                                <div key={key} className="w-8 h-8 bg-neutral-100 rounded flex items-center justify-center" title={key}>
-                                  <Camera className="w-4 h-4 text-neutral-500" />
-                                </div>
-                              ))}
-                            </div>
+                            <div className="flex gap-1 mb-4">{Object.entries(tool.images).map(([key]) => <div key={key} className="w-8 h-8 bg-neutral-100 rounded flex items-center justify-center" title={key}><Camera className="w-4 h-4 text-neutral-500" /></div>)}</div>
                           )}
                           <div className="pt-4 border-t">
                             {isReport ? (
                               isReady ? (
                                 <Button onClick={() => router.push(getToolRoute(tool))} fullWidth className="group">
-                                  <Eye className="w-4 h-4 mr-2" />View Report<ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                                  <Eye className="w-4 h-4 mr-2" />View Report
+                                  <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
                                 </Button>
                               ) : isProcessing ? (
                                 <Button disabled fullWidth variant="outline">
@@ -571,17 +616,18 @@ function MemberDashboardInner() {
                                 </Button>
                               ) : isFailed ? (
                                 <Button onClick={() => alert('This report failed to generate. Please contact support.')} fullWidth variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
-                                  <AlertCircle className="w-4 h-4 mr-2" />Failed - Contact Support
+                                  <AlertCircle className="w-4 h-4 mr-2" />Failed – Contact Support
                                 </Button>
                               ) : (
                                 <Button onClick={() => router.push(getToolRoute(tool))} fullWidth className="group">
-                                  <FileText className="w-4 h-4 mr-2" />View Report<ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                                  <FileText className="w-4 h-4 mr-2" />View Report
+                                  <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
                                 </Button>
                               )
                             ) : isSub ? (
                               <div className="flex gap-2">
                                 <Button onClick={() => router.push(getToolRoute(tool))} className="flex-1 group" size="sm">
-                                  Access<ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                                  Access <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
                                 </Button>
                                 <Button variant="outline" size="sm" onClick={() => setCancellingTool(tool)} className="text-red-600 border-red-200 hover:bg-red-50">
                                   Cancel
@@ -589,7 +635,7 @@ function MemberDashboardInner() {
                               </div>
                             ) : (
                               <Button onClick={() => router.push(getToolRoute(tool))} fullWidth className="group">
-                                Access Tool<ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                                Access Tool <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
                               </Button>
                             )}
                           </div>
@@ -602,11 +648,13 @@ function MemberDashboardInner() {
             )}
           </div>
 
+          {/* Right Column */}
           <div className="lg:col-span-1 space-y-6">
             <RightWidgetSidebar referralData={referralData} userId={user?.id} userPurchases={purchases} dashboardType="member" userContext={userContext} />
           </div>
         </div>
 
+        {/* Subscription Management Section */}
         {groupedPurchases.chat.length + groupedPurchases.reading.length + groupedPurchases.audio.length > 0 && (
           <Card className="mt-8 p-6 bg-gradient-to-r from-primary-50 to-transparent">
             <div className="flex items-start justify-between">
@@ -626,18 +674,22 @@ function MemberDashboardInner() {
         )}
       </div>
 
+      {/* Cancellation Modal */}
       <CancellationModal
         isOpen={!!cancellingTool}
         onClose={() => setCancellingTool(null)}
         tool={cancellingTool ? {
-          id:         cancellingTool.tool_id,
-          name:       cancellingTool.tool_name,
-          emoji:      cancellingTool.emoji || '📦',
+          id: cancellingTool.tool_id,
+          name: cancellingTool.tool_name,
+          emoji: cancellingTool.emoji || '📦',
           expires_at: cancellingTool.expires_at || new Date().toISOString(),
-          price:      cancellingTool.price
+          price: cancellingTool.price
         } : {
-          id: '', name: '', emoji: '📦',
-          expires_at: new Date().toISOString(), price: 0
+          id: '',
+          name: '',
+          emoji: '📦',
+          expires_at: new Date().toISOString(),
+          price: 0
         }}
         onConfirm={handleCancelSubscription}
       />
