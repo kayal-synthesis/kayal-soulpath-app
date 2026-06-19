@@ -97,20 +97,20 @@ const getDeviceId = () => {
 function getPersonalDay(dob: string): number {
   const today = new Date()
   const born  = new Date(dob)
-
-  const sum =
-    today.getDate()          +
-    (today.getMonth() + 1)   +   // getMonth() is 0-indexed
-    born.getDate()           +
-    (born.getMonth() + 1)    +
-    born.getFullYear()           // use full birth year, not current year
-
-  // Reduce to single digit 1–9
-  let n = sum
-  while (n > 9) {
-    n = String(n).split('').reduce((a, d) => a + Number(d), 0)
+  const reduceNum = (n: number): number => {
+    while (n > 9 && n !== 11 && n !== 22 && n !== 33) {
+      n = String(n).split('').reduce((a, d) => a + Number(d), 0)
+    }
+    return n
   }
-  return n || 9
+  const yearDigits    = String(today.getFullYear()).split('').reduce((a, d) => a + Number(d), 0)
+  const personalMonth = reduceNum((born.getMonth() + 1) + born.getDate() + yearDigits)
+  const personalDay   = reduceNum(personalMonth + today.getDate())
+  return personalDay || 5
+}
+
+
+
 }
 
 function MemberDashboardInner() {
