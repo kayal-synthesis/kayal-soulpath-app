@@ -33,7 +33,7 @@ function StarField() {
           className="absolute rounded-full bg-white"
           style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size }}
           animate={{ opacity: [0.1, 0.8, 0.1], scale: [1, 1.3, 1] }}
-          transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: s.duration, delay: s.delay, repeat: 999, ease: 'easeInOut' }}
         />
       ))}
     </div>
