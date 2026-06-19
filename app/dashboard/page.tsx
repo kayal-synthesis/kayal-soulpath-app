@@ -250,8 +250,8 @@ export default function DashboardPage() {
               greeting={getGreeting()}
               date={formattedDate}
               time={formattedTime}
-              userId={supabaseUser?.id}
               personalDay={numerology.personalDay}
+              dob={anonymousUser.dob ?? anonymousUser.personalInfo?.dob ?? ''}
               vibration={numerology.vibration}
               vibrationMeaning={numerology.vibrationMeaning}
               energyLevel={numerology.energyLevel}
