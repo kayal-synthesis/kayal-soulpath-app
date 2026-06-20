@@ -21,18 +21,11 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: false,
   async redirects() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.kayalsoulpath.com'
     return [
       { source: '/audio/:toolId', destination: '/domain/voice-of-prophecy/:toolId', permanent: true },
       { source: '/chat/:toolId', destination: '/domain/sacred-script/:toolId', permanent: true },
       { source: '/', destination: '/member/dashboard', permanent: false, has: [{ type: 'host', value: 'members.kayalsoulpath.com' }] },
       { source: '/', destination: '/member/referral/dashboard', permanent: false, has: [{ type: 'host', value: 'affiliate.kayalsoulpath.com' }] },
-    ]
-  },
-  async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.kayalsoulpath.com'
-    return [
-      { source: '/api/reading/submit', destination: `${apiUrl}/api/reading/submit` },
     ]
   },
 }
