@@ -696,7 +696,7 @@ export default function PurchasePage() {
               {/* STEP 4 â€” Upsell */}
               {currentStep === 'upsell' && (
                 <motion.div key="upsell" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                  <Card className="p-4 sm:p-6">
+                  <Card className="p-4 sm:p-6 overflow-hidden w-full">
                     <div className="text-center mb-6">
                       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <CheckCircle className="w-8 h-8 text-green-600" />
@@ -705,7 +705,7 @@ export default function PurchasePage() {
                       <p className="text-sm text-neutral-500">Your {tool.name} is being generated. Check your dashboard for updates.</p>
                     </div>
                     {upsellTools.length > 0 && (
-                      <div className="mb-6">
+                      <div className="mb-6 w-full overflow-hidden">
                         <div className="flex items-center gap-2 mb-3">
                           <Zap className="w-4 h-4 text-amber-500 flex-shrink-0" />
                           <p className="text-sm font-medium text-neutral-700">Customers who bought this also loved:</p>
