@@ -13,7 +13,7 @@ import {
   ArrowLeft, Shield, CreditCard, CheckCircle, AlertCircle,
   Camera, Loader2, Star, Crown, Clock, Mic, BookOpen,
   Mail, User, Key, Tag, X, Zap, Gift, Heart, TrendingUp,
-  Moon, ChevronDown, ChevronUp, Check,
+  Moon, Infinity, ChevronDown, ChevronUp,
 } from 'lucide-react'
 
 import { omniTools }         from '@/lib/constants/omni-seer-tools'
@@ -237,8 +237,11 @@ export default function PurchasePage() {
     if (uploadedImages['palm-left'])  form.append('palm_image_left', uploadedImages['palm-left'])
     if (uploadedImages['palm-right']) form.append('palm_image_right',uploadedImages['palm-right'])
 
-    const res = await fetch('/api/reading/submit', { method: 'POST', body: form })
-    if (!res.ok) throw new Error(`Submission failed: ${res.status}`)
+    const res  = await fetch('/api/reading/submit', { method: 'POST', body: form })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`Submission failed: ${res.status}`)
+    }
     const data = await res.json()
     return data.job_id || null
   }
@@ -321,69 +324,67 @@ export default function PurchasePage() {
     ? ['images', 'payment', 'account', 'upsell'].indexOf(currentStep)
     : ['payment', 'account', 'upsell'].indexOf(currentStep)
 
-  const inputClass = "w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
-
   return (
-    <div className="min-h-screen bg-neutral-50 overflow-x-hidden">
-
+    <div className="min-h-screen bg-neutral-50 overscroll-none overflow-x-hidden">
       {/* Header */}
       <div className="bg-white border-b border-neutral-200 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <button onClick={() => router.back()} className="flex items-center gap-1 text-neutral-600 hover:text-primary-600 flex-shrink-0">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-neutral-600 hover:text-primary-600 text-sm">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="flex items-center gap-2 flex-1 min-w-0 justify-center">
-            <span className="text-sm font-medium text-neutral-700 truncate max-w-[180px]">{tool.name}</span>
-            <span className="text-base font-bold text-primary-600 flex-shrink-0">${finalPrice.toFixed(2)}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-neutral-700 max-w-[150px] truncate">{tool.name}</span>
+            <span className="text-base font-bold text-primary-600">${finalPrice.toFixed(2)}</span>
           </div>
-          {loggedInUser ? (
-            <span className="text-xs text-green-600 flex items-center gap-1 flex-shrink-0">
-              <CheckCircle className="w-4 h-4" />
+          {loggedInUser && (
+            <span className="text-xs text-green-600 flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" />
+              <span className="hidden sm:inline">Signed in</span>
             </span>
-          ) : <div className="w-5" />}
+          )}
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8">
+      <div className="max-w-4xl mx-auto px-4 py-4 sm:py-8">
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-2 mb-6">
+        {/* Progress */}
+        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-6 sm:mb-8">
           {steps.map((label, i) => (
-            <div key={label} className="flex items-center gap-2">
-              <div className="flex flex-col items-center gap-1">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+            <div key={label} className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   i < stepIndex ? 'bg-green-500 text-white' :
                   i === stepIndex ? 'bg-primary-600 text-white' :
                   'bg-neutral-200 text-neutral-500'
                 }`}>
-                  {i < stepIndex ? <Check className="w-4 h-4" /> : i + 1}
+                  {i < stepIndex ? 'Ã¢Å“â€œ' : i + 1}
                 </div>
-                <span className={`text-xs font-medium ${
-                  i === stepIndex ? 'text-neutral-800' : 
-                  i < stepIndex ? 'text-green-600' : 'text-neutral-400'
-                }`}>{label}</span>
+                <span className={`text-xs ${i === stepIndex ? 'font-medium text-neutral-800' : 'text-neutral-400'}`}>
+                  {label}
+                </span>
               </div>
-              {i < steps.length - 1 && <div className="w-6 sm:w-10 h-0.5 bg-neutral-200 mb-4" />}
+              {i < steps.length - 1 && <div className="w-4 sm:w-8 h-0.5 bg-neutral-200" />}
             </div>
           ))}
         </div>
 
-        {/* Mobile collapsible order summary */}
+        {/* Mobile: collapsible order summary */}
         <div className="block md:hidden mb-4">
           <button
             onClick={() => setShowSummary(v => !v)}
             className="w-full flex items-center justify-between p-3 bg-white rounded-xl border border-neutral-200 shadow-sm"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0 ${categoryColor}`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg ${categoryColor}`}>
                 {tool.emoji || '📦'}
               </div>
-              <div className="text-left min-w-0">
-                <p className="text-sm font-semibold text-neutral-800 truncate">{tool.name}</p>
-                <p className="text-xs text-neutral-500">{hasDiscount ? `Was $${originalPrice}` : `~${tool.deliveryMinutes || 20} min delivery`}</p>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-neutral-800 line-clamp-1">{tool.name}</p>
+                <p className="text-xs text-neutral-500">{hasDiscount ? `Was $${originalPrice}` : `${tool.deliveryMinutes || 20}-min delivery`}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+            <div className="flex items-center gap-2">
               <span className="text-base font-bold text-primary-600">${finalPrice.toFixed(2)}</span>
               {showSummary ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400" />}
             </div>
@@ -391,19 +392,21 @@ export default function PurchasePage() {
 
           <AnimatePresence>
             {showSummary && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden">
                 <div className="bg-white rounded-b-xl border border-t-0 border-neutral-200 p-4 space-y-3">
                   {fullName && (
                     <div className="bg-primary-50 rounded-lg p-3">
                       <p className="text-xs font-medium text-primary-700 mb-1">Reading prepared for:</p>
                       <p className="text-sm text-primary-800 font-medium">{fullName}</p>
                       {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` · ${userBirthLoc}` : ''}</p>}
+                      {partnerName && <p className="text-xs text-primary-600 mt-1">Partner: {partnerName}</p>}
                     </div>
                   )}
-                  <div className="space-y-1.5">
-                    {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee'].map(item => (
+                  <div className="space-y-1">
+                    {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee'].map(item => (
                       <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
-                        <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />{item}
+                        <Shield className="w-3 h-3 text-green-500 flex-shrink-0" />{item}
                       </div>
                     ))}
                   </div>
@@ -415,7 +418,7 @@ export default function PurchasePage() {
 
         <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
 
-          {/* Left — Tool Summary (desktop only) */}
+          {/* Left — Tool Summary (desktop only) */}
           <div className="hidden md:block">
             <Card className="p-6 sticky top-24">
               <div className="flex items-center gap-4 mb-4">
@@ -445,7 +448,7 @@ export default function PurchasePage() {
                     <Camera className="w-4 h-4" />
                     Required: {requiresImage.type === 'both' ? 'Face + Both Palms' : requiresImage.type === 'face' ? 'Face Photo' : 'Both Palms'}
                   </div>
-                  <p className="text-xs text-amber-700">Upload before payment.</p>
+                  <p className="text-xs text-amber-700">Upload after reviewing your order below.</p>
                 </div>
               )}
               <div className="pt-4 border-t border-neutral-100">
@@ -458,25 +461,25 @@ export default function PurchasePage() {
                 </div>
               </div>
               <div className="mt-4 space-y-1.5">
-                {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee', `Delivery in ~${tool.deliveryMinutes || 20} minutes`].map(item => (
+                {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee', `Delivery in ~${tool.deliveryMinutes || 20} minutes`].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
-                    <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />{item}
+                    <Shield className="w-3 h-3 text-green-500 flex-shrink-0" />{item}
                   </div>
                 ))}
               </div>
             </Card>
           </div>
 
-          {/* Right — Steps */}
+          {/* Right — Steps */}
           <div>
             <AnimatePresence mode="wait">
 
-              {/* STEP 1 — Image Upload */}
+              {/* STEP 1 — Image Upload */}
               {currentStep === 'images' && (
                 <motion.div key="images" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <Card className="p-5 sm:p-6">
-                    <h2 className="text-xl font-serif mb-2">Upload Required Images</h2>
-                    <p className="text-sm text-neutral-500 mb-5">
+                    <h2 className="text-lg sm:text-xl font-serif mb-2">Upload Required Images</h2>
+                    <p className="text-sm text-neutral-500 mb-4 sm:mb-6">
                       Your {requiresImage?.type === 'both' ? 'face photo and palm images are' : requiresImage?.type === 'face' ? 'face photo is' : 'palm images are'} required for this reading.
                     </p>
                     <ImageUploader
@@ -513,34 +516,36 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 2 — Payment */}
+              {/* STEP 2 — Payment */}
               {currentStep === 'payment' && (
                 <motion.div key="payment" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                  <Card className="p-5 sm:p-6 space-y-5">
-                    <h2 className="text-xl font-serif">Complete Your Order</h2>
+                  <Card className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+                    <h2 className="text-lg sm:text-xl font-serif">Complete Your Order</h2>
 
                     {/* Email */}
                     <div>
-                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      <label className="block text-sm font-medium text-neutral-700 mb-1.5">
                         Email address <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                         <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                          placeholder="your@email.com" className={inputClass} />
+                          placeholder="your@email.com"
+                          className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
+                        />
                       </div>
                       <p className="text-xs text-neutral-400 mt-1">Your reading will be sent here.</p>
                     </div>
 
                     {/* Coupon */}
-                    <div className="bg-neutral-50 rounded-xl p-4">
-                      <p className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
-                        <Tag className="w-4 h-4" />Have a coupon code?
+                    <div className="bg-neutral-50 rounded-xl p-3 sm:p-4">
+                      <p className="text-sm font-medium text-neutral-700 mb-2 flex items-center gap-2">
+                        <Tag className="w-4 h-4" />Have a coupon?
                       </p>
                       {appliedCoupon ? (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                            <CheckCircle className="w-4 h-4 text-green-600" />
                             <div>
                               <p className="text-sm font-medium text-green-800">{appliedCoupon.code} applied</p>
                               <p className="text-xs text-green-600">
@@ -548,7 +553,7 @@ export default function PurchasePage() {
                               </p>
                             </div>
                           </div>
-                          <button onClick={() => { setAppliedCoupon(null); setFinalPrice(originalPrice) }} className="p-1">
+                          <button onClick={() => { setAppliedCoupon(null); setFinalPrice(originalPrice) }}>
                             <X className="w-4 h-4 text-green-600" />
                           </button>
                         </div>
@@ -558,55 +563,54 @@ export default function PurchasePage() {
                             placeholder="Enter coupon code"
                             className="flex-1 px-3 py-3 border border-neutral-200 rounded-lg text-base sm:text-sm focus:outline-none focus:border-primary-400"
                           />
-                          <Button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} variant="outline">
+                          <Button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} variant="outline" size="sm">
                             {validatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
                           </Button>
                         </div>
                       )}
                       {couponError && (
-                        <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
-                          <AlertCircle className="w-4 h-4 flex-shrink-0" />{couponError}
+                        <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />{couponError}
                         </p>
                       )}
                     </div>
 
                     {/* Order Summary */}
-                    <div className="bg-primary-50 rounded-xl p-4">
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-neutral-600 flex-1 mr-2 truncate">{tool.name}</span>
-                        <span className="flex-shrink-0 font-medium">${originalPrice}</span>
+                    <div className="bg-primary-50 rounded-xl p-3 sm:p-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-neutral-600 line-clamp-1 flex-1 mr-2">{tool.name}</span>
+                        <span className="flex-shrink-0">${originalPrice}</span>
                       </div>
                       {hasDiscount && (
-                        <div className="flex justify-between text-sm text-green-600 mb-2">
+                        <div className="flex justify-between text-sm text-green-600 mb-1">
                           <span>Discount ({appliedCoupon?.code})</span>
                           <span>-${savings.toFixed(2)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-primary-100">
+                      <div className="flex justify-between font-bold text-base pt-2 border-t border-primary-100">
                         <span>Total{isSub ? ' /month' : ''}:</span>
                         <span className="text-primary-700">${finalPrice.toFixed(2)}</span>
                       </div>
                     </div>
 
                     {/* Demo payment */}
-                    <div className="bg-neutral-50 rounded-xl p-4">
+                    <div className="bg-neutral-50 rounded-xl p-3 sm:p-4">
                       <p className="text-xs text-neutral-400 mb-3 flex items-center gap-1.5">
-                        <CreditCard className="w-3.5 h-3.5" />Demo payment — Stripe integration coming soon
+                        <CreditCard className="w-3.5 h-3.5" />Demo payment — Stripe integration coming soon
                       </p>
                       <div className="space-y-2 opacity-60 pointer-events-none">
-                        <input type="text" value="4242 4242 4242 4242" readOnly className="w-full px-3 py-3 border rounded-lg text-sm bg-white" />
+                        <input type="text" value="4242 4242 4242 4242" readOnly className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white" />
                         <div className="grid grid-cols-2 gap-2">
-                          <input type="text" value="12/25" readOnly className="px-3 py-3 border rounded-lg text-sm bg-white" />
-                          <input type="text" value="123" readOnly className="px-3 py-3 border rounded-lg text-sm bg-white" />
+                          <input type="text" value="12/25" readOnly className="px-3 py-2.5 border rounded-lg text-sm bg-white" />
+                          <input type="text" value="123" readOnly className="px-3 py-2.5 border rounded-lg text-sm bg-white" />
                         </div>
                       </div>
                     </div>
 
                     {/* Terms */}
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input type="checkbox" checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)}
-                        className="mt-0.5 w-5 h-5 flex-shrink-0 cursor-pointer rounded" />
-                      <span className="text-sm text-neutral-600 leading-relaxed">
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input type="checkbox" checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="mt-0.5 w-5 h-5 flex-shrink-0 cursor-pointer" />
+                      <span className="text-sm text-neutral-600">
                         I agree to the{' '}
                         <a href="/terms" className="text-primary-600 underline" target="_blank">Terms of Service</a>
                         {' '}and{' '}
@@ -615,8 +619,8 @@ export default function PurchasePage() {
                     </label>
 
                     {purchaseError && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{purchaseError}
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />{purchaseError}
                       </div>
                     )}
 
@@ -630,62 +634,65 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 3 — Account Creation */}
+              {/* STEP 3 — Account Creation */}
               {currentStep === 'account' && (
                 <motion.div key="account" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <Card className="p-5 sm:p-6">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <CheckCircle className="w-8 h-8 text-green-600" />
+                    <div className="text-center mb-5 sm:mb-6">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" />
                       </div>
-                      <h2 className="text-2xl font-serif mb-2">Payment Successful!</h2>
+                      <h2 className="text-xl sm:text-2xl font-serif mb-1">Payment Successful!</h2>
                       <p className="text-sm text-neutral-500">Your {tool.name} is being prepared. Create an account to access it.</p>
                     </div>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">Full Name</label>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">Full Name</label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                          <input type="text" value={name} onChange={e => setName(e.target.value)}
-                            placeholder="Your name" className={inputClass} />
+                          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name"
+                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
+                          />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">Email Address</label>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">Email Address</label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                            placeholder="your@email.com" className={inputClass} />
+                          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com"
+                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
+                          />
                         </div>
-                        {emailError && <p className="text-sm text-red-500 mt-1">{emailError}</p>}
+                        {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">
-                          Create Password <span className="text-neutral-400 font-normal text-xs">(min 8 characters)</span>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Create Password <span className="text-neutral-400 font-normal">(min 8 characters)</span>
                         </label>
                         <div className="relative">
                           <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                            placeholder="Create a secure password" className={inputClass} />
+                          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a secure password"
+                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
+                          />
                         </div>
-                        {passwordError && <p className="text-sm text-red-500 mt-1">{passwordError}</p>}
+                        {passwordError && <p className="text-xs text-red-500 mt-1">{passwordError}</p>}
                       </div>
-                      <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-700">
-                        <p className="font-medium mb-1">After creating your account:</p>
-                        <p className="text-xs">You will be automatically signed in and taken to your dashboard.</p>
+                      <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+                        <p className="font-medium mb-0.5">After creating your account:</p>
+                        <p>You will be automatically signed in on this device.</p>
                       </div>
                       <Button onClick={handleCreateAccount} disabled={accountLoading || !email || !password || !name} fullWidth size="lg">
                         {accountLoading
                           ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />Creating account...</>
-                          : <><User className="w-5 h-5 mr-2" />Create Account and Access Dashboard</>
+                          : <><User className="w-5 h-5 mr-2" />Create Account & Access Dashboard</>
                         }
                       </Button>
-                      <div className="relative my-2">
+                      <div className="relative">
                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-200" /></div>
-                        <div className="relative flex justify-center"><span className="px-3 bg-white text-sm text-neutral-400">or</span></div>
+                        <div className="relative flex justify-center text-xs"><span className="px-2 bg-white text-neutral-400">or</span></div>
                       </div>
                       <button onClick={handleContinueAsGuest}
-                        className="w-full py-3 text-sm text-neutral-500 hover:text-neutral-700 border border-neutral-200 rounded-xl transition active:scale-95">
+                        className="w-full py-3 text-sm text-neutral-500 hover:text-neutral-700 border border-neutral-200 rounded-xl transition">
                         Continue as Guest
                       </button>
                     </div>
@@ -693,32 +700,32 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 4 — Upsell */}
+              {/* STEP 4 — Upsell */}
               {currentStep === 'upsell' && (
                 <motion.div key="upsell" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <Card className="p-5 sm:p-6">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <CheckCircle className="w-8 h-8 text-green-600" />
+                    <div className="text-center mb-5 sm:mb-6">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" />
                       </div>
-                      <h2 className="text-2xl font-serif mb-2">You are all set!</h2>
+                      <h2 className="text-xl sm:text-2xl font-serif mb-1">You are all set!</h2>
                       <p className="text-sm text-neutral-500">Your {tool.name} is being generated. Check your dashboard for updates.</p>
                     </div>
                     {upsellTools.length > 0 && (
-                      <div className="mb-6">
+                      <div className="mb-5 sm:mb-6">
                         <div className="flex items-center gap-2 mb-3">
-                          <Zap className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                          <Zap className="w-4 h-4 text-amber-500" />
                           <p className="text-sm font-medium text-neutral-700">Customers who bought this also loved:</p>
                         </div>
                         <div className="space-y-2">
                           {upsellTools.map(t => (
                             <div key={t.id}
-                              className="flex items-center gap-3 p-3 rounded-xl border border-neutral-200 hover:border-primary-200 hover:bg-primary-50 transition cursor-pointer"
+                              className="flex items-center gap-3 p-3 rounded-xl border border-neutral-200 hover:border-primary-200 hover:bg-primary-50 transition cursor-pointer w-full overflow-hidden"
                               onClick={() => router.push(`/tool/${t.id}`)}>
-                              <span className="text-2xl flex-shrink-0">{t.emoji || '🔮'}</span>
+                              <span className="text-xl">{t.emoji || 'Ã°Å¸â€Â®'}</span>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-neutral-800 truncate">{t.name}</p>
-                                <p className="text-xs text-neutral-400 truncate">{t.tagline || t.description}</p>
+                                <p className="text-sm font-medium text-neutral-800 truncate max-w-[160px] sm:max-w-none">{t.name}</p>
+                                <p className="text-xs text-neutral-400 truncate max-w-[160px] sm:max-w-none">{t.tagline || t.description}</p>
                               </div>
                               <div className="flex items-center gap-1 flex-shrink-0">
                                 <span className="text-sm font-bold text-primary-600">${t.price}</span>
