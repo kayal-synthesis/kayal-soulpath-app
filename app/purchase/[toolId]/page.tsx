@@ -253,7 +253,7 @@ export default function PurchasePage() {
       body: JSON.stringify({
         userId, toolId: tool.id, toolName: tool.name,
         toolType: destination, category: domain, destination,
-        emoji: tool.emoji || '📦', price: finalPrice, originalPrice,
+        emoji: tool.emoji || 'ðŸ“¦', price: finalPrice, originalPrice,
         couponCode: appliedCoupon?.code || null, name, email,
         job_id: jId, purchaseDate: new Date().toISOString(),
       }),
@@ -325,7 +325,7 @@ export default function PurchasePage() {
     : ['payment', 'account', 'upsell'].indexOf(currentStep)
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 overscroll-none">
       {/* Header */}
       <div className="bg-white border-b border-neutral-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -334,7 +334,7 @@ export default function PurchasePage() {
             <span className="hidden sm:inline">Back</span>
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-neutral-700 hidden sm:inline">{tool.name}</span>
+            <span className="text-sm font-medium text-neutral-700 max-w-[150px] truncate">{tool.name}</span>
             <span className="text-base font-bold text-primary-600">${finalPrice.toFixed(2)}</span>
           </div>
           {loggedInUser && (
@@ -358,9 +358,9 @@ export default function PurchasePage() {
                   i === stepIndex ? 'bg-primary-600 text-white' :
                   'bg-neutral-200 text-neutral-500'
                 }`}>
-                  {i < stepIndex ? '✓' : i + 1}
+                  {i < stepIndex ? 'âœ“' : i + 1}
                 </div>
-                <span className={`text-xs hidden sm:inline ${i === stepIndex ? 'font-medium text-neutral-800' : 'text-neutral-400'}`}>
+                <span className={`text-xs ${i === stepIndex ? 'font-medium text-neutral-800' : 'text-neutral-400'}`}>
                   {label}
                 </span>
               </div>
@@ -377,7 +377,7 @@ export default function PurchasePage() {
           >
             <div className="flex items-center gap-3">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg ${categoryColor}`}>
-                {tool.emoji || '📦'}
+                {tool.emoji || 'ðŸ“¦'}
               </div>
               <div className="text-left">
                 <p className="text-sm font-semibold text-neutral-800 line-clamp-1">{tool.name}</p>
@@ -399,12 +399,12 @@ export default function PurchasePage() {
                     <div className="bg-primary-50 rounded-lg p-3">
                       <p className="text-xs font-medium text-primary-700 mb-1">Reading prepared for:</p>
                       <p className="text-sm text-primary-800 font-medium">{fullName}</p>
-                      {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` · ${userBirthLoc}` : ''}</p>}
+                      {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` Â· ${userBirthLoc}` : ''}</p>}
                       {partnerName && <p className="text-xs text-primary-600 mt-1">Partner: {partnerName}</p>}
                     </div>
                   )}
                   <div className="space-y-1">
-                    {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee'].map(item => (
+                    {['Secure 256-bit encryption', 'Private â€” only you can access', '7-day money-back guarantee'].map(item => (
                       <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
                         <Shield className="w-3 h-3 text-green-500 flex-shrink-0" />{item}
                       </div>
@@ -418,12 +418,12 @@ export default function PurchasePage() {
 
         <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
 
-          {/* Left — Tool Summary (desktop only) */}
+          {/* Left â€” Tool Summary (desktop only) */}
           <div className="hidden md:block">
             <Card className="p-6 sticky top-24">
               <div className="flex items-center gap-4 mb-4">
                 <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl ${categoryColor}`}>
-                  {tool.emoji || '📦'}
+                  {tool.emoji || 'ðŸ“¦'}
                 </div>
                 <div>
                   <h1 className="text-xl font-serif">{tool.name}</h1>
@@ -438,7 +438,7 @@ export default function PurchasePage() {
                 <div className="bg-primary-50 rounded-xl p-3 mb-4">
                   <p className="text-xs font-medium text-primary-700 mb-1">Reading prepared for:</p>
                   <p className="text-sm text-primary-800 font-medium">{fullName}</p>
-                  {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` · ${userBirthLoc}` : ''}</p>}
+                  {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` Â· ${userBirthLoc}` : ''}</p>}
                   {partnerName && <p className="text-xs text-primary-600 mt-1">Partner: {partnerName}</p>}
                 </div>
               )}
@@ -461,7 +461,7 @@ export default function PurchasePage() {
                 </div>
               </div>
               <div className="mt-4 space-y-1.5">
-                {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee', `Delivery in ~${tool.deliveryMinutes || 20} minutes`].map(item => (
+                {['Secure 256-bit encryption', 'Private â€” only you can access', '7-day money-back guarantee', `Delivery in ~${tool.deliveryMinutes || 20} minutes`].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
                     <Shield className="w-3 h-3 text-green-500 flex-shrink-0" />{item}
                   </div>
@@ -470,14 +470,14 @@ export default function PurchasePage() {
             </Card>
           </div>
 
-          {/* Right — Steps */}
+          {/* Right â€” Steps */}
           <div>
             <AnimatePresence mode="wait">
 
-              {/* STEP 1 — Image Upload */}
+              {/* STEP 1 â€” Image Upload */}
               {currentStep === 'images' && (
                 <motion.div key="images" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                  <Card className="p-4 sm:p-6">
+                  <Card className="p-5 sm:p-6">
                     <h2 className="text-lg sm:text-xl font-serif mb-2">Upload Required Images</h2>
                     <p className="text-sm text-neutral-500 mb-4 sm:mb-6">
                       Your {requiresImage?.type === 'both' ? 'face photo and palm images are' : requiresImage?.type === 'face' ? 'face photo is' : 'palm images are'} required for this reading.
@@ -516,7 +516,7 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 2 — Payment */}
+              {/* STEP 2 â€” Payment */}
               {currentStep === 'payment' && (
                 <motion.div key="payment" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <Card className="p-4 sm:p-6 space-y-4 sm:space-y-5">
@@ -531,7 +531,7 @@ export default function PurchasePage() {
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                         <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                           placeholder="your@email.com"
-                          className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-sm"
+                          className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
                         />
                       </div>
                       <p className="text-xs text-neutral-400 mt-1">Your reading will be sent here.</p>
@@ -561,7 +561,7 @@ export default function PurchasePage() {
                         <div className="flex gap-2">
                           <input type="text" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())}
                             placeholder="Enter coupon code"
-                            className="flex-1 px-3 py-2.5 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:border-primary-400"
+                            className="flex-1 px-3 py-3 border border-neutral-200 rounded-lg text-base sm:text-sm focus:outline-none focus:border-primary-400"
                           />
                           <Button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} variant="outline" size="sm">
                             {validatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
@@ -596,7 +596,7 @@ export default function PurchasePage() {
                     {/* Demo payment */}
                     <div className="bg-neutral-50 rounded-xl p-3 sm:p-4">
                       <p className="text-xs text-neutral-400 mb-3 flex items-center gap-1.5">
-                        <CreditCard className="w-3.5 h-3.5" />Demo payment — Stripe integration coming soon
+                        <CreditCard className="w-3.5 h-3.5" />Demo payment â€” Stripe integration coming soon
                       </p>
                       <div className="space-y-2 opacity-60 pointer-events-none">
                         <input type="text" value="4242 4242 4242 4242" readOnly className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white" />
@@ -609,8 +609,8 @@ export default function PurchasePage() {
 
                     {/* Terms */}
                     <label className="flex items-start gap-2.5 cursor-pointer">
-                      <input type="checkbox" checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="mt-1 w-4 h-4 flex-shrink-0" />
-                      <span className="text-xs text-neutral-600">
+                      <input type="checkbox" checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="mt-0.5 w-5 h-5 flex-shrink-0 cursor-pointer" />
+                      <span className="text-sm text-neutral-600">
                         I agree to the{' '}
                         <a href="/terms" className="text-primary-600 underline" target="_blank">Terms of Service</a>
                         {' '}and{' '}
@@ -634,10 +634,10 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 3 — Account Creation */}
+              {/* STEP 3 â€” Account Creation */}
               {currentStep === 'account' && (
                 <motion.div key="account" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                  <Card className="p-4 sm:p-6">
+                  <Card className="p-5 sm:p-6">
                     <div className="text-center mb-5 sm:mb-6">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" />
@@ -651,7 +651,7 @@ export default function PurchasePage() {
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your name"
-                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-sm"
+                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
                           />
                         </div>
                       </div>
@@ -660,7 +660,7 @@ export default function PurchasePage() {
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com"
-                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-sm"
+                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
                           />
                         </div>
                         {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
@@ -672,7 +672,7 @@ export default function PurchasePage() {
                         <div className="relative">
                           <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a secure password"
-                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-sm"
+                            className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 text-base sm:text-sm"
                           />
                         </div>
                         {passwordError && <p className="text-xs text-red-500 mt-1">{passwordError}</p>}
@@ -700,10 +700,10 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 4 — Upsell */}
+              {/* STEP 4 â€” Upsell */}
               {currentStep === 'upsell' && (
                 <motion.div key="upsell" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                  <Card className="p-4 sm:p-6">
+                  <Card className="p-5 sm:p-6">
                     <div className="text-center mb-5 sm:mb-6">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" />
@@ -722,7 +722,7 @@ export default function PurchasePage() {
                             <div key={t.id}
                               className="flex items-center gap-3 p-3 rounded-xl border border-neutral-200 hover:border-primary-200 hover:bg-primary-50 transition cursor-pointer"
                               onClick={() => router.push(`/tool/${t.id}`)}>
-                              <span className="text-xl">{t.emoji || '🔮'}</span>
+                              <span className="text-xl">{t.emoji || 'ðŸ”®'}</span>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-neutral-800 truncate">{t.name}</p>
                                 <p className="text-xs text-neutral-400 truncate">{t.tagline || t.description}</p>

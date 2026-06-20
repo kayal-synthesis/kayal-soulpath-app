@@ -6,6 +6,12 @@ import { Footer } from '@/components/layout/Footer'
 
 const inter = Inter({ subsets: ['latin'] })
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 export const metadata: Metadata = {
   title: 'KAYAL LifeOS',
   description: 'Self-discovery platform by Kayal Soulpath Institute',
