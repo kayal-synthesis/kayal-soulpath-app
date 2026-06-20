@@ -250,7 +250,7 @@ export default function PurchasePage() {
       body: JSON.stringify({
         userId, toolId: tool.id, toolName: tool.name,
         toolType: destination, category: domain, destination,
-        emoji: tool.emoji || '📦', price: finalPrice, originalPrice,
+        emoji: tool.emoji || 'ðŸ“¦', price: finalPrice, originalPrice,
         couponCode: appliedCoupon?.code || null, name, email,
         job_id: jId, purchaseDate: new Date().toISOString(),
       }),
@@ -376,7 +376,7 @@ export default function PurchasePage() {
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0 ${categoryColor}`}>
-                {tool.emoji || '📦'}
+                {tool.emoji || 'ðŸ“¦'}
               </div>
               <div className="text-left min-w-0">
                 <p className="text-sm font-semibold text-neutral-800 truncate">{tool.name}</p>
@@ -397,11 +397,11 @@ export default function PurchasePage() {
                     <div className="bg-primary-50 rounded-lg p-3">
                       <p className="text-xs font-medium text-primary-700 mb-1">Reading prepared for:</p>
                       <p className="text-sm text-primary-800 font-medium">{fullName}</p>
-                      {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` · ${userBirthLoc}` : ''}</p>}
+                      {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` Â· ${userBirthLoc}` : ''}</p>}
                     </div>
                   )}
                   <div className="space-y-1.5">
-                    {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee'].map(item => (
+                    {['Secure 256-bit encryption', 'Private â€” only you can access', '7-day money-back guarantee'].map(item => (
                       <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
                         <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />{item}
                       </div>
@@ -415,12 +415,12 @@ export default function PurchasePage() {
 
         <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
 
-          {/* Left — Tool Summary (desktop only) */}
+          {/* Left â€” Tool Summary (desktop only) */}
           <div className="hidden md:block">
             <Card className="p-6 sticky top-24">
               <div className="flex items-center gap-4 mb-4">
                 <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl ${categoryColor}`}>
-                  {tool.emoji || '📦'}
+                  {tool.emoji || 'ðŸ“¦'}
                 </div>
                 <div>
                   <h1 className="text-xl font-serif">{tool.name}</h1>
@@ -435,7 +435,7 @@ export default function PurchasePage() {
                 <div className="bg-primary-50 rounded-xl p-3 mb-4">
                   <p className="text-xs font-medium text-primary-700 mb-1">Reading prepared for:</p>
                   <p className="text-sm text-primary-800 font-medium">{fullName}</p>
-                  {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` · ${userBirthLoc}` : ''}</p>}
+                  {userDob && <p className="text-xs text-primary-600">{userDob}{userBirthLoc ? ` Â· ${userBirthLoc}` : ''}</p>}
                   {partnerName && <p className="text-xs text-primary-600 mt-1">Partner: {partnerName}</p>}
                 </div>
               )}
@@ -458,7 +458,7 @@ export default function PurchasePage() {
                 </div>
               </div>
               <div className="mt-4 space-y-1.5">
-                {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee', `Delivery in ~${tool.deliveryMinutes || 20} minutes`].map(item => (
+                {['Secure 256-bit encryption', 'Private â€” only you can access', '7-day money-back guarantee', `Delivery in ~${tool.deliveryMinutes || 20} minutes`].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
                     <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />{item}
                   </div>
@@ -467,11 +467,11 @@ export default function PurchasePage() {
             </Card>
           </div>
 
-          {/* Right — Steps */}
+          {/* Right â€” Steps */}
           <div>
             <AnimatePresence mode="wait">
 
-              {/* STEP 1 — Image Upload */}
+              {/* STEP 1 â€” Image Upload */}
               {currentStep === 'images' && (
                 <motion.div key="images" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <Card className="p-5 sm:p-6">
@@ -513,7 +513,7 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 2 — Payment */}
+              {/* STEP 2 â€” Payment */}
               {currentStep === 'payment' && (
                 <motion.div key="payment" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <Card className="p-5 sm:p-6 space-y-5">
@@ -591,7 +591,7 @@ export default function PurchasePage() {
                     {/* Demo payment */}
                     <div className="bg-neutral-50 rounded-xl p-4">
                       <p className="text-xs text-neutral-400 mb-3 flex items-center gap-1.5">
-                        <CreditCard className="w-3.5 h-3.5" />Demo payment — Stripe integration coming soon
+                        <CreditCard className="w-3.5 h-3.5" />Demo payment â€” Stripe integration coming soon
                       </p>
                       <div className="space-y-2 opacity-60 pointer-events-none">
                         <input type="text" value="4242 4242 4242 4242" readOnly className="w-full px-3 py-3 border rounded-lg text-sm bg-white" />
@@ -630,7 +630,7 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 3 — Account Creation */}
+              {/* STEP 3 â€” Account Creation */}
               {currentStep === 'account' && (
                 <motion.div key="account" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                   <Card className="p-5 sm:p-6">
@@ -693,10 +693,10 @@ export default function PurchasePage() {
                 </motion.div>
               )}
 
-              {/* STEP 4 — Upsell */}
+              {/* STEP 4 â€” Upsell */}
               {currentStep === 'upsell' && (
                 <motion.div key="upsell" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                  <Card className="p-5 sm:p-6">
+                  <Card className="p-4 sm:p-6">
                     <div className="text-center mb-6">
                       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <CheckCircle className="w-8 h-8 text-green-600" />
@@ -710,19 +710,18 @@ export default function PurchasePage() {
                           <Zap className="w-4 h-4 text-amber-500 flex-shrink-0" />
                           <p className="text-sm font-medium text-neutral-700">Customers who bought this also loved:</p>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 w-full min-w-0">
                           {upsellTools.map(t => (
                             <div key={t.id}
-                              className="flex items-center gap-3 p-3 rounded-xl border border-neutral-200 hover:border-primary-200 hover:bg-primary-50 transition cursor-pointer"
+                              className="flex items-center gap-2 p-3 rounded-xl border border-neutral-200 hover:border-primary-200 hover:bg-primary-50 transition cursor-pointer w-full min-w-0"
                               onClick={() => router.push(`/tool/${t.id}`)}>
-                              <span className="text-2xl flex-shrink-0">{t.emoji || '🔮'}</span>
+                              <span className="text-2xl flex-shrink-0">{t.emoji || 'ðŸ”®'}</span>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-neutral-800 truncate">{t.name}</p>
+                                <p className="text-sm font-medium text-neutral-800 truncate w-full">{t.name}</p>
                                 <p className="text-xs text-neutral-400 truncate">{t.tagline || t.description}</p>
                               </div>
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                <span className="text-sm font-bold text-primary-600">${t.price}</span>
-                                <Gift className="w-3.5 h-3.5 text-primary-400" />
+                              <div className="flex-shrink-0 text-right">
+                                <span className="text-sm font-bold text-primary-600 block">${t.price}</span>
                               </div>
                             </div>
                           ))}
