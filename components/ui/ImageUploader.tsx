@@ -90,9 +90,12 @@ export const ImageUploader = ({ type, onCapture, onComplete, instructions }: Ima
       setStream(ms)
       if (videoRef.current) {
         videoRef.current.srcObject = ms
+        setMode('camera')
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().then(() => { setCameraReady(true); setMode('camera') })
+          videoRef.current?.play().then(() => { setCameraReady(true) }).catch(() => setCameraReady(true))
         }
+        videoRef.current.oncanplay = () => { setCameraReady(true) }
+        setTimeout(() => { setCameraReady(true) }, 2000)
       }
     } catch (err: any) {
       const msg = err.name === 'NotAllowedError' ? 'Camera access denied. Please allow camera access.'
