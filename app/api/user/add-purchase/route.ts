@@ -68,10 +68,8 @@ export async function POST(request: Request) {
       await supabaseAdmin.from('users').insert({
         id:           userId,
         email:        email || 'unknown@email.com',
-        full_name:    name  || 'User',      // FIX 5: full_name not name
-        // membership_tier removed — not in our schema
-        created_at:   new Date().toISOString(),
-        updated_at:   new Date().toISOString(),
+        full_name:    name  || 'User',
+        created:      new Date().toISOString(),
       })
     }
 
