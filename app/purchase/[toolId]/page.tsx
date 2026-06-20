@@ -282,7 +282,7 @@ export default function PurchasePage() {
   const handleCreateAccount = async () => {
     setEmailError('')
     setPasswordError('')
-    if (!name.trim()) return
+    if (!name.trim()) { setName(email.split("@")[0]); }
     if (!EMAIL_RE.test(email)) { setEmailError('Valid email required'); return }
     if (password.length < 8)  { setPasswordError('Password must be at least 8 characters'); return }
     setAccountLoading(true)
@@ -674,7 +674,7 @@ export default function PurchasePage() {
                         <p className="font-medium mb-1">After creating your account:</p>
                         <p className="text-xs">You will be automatically signed in and taken to your dashboard.</p>
                       </div>
-                      <Button onClick={handleCreateAccount} disabled={accountLoading || !email || !password || !name} fullWidth size="lg">
+                      <Button onClick={handleCreateAccount} disabled={accountLoading || !email || !password} fullWidth size="lg">
                         {accountLoading
                           ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />Creating account...</>
                           : <><User className="w-5 h-5 mr-2" />Create Account and Access Dashboard</>
