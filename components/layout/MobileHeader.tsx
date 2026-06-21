@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, Search, User } from 'lucide-react'
+import { Bell, User, Menu } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface MobileHeaderProps {
@@ -18,6 +18,15 @@ export const MobileHeader = ({ isOpen, onToggle, userName, onSearchClick }: Mobi
     <header className="lg:hidden bg-white/95 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-30 shadow-sm">
       <div className="flex items-center justify-between px-4 py-3">
 
+        {/* Hamburger — opens Sidebar mobile overlay */}
+        <button
+          onClick={onToggle}
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 transition"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5 text-neutral-600" />
+        </button>
+
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="text-xl text-primary-600">☾</span>
@@ -25,25 +34,19 @@ export const MobileHeader = ({ isOpen, onToggle, userName, onSearchClick }: Mobi
         </Link>
 
         {/* Right actions */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onSearchClick}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 transition"
-          >
-            <Search className="w-4.5 h-4.5 text-neutral-500" />
-          </button>
+        <div className="flex items-center gap-1">
           <button
             onClick={() => router.push('/notifications')}
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 transition relative"
           >
-            <Bell className="w-4.5 h-4.5 text-neutral-500" />
+            <Bell className="w-4 h-4 text-neutral-500" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
           </button>
           <button
             onClick={() => router.push('/dashboard/profile')}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-primary-50 hover:bg-primary-100 transition"
           >
-            <User className="w-4.5 h-4.5 text-primary-600" />
+            <User className="w-4 h-4 text-primary-600" />
           </button>
         </div>
 

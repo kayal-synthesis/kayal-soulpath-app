@@ -59,6 +59,7 @@ export default function DashboardPage() {
   const [searchQuery,        setSearchQuery]        = useState('')
   const [activeFilter,       setActiveFilter]       = useState('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isMobileMenuOpen,   setIsMobileMenuOpen]   = useState(false)
   const [coupons,            setCoupons]            = useState<Coupon[]>([])
   const [banners,            setBanners]            = useState<any[]>([])
   const [userContext,        setUserContext]        = useState<any>(null)
@@ -291,7 +292,7 @@ export default function DashboardPage() {
             {filterCategories.map((filter) => (
               <button
                 key={filter.value}
-                onClick={() => setActiveFilter(filter.value)}
+                onClick={() => { setActiveFilter(filter.value); if (filter.value) router.push(filter.href) }}
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all whitespace-nowrap ${
                   activeFilter === filter.value
                     ? 'bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-200'
