@@ -26,12 +26,11 @@ import {
   X,
 } from 'lucide-react'
 
-// ─── Correct imports — aligned with actual export names ────────
 import { loveTools }         from '@/lib/constants/love-tools'
-import { wealthTools }       from '@/lib/constants/wealth-tools'       // career is inside wealth
+import { wealthTools }       from '@/lib/constants/wealth-tools'
 import { wellnessTools }     from '@/lib/constants/wellness-spiritual'
 import { lifePathTools }     from '@/lib/constants/life-path-tools'
-import { omniTools }         from '@/lib/constants/omni-seer-tools'    // was omniSeerTools
+import { omniTools }         from '@/lib/constants/omni-seer-tools'
 import { voiceTools }        from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
@@ -44,9 +43,9 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard',              icon: LayoutDashboard },
-  { name: 'Chat',      href: '/chat',                   icon: MessageCircle   },
-  { name: 'Referrals', href: '/member/referral/dashboard', icon: Gift         },
+  { name: 'Dashboard', href: '/dashboard',                 icon: LayoutDashboard },
+  { name: 'Chat',      href: '/chat',                      icon: MessageCircle   },
+  { name: 'Referrals', href: '/member/referral/dashboard', icon: Gift            },
 ]
 
 const featuredNavItems: NavItem[] = [
@@ -57,10 +56,10 @@ const featuredNavItems: NavItem[] = [
 ]
 
 const categoryNavItems: NavItem[] = [
-  { name: 'Love & Relationships',    href: '/domain/love-relationships',   icon: Heart,      count: loveTools.length     },
-  { name: 'Wealth & Career',         href: '/domain/wealth-career',        icon: TrendingUp, count: wealthTools.length   },
-  { name: 'Wellness & Spirituality', href: '/domain/wellness-spirituality', icon: Moon,      count: wellnessTools.length },
-  { name: 'Life Path & Destiny',     href: '/domain/life-path-destiny',    icon: Star,       count: lifePathTools.length },
+  { name: 'Love & Relationships',    href: '/domain/love-relationships',    icon: Heart,      count: loveTools.length     },
+  { name: 'Wealth & Career',         href: '/domain/wealth-career',         icon: TrendingUp, count: wealthTools.length   },
+  { name: 'Wellness & Spirituality', href: '/domain/wellness-spirituality', icon: Moon,       count: wellnessTools.length },
+  { name: 'Life Path & Destiny',     href: '/domain/life-path-destiny',     icon: Star,       count: lifePathTools.length },
 ]
 
 const bottomNavItems: NavItem[] = [
@@ -69,20 +68,13 @@ const bottomNavItems: NavItem[] = [
 ]
 
 interface SidebarProps {
-  isCollapsed?: boolean
-  onToggle?:    () => void
-  mobileOpen?:  boolean
-  onMobileClose?: () => void
+  isCollapsed?:   boolean
+  onToggle?:      () => void
 }
 
-export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClose }: SidebarProps) => {
+export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
   const pathname = usePathname()
-  const [_isMobileOpen, _setIsMobileOpen] = useState(false)
-  const isMobileOpen = mobileOpen !== undefined ? mobileOpen : _isMobileOpen
-  const setIsMobileOpen = (v: boolean) => {
-    _setIsMobileOpen(v)
-    if (!v && onMobileClose) onMobileClose()
-  }
+  const [isMobileOpen,       setIsMobileOpen]       = useState(false)
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(isCollapsed)
 
   useEffect(() => {
@@ -104,17 +96,16 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
   const iconOnly     = isDesktopCollapsed
   const sidebarWidth = isDesktopCollapsed ? 'w-20' : 'w-72'
 
-  // ── Shared nav link renderer ───────────────────────────────
   const NavLink = ({
-    item, compact = false, onClick,
-  }: { item: NavItem; compact?: boolean; onClick?: () => void }) => {
+    item, compact = false,
+  }: { item: NavItem; compact?: boolean }) => {
     const Icon   = item.icon
     const active = isActive(item.href)
 
     return (
       <Link
         href={item.href}
-        onClick={onClick}
+        onClick={() => setIsMobileOpen(false)}
         title={iconOnly ? item.name : ''}
         className={`flex items-center ${iconOnly ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-all group relative ${
           active
@@ -146,7 +137,6 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
     )
   }
 
-  // ── Section label ──────────────────────────────────────────
   const SectionLabel = ({ icon: Icon, label }: { icon?: any; label: string }) =>
     !iconOnly ? (
       <div className="flex items-center gap-2 px-3 mb-2">
@@ -155,14 +145,11 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
       </div>
     ) : null
 
-  // ─────────────────────────────────────────────────────────────
   return (
     <>
-      {/* ── Desktop sidebar ──────────────────────────────────── */}
+      {/* Desktop sidebar */}
       <aside className={`hidden lg:block fixed left-0 top-0 h-full ${sidebarWidth} bg-white border-r border-neutral-200 shadow-sm transition-all duration-300 z-40`}>
         <div className="flex flex-col h-full">
-
-          {/* Logo + toggle */}
           <div className={`p-5 border-b border-neutral-200 flex items-center ${iconOnly ? 'justify-center' : 'justify-between'}`}>
             {!iconOnly ? (
               <div className="flex items-center gap-2">
@@ -175,7 +162,6 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
             <button
               onClick={toggleDesktopCollapse}
               className="p-1.5 hover:bg-neutral-100 rounded-lg transition"
-              aria-label={isDesktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {isDesktopCollapsed
                 ? <ChevronRight className="w-4 h-4 text-neutral-500" />
@@ -183,35 +169,24 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
             </button>
           </div>
 
-          {/* Nav */}
           <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
-
-            {/* Main */}
             <div className="space-y-1">
               <SectionLabel label="Main" />
               {mainNavItems.map(item => <NavLink key={item.name} item={item} />)}
             </div>
-
-            {/* Featured */}
             <div className="space-y-1">
               <SectionLabel icon={Crown} label="Featured" />
               {featuredNavItems.map(item => <NavLink key={item.name} item={item} compact />)}
             </div>
-
-            {/* Life Areas */}
             <div className="space-y-1">
               <SectionLabel icon={Compass} label="Life Areas" />
               {categoryNavItems.map(item => <NavLink key={item.name} item={item} compact />)}
             </div>
-
-            {/* Bottom */}
             <div className="pt-6 border-t border-neutral-200 space-y-1">
               {bottomNavItems.map(item => <NavLink key={item.name} item={item} compact />)}
             </div>
-
           </nav>
 
-          {/* User energy strip */}
           {!iconOnly && (
             <div className="p-4 border-t border-neutral-200 bg-neutral-50">
               <div className="flex items-center gap-2 text-xs text-neutral-600">
@@ -223,9 +198,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
         </div>
       </aside>
 
-
-
-      {/* ── Mobile menu button ────────────────────────────────── */}
+      {/* Mobile hamburger button */}
       <button
         onClick={() => setIsMobileOpen(true)}
         className="lg:hidden fixed top-3 left-3 z-50 p-2 bg-white rounded-lg shadow-md border border-neutral-200"
@@ -234,7 +207,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
         <Menu className="w-5 h-5 text-neutral-600" />
       </button>
 
-      {/* ── Mobile sidebar overlay ───────────────────────────── */
+      {/* Mobile sidebar overlay */}
       <AnimatePresence>
         {isMobileOpen && (
           <>
@@ -248,7 +221,6 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed left-0 top-0 h-full w-72 bg-white shadow-xl z-50 lg:hidden overflow-y-auto"
             >
-              {/* Mobile header */}
               <div className="p-5 border-b border-neutral-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl text-primary-600">☾</span>
@@ -260,9 +232,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
                 </button>
               </div>
 
-              {/* Mobile nav */}
               <nav className="p-4 space-y-6">
-
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-2">Main</p>
                   {mainNavItems.map(item => {
@@ -336,7 +306,6 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
                     )
                   })}
                 </div>
-
               </nav>
 
               <div className="p-4 border-t border-neutral-200 bg-neutral-50">
