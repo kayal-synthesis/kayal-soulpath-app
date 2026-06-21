@@ -1,31 +1,24 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, User, Menu } from 'lucide-react'
+import { Bell, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface MobileHeaderProps {
   isOpen: boolean
   onToggle: () => void
   userName?: string
-  onSearchClick?: () => void
 }
 
-export const MobileHeader = ({ isOpen, onToggle, userName, onSearchClick }: MobileHeaderProps) => {
+export const MobileHeader = ({ isOpen, onToggle, userName }: MobileHeaderProps) => {
   const router = useRouter()
 
   return (
-    <header className="lg:hidden bg-white/95 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-30 shadow-sm">
+    <header className="lg:hidden bg-white/95 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-20 shadow-sm">
       <div className="flex items-center justify-between px-4 py-3">
 
-        {/* Hamburger — opens Sidebar mobile overlay */}
-        <button
-          onClick={onToggle}
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 transition"
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5 text-neutral-600" />
-        </button>
+        {/* Space for Sidebar hamburger which is fixed top-4 left-4 */}
+        <div className="w-10" />
 
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
