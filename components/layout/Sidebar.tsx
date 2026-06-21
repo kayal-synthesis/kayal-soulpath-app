@@ -71,11 +71,17 @@ const bottomNavItems: NavItem[] = [
 interface SidebarProps {
   isCollapsed?: boolean
   onToggle?:    () => void
+  mobileOpen?:  boolean
+  onMobileClose?: () => void
 }
 
-export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
+export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClose }: SidebarProps) => {
   const pathname = usePathname()
-  const [isMobileOpen,       setIsMobileOpen]       = useState(false)
+  const [_isMobileOpen,      _setIsMobileOpen]      = useState(false)
+  const isMobileOpen    = mobileOpen    !== undefined ? mobileOpen    : _isMobileOpen
+  const setIsMobileOpen = onMobileClose !== undefined
+    ? (v: boolean) => { if (!v) onMobileClose(); else _setIsMobileOpen(true) }
+    : _setIsMobileOpen
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(isCollapsed)
 
   useEffect(() => {
