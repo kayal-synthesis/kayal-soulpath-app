@@ -20,9 +20,6 @@ import { getNumerologySnapshot } from '@/lib/utils/numerology'
 import { AnimatePresence } from 'framer-motion'
 import InnerSanctum from '@/components/marketplace/InnerSanctum'
 
-// ─────────────────────────────────────────────────────────────
-// Safe wrapper — renders null instead of crashing on bad import
-// ─────────────────────────────────────────────────────────────
 function SafeRender({
   component: Component,
   name,
@@ -42,6 +39,15 @@ const mockNotifications = [
   { id: '4', type: 'promo'    as const, title: 'Special offer',       message: '50% off on Soul Journey',         time: '1 day ago',   read: true  },
 ]
 
+const filterCategories = [
+  { label: 'All',           value: ''           },
+  { label: '✨ Featured',   value: 'featured'   },
+  { label: '❤️ Love',      value: 'love'       },
+  { label: '💰 Wealth',    value: 'wealth'     },
+  { label: '🌙 Wellness',  value: 'wellness'   },
+  { label: '⭐ Life Path', value: 'life-path'  },
+]
+
 export default function DashboardPage() {
   const router   = useRouter()
   const supabase = createClient()
@@ -50,18 +56,15 @@ export default function DashboardPage() {
   const [supabaseUser,       setSupabaseUser]       = useState<any>(null)
   const [isLoading,          setIsLoading]          = useState(true)
   const [currentTime,        setCurrentTime]        = useState(new Date())
-  const [isMobileMenuOpen,   setIsMobileMenuOpen]   = useState(false)
   const [searchQuery,        setSearchQuery]        = useState('')
+  const [activeFilter,       setActiveFilter]       = useState('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [coupons,            setCoupons]            = useState<Coupon[]>([])
   const [banners,            setBanners]            = useState<any[]>([])
   const [userContext,        setUserContext]        = useState<any>(null)
   const [dismissedBanners,   setDismissedBanners]   = useState<string[]>([])
+  const [numerology,         setNumerology]         = useState<ReturnType<typeof getNumerologySnapshot> | null>(null)
 
-  // ── Numerology snapshot — computed from user's DOB ──────────
-  const [numerology, setNumerology] = useState<ReturnType<typeof getNumerologySnapshot> | null>(null)
-
-  // ── Auth + clock ────────────────────────────────────────────
   useEffect(() => {
     const getSupabaseUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -73,10 +76,8 @@ export default function DashboardPage() {
     return () => clearInterval(timer)
   }, [hasCompletedOnboarding, router, supabase.auth])
 
-  // ── Coupons — fixed: isLoading now always resolves ──────────
   useEffect(() => {
     const loadCoupons = async () => {
-      // If no Supabase session, skip coupon fetch but still unblock loading
       if (!supabaseUser?.id) {
         setIsLoading(false)
         return
@@ -99,40 +100,23 @@ export default function DashboardPage() {
     loadCoupons()
   }, [supabaseUser?.id])
 
-  // ── Numerology — runs once anonymousUser is available ───────
   useEffect(() => {
     if (!anonymousUser) return
-
-    // Try every common field name your onboarding store might use
     const dob: string =
-      anonymousUser.dateOfBirth   ??   // most common
-      anonymousUser.dob           ??   // short form
-      anonymousUser.birthDate     ??   // camelCase variant
-      anonymousUser.birth_date    ??   // snake_case variant
+      anonymousUser.dateOfBirth           ??
+      anonymousUser.dob                   ??
+      anonymousUser.birthDate             ??
+      anonymousUser.birth_date            ??
       anonymousUser.personalInfo?.dateOfBirth ??
-      anonymousUser.personalInfo?.dob ??
+      anonymousUser.personalInfo?.dob     ??
       ''
-
     if (dob) {
-      // Full personalised snapshot from the real birth date
       setNumerology(getNumerologySnapshot(dob))
     } else {
-      // No DOB yet — show a real but impersonal reading based on today's date
-      // (still changes daily, never shows stale hardcoded values)
-      const today = new Date()
-      const dateSum = today.getDate() + (today.getMonth() + 1) + today.getFullYear()
-      const reduced = String(dateSum)
-        .split('')
-        .reduce((s, d) => s + Number(d), 0)
-      const day = reduced > 9
-        ? String(reduced).split('').reduce((s, d) => s + Number(d), 0)
-        : reduced || 1
-
-      setNumerology(getNumerologySnapshot('', today))
+      setNumerology(getNumerologySnapshot('', new Date()))
     }
   }, [anonymousUser])
 
-  // ── Handlers ────────────────────────────────────────────────
   const handleDismissBanner = (bannerId: string) => {
     const next = [...dismissedBanners, bannerId]
     setDismissedBanners(next)
@@ -157,7 +141,6 @@ export default function DashboardPage() {
     }
   }
 
-  // ── Derived display values ───────────────────────────────────
   const formattedDate = currentTime.toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
@@ -173,26 +156,28 @@ export default function DashboardPage() {
 
   const referralData = { clicks: 124, earnings: 47, referrals: 8 }
   const userProfile  = {
-    name:       anonymousUser?.name  || 'Sarah Chen',
-    email:      supabaseUser?.email  || 'sarah@example.com',
+    name:       anonymousUser?.name || 'Seeker',
+    email:      supabaseUser?.email || '',
     membership: 'free' as const,
     joinDate:   'Mar 2025',
     lastActive: 'Just now',
   }
 
-  // ── Loading state ────────────────────────────────────────────
   if (isLoading || !anonymousUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" />
+          <p className="text-sm text-neutral-400">Preparing your dashboard...</p>
+        </div>
       </div>
     )
   }
 
-  // ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-neutral-50">
 
+      {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar
           isCollapsed={isSidebarCollapsed}
@@ -200,29 +185,28 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Mobile Header — no menu toggle, Sidebar handles its own mobile overlay */}
       <MobileHeader
-        isOpen={isMobileMenuOpen}
-        onToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        isOpen={false}
+        onToggle={() => {}}
         userName={anonymousUser.name}
       />
+
+      {/* Mobile Bottom Nav */}
       <MobileBottomNav userName={anonymousUser.name} />
 
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <div className="w-64 h-full bg-white" onClick={e => e.stopPropagation()}>
-            <Sidebar />
-          </div>
-        </div>
-      )}
-
-      <main className={`${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'} pb-32 lg:pb-0 transition-all duration-300`}>
+      {/* Main content */}
+      <main className={`${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'} pb-24 lg:pb-0 transition-all duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
 
           {/* Desktop top bar */}
-          <div className="hidden lg:flex items-center justify-end mb-6">
+          <div className="hidden lg:flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-2xl font-serif text-neutral-900">
+                {getGreeting()}, {anonymousUser.name?.split(' ')[0] || 'Seeker'} ✨
+              </h1>
+              <p className="text-sm text-neutral-400 mt-0.5">{formattedDate}</p>
+            </div>
             <div className="flex items-center gap-3">
               <SafeRender
                 component={NotificationCenter}
@@ -241,7 +225,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── Daily Guidance — all props computed from real data ── */}
+          {/* Daily Guidance */}
           {numerology ? (
             <SafeRender
               component={DailyGuidance}
@@ -259,7 +243,6 @@ export default function DashboardPage() {
               insightMessage={numerology.insightMessage}
             />
           ) : (
-            // Skeleton while numerology computes (usually <10ms)
             <div className="h-28 rounded-2xl bg-indigo-50 animate-pulse border border-indigo-100" />
           )}
 
@@ -279,42 +262,45 @@ export default function DashboardPage() {
               ))}
           </AnimatePresence>
 
-          {/* Search */}
+          {/* Premium Search */}
           <div className="mt-6 mb-4">
             <div className="relative">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <span className="text-neutral-400">🔍</span>
+              </div>
               <input
                 type="text"
                 placeholder="Search 140+ journeys for self-discovery..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full pl-11 pr-10 py-3.5 bg-white border border-neutral-200 rounded-2xl text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 shadow-sm hover:shadow-md transition-all"
               />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">🔍</span>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-4 flex items-center text-neutral-400 hover:text-neutral-600 text-lg"
+                >
+                  ×
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            <select className="px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm">
-              <option>All Categories</option>
-              <option>Featured</option>
-              <option>Love &amp; Relationships</option>
-              <option>Wealth &amp; Career</option>
-              <option>Wellness &amp; Spirituality</option>
-              <option>Life Path &amp; Destiny</option>
-            </select>
-            <select className="px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm">
-              <option>Price: All</option>
-              <option>Under $20</option>
-              <option>$20 - $40</option>
-              <option>$40+</option>
-            </select>
-            <select className="px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm">
-              <option>Sort: Popular</option>
-              <option>Newest</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
-            </select>
+          {/* Premium Filter Pills */}
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
+            {filterCategories.map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => setActiveFilter(filter.value)}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all whitespace-nowrap ${
+                  activeFilter === filter.value
+                    ? 'bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-200'
+                    : 'bg-white border-neutral-200 text-neutral-600 hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
           </div>
 
           {/* Content grid */}
@@ -322,8 +308,8 @@ export default function DashboardPage() {
             <div className="lg:col-span-9 space-y-6">
               <InnerSanctum />
               <SafeRender component={ExploreByLifeArea} name="ExploreByLifeArea" />
-              <SafeRender component={BestsellerTools}   name="BestsellerTools" />
-              <SafeRender component={NewArrivals}       name="NewArrivals" />
+              <SafeRender component={BestsellerTools}   name="BestsellerTools"   />
+              <SafeRender component={NewArrivals}       name="NewArrivals"       />
             </div>
             <div className="lg:col-span-3 space-y-6">
               <SafeRender
