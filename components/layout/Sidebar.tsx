@@ -77,11 +77,12 @@ interface SidebarProps {
 
 export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClose }: SidebarProps) => {
   const pathname = usePathname()
-  const [_isMobileOpen,      _setIsMobileOpen]      = useState(false)
-  const isMobileOpen    = mobileOpen    !== undefined ? mobileOpen    : _isMobileOpen
-  const setIsMobileOpen = onMobileClose !== undefined
-    ? (v: boolean) => { if (!v) onMobileClose(); else _setIsMobileOpen(true) }
-    : _setIsMobileOpen
+  const [_isMobileOpen, _setIsMobileOpen] = useState(false)
+  const isMobileOpen = mobileOpen !== undefined ? mobileOpen : _isMobileOpen
+  const setIsMobileOpen = (v: boolean) => {
+    _setIsMobileOpen(v)
+    if (!v && onMobileClose) onMobileClose()
+  }
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(isCollapsed)
 
   useEffect(() => {
@@ -222,14 +223,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
         </div>
       </aside>
 
-      {/* ── Mobile menu button ────────────────────────────────── */}
-      <button
-        onClick={() => setIsMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md border border-neutral-200"
-        aria-label="Open menu"
-      >
-        <Menu className="w-5 h-5 text-neutral-600" />
-      </button>
+
 
       {/* ── Mobile sidebar overlay ───────────────────────────── */}
       <AnimatePresence>
