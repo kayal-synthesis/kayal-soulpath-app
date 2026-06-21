@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAnonymousStore } from '@/lib/store/anonymousStore'
@@ -285,7 +285,7 @@ function WhySection({ explanation }: { explanation: string }) {
 }
 
 // â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export default function BasicInfoPage() {
+function BasicInfoPageInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const {
@@ -767,5 +767,17 @@ export default function BasicInfoPage() {
         />
       )}
     </>
+  )
+}
+
+export default function BasicInfoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0c29' }}>
+        <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+      </div>
+    }>
+      <BasicInfoPageInner />
+    </Suspense>
   )
 }
