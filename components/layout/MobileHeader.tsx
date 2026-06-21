@@ -14,10 +14,9 @@ export const MobileHeader = ({ isOpen, onToggle, userName }: MobileHeaderProps) 
   const router = useRouter()
 
   return (
-    <header className="lg:hidden bg-white/95 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-20 shadow-sm">
+    <header className="lg:hidden bg-white/95 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-30 shadow-sm">
       <div className="flex items-center justify-between px-4 py-3">
-
-        {/* Space for Sidebar hamburger which is fixed top-4 left-4 */}
+        {/* Space for Sidebar fixed hamburger button */}
         <div className="w-10" />
 
         {/* Logo */}
@@ -42,7 +41,6 @@ export const MobileHeader = ({ isOpen, onToggle, userName }: MobileHeaderProps) 
             <User className="w-4 h-4 text-primary-600" />
           </button>
         </div>
-
       </div>
     </header>
   )

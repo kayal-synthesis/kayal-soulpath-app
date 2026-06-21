@@ -225,7 +225,16 @@ export const Sidebar = ({ isCollapsed = false, onToggle, mobileOpen, onMobileClo
 
 
 
-      {/* ── Mobile sidebar overlay ───────────────────────────── */}
+      {/* ── Mobile menu button ────────────────────────────────── */}
+      <button
+        onClick={() => setIsMobileOpen(true)}
+        className="lg:hidden fixed top-3 left-3 z-50 p-2 bg-white rounded-lg shadow-md border border-neutral-200"
+        aria-label="Open menu"
+      >
+        <Menu className="w-5 h-5 text-neutral-600" />
+      </button>
+
+      {/* ── Mobile sidebar overlay ───────────────────────────── */
       <AnimatePresence>
         {isMobileOpen && (
           <>
