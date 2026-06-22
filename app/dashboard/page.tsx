@@ -60,6 +60,7 @@ export default function DashboardPage() {
   const [dismissedBanners,   setDismissedBanners]   = useState<string[]>([])
   const [numerology,         setNumerology]         = useState<ReturnType<typeof getNumerologySnapshot> | null>(null)
   const [showDailyModal,     setShowDailyModal]     = useState(false)
+  const [openInsights,       setOpenInsights]       = useState(false)
 
   useEffect(() => {
     const getSupabaseUser = async () => {
@@ -150,7 +151,7 @@ export default function DashboardPage() {
       <MobileHeader userName={anonymousUser.name} />
 
       {/* Mobile Bottom Nav — home, explore, daily, chat, profile */}
-      <MobileBottomNav userName={anonymousUser.name} onDailyClick={() => setShowDailyModal(true)} />
+      <MobileBottomNav userName={anonymousUser.name} onDailyClick={() => { setOpenInsights(true); setTimeout(() => setOpenInsights(false), 500) }} />
 
       {/* Main content */}
       <main className={`${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'} pb-24 lg:pb-0 transition-all duration-300`}>
@@ -194,6 +195,7 @@ export default function DashboardPage() {
               energyLevel={numerology.energyLevel}
               energyDescription={numerology.energyDescription}
               insightMessage={numerology.insightMessage}
+              openInsights={openInsights}
             />
           ) : (
             <div className="h-28 rounded-2xl bg-indigo-50 animate-pulse border border-indigo-100" />

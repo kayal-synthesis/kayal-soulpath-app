@@ -190,6 +190,7 @@ interface DailyGuidanceProps {
   birthTime?: string; birthLocation?: string
   vibration?: string; vibrationMeaning?: string
   energyLevel?: number; energyDescription?: string; insightMessage?: string
+  openInsights?: boolean
 }
 
 function EnergyArc({ level, accent }: { level: number; accent: string }) {
@@ -486,6 +487,7 @@ export const DailyGuidance = ({
 
   const [showMatchModal,   setShowMatchModal]   = useState(false)
   const [showInsightModal, setShowInsightModal] = useState(false)
+  useEffect(() => { if (openInsights) setShowInsightModal(true) }, [openInsights])
   const [matchedTools,     setMatchedTools]     = useState<any[]>([])
   const [purchasedIds,     setPurchasedIds]     = useState<Set<string>>(new Set())
   const [loadingTools,     setLoadingTools]     = useState(false)
