@@ -68,8 +68,8 @@ const bottomNavItems: NavItem[] = [
 ]
 
 interface SidebarProps {
-  isCollapsed?:   boolean
-  onToggle?:      () => void
+  isCollapsed?: boolean
+  onToggle?:    () => void
 }
 
 export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
@@ -96,21 +96,16 @@ export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
   const iconOnly     = isDesktopCollapsed
   const sidebarWidth = isDesktopCollapsed ? 'w-20' : 'w-72'
 
-  const NavLink = ({
-    item, compact = false,
-  }: { item: NavItem; compact?: boolean }) => {
+  const NavLink = ({ item, compact = false }: { item: NavItem; compact?: boolean }) => {
     const Icon   = item.icon
     const active = isActive(item.href)
-
     return (
       <Link
         href={item.href}
         onClick={() => setIsMobileOpen(false)}
         title={iconOnly ? item.name : ''}
-        className={`flex items-center ${iconOnly ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-all group relative ${
-          active
-            ? 'bg-primary-50 text-primary-700'
-            : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+        className={`flex items-center ${iconOnly ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-all relative ${
+          active ? 'bg-primary-50 text-primary-700' : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
         }`}
       >
         {active && !iconOnly && !compact && (
@@ -123,13 +118,9 @@ export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
         <Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 ${active ? 'text-primary-600' : 'text-neutral-400'}`} />
         {!iconOnly && (
           <>
-            <span className={`${compact ? 'text-sm' : 'text-sm font-medium'} flex-1 truncate`}>
-              {item.name}
-            </span>
+            <span className={`${compact ? 'text-sm' : 'text-sm font-medium'} flex-1 truncate`}>{item.name}</span>
             {item.count !== undefined && (
-              <span className="text-xs bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                {item.count}
-              </span>
+              <span className="text-xs bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded-full flex-shrink-0">{item.count}</span>
             )}
           </>
         )}
@@ -159,10 +150,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
             ) : (
               <span className="text-2xl text-primary-600">☾</span>
             )}
-            <button
-              onClick={toggleDesktopCollapse}
-              className="p-1.5 hover:bg-neutral-100 rounded-lg transition"
-            >
+            <button onClick={toggleDesktopCollapse} className="p-1.5 hover:bg-neutral-100 rounded-lg transition">
               {isDesktopCollapsed
                 ? <ChevronRight className="w-4 h-4 text-neutral-500" />
                 : <ChevronLeft  className="w-4 h-4 text-neutral-500" />}
@@ -226,8 +214,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
                   <span className="text-2xl text-primary-600">☾</span>
                   <span className="font-serif text-lg text-primary-900">Kayal LifeOS</span>
                 </div>
-                <button onClick={() => setIsMobileOpen(false)}
-                  className="p-1.5 hover:bg-neutral-100 rounded-lg transition">
+                <button onClick={() => setIsMobileOpen(false)} className="p-1.5 hover:bg-neutral-100 rounded-lg transition">
                   <X className="w-5 h-5 text-neutral-500" />
                 </button>
               </div>
@@ -236,7 +223,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-2">Main</p>
                   {mainNavItems.map(item => {
-                    const Icon   = item.icon
+                    const Icon = item.icon
                     const active = isActive(item.href)
                     return (
                       <Link key={item.name} href={item.href} onClick={() => setIsMobileOpen(false)}
@@ -254,7 +241,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
                     <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Featured</p>
                   </div>
                   {featuredNavItems.map(item => {
-                    const Icon   = item.icon
+                    const Icon = item.icon
                     const active = isActive(item.href)
                     return (
                       <Link key={item.name} href={item.href} onClick={() => setIsMobileOpen(false)}
@@ -277,7 +264,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle }: SidebarProps) => {
                     <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Life Areas</p>
                   </div>
                   {categoryNavItems.map(item => {
-                    const Icon   = item.icon
+                    const Icon = item.icon
                     const active = isActive(item.href)
                     return (
                       <Link key={item.name} href={item.href} onClick={() => setIsMobileOpen(false)}
