@@ -473,7 +473,7 @@ function InsightsModal({ open, onClose, date, personalDay, arch, universalDay, r
 
 export const DailyGuidance = ({
   userName, greeting, date, time, personalDay: personalDayProp,
-  userId, dob,
+  userId, dob, openInsights,
 }: DailyGuidanceProps) => {
   const router    = useRouter()
   const supabase  = createClient()
