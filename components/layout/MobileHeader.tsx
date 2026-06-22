@@ -1,32 +1,34 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, User } from 'lucide-react'
+import { Bell, User, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface MobileHeaderProps {
-  isOpen: boolean
-  onToggle: () => void
+  isOpen?: boolean
+  onToggle?: () => void
   userName?: string
 }
 
-export const MobileHeader = ({ isOpen, onToggle, userName }: MobileHeaderProps) => {
+export const MobileHeader = ({ userName }: MobileHeaderProps) => {
   const router = useRouter()
 
   return (
-    <header className="lg:hidden bg-white/95 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-30 shadow-sm">
+    <header className="lg:hidden bg-white border-b border-neutral-100 sticky top-0 z-30 shadow-sm">
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Space for Sidebar fixed hamburger button */}
-        <div className="w-10" />
 
-        {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="text-xl text-primary-600">☾</span>
-          <span className="font-serif text-base font-medium text-primary-900">KAYAL</span>
+          <span className="font-serif text-base font-semibold text-primary-900">KAYAL</span>
         </Link>
 
-        {/* Right actions */}
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => router.push('/explore')}
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 transition"
+          >
+            <Search className="w-4 h-4 text-neutral-500" />
+          </button>
           <button
             onClick={() => router.push('/notifications')}
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 transition relative"
@@ -41,6 +43,7 @@ export const MobileHeader = ({ isOpen, onToggle, userName }: MobileHeaderProps) 
             <User className="w-4 h-4 text-primary-600" />
           </button>
         </div>
+
       </div>
     </header>
   )
