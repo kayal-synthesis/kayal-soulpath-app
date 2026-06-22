@@ -1,21 +1,54 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Compass, Sparkles, MessageCircle, User } from 'lucide-react'
+import { LayoutDashboard, Compass, Sparkles, Users, Heart } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-interface MobileBottomNavProps { userName?: string }
+interface MobileBottomNavProps {
+  userName?: string
+  onDailyClick?: () => void
+}
 
-export const MobileBottomNav = ({ userName }: MobileBottomNavProps) => {
+export const MobileBottomNav = ({ userName, onDailyClick }: MobileBottomNavProps) => {
   const router   = useRouter()
   const pathname = usePathname()
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Home',    path: '/dashboard',                color: 'text-primary-600'  },
-    { icon: Compass,         label: 'Explore', path: '/explore',                  color: 'text-emerald-600'  },
-    { icon: Sparkles,        label: 'Daily',   path: '/daily',                    color: 'text-amber-600'    },
-    { icon: MessageCircle,   label: 'Chat',    path: '/chat',                     color: 'text-blue-600'     },
-    { icon: User,            label: 'Profile', path: '/dashboard/profile',        color: 'text-purple-600'   },
+    {
+      icon:    LayoutDashboard,
+      label:   'Home',
+      path:    '/dashboard',
+      color:   'text-primary-600',
+      action:  () => router.push('/dashboard'),
+    },
+    {
+      icon:    Compass,
+      label:   'Explore',
+      path:    '/domains',
+      color:   'text-emerald-600',
+      action:  () => router.push('/domains'),
+    },
+    {
+      icon:    Sparkles,
+      label:   'Daily',
+      path:    '/daily',
+      color:   'text-amber-600',
+      action:  () => onDailyClick ? onDailyClick() : router.push('/dashboard'),
+    },
+    {
+      icon:    Heart,
+      label:   'Enroll',
+      path:    '/enroll',
+      color:   'text-rose-600',
+      action:  () => window.open('https://kayalsoulpath.com/courses', '_blank'),
+    },
+    {
+      icon:    Users,
+      label:   'Affiliate',
+      path:    '/member/referral/dashboard',
+      color:   'text-purple-600',
+      action:  () => router.push('/member/referral/dashboard'),
+    },
   ]
 
   return (
@@ -28,7 +61,7 @@ export const MobileBottomNav = ({ userName }: MobileBottomNavProps) => {
           return (
             <button
               key={item.path}
-              onClick={() => router.push(item.path)}
+              onClick={item.action}
               className="relative flex flex-col items-center py-2 px-3 min-w-[56px]"
             >
               {isActive && (
