@@ -2,8 +2,11 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Search, SlidersHorizontal, X, TrendingUp, Clock, DollarSign, ArrowRight, ChevronLeft } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  ArrowLeft, Search, SlidersHorizontal, X, TrendingUp,
+  Clock, DollarSign, ArrowRight, Camera, Hand, Scan
+} from 'lucide-react'
 
 import { omniTools }         from '@/lib/constants/omni-seer-tools'
 import { voiceTools }        from '@/lib/constants/voice-tools'
@@ -20,21 +23,102 @@ const allTools: any[] = [
 ]
 
 const domains = [
-  { id: 'oracle-temple', name: "Omni-Seer's Sanctum",    icon: '👁️',  tools: omniTools,         color: 'from-purple-600 to-indigo-600',  bg: 'bg-purple-50',  text: 'text-purple-700', url: '/domain/omni-seer-sanctum',     description: 'Ancient wisdom and divination tools for profound life insights.'                        },
-  { id: 'voice',         name: 'Voice of Prophecy',       icon: '🎙️',  tools: voiceTools,        color: 'from-blue-600 to-cyan-600',      bg: 'bg-blue-50',    text: 'text-blue-700',   url: '/domain/voice-of-prophecy',     description: 'Live voice conversations with an AI oracle trained on your complete synthesis.'         },
-  { id: 'sacred-script', name: 'Sacred Script',           icon: '📜',  tools: sacredScriptTools, color: 'from-amber-600 to-orange-600',   bg: 'bg-amber-50',   text: 'text-amber-700',  url: '/domain/sacred-script',         description: 'Deep written dialogue with a sacred scribe trained on your complete synthesis.'         },
-  { id: 'time-keeper',   name: 'Eternal Clock',           icon: '⏰',  tools: timeKeeperTools,   color: 'from-emerald-600 to-teal-600',   bg: 'bg-emerald-50', text: 'text-emerald-700', url: '/domain/eternal-clock',         description: 'Temporal wisdom tools to understand your relationship with time.'                       },
-  { id: 'love',          name: 'Love & Relationships',    icon: '💞',  tools: loveTools,         color: 'from-red-600 to-pink-600',       bg: 'bg-red-50',     text: 'text-red-700',    url: '/domain/love-relationships',    description: 'Deep relationship insights and romantic guidance for soul connections.'                 },
-  { id: 'wealth',        name: 'Wealth & Career',         icon: '💰',  tools: wealthTools,       color: 'from-green-600 to-emerald-600',  bg: 'bg-green-50',   text: 'text-green-700',  url: '/domain/wealth-career',         description: 'Abundance manifestation tools for financial freedom and career success.'                },
-  { id: 'wellness',      name: 'Wellness & Spirituality', icon: '🌙',  tools: wellnessTools,     color: 'from-violet-600 to-purple-600',  bg: 'bg-violet-50',  text: 'text-violet-700', url: '/domain/wellness-spirituality',  description: 'Spiritual growth and wellness tools for awakening and inner healing.'                   },
-  { id: 'life-path',     name: 'Life Path & Destiny',     icon: '🌟',  tools: lifePathTools,     color: 'from-amber-600 to-yellow-600',   bg: 'bg-yellow-50',  text: 'text-yellow-700', url: '/domain/life-path-destiny',     description: 'Life purpose and destiny revelation tools to discover why you are here.'                },
-]
-
-const priceRanges = [
-  { label: 'All Prices', value: 'all'      },
-  { label: 'Under $20',  value: 'under-20' },
-  { label: '$20 - $40',  value: '20-40'    },
-  { label: '$40+',       value: 'over-40'  },
+  {
+    id: 'oracle-temple',
+    name: "Omni-Seer's Sanctum",
+    icon: '👁️',
+    tools: omniTools,
+    color: 'from-purple-600 to-indigo-600',
+    bg: 'bg-purple-50',
+    text: 'text-purple-700',
+    border: 'border-purple-200',
+    url: '/domain/omni-seer-sanctum',
+    description: 'Ancient wisdom and divination tools for profound life insights through numerology, astrology, face and palm readings.',
+  },
+  {
+    id: 'voice',
+    name: 'Voice of Prophecy',
+    icon: '🎙️',
+    tools: voiceTools,
+    color: 'from-blue-600 to-cyan-600',
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-200',
+    url: '/domain/voice-of-prophecy',
+    description: 'Live voice conversations with an AI oracle trained on your complete synthesis.',
+  },
+  {
+    id: 'sacred-script',
+    name: 'Sacred Script',
+    icon: '📜',
+    tools: sacredScriptTools,
+    color: 'from-amber-600 to-orange-600',
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+    url: '/domain/sacred-script',
+    description: 'Deep written dialogue with a sacred scribe trained on your complete synthesis.',
+  },
+  {
+    id: 'time-keeper',
+    name: 'Eternal Clock',
+    icon: '⏰',
+    tools: timeKeeperTools,
+    color: 'from-emerald-600 to-teal-600',
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-700',
+    border: 'border-emerald-200',
+    url: '/domain/eternal-clock',
+    description: 'Temporal wisdom tools to understand your relationship with time and destiny cycles.',
+  },
+  {
+    id: 'love',
+    name: 'Love & Relationships',
+    icon: '💞',
+    tools: loveTools,
+    color: 'from-red-600 to-pink-600',
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    border: 'border-red-200',
+    url: '/domain/love-relationships',
+    description: 'Deep relationship insights and romantic guidance for soul connections.',
+  },
+  {
+    id: 'wealth',
+    name: 'Wealth & Career',
+    icon: '💰',
+    tools: wealthTools,
+    color: 'from-green-600 to-emerald-600',
+    bg: 'bg-green-50',
+    text: 'text-green-700',
+    border: 'border-green-200',
+    url: '/domain/wealth-career',
+    description: 'Abundance manifestation tools for financial freedom and career success.',
+  },
+  {
+    id: 'wellness',
+    name: 'Wellness & Spirituality',
+    icon: '🌙',
+    tools: wellnessTools,
+    color: 'from-violet-600 to-purple-600',
+    bg: 'bg-violet-50',
+    text: 'text-violet-700',
+    border: 'border-violet-200',
+    url: '/domain/wellness-spirituality',
+    description: 'Spiritual growth and wellness tools for awakening and inner healing.',
+  },
+  {
+    id: 'life-path',
+    name: 'Life Path & Destiny',
+    icon: '🌟',
+    tools: lifePathTools,
+    color: 'from-amber-600 to-yellow-600',
+    bg: 'bg-yellow-50',
+    text: 'text-yellow-700',
+    border: 'border-yellow-200',
+    url: '/domain/life-path-destiny',
+    description: 'Life purpose and destiny revelation tools to discover why you are here.',
+  },
 ]
 
 const sortOptions = [
@@ -44,12 +128,51 @@ const sortOptions = [
   { label: 'Price: High', value: 'price-desc', icon: DollarSign },
 ]
 
-function filterByPrice(tools: any[], priceRange: string) {
-  if (priceRange === 'all') return tools
-  if (priceRange === 'under-20') return tools.filter(t => t.price < 20)
-  if (priceRange === '20-40')    return tools.filter(t => t.price >= 20 && t.price <= 40)
-  if (priceRange === 'over-40')  return tools.filter(t => t.price > 40)
-  return tools
+// ── Image requirement badge ──────────────────────────────
+function ImageBadge({ type }: { type: 'face' | 'palm' | 'both' }) {
+  if (type === 'face') return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] font-semibold">
+      <Camera className="w-2.5 h-2.5" /> Face Photo
+    </span>
+  )
+  if (type === 'palm') return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-[10px] font-semibold">
+      <Hand className="w-2.5 h-2.5" /> Palm Photo
+    </span>
+  )
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 border border-purple-100 text-purple-600 text-[10px] font-semibold">
+      <Scan className="w-2.5 h-2.5" /> Face + Palm
+    </span>
+  )
+}
+
+// ── Price helpers ────────────────────────────────────────
+function getPriceRanges(tools: any[]) {
+  const prices = tools.map(t => t.price ?? 0).filter(Boolean)
+  const min    = Math.min(...prices)
+  const max    = Math.max(...prices)
+  const mid    = Math.round((min + max) / 2)
+  return [
+    { label: 'All Prices',       value: 'all'      },
+    { label: `Under $${mid}`,    value: `under-${mid}` },
+    { label: `$${mid} – $${max}`, value: `${mid}-${max}` },
+    { label: `$${max}+`,         value: `over-${max}` },
+  ]
+}
+
+function filterByPrice(tools: any[], range: string) {
+  if (range === 'all') return tools
+  if (range.startsWith('under-')) {
+    const cap = parseInt(range.replace('under-', ''))
+    return tools.filter(t => (t.price ?? 0) < cap)
+  }
+  if (range.startsWith('over-')) {
+    const floor = parseInt(range.replace('over-', ''))
+    return tools.filter(t => (t.price ?? 0) > floor)
+  }
+  const [lo, hi] = range.split('-').map(Number)
+  return tools.filter(t => (t.price ?? 0) >= lo && (t.price ?? 0) <= hi)
 }
 
 function sortTools(tools: any[], sort: string) {
@@ -60,6 +183,112 @@ function sortTools(tools: any[], sort: string) {
   return arr
 }
 
+// ── Tool Card ────────────────────────────────────────────
+function ToolCard({ tool, index, onClick }: { tool: any; index: number; onClick: () => void }) {
+  const imageType = tool.requiresImage?.type as 'face' | 'palm' | 'both' | undefined
+
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all duration-200 cursor-pointer group p-5 flex flex-col"
+      style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
+    >
+      {/* Top row */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="text-3xl leading-none">{tool.emoji || '✨'}</div>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-sm font-bold text-primary-600">${tool.price}</span>
+          {tool.deliveryMinutes && (
+            <span className="text-[10px] text-neutral-400 flex items-center gap-0.5">
+              <Clock className="w-2.5 h-2.5" />{tool.deliveryMinutes} min
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Name */}
+      <h3 className="font-serif font-semibold text-neutral-900 mb-1.5 group-hover:text-primary-600 transition-colors text-sm leading-snug line-clamp-2">
+        {tool.name}
+      </h3>
+
+      {/* Tagline */}
+      <p className="text-xs text-neutral-500 leading-relaxed line-clamp-2 mb-3 flex-1">
+        {tool.tagline || tool.hook || tool.description}
+      </p>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-2 border-t border-neutral-50">
+        <div>
+          {imageType && <ImageBadge type={imageType} />}
+        </div>
+        <div className="flex items-center text-xs font-semibold text-primary-600 gap-1 group-hover:gap-2 transition-all">
+          Get Reading <ArrowRight className="w-3 h-3" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Domain Card ──────────────────────────────────────────
+function DomainCard({ domain, index, onClick }: { domain: typeof domains[0]; index: number; onClick: () => void }) {
+  const imageTools = domain.tools.filter((t: any) => t.requiresImage).length
+
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all duration-200 cursor-pointer group p-5"
+      style={{ animationDelay: `${index * 40}ms` }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${domain.color} flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform duration-200`}>
+          {domain.icon}
+        </div>
+        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${domain.bg} ${domain.text} border ${domain.border}`}>
+          {domain.tools.length} tools
+        </span>
+      </div>
+
+      <h3 className="font-serif font-semibold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors leading-tight">
+        {domain.name}
+      </h3>
+      <p className="text-xs text-neutral-500 leading-relaxed line-clamp-2 mb-4">
+        {domain.description}
+      </p>
+
+      <div className="flex items-center justify-between pt-3 border-t border-neutral-50">
+        {imageTools > 0 ? (
+          <span className="text-[10px] text-neutral-400 flex items-center gap-1">
+            <Camera className="w-3 h-3" /> {imageTools} require photos
+          </span>
+        ) : <span />}
+        <div className="flex items-center text-xs font-semibold text-primary-600 gap-1 group-hover:gap-2 transition-all">
+          Browse <ArrowRight className="w-3 h-3" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Domain Hero Banner ───────────────────────────────────
+function DomainHero({ domain, toolCount }: { domain: typeof domains[0]; toolCount: number }) {
+  return (
+    <div className={`rounded-2xl bg-gradient-to-br ${domain.color} p-5 mb-5 text-white shadow-md`}>
+      <div className="flex items-center gap-4">
+        <div className="text-4xl">{domain.icon}</div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-serif font-bold text-lg leading-tight">{domain.name}</h2>
+          <p className="text-white/80 text-xs mt-1 leading-relaxed line-clamp-2">{domain.description}</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-2xl font-bold">{toolCount}</p>
+          <p className="text-white/70 text-xs">tools</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Page ────────────────────────────────────────────
 export default function DomainsPage() {
   const router = useRouter()
   const [searchQuery,  setSearchQuery]  = useState('')
@@ -68,27 +297,39 @@ export default function DomainsPage() {
   const [activeSort,   setActiveSort]   = useState('popular')
   const [showFilters,  setShowFilters]  = useState(false)
 
+  const priceRanges    = useMemo(() => getPriceRanges(allTools), [])
   const totalTools     = allTools.length
   const selectedDomain = domains.find(d => d.id === activeDomain)
 
   const visibleTools = useMemo(() => {
     let tools = activeDomain === 'all' ? allTools : (selectedDomain?.tools ?? [])
-    tools = tools.filter((t: any) =>
-      t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.tagline?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      tools = tools.filter((t: any) =>
+        t.name?.toLowerCase().includes(q)     ||
+        t.tagline?.toLowerCase().includes(q)  ||
+        t.hook?.toLowerCase().includes(q)     ||
+        t.description?.toLowerCase().includes(q)
+      )
+    }
     tools = filterByPrice(tools, activePrice)
     tools = sortTools(tools, activeSort)
     return tools
   }, [activeDomain, searchQuery, activePrice, activeSort, selectedDomain])
 
-  const showingTools = activeDomain !== 'all' || searchQuery || activePrice !== 'all'
+  const showingTools   = activeDomain !== 'all' || !!searchQuery.trim() || activePrice !== 'all'
+  const activeFilters  = (activePrice !== 'all' ? 1 : 0) + (activeSort !== 'popular' ? 1 : 0)
+
+  const clearAll = () => {
+    setSearchQuery('')
+    setActivePrice('all')
+    setActiveSort('popular')
+  }
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-24 lg:pb-0">
+    <div className="min-h-screen bg-neutral-50 pb-24 lg:pb-8">
 
-      {/* Header */}
+      {/* ── Sticky Header ── */}
       <div className="bg-white/95 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
@@ -99,26 +340,28 @@ export default function DomainsPage() {
               <ArrowLeft className="w-5 h-5 text-neutral-600" />
             </button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-serif text-neutral-900">
+              <h1 className="text-lg font-serif text-neutral-900 truncate">
                 {selectedDomain ? selectedDomain.name : 'Explore All Domains'}
               </h1>
               <p className="text-xs text-neutral-400">
-                {showingTools ? `${visibleTools.length} tools found` : `${totalTools} tools across ${domains.length} domains`}
+                {showingTools
+                  ? `${visibleTools.length} tool${visibleTools.length !== 1 ? 's' : ''} found`
+                  : `${totalTools} tools across ${domains.length} domains`}
               </p>
             </div>
             <button
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={() => setShowFilters(f => !f)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                showFilters || activePrice !== 'all' || activeSort !== 'popular'
+                showFilters || activeFilters > 0
                   ? 'bg-primary-600 text-white border-primary-600'
-                  : 'bg-white text-neutral-600 border-neutral-200'
+                  : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-300'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               Filters
-              {(activePrice !== 'all' || activeSort !== 'popular') && (
-                <span className="w-4 h-4 bg-white/30 rounded-full text-[10px] flex items-center justify-center">
-                  {(activePrice !== 'all' ? 1 : 0) + (activeSort !== 'popular' ? 1 : 0)}
+              {activeFilters > 0 && (
+                <span className="w-4 h-4 bg-white/30 rounded-full text-[10px] flex items-center justify-center font-bold">
+                  {activeFilters}
                 </span>
               )}
             </button>
@@ -128,37 +371,39 @@ export default function DomainsPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-5">
 
-        {/* Search */}
+        {/* ── Search ── */}
         <div className="relative mb-4">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <Search className="w-4 h-4 text-neutral-400" />
-          </div>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search tools and domains..."
+            placeholder="Search tools by name, topic, or keyword..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full pl-11 pr-10 py-3.5 bg-white border border-neutral-200 rounded-2xl text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 shadow-sm transition-all"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-4 flex items-center text-neutral-400 hover:text-neutral-600">
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+            >
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {/* Filter Panel */}
+        {/* ── Filter Panel ── */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
               <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4 mb-4 space-y-4">
                 <div>
-                  <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Price Range</p>
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Price Range</p>
                   <div className="flex flex-wrap gap-2">
                     {priceRanges.map(price => (
                       <button
@@ -176,7 +421,7 @@ export default function DomainsPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Sort By</p>
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Sort By</p>
                   <div className="flex flex-wrap gap-2">
                     {sortOptions.map(sort => (
                       <button
@@ -194,12 +439,12 @@ export default function DomainsPage() {
                     ))}
                   </div>
                 </div>
-                {(activePrice !== 'all' || activeSort !== 'popular') && (
+                {activeFilters > 0 && (
                   <button
                     onClick={() => { setActivePrice('all'); setActiveSort('popular') }}
-                    className="text-xs text-red-500 hover:text-red-700 font-medium"
+                    className="text-xs text-red-500 hover:text-red-700 font-semibold"
                   >
-                    Clear all filters
+                    ✕ Clear all filters
                   </button>
                 )}
               </div>
@@ -207,14 +452,14 @@ export default function DomainsPage() {
           )}
         </AnimatePresence>
 
-        {/* Domain Pills */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        {/* ── Domain Pills ── */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           <button
             onClick={() => setActiveDomain('all')}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all ${
               activeDomain === 'all'
                 ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-400'
+                : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-300'
             }`}
           >
             All ({totalTools})
@@ -226,7 +471,7 @@ export default function DomainsPage() {
               className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold border transition-all whitespace-nowrap ${
                 activeDomain === domain.id
                   ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                  : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-400'
+                  : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-300'
               }`}
             >
               <span>{domain.icon}</span>
@@ -235,97 +480,76 @@ export default function DomainsPage() {
           ))}
         </div>
 
-        {/* Domain Cards View */}
+        {/* ── Domain Hero (when domain selected) ── */}
+        {selectedDomain && showingTools && (
+          <DomainHero domain={selectedDomain} toolCount={visibleTools.length} />
+        )}
+
+        {/* ── All Domains View ── */}
         {!showingTools && (
           <>
+            {/* Stats row */}
             <div className="grid grid-cols-4 gap-3 mb-6">
               {[
-                { label: 'Domains', value: domains.length, color: 'text-primary-600' },
-                { label: 'Tools',   value: totalTools,     color: 'text-emerald-600' },
-                { label: 'Featured', value: 4,             color: 'text-amber-600'   },
-                { label: 'New',      value: 12,            color: 'text-rose-600'    },
-              ].map(stat => (
-                <div key={stat.label} className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-3 text-center">
+                { label: 'Domains',  value: domains.length, color: 'text-primary-600'  },
+                { label: 'Tools',    value: totalTools,     color: 'text-emerald-600'  },
+                { label: 'w/ Photos', value: allTools.filter((t:any) => t.requiresImage).length, color: 'text-blue-600' },
+                { label: 'Domains',  value: domains.length, color: 'text-amber-600'   },
+              ].map((stat, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-3 text-center">
                   <p className={`text-xl font-serif font-bold ${stat.color}`}>{stat.value}</p>
                   <p className="text-xs text-neutral-400 mt-0.5">{stat.label}</p>
                 </div>
               ))}
             </div>
 
+            {/* Image requirement legend */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              <span className="text-xs text-neutral-400 font-medium self-center">Photo requirements:</span>
+              <ImageBadge type="face" />
+              <ImageBadge type="palm" />
+              <ImageBadge type="both" />
+              <span className="text-xs text-neutral-400 self-center">— shown on each tool card</span>
+            </div>
+
+            {/* Domain grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {domains.map((domain, index) => (
-                <motion.div
+                <DomainCard
                   key={domain.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  domain={domain}
+                  index={index}
                   onClick={() => setActiveDomain(domain.id)}
-                  className="bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all cursor-pointer group p-5"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${domain.color} flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform`}>
-                      {domain.icon}
-                    </div>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${domain.bg} ${domain.text}`}>
-                      {domain.tools.length} tools
-                    </span>
-                  </div>
-                  <h3 className="font-serif font-semibold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors leading-tight">
-                    {domain.name}
-                  </h3>
-                  <p className="text-xs text-neutral-500 leading-relaxed line-clamp-2 mb-4">
-                    {domain.description}
-                  </p>
-                  <div className="flex items-center text-xs font-semibold text-primary-600 gap-1 group-hover:gap-2 transition-all">
-                    Browse Tools <ArrowRight className="w-3 h-3" />
-                  </div>
-                </motion.div>
+                />
               ))}
             </div>
           </>
         )}
 
-        {/* Tools View */}
+        {/* ── Tools Grid View ── */}
         {showingTools && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {visibleTools.map((tool: any, index: number) => (
-              <motion.div
+              <ToolCard
                 key={tool.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                tool={tool}
+                index={index}
                 onClick={() => router.push(`/purchase/${tool.id}`)}
-                className="bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all cursor-pointer group p-5"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="text-3xl">{tool.emoji || '✨'}</div>
-                  <span className="text-sm font-bold text-primary-600">${tool.price}</span>
-                </div>
-                <h3 className="font-serif font-semibold text-neutral-900 mb-1.5 group-hover:text-primary-600 transition-colors text-sm leading-tight">
-                  {tool.name}
-                </h3>
-                <p className="text-xs text-neutral-500 leading-relaxed line-clamp-2 mb-4">
-                  {tool.tagline || tool.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-neutral-400">{tool.deliveryMinutes || 20} min</span>
-                  <div className="flex items-center text-xs font-semibold text-primary-600 gap-1 group-hover:gap-2 transition-all">
-                    Get Reading <ArrowRight className="w-3 h-3" />
-                  </div>
-                </div>
-              </motion.div>
+              />
             ))}
 
             {visibleTools.length === 0 && (
               <div className="col-span-full text-center py-16">
-                <p className="text-4xl mb-4">🔍</p>
-                <p className="text-neutral-500 font-medium">No tools found</p>
-                <p className="text-neutral-400 text-sm mt-1">Try adjusting your filters</p>
+                <p className="text-5xl mb-4">🔍</p>
+                <p className="text-neutral-600 font-semibold text-lg">No tools found</p>
+                <p className="text-neutral-400 text-sm mt-1 mb-5">
+                  Try adjusting your search or filters
+                </p>
                 <button
-                  onClick={() => { setSearchQuery(''); setActivePrice('all'); setActiveSort('popular') }}
-                  className="mt-4 text-primary-600 text-sm font-medium hover:underline"
+                  onClick={clearAll}
+                  className="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition"
                 >
-                  Clear filters
+                  Clear All Filters
                 </button>
               </div>
             )}
