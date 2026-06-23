@@ -61,6 +61,7 @@ export default function DashboardPage() {
   const [numerology,         setNumerology]         = useState<ReturnType<typeof getNumerologySnapshot> | null>(null)
   const [showDailyModal,     setShowDailyModal]     = useState(false)
   const [openInsights,       setOpenInsights]       = useState(false)
+  const [showDomainMenu,     setShowDomainMenu]     = useState(false)
 
   useEffect(() => {
     const getSupabaseUser = async () => {
@@ -208,43 +209,73 @@ export default function DashboardPage() {
             ))}
           </AnimatePresence>
 
-          {/* Search bar */}
-          <div className="mt-5 mb-3">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <span className="text-neutral-400">🔍</span>
+          {/* Search bar + Domain dropdown */}
+          <div className="mt-5 mb-6">
+            <div className="flex gap-2">
+              {/* Search */}
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <span className="text-neutral-400">🔍</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search 149 tools across 8 domains..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3.5 bg-white border border-neutral-200 rounded-2xl text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 shadow-sm hover:shadow-md transition-all"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-4 flex items-center text-neutral-400 hover:text-neutral-600 text-lg">×</button>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="Search 149 tools across 8 domains..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-10 py-3.5 bg-white border border-neutral-200 rounded-2xl text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 shadow-sm hover:shadow-md transition-all"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-4 flex items-center text-neutral-400 hover:text-neutral-600 text-lg">×</button>
-              )}
-            </div>
-          </div>
 
-          {/* Domain filter pills */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {domainFilters.map((filter) => (
-              <button
-                key={filter.value}
-                onClick={() => {
-                  setActiveFilter(filter.value)
-                  if (filter.value !== '') router.push(filter.href)
-                }}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all whitespace-nowrap ${
-                  activeFilter === filter.value
-                    ? 'bg-primary-600 border-primary-600 text-white shadow-sm'
-                    : 'bg-white border-neutral-200 text-neutral-600 hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
+              {/* Domain dropdown button */}
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={() => setShowDomainMenu(d => !d)}
+                  className={`h-full px-4 py-3.5 rounded-2xl text-sm font-semibold border shadow-sm transition-all flex items-center gap-2 whitespace-nowrap ${
+                    activeFilter !== ''
+                      ? 'bg-primary-600 text-white border-primary-600'
+                      : 'bg-white text-neutral-700 border-neutral-200 hover:border-primary-400 hover:text-primary-600'
+                  }`}
+                >
+                  <span>{domainFilters.find(f => f.value === activeFilter)?.label || '👁️ Domains'}</span>
+                  <span className={`transition-transform duration-200 text-xs ${showDomainMenu ? 'rotate-180' : ''}`}>▾</span>
+                </button>
+
+                {/* Dropdown menu */}
+                {showDomainMenu && (
+                  <>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 z-10" onClick={() => setShowDomainMenu(false)} />
+                    {/* Menu */}
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-neutral-100 shadow-xl z-20 overflow-hidden">
+                      <div className="p-1.5">
+                        {domainFilters.map((filter) => (
+                          <button
+                            key={filter.value}
+                            onClick={() => {
+                              setActiveFilter(filter.value)
+                              setShowDomainMenu(false)
+                              if (filter.value !== '') router.push(filter.href)
+                            }}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left ${
+                              activeFilter === filter.value
+                                ? 'bg-primary-50 text-primary-700 font-semibold'
+                                : 'text-neutral-700 hover:bg-neutral-50 font-medium'
+                            }`}
+                          >
+                            <span className="text-base">{filter.label.split(' ')[0]}</span>
+                            <span className="flex-1">{filter.label.split(' ').slice(1).join(' ') || 'All Domains'}</span>
+                            {activeFilter === filter.value && <span className="text-primary-600 text-xs">✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Content grid */}
