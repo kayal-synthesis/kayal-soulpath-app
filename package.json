@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@mediapipe/hands": "0.4.1675469240",
+    "@mediapipe/tasks-vision": "0.10.35",
     "@react-pdf/renderer": "^3.4.4",
     "@stripe/react-stripe-js": "^2.7.2",
     "@stripe/stripe-js": "^3.5.0",
