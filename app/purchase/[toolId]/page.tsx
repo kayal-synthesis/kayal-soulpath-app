@@ -186,7 +186,7 @@ export default function PurchasePage() {
       const res  = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, toolId, userId: supabaseUser?.id || user?.id || null }),
+        body: JSON.stringify({ code: couponCode, toolId, userId: loggedInUser?.id || null }),
       })
       const data = await res.json()
       if (data.valid && data.coupon) {
@@ -241,7 +241,7 @@ export default function PurchasePage() {
         toolType:      destination,
         category:      domain,
         destination,
-        emoji:         tool.emoji || 'ðŸ“¦',
+        emoji:         tool.emoji || 'Ã°Å¸â€œÂ¦',
         price:         finalPrice,
         originalPrice,
         couponCode:    appliedCoupon?.code || null,
@@ -352,7 +352,7 @@ export default function PurchasePage() {
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${categoryColor}`}>
-                {tool.emoji || 'ðŸ“¦'}
+                {tool.emoji || 'Ã°Å¸â€œÂ¦'}
               </div>
               <div className="text-left min-w-0">
                 <p className="text-sm font-semibold text-neutral-800 truncate">{tool.name}</p>
@@ -389,13 +389,13 @@ export default function PurchasePage() {
                       <p className="text-sm font-medium text-primary-900">{fullName}</p>
                       {userDob && (
                         <p className="text-xs text-primary-600 mt-0.5">
-                          {userDob}{userBirthLoc ? ` Â· ${userBirthLoc}` : ''}
+                          {userDob}{userBirthLoc ? ` Ã‚Â· ${userBirthLoc}` : ''}
                         </p>
                       )}
                     </div>
                   )}
                   <div className="space-y-2">
-                    {['Secure 256-bit encryption', 'Private â€” only you can access', '7-day money-back guarantee'].map(item => (
+                    {['Secure 256-bit encryption', 'Private Ã¢â‚¬â€ only you can access', '7-day money-back guarantee'].map(item => (
                       <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
                         <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />{item}
                       </div>
@@ -410,7 +410,7 @@ export default function PurchasePage() {
         {/* Step Content */}
         <AnimatePresence mode="wait">
 
-          {/* STEP 1 â€” Image Upload */}
+          {/* STEP 1 Ã¢â‚¬â€ Image Upload */}
           {currentStep === 'images' && (
             <motion.div
               key="images"
@@ -479,7 +479,7 @@ export default function PurchasePage() {
             </motion.div>
           )}
 
-          {/* STEP 2 â€” Payment */}
+          {/* STEP 2 Ã¢â‚¬â€ Payment */}
           {currentStep === 'payment' && (
             <motion.div
               key="payment"
@@ -495,7 +495,7 @@ export default function PurchasePage() {
                   <h2 className="text-lg font-serif text-neutral-900 mb-4">Order Summary</h2>
                   <div className="flex items-start gap-4 mb-4">
                     <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${categoryColor}`}>
-                      {tool.emoji || 'ðŸ“¦'}
+                      {tool.emoji || 'Ã°Å¸â€œÂ¦'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-neutral-900 leading-tight">{tool.name}</p>
@@ -653,7 +653,7 @@ export default function PurchasePage() {
                     </div>
                   </div>
                   <p className="text-xs text-neutral-400 mt-3 text-center">
-                    Stripe coming soon â€” no card will be charged
+                    Stripe coming soon Ã¢â‚¬â€ no card will be charged
                   </p>
                 </div>
 
@@ -710,7 +710,7 @@ export default function PurchasePage() {
                   {isProcessing ? (
                     <><Loader2 className="w-5 h-5 animate-spin mr-2" />Processing your order...</>
                   ) : (
-                    <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase â€” ${finalPrice.toFixed(2)}{isSub ? '/mo' : ''}</>
+                    <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase Ã¢â‚¬â€ ${finalPrice.toFixed(2)}{isSub ? '/mo' : ''}</>
                   )}
                 </Button>
 
