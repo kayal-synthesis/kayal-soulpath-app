@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,18 +8,9 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { code, toolId } = await request.json()
+    const { code, toolId, userId } = await request.json()
 
     if (!code) return NextResponse.json({ valid: false, error: 'No coupon code provided' })
-
-    // Get current user
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { get: (name: string) => cookieStore.get(name)?.value } }
-    )
-    const { data: { user } } = await supabase.auth.getUser()
 
     // Fetch coupon
     const { data: coupon, error } = await supabaseAdmin
@@ -31,7 +20,8 @@ export async function POST(request: Request) {
       .eq('is_active', true)
       .single()
 
-    if (error || !coupon) return NextResponse.json({ valid: false, error: 'Coupon not found or inactive' })
+    if (error || !coupon)
+      return NextResponse.json({ valid: false, error: 'Coupon not found or inactive' })
 
     // Check global usage limit
     if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit)
@@ -54,16 +44,15 @@ export async function POST(request: Request) {
       if (coupon.excludes_tools.includes(toolId))
         return NextResponse.json({ valid: false, error: 'Coupon cannot be used for this tool' })
 
-    // ── Per-user usage check ─────────────────────────────
-    if (user) {
-      // Check per_user_limit (default 1 if not set)
+    // ── Per-user usage check ─────────────────────────────────
+    if (userId) {
       const perUserLimit = coupon.per_user_limit ?? 1
 
       const { count } = await supabaseAdmin
         .from('coupon_usage')
         .select('id', { count: 'exact', head: true })
         .eq('coupon_id', coupon.id)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
 
       if ((count ?? 0) >= perUserLimit)
         return NextResponse.json({
