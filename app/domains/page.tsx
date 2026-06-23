@@ -275,10 +275,11 @@ export default function DomainsPage() {
   }, [activeDomain, searchQuery, activePrice, activeSort, selectedDomain])
 
   const showingTools  = activeDomain !== 'all' || !!searchQuery.trim() || activePrice !== 'all'
-  const activeFilters = (activePrice !== 'all' ? 1 : 0) + (activeSort !== 'popular' ? 1 : 0)
+  const activeFilters = (activeDomain !== 'all' ? 1 : 0) + (activePrice !== 'all' ? 1 : 0) + (activeSort !== 'popular' ? 1 : 0)
 
   const clearAll = () => {
     setSearchQuery('')
+    setActiveDomain('all')
     setActivePrice('all')
     setActiveSort('popular')
   }
@@ -348,7 +349,7 @@ export default function DomainsPage() {
           )}
         </div>
 
-        {/* ── Filter Panel ── */}
+        {/* ── Filter Panel — includes domain selector ── */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -359,10 +360,41 @@ export default function DomainsPage() {
               className="overflow-hidden"
             >
               <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4 mb-4 space-y-4">
+
+                {/* Domain selector */}
                 <div>
-                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">
-                    Price Range
-                  </p>
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Domain</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setActiveDomain('all')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                        activeDomain === 'all'
+                          ? 'bg-primary-600 text-white border-primary-600'
+                          : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-400 hover:text-primary-600'
+                      }`}
+                    >
+                      All ({totalTools})
+                    </button>
+                    {domains.map(domain => (
+                      <button
+                        key={domain.id}
+                        onClick={() => { setActiveDomain(domain.id); setShowFilters(false) }}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                          activeDomain === domain.id
+                            ? 'bg-primary-600 text-white border-primary-600'
+                            : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-400 hover:text-primary-600'
+                        }`}
+                      >
+                        <span>{domain.icon}</span>
+                        {domain.shortName} ({domain.tools.length})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price range */}
+                <div>
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Price Range</p>
                   <div className="flex flex-wrap gap-2">
                     {priceRanges.map(price => (
                       <button
@@ -379,10 +411,10 @@ export default function DomainsPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Sort */}
                 <div>
-                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">
-                    Sort By
-                  </p>
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Sort By</p>
                   <div className="flex flex-wrap gap-2">
                     {sortOptions.map(sort => (
                       <button
@@ -400,9 +432,10 @@ export default function DomainsPage() {
                     ))}
                   </div>
                 </div>
+
                 {activeFilters > 0 && (
                   <button
-                    onClick={() => { setActivePrice('all'); setActiveSort('popular') }}
+                    onClick={clearAll}
                     className="text-xs text-red-500 hover:text-red-700 font-semibold"
                   >
                     ✕ Clear all filters
@@ -412,34 +445,6 @@ export default function DomainsPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* ── Domain Pills — wrapping, compact short names ── */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button
-            onClick={() => setActiveDomain('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-              activeDomain === 'all'
-                ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-300'
-            }`}
-          >
-            All ({totalTools})
-          </button>
-          {domains.map(domain => (
-            <button
-              key={domain.id}
-              onClick={() => setActiveDomain(domain.id)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                activeDomain === domain.id
-                  ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                  : 'bg-white text-neutral-600 border-neutral-200 hover:border-primary-300'
-              }`}
-            >
-              <span className="text-sm leading-none">{domain.icon}</span>
-              {domain.shortName} ({domain.tools.length})
-            </button>
-          ))}
-        </div>
 
         {/* ── Domain Hero ── */}
         {selectedDomain && showingTools && (
@@ -452,10 +457,10 @@ export default function DomainsPage() {
             {/* Stats */}
             <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                { label: 'Domains',   value: domains.length,                                       color: 'text-primary-600' },
-                { label: 'Tools',     value: totalTools,                                           color: 'text-emerald-600' },
-                { label: 'w/ Photos', value: allTools.filter((t: any) => t.requiresImage).length, color: 'text-blue-600'    },
-                { label: 'Categories', value: domains.length,                                      color: 'text-amber-600'   },
+                { label: 'Domains',    value: domains.length,                                       color: 'text-primary-600' },
+                { label: 'Tools',      value: totalTools,                                           color: 'text-emerald-600' },
+                { label: 'w/ Photos',  value: allTools.filter((t: any) => t.requiresImage).length, color: 'text-blue-600'    },
+                { label: 'Categories', value: domains.length,                                       color: 'text-amber-600'   },
               ].map((stat, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-3 text-center">
                   <p className={`text-xl font-serif font-bold ${stat.color}`}>{stat.value}</p>
@@ -474,7 +479,7 @@ export default function DomainsPage() {
 
             {/* Domain grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {domains.map((domain, index) => (
+              {domains.map((domain) => (
                 <DomainCard
                   key={domain.id}
                   domain={domain}
@@ -488,7 +493,7 @@ export default function DomainsPage() {
         {/* ── Tools Grid ── */}
         {showingTools && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {visibleTools.map((tool: any, index: number) => (
+            {visibleTools.map((tool: any) => (
               <ToolCard
                 key={tool.id}
                 tool={tool}
