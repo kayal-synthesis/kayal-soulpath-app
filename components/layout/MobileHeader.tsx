@@ -18,7 +18,7 @@ export const MobileHeader = ({ userName }: MobileHeaderProps) => {
       <div className="flex items-center justify-between px-4 py-3">
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="text-xl text-primary-600">☾</span>
-          <span className="font-serif text-base font-semibold text-primary-900">KAYAL</span>
+          <span className="font-serif text-base font-semibold text-primary-900">KAYAL <span className="font-light text-neutral-500">LifeOS</span></span>
         </Link>
         <div className="flex items-center gap-1">
           <button
