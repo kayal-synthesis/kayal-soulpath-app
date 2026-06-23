@@ -7,10 +7,10 @@ import { CheckCircle, Clock, Zap, ChevronRight, Star, X } from 'lucide-react'
 import { allTools, getToolById } from '@/lib/tools/all-tools-index'
 import type { Tool } from '@/lib/tools/all-tools-index'
 
-// ─────────────────────────────────────────────────────────────
-// Upsell map — toolId → recommended upsell tool id
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Upsell map â€” toolId â†’ recommended upsell tool id
 // Falls back to popular tools if no specific upsell configured
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const UPSELL_MAP: Record<string, string> = {
   'soulmate-arrival-window-os':   'soulmate-compatibility-verdict',
   'love-wound-reading-os':        'karmic-debt-cleanser',
@@ -30,9 +30,9 @@ const UPSELL_MAP: Record<string, string> = {
   'oracle-deep-dive-session':     'oracle-voice-unlimited',
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Star rating display
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Stars({ rating = 4.9 }: { rating?: number }) {
   return (
     <div className="flex items-center gap-1">
@@ -46,9 +46,9 @@ function Stars({ rating = 4.9 }: { rating?: number }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // One-click upsell card
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function UpsellCard({
   tool,
   onAccept,
@@ -74,7 +74,7 @@ function UpsellCard({
         {/* Tag */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-wider">
-            One-Time Offer — This Session Only
+            One-Time Offer â€” This Session Only
           </span>
           <button
             onClick={onDecline}
@@ -111,7 +111,7 @@ function UpsellCard({
           {tool.features.slice(0, 3).map((f, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700">
               <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <span>{typeof f === 'string' ? f.split(' — ')[0] : String(f)}</span>
+              <span>{typeof f === 'string' ? f.split(' â€” ')[0] : String(f)}</span>
             </li>
           ))}
         </ul>
@@ -121,7 +121,7 @@ function UpsellCard({
           <Zap className="w-5 h-5 text-amber-500 flex-shrink-0" />
           <div>
             <p className="text-xs font-bold text-amber-800">
-              Add this now and save 20% — available only at checkout
+              Add this now and save 20% â€” available only at checkout
             </p>
             <p className="text-xs text-amber-600 mt-0.5">
               Full price after this page: <span className="line-through">${tool.price}</span>
@@ -138,11 +138,11 @@ function UpsellCard({
           {accepting ? (
             <span className="flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Adding to your order…
+              Adding to your orderâ€¦
             </span>
           ) : (
             <>
-              Yes — Add {tool.name} for ${Math.round(tool.price * 0.8)}
+              Yes â€” Add {tool.name} for ${Math.round(tool.price * 0.8)}
               <ChevronRight className="w-4 h-4" />
             </>
           )}
@@ -159,9 +159,9 @@ function UpsellCard({
   )
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Main page
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function PurchaseConfirmationPage() {
   const router   = useRouter()
   const params   = useParams()
@@ -185,7 +185,7 @@ export default function PurchaseConfirmationPage() {
       const u = getToolById(upsellId)
       setUpsellTool(u ?? null)
     } else {
-      // Default upsell — most popular tool not already purchased
+      // Default upsell â€” most popular tool not already purchased
       const fallback = allTools.find(t => t.isPopular && t.id !== toolId)
       setUpsellTool(fallback ?? null)
     }
@@ -311,13 +311,13 @@ export default function PurchaseConfirmationPage() {
         {/* Navigation */}
         <div className="flex items-center justify-center gap-4">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/member/dashboard')}
             className="px-5 py-2.5 bg-white border border-neutral-200 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50 transition-colors shadow-sm"
           >
             Back to Dashboard
           </button>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/member/dashboard')}
             className="px-5 py-2.5 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-colors shadow-sm"
           >
             View All Readings
@@ -325,7 +325,7 @@ export default function PurchaseConfirmationPage() {
         </div>
 
         <p className="text-center text-xs text-neutral-400">
-          Questions? Email support@kayal.com — we respond within 2 hours.
+          Questions? Email support@kayal.com â€” we respond within 2 hours.
         </p>
       </div>
     </div>
