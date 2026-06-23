@@ -155,7 +155,7 @@ export default function DashboardPage() {
       <MobileBottomNav userName={anonymousUser.name} onDailyClick={() => { setOpenInsights(true); setTimeout(() => setOpenInsights(false), 500) }} />
 
       {/* Main content */}
-      <main className={`${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'} pb-24 lg:pb-0 transition-all duration-300`}>
+      <main className={`${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'} pb-24 lg:pb-0 pt-14 lg:pt-0 transition-all duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
 
           {/* Desktop top bar */}

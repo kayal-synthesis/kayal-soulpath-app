@@ -14,7 +14,7 @@ export const MobileHeader = ({ userName }: MobileHeaderProps) => {
   const router = useRouter()
 
   return (
-    <header className="lg:hidden bg-white border-b border-neutral-100 sticky top-0 z-30 shadow-sm">
+    <header className="lg:hidden bg-white border-b border-neutral-100 fixed top-0 left-0 right-0 z-30 shadow-sm">
       <div className="flex items-center justify-between px-4 py-3">
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="text-xl text-primary-600">☾</span>
