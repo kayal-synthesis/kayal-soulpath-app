@@ -65,15 +65,12 @@ export const ImageUploader = ({ type, onCapture, onComplete, instructions }: Ima
 
       // MediaPipe HandLandmarker
       try {
-        const vision = await (await import('@mediapipe/tasks-vision')).FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-        )
+        const vision = await (await import('@mediapipe/tasks-vision')).FilesetResolver.forVisionTasks('/mediapipe')
         const { HandLandmarker } = await import('@mediapipe/tasks-vision')
         handDetector = await HandLandmarker.createFromOptions(vision, {
           baseOptions: {
-            modelAssetPath:
-              'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
-            delegate: 'GPU',
+            modelAssetPath: '/mediapipe/hand_landmarker.task',
+            delegate: 'CPU',
           },
           runningMode: 'IMAGE',
           numHands: 1,
