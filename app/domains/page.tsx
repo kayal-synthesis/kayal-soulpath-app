@@ -207,7 +207,7 @@ function DomainCard({ domain, onClick }: { domain: typeof domains[0]; onClick: (
           {domain.tools.length} tools
         </span>
       </div>
-      <h3 className="font-serif font-medium text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors leading-tight text-sm">
+      <h3 className="font-serif font-semibold text-gray-950 mb-2 group-hover:text-primary-600 transition-colors leading-tight text-[0.925rem]">
         {domain.name}
       </h3>
       <p className="text-xs text-neutral-500 leading-relaxed line-clamp-2 mb-4">
