@@ -64,8 +64,6 @@ const getDeviceId = () => {
   return id
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 type Step = 'images' | 'payment'
 
 export default function PurchasePage() {
@@ -241,7 +239,7 @@ export default function PurchasePage() {
         toolType:      destination,
         category:      domain,
         destination,
-        emoji:         tool.emoji || 'Ã°Å¸â€œÂ¦',
+        emoji:         tool.emoji || '📦',
         price:         finalPrice,
         originalPrice,
         couponCode:    appliedCoupon?.code || null,
@@ -266,7 +264,6 @@ export default function PurchasePage() {
       if (loggedInUser) {
         await savePurchase(loggedInUser.id, newJobId)
       }
-      // Redirect to confirmation page
       router.push(`/purchase/${toolId}/confirmation${newJobId ? `?job=${newJobId}` : ''}`)
     } catch (err: any) {
       setPurchaseError(err.message || 'Something went wrong. Please try again.')
@@ -274,8 +271,6 @@ export default function PurchasePage() {
       setIsProcessing(false)
     }
   }
-
-  const inputClass = "w-full pl-10 pr-4 py-3.5 border border-neutral-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 text-base transition-all bg-white"
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-white overflow-x-hidden">
@@ -289,7 +284,6 @@ export default function PurchasePage() {
           >
             <ArrowLeft className="w-5 h-5 text-neutral-600" />
           </button>
-
           <div className="flex items-center gap-2 flex-1 min-w-0 justify-center">
             <span className="text-sm font-semibold text-neutral-800 truncate max-w-[160px]">
               {tool.name}
@@ -303,7 +297,6 @@ export default function PurchasePage() {
               ${finalPrice.toFixed(2)}
             </span>
           </div>
-
           <div className="w-9 flex-shrink-0 flex justify-end">
             {loggedInUser && <CheckCircle className="w-5 h-5 text-green-500" />}
           </div>
@@ -352,7 +345,7 @@ export default function PurchasePage() {
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${categoryColor}`}>
-                {tool.emoji || 'Ã°Å¸â€œÂ¦'}
+                {tool.emoji || '📦'}
               </div>
               <div className="text-left min-w-0">
                 <p className="text-sm font-semibold text-neutral-800 truncate">{tool.name}</p>
@@ -389,13 +382,13 @@ export default function PurchasePage() {
                       <p className="text-sm font-medium text-primary-900">{fullName}</p>
                       {userDob && (
                         <p className="text-xs text-primary-600 mt-0.5">
-                          {userDob}{userBirthLoc ? ` Ã‚Â· ${userBirthLoc}` : ''}
+                          {userDob}{userBirthLoc ? ` · ${userBirthLoc}` : ''}
                         </p>
                       )}
                     </div>
                   )}
                   <div className="space-y-2">
-                    {['Secure 256-bit encryption', 'Private Ã¢â‚¬â€ only you can access', '7-day money-back guarantee'].map(item => (
+                    {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee'].map(item => (
                       <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
                         <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />{item}
                       </div>
@@ -410,7 +403,7 @@ export default function PurchasePage() {
         {/* Step Content */}
         <AnimatePresence mode="wait">
 
-          {/* STEP 1 Ã¢â‚¬â€ Image Upload */}
+          {/* STEP 1 — Image Upload */}
           {currentStep === 'images' && (
             <motion.div
               key="images"
@@ -479,7 +472,7 @@ export default function PurchasePage() {
             </motion.div>
           )}
 
-          {/* STEP 2 Ã¢â‚¬â€ Payment */}
+          {/* STEP 2 — Payment */}
           {currentStep === 'payment' && (
             <motion.div
               key="payment"
@@ -495,7 +488,7 @@ export default function PurchasePage() {
                   <h2 className="text-lg font-serif text-neutral-900 mb-4">Order Summary</h2>
                   <div className="flex items-start gap-4 mb-4">
                     <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${categoryColor}`}>
-                      {tool.emoji || 'Ã°Å¸â€œÂ¦'}
+                      {tool.emoji || '📦'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-neutral-900 leading-tight">{tool.name}</p>
@@ -653,16 +646,16 @@ export default function PurchasePage() {
                     </div>
                   </div>
                   <p className="text-xs text-neutral-400 mt-3 text-center">
-                    Stripe coming soon Ã¢â‚¬â€ no card will be charged
+                    Stripe coming soon — no card will be charged
                   </p>
                 </div>
 
                 {/* Trust Signals */}
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { icon: Shield,   text: '256-bit SSL',  sub: 'Encrypted'      },
-                    { icon: Lock,     text: 'Private',      sub: 'Only you'       },
-                    { icon: Sparkles, text: '7-day',        sub: 'Money back'     },
+                    { icon: Shield,   text: '256-bit SSL', sub: 'Encrypted'  },
+                    { icon: Lock,     text: 'Private',     sub: 'Only you'   },
+                    { icon: Sparkles, text: '7-day',       sub: 'Money back' },
                   ].map(({ icon: Icon, text, sub }) => (
                     <div key={text} className="bg-white rounded-xl border border-neutral-100 p-3 text-center shadow-sm">
                       <Icon className="w-4 h-4 text-green-500 mx-auto mb-1" />
@@ -710,13 +703,14 @@ export default function PurchasePage() {
                   {isProcessing ? (
                     <><Loader2 className="w-5 h-5 animate-spin mr-2" />Processing your order...</>
                   ) : (
-                    <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase Ã¢â‚¬â€ ${finalPrice.toFixed(2)}{isSub ? '/mo' : ''}</>
+                    <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase ${finalPrice.toFixed(2)}{isSub ? '/mo' : ''}</>
                   )}
                 </Button>
 
                 <p className="text-xs text-center text-neutral-400 pb-2">
                   Your reading will be ready in approximately {tool.deliveryMinutes || 20} minutes after payment.
                 </p>
+
               </div>
             </motion.div>
           )}
