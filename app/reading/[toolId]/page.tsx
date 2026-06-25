@@ -1,18 +1,19 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAnonymousStore } from '@/lib/store/anonymousStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { createClient } from '@/lib/supabase/client'
 import {
   ArrowLeft, Calendar, Clock, Share2, Sparkles, Sun, Moon, Star,
   TrendingUp, Loader2, User, ChevronRight, ChevronLeft, Bookmark,
-  BookmarkCheck, Compass, Crown, Infinity, Eye, Copy, Check,
+  BookmarkCheck, Compass, Infinity, Eye, Copy, Check,
   Facebook, Twitter, Linkedin, Mail, Bell, BellOff, X, Hourglass,
-  Timer, Watch,
+  Timer, Watch, AlertCircle, RefreshCw,
 } from 'lucide-react'
 
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
@@ -47,7 +48,7 @@ const timeframeConfig: Record<string, {
   monthly: {
     gradient: 'from-purple-600 to-purple-700', darkGradient: 'from-purple-500 to-purple-600',
     accent: 'purple', lightBg: 'bg-purple-50', darkBg: 'bg-purple-950/30', border: 'border-purple-200',
-    icon: Moon, nextReading: 'March 1st', description: 'Monthly cycles and themes'
+    icon: Moon, nextReading: 'Next month', description: 'Monthly cycles and themes'
   },
   yearly: {
     gradient: 'from-emerald-600 to-emerald-700', darkGradient: 'from-emerald-500 to-emerald-600',
@@ -79,12 +80,14 @@ const PEAK_HOURS = [
 ]
 
 export default function ReadingPage() {
-  const params = useParams()
-  const router = useRouter()
+  const params       = useParams()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
   const { user, hasCompletedOnboarding } = useAnonymousStore()
-  const toolId = params.toolId as string
+  const supabase     = createClient()
+  const toolId       = params.toolId as string
 
-  const [isLoading,             setIsLoading]             = useState(true)
+  const [pageLoading,           setPageLoading]           = useState(true)
   const [isSaved,               setIsSaved]               = useState(false)
   const [currentSection,        setCurrentSection]        = useState(0)
   const [copied,                setCopied]                = useState(false)
@@ -94,6 +97,12 @@ export default function ReadingPage() {
     enabled: false, peakHours: [] as string[], showSettings: false
   })
   const [showNotificationModal, setShowNotificationModal] = useState(false)
+
+  // Reading state
+  const [jobId,           setJobId]           = useState<string | null>(searchParams.get('job'))
+  const [readingStatus,   setReadingStatus]   = useState<'loading' | 'pending' | 'completed' | 'failed'>('loading')
+  const [readingContent,  setReadingContent]  = useState<any>(null)
+  const [pollCount,       setPollCount]       = useState(0)
 
   const tool   = allReadingTools.find(t => t.id === toolId) as any
   const config = tool
@@ -116,10 +125,61 @@ export default function ReadingPage() {
     if (!hasCompletedOnboarding()) router.push('/onboarding/basic')
   }, [hasCompletedOnboarding, router])
 
+  // ── Load job_id from purchase if not in URL ──────────────
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500)
-    return () => clearTimeout(timer)
-  }, [])
+    const loadJobId = async () => {
+      if (jobId) { setPageLoading(false); return }
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) { setPageLoading(false); return }
+      const { data: purchase } = await supabase
+        .from('purchases')
+        .select('job_id')
+        .eq('user_id', authUser.id)
+        .eq('tool_id', toolId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+      if (purchase?.job_id) setJobId(purchase.job_id)
+      setPageLoading(false)
+    }
+    loadJobId()
+  }, [toolId])
+
+  // ── Poll reading result ──────────────────────────────────
+  useEffect(() => {
+    if (!jobId || pageLoading) return
+    let cancelled = false
+
+    const fetchResult = async () => {
+      try {
+        const res  = await fetch(`/api/reading/result/${jobId}`)
+        const data = await res.json()
+
+        if (cancelled) return
+
+        if (data.status === 'completed' && data.content) {
+          setReadingContent(data.content)
+          setReadingStatus('completed')
+        } else if (data.status === 'failed') {
+          setReadingStatus('failed')
+        } else {
+          setReadingStatus('pending')
+          setPollCount(c => c + 1)
+        }
+      } catch {
+        if (!cancelled) setReadingStatus('failed')
+      }
+    }
+
+    fetchResult()
+    // Poll every 5 seconds if still pending
+    const interval = setInterval(() => {
+      if (readingStatus !== 'completed' && readingStatus !== 'failed') fetchResult()
+    }, 5000)
+
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [jobId, pageLoading])
 
   const handleBack = () => router.back()
 
@@ -167,7 +227,28 @@ export default function ReadingPage() {
     }
   }
 
-  if (!user) {
+  // ── Build sections from real content or fallback ─────────
+  const buildSections = () => {
+    if (readingContent?.sections?.length > 0) {
+      return readingContent.sections.map((s: any, i: number) => ({
+        title:   s.title   || `Section ${i + 1}`,
+        icon:    [Eye, Sparkles, Compass, Hourglass, Star, Timer, Watch][i] || Eye,
+        content: s.content || '',
+      }))
+    }
+    // Fallback placeholder sections
+    return [
+      { title: 'Overview',  icon: Eye,      content: tool?.sampleContent || tool?.description || 'Your personalised reading is being prepared...' },
+      { title: 'Insights',  icon: Sparkles, content: 'Based on your unique patterns and cosmic alignments, key insights will appear here...' },
+      { title: 'Guidance',  icon: Compass,  content: 'Personalised guidance and recommendations will be provided here...' },
+      { title: 'Timeline',  icon: Clock,    content: 'Important dates and timing for your reading will appear here...' },
+    ]
+  }
+
+  const sections    = buildSections()
+  const SectionIcon = sections[currentSection]?.icon || Eye
+
+  if (!user || pageLoading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-stone-900' : 'bg-stone-50'}`}>
         <Loader2 className={`w-8 h-8 animate-spin ${darkMode ? 'text-stone-400' : 'text-primary-600'}`} />
@@ -182,78 +263,12 @@ export default function ReadingPage() {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">🔍</span>
           </div>
-          <h2 className={`text-xl font-serif mb-2 ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>
-            Reading Not Found
-          </h2>
+          <h2 className={`text-xl font-serif mb-2 ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>Reading Not Found</h2>
           <p className={`mb-6 ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>
             The reading you're looking for doesn't exist or hasn't been generated yet.
           </p>
           <Button onClick={() => router.push('/member/dashboard')}>Back to Dashboard</Button>
         </Card>
-      </div>
-    )
-  }
-
-  const getEternalContent = () => {
-    if (tool.id !== 'eternal-clock') return null
-    return {
-      overview: `Time is not linear — it's a vast, eternal ocean. Your Eternal Clock reading reveals how past, present, and future intertwine in your soul's journey. Unlike standard time readings that focus on specific periods, this reading transcends time itself, showing you the patterns that repeat across lifetimes and the timeless wisdom that awaits you.
-
-Your eternal perspective shows that you are not just living one life, but participating in a grand symphony of existence. The challenges you face now are echoes of lessons from other times, and the joys you experience are ripples from eternal sources.`,
-      insights: [
-        { title: 'Past Echoes', content: 'Three significant past life patterns are influencing your present: a life of solitude as a monk, a life of leadership in ancient times, and a life of creative expression. These lifetimes gifted you with wisdom, authority, and artistic sensitivity that you carry forward.' },
-        { title: 'Present Moment', content: 'Right now, you stand at a convergence point where multiple timelines meet. The choices you make in this moment ripple forward and backward through your existence. This is why certain decisions feel so weighty — they matter across time.' },
-        { title: 'Future Whispers', content: "Your future self is already reaching back to guide you. Pay attention to intuitive nudges and 'coincidences.' They are messages from your future self, helping you navigate toward the timeline where you fulfil your highest purpose." },
-      ],
-      guidance: `To work with eternal time rather than against it:
-
-- Practice being fully present — eternity exists in each moment
-- Notice recurring patterns — they are lessons across lifetimes
-- Trust your intuition — it's memory from other times
-- Release attachment to specific outcomes — many timelines exist
-- Honour your ancestors — their wisdom flows through you
-- Plant seeds for future generations — your legacy echoes eternally`,
-      timeline: `Your eternal timeline reveals these key nexuses:
-
-- Age 33 — A portal to past life memories opens
-- Age 42 — You meet someone from another lifetime
-- Age 55 — A choice that affects seven generations
-- Age 70+ — You become an ancestor guide
-- Beyond — Your soul's eternal journey continues`
-    }
-  }
-
-  const eternalContent = getEternalContent()
-
-  const sections = tool.id === 'eternal-clock' ? [
-    { title: 'Eternal Overview',  icon: Infinity,  content: eternalContent?.overview  || tool.sampleContent || 'Your personalised eternal reading is being prepared...' },
-    { title: 'Timeless Insights', icon: Sparkles,  content: eternalContent?.insights.map((i: any) => `**${i.title}:** ${i.content}`).join('\n\n') || 'Insights will appear here...' },
-    { title: 'Eternal Guidance',  icon: Compass,   content: eternalContent?.guidance  || 'Personalised guidance will be provided here...' },
-    { title: 'Timeline Nexus',    icon: Hourglass, content: eternalContent?.timeline  || 'Important nexus points across your eternal timeline will appear here...' },
-  ] : [
-    { title: 'Overview',  icon: Eye,      content: tool.sampleContent || tool.description || 'Your personalised reading is being prepared...' },
-    { title: 'Insights',  icon: Sparkles, content: 'Based on your unique patterns and cosmic alignments, key insights will appear here...' },
-    { title: 'Guidance',  icon: Compass,  content: 'Personalised guidance and recommendations will be provided here...' },
-    { title: 'Timeline',  icon: Clock,    content: 'Important dates and timing for your reading will appear here...' },
-  ]
-
-  const SectionIcon = sections[currentSection].icon
-
-  if (isLoading) {
-    return (
-      <div className={`min-h-screen ${darkMode ? 'bg-stone-900' : 'bg-stone-50'} flex items-center justify-center`}>
-        <div className="text-center max-w-md">
-          <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${darkMode ? config.darkGradient : config.gradient} text-white flex items-center justify-center text-4xl mx-auto mb-6 shadow-lg`}>
-            {tool.emoji || '✨'}
-          </div>
-          <h2 className={`text-2xl font-serif mb-2 ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>{tool.name}</h2>
-          <p className={`mb-6 ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>{config.description}</p>
-          <div className="flex justify-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
-            <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" style={{ animationDelay: '200ms' }} />
-            <div className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" style={{ animationDelay: '400ms' }} />
-          </div>
-        </div>
       </div>
     )
   }
@@ -278,7 +293,6 @@ Your eternal perspective shows that you are not just living one life, but partic
               <button onClick={() => setDarkMode(!darkMode)} className={`p-2 rounded-lg transition-colors ${darkMode ? 'bg-stone-700 text-stone-300 hover:bg-stone-600' : 'text-stone-500 hover:bg-stone-100'}`}>
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
-
               <button onClick={requestNotificationPermission} className={`p-2 rounded-lg transition-colors relative ${notifications.enabled ? darkMode ? 'bg-stone-700 text-amber-400' : 'bg-amber-50 text-amber-600' : darkMode ? 'text-stone-400 hover:bg-stone-700' : 'text-stone-500 hover:bg-stone-100'}`}>
                 {notifications.enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
                 {notifications.enabled && notifications.peakHours.length > 0 && (
@@ -287,11 +301,9 @@ Your eternal perspective shows that you are not just living one life, but partic
                   </span>
                 )}
               </button>
-
               <button onClick={() => setIsSaved(!isSaved)} className={`p-2 rounded-lg transition-colors ${isSaved ? darkMode ? 'bg-stone-700 text-amber-400' : 'bg-primary-50 text-primary-600' : darkMode ? 'text-stone-400 hover:bg-stone-700' : 'text-stone-500 hover:bg-stone-100'}`}>
                 {isSaved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
               </button>
-
               <div className="relative">
                 <button onClick={() => setShowShareMenu(!showShareMenu)} className={`p-2 rounded-lg transition-colors ${darkMode ? 'text-stone-400 hover:bg-stone-700' : 'text-stone-500 hover:bg-stone-100'}`}>
                   <Share2 className="w-5 h-5" />
@@ -369,14 +381,18 @@ Your eternal perspective shows that you are not just living one life, but partic
             <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${darkMode ? config.darkGradient : config.gradient} text-white flex items-center justify-center text-3xl shadow-md flex-shrink-0`}>
               {tool.emoji || '✨'}
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-1 flex-wrap">
                 <h1 className={`text-2xl font-serif ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>{tool.name}</h1>
                 <Badge variant="outline" className={`${darkMode ? 'bg-stone-700 border-stone-600 text-stone-300' : 'bg-primary-50 border-primary-200 text-primary-700'}`}>
-                  {tool.timeframe ? `${tool.timeframe} reading` : 'personalised reading'}
+                  {readingContent ? '✅ Reading Ready' : readingStatus === 'pending' ? '⏳ Generating...' : 'personalised reading'}
                 </Badge>
               </div>
-              <p className={darkMode ? 'text-stone-400' : 'text-stone-500'}>{config.description}</p>
+              {readingContent?.summary && (
+                <p className={`text-sm italic mt-1 ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>
+                  "{readingContent.summary}"
+                </p>
+              )}
               <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
                 <div className={`flex items-center gap-1.5 ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>
                   <User className="w-4 h-4" /><span>{user.name}</span>
@@ -390,141 +406,152 @@ Your eternal perspective shows that you are not just living one life, but partic
           </div>
         </Card>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Reading pending state */}
+        {readingStatus === 'pending' && (
+          <Card className={`p-8 mb-6 text-center ${darkMode ? 'bg-stone-800 border-stone-700' : ''}`}>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+              </div>
+            </div>
+            <h3 className={`text-lg font-serif mb-2 ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>
+              Your reading is being generated
+            </h3>
+            <p className={`text-sm mb-4 ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>
+              Our AI oracle is preparing your personalised {tool.name} reading. This usually takes 2–5 minutes.
+            </p>
+            <div className="flex justify-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" style={{ animationDelay: '200ms' }} />
+              <div className="w-2 h-2 rounded-full bg-primary-600 animate-pulse" style={{ animationDelay: '400ms' }} />
+            </div>
+            <p className={`text-xs mt-4 ${darkMode ? 'text-stone-500' : 'text-stone-400'}`}>
+              Checking for updates... ({pollCount} checks)
+            </p>
+          </Card>
+        )}
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className={`p-4 sticky top-24 transition-colors ${darkMode ? 'bg-stone-800 border-stone-700' : ''}`}>
-              <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${darkMode ? 'text-stone-400' : 'text-stone-400'}`}>Sections</h3>
-              <nav className="space-y-1">
-                {sections.map((section, index) => {
-                  const Icon = section.icon
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentSection(index)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        currentSection === index
-                          ? darkMode ? 'bg-primary-950/50 text-primary-300' : 'bg-primary-50 text-primary-700 font-medium'
-                          : darkMode ? 'text-stone-400 hover:bg-stone-700' : 'text-stone-600 hover:bg-stone-100'
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 ${currentSection === index ? darkMode ? 'text-primary-400' : 'text-primary-600' : 'text-stone-400'}`} />
-                      <span>{section.title}</span>
-                    </button>
-                  )
-                })}
-              </nav>
+        {/* Reading failed state */}
+        {readingStatus === 'failed' && (
+          <Card className={`p-8 mb-6 text-center ${darkMode ? 'bg-stone-800 border-stone-700' : ''}`}>
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className={`text-lg font-serif mb-2 ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>
+              Reading generation failed
+            </h3>
+            <p className={`text-sm mb-4 ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>
+              Something went wrong generating your reading. Please contact support at support@kayalsoulpath.com
+            </p>
+            <Button onClick={() => router.push('/member/dashboard')} variant="outline">
+              Back to Dashboard
+            </Button>
+          </Card>
+        )}
 
-              <div className={`mt-6 pt-4 border-t ${darkMode ? 'border-stone-700' : 'border-stone-200'}`}>
-                <div className={`p-3 rounded-lg ${darkMode ? config.darkBg : config.lightBg}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${darkMode ? config.darkGradient : config.gradient} text-white flex items-center justify-center`}>
-                      {(() => { const Icon = config.icon; return <Icon className="w-4 h-4" /> })()}
+        {/* Reading content */}
+        {(readingStatus === 'completed' || readingStatus === 'loading') && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <Card className={`p-4 sticky top-24 transition-colors ${darkMode ? 'bg-stone-800 border-stone-700' : ''}`}>
+                <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${darkMode ? 'text-stone-400' : 'text-stone-400'}`}>Sections</h3>
+                <nav className="space-y-1">
+                  {sections.map((section, index) => {
+                    const Icon = section.icon
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentSection(index)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          currentSection === index
+                            ? darkMode ? 'bg-primary-950/50 text-primary-300' : 'bg-primary-50 text-primary-700 font-medium'
+                            : darkMode ? 'text-stone-400 hover:bg-stone-700' : 'text-stone-600 hover:bg-stone-100'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 ${currentSection === index ? darkMode ? 'text-primary-400' : 'text-primary-600' : 'text-stone-400'}`} />
+                        <span>{section.title}</span>
+                      </button>
+                    )
+                  })}
+                </nav>
+
+                <div className={`mt-6 pt-4 border-t ${darkMode ? 'border-stone-700' : 'border-stone-200'}`}>
+                  <div className={`p-3 rounded-lg ${darkMode ? config.darkBg : config.lightBg}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${darkMode ? config.darkGradient : config.gradient} text-white flex items-center justify-center`}>
+                        {(() => { const Icon = config.icon; return <Icon className="w-4 h-4" /> })()}
+                      </div>
+                      <div>
+                        <p className={`text-xs ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>Status</p>
+                        <p className={`text-sm font-medium ${darkMode ? 'text-stone-300' : 'text-stone-700'}`}>
+                          {readingContent ? 'Ready to read' : 'Generating...'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className={`text-xs ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>Next reading</p>
-                      <p className={`text-sm font-medium ${darkMode ? 'text-stone-300' : 'text-stone-700'}`}>{config.nextReading}</p>
-                    </div>
+                    <Badge variant="outline" className={`w-full justify-center ${darkMode ? 'bg-stone-800 border-stone-600 text-stone-300' : 'bg-white'}`}>
+                      {readingContent ? '✅ Complete' : '⏳ Processing'}
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className={`w-full justify-center ${darkMode ? 'bg-stone-800 border-stone-600 text-stone-300' : 'bg-white'}`}>
-                    Active
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Back to dashboard */}
-              <div className="mt-4">
-                <Button
-                  variant="outline"
-                  fullWidth
-                  onClick={() => router.push('/member/dashboard')}
-                  className="text-xs"
-                >
-                  ← My Dashboard
-                </Button>
-              </div>
-            </Card>
-          </div>
-
-          {/* Content */}
-          <div className="lg:col-span-3">
-            <Card className={`p-6 transition-colors ${darkMode ? 'bg-stone-800 border-stone-700' : ''}`}>
-              <div className={`flex items-center gap-3 mb-6 pb-4 border-b ${darkMode ? 'border-stone-700' : 'border-stone-200'}`}>
-                <div className={`w-10 h-10 rounded-lg ${darkMode ? config.darkBg : config.lightBg} flex items-center justify-center`}>
-                  <SectionIcon className={`w-5 h-5 ${darkMode ? 'text-primary-400' : 'text-primary-600'}`} />
-                </div>
-                <div>
-                  <h2 className={`text-xl font-serif ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>{sections[currentSection].title}</h2>
-                  <p className={`text-xs ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>{tool.name}</p>
-                </div>
-              </div>
-
-              <div className="prose max-w-none">
-                <div className={`leading-relaxed whitespace-pre-line ${darkMode ? 'text-stone-300' : 'text-stone-700'}`}>
-                  {sections[currentSection].content}
                 </div>
 
-                {currentSection === 0 && tool.sampleContent && tool.id !== 'eternal-clock' && (
-                  <div className="mt-8 space-y-4">
-                    <h3 className={`text-lg font-serif ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>Key Insights</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        { icon: Sparkles,  label: 'Cosmic Alignment', text: 'The stars align favourably for new beginnings.' },
-                        { icon: TrendingUp, label: 'Opportunity',     text: 'An unexpected opportunity presents itself soon.'  },
-                      ].map(({ icon: Icon, label, text }) => (
-                        <div key={label} className={`p-4 rounded-lg ${darkMode ? 'bg-stone-700/50' : 'bg-stone-50'}`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Icon className="w-4 h-4 text-primary-500" />
-                            <span className={`font-medium ${darkMode ? 'text-stone-200' : 'text-stone-700'}`}>{label}</span>
-                          </div>
-                          <p className={`text-sm ${darkMode ? 'text-stone-400' : 'text-stone-600'}`}>{text}</p>
-                        </div>
+                <div className="mt-4">
+                  <Button variant="outline" fullWidth onClick={() => router.push('/member/dashboard')} className="text-xs">
+                    ← My Dashboard
+                  </Button>
+                </div>
+              </Card>
+            </div>
+
+            {/* Content */}
+            <div className="lg:col-span-3">
+              <Card className={`p-6 transition-colors ${darkMode ? 'bg-stone-800 border-stone-700' : ''}`}>
+                <div className={`flex items-center gap-3 mb-6 pb-4 border-b ${darkMode ? 'border-stone-700' : 'border-stone-200'}`}>
+                  <div className={`w-10 h-10 rounded-lg ${darkMode ? config.darkBg : config.lightBg} flex items-center justify-center`}>
+                    <SectionIcon className={`w-5 h-5 ${darkMode ? 'text-primary-400' : 'text-primary-600'}`} />
+                  </div>
+                  <div>
+                    <h2 className={`text-xl font-serif ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>
+                      {sections[currentSection]?.title}
+                    </h2>
+                    <p className={`text-xs ${darkMode ? 'text-stone-400' : 'text-stone-500'}`}>{tool.name}</p>
+                  </div>
+                </div>
+
+                <div className={`leading-relaxed whitespace-pre-line text-base ${darkMode ? 'text-stone-300' : 'text-stone-700'}`}>
+                  {readingStatus === 'loading' ? (
+                    <div className="space-y-3">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className={`h-4 rounded animate-pulse ${darkMode ? 'bg-stone-700' : 'bg-stone-100'}`} style={{ width: `${85 - i * 10}%` }} />
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    sections[currentSection]?.content
+                  )}
+                </div>
 
-                {currentSection === 1 && tool.id === 'eternal-clock' && eternalContent?.insights && (
-                  <div className="mt-8 space-y-6">
-                    {eternalContent.insights.map((insight: any, index: number) => (
-                      <div key={index} className={`p-5 rounded-lg ${darkMode ? 'bg-stone-700/50' : 'bg-stone-50'}`}>
-                        <h3 className={`text-md font-serif mb-2 flex items-center gap-2 ${darkMode ? 'text-stone-200' : 'text-stone-800'}`}>
-                          {index === 0 && <Hourglass className="w-4 h-4" />}
-                          {index === 1 && <Timer className="w-4 h-4" />}
-                          {index === 2 && <Watch className="w-4 h-4" />}
-                          {insight.title}
-                        </h3>
-                        <p className={`text-sm ${darkMode ? 'text-stone-400' : 'text-stone-600'}`}>{insight.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className={`flex items-center justify-between mt-8 pt-6 border-t ${darkMode ? 'border-stone-700' : 'border-stone-200'}`}>
-                <button
-                  onClick={() => setCurrentSection(prev => Math.max(0, prev - 1))}
-                  disabled={currentSection === 0}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${darkMode ? 'text-stone-400 hover:text-stone-200' : 'text-stone-600 hover:text-primary-600'}`}
-                >
-                  <ChevronLeft className="w-4 h-4" /> Previous
-                </button>
-                <span className={`text-sm ${darkMode ? 'text-stone-500' : 'text-stone-400'}`}>
-                  Section {currentSection + 1} of {sections.length}
-                </span>
-                <button
-                  onClick={() => setCurrentSection(prev => Math.min(sections.length - 1, prev + 1))}
-                  disabled={currentSection === sections.length - 1}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${darkMode ? 'text-stone-400 hover:text-stone-200' : 'text-stone-600 hover:text-primary-600'}`}
-                >
-                  Next <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </Card>
+                <div className={`flex items-center justify-between mt-8 pt-6 border-t ${darkMode ? 'border-stone-700' : 'border-stone-200'}`}>
+                  <button
+                    onClick={() => setCurrentSection(prev => Math.max(0, prev - 1))}
+                    disabled={currentSection === 0}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${darkMode ? 'text-stone-400 hover:text-stone-200' : 'text-stone-600 hover:text-primary-600'}`}
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Previous
+                  </button>
+                  <span className={`text-sm ${darkMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                    Section {currentSection + 1} of {sections.length}
+                  </span>
+                  <button
+                    onClick={() => setCurrentSection(prev => Math.min(sections.length - 1, prev + 1))}
+                    disabled={currentSection === sections.length - 1}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${darkMode ? 'text-stone-400 hover:text-stone-200' : 'text-stone-600 hover:text-primary-600'}`}
+                  >
+                    Next <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </Card>
+            </div>
           </div>
-        </div>
+        )}
 
       </main>
     </div>
