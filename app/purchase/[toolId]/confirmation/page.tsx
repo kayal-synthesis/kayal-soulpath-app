@@ -7,10 +7,7 @@ import { CheckCircle, Clock, Zap, ChevronRight, Star, X } from 'lucide-react'
 import { allTools, getToolById } from '@/lib/tools/all-tools-index'
 import type { Tool } from '@/lib/tools/all-tools-index'
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Upsell map â€” toolId â†’ recommended upsell tool id
-// Falls back to popular tools if no specific upsell configured
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Upsell map — toolId → recommended upsell tool id ────
 const UPSELL_MAP: Record<string, string> = {
   'soulmate-arrival-window-os':   'soulmate-compatibility-verdict',
   'love-wound-reading-os':        'karmic-debt-cleanser',
@@ -23,16 +20,13 @@ const UPSELL_MAP: Record<string, string> = {
   'complete-wealth-synthesis':    'full-soul-portrait',
   'complete-purpose-synthesis':   'full-soul-portrait',
   'full-soul-portrait':           'oracle-voice-unlimited',
-  // subscriptions upsell to the next tier up
   'daily-personal-oracle':        'monthly-cycle-navigator',
   'monthly-cycle-navigator':      'quarterly-destiny-pulse',
   'oracle-voice-session':         'oracle-deep-dive-session',
   'oracle-deep-dive-session':     'oracle-voice-unlimited',
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Star rating display
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Star rating ──────────────────────────────────────────
 function Stars({ rating = 4.9 }: { rating?: number }) {
   return (
     <div className="flex items-center gap-1">
@@ -46,9 +40,7 @@ function Stars({ rating = 4.9 }: { rating?: number }) {
   )
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// One-click upsell card
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Upsell card ──────────────────────────────────────────
 function UpsellCard({
   tool,
   onAccept,
@@ -67,14 +59,12 @@ function UpsellCard({
       transition={{ duration: 0.5, ease: 'easeOut', delay: 0.6 }}
       className="bg-white rounded-2xl border border-amber-200 shadow-xl overflow-hidden max-w-lg w-full mx-auto"
     >
-      {/* Gradient bar */}
       <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-orange-500" />
 
       <div className="p-6">
-        {/* Tag */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-wider">
-            One-Time Offer â€” This Session Only
+            One-Time Offer — This Session Only
           </span>
           <button
             onClick={onDecline}
@@ -85,7 +75,6 @@ function UpsellCard({
           </button>
         </div>
 
-        {/* Tool */}
         <div className="flex items-start gap-4 mb-5">
           <div className="text-4xl flex-shrink-0">{tool.emoji}</div>
           <div>
@@ -98,7 +87,6 @@ function UpsellCard({
           </div>
         </div>
 
-        {/* Social proof */}
         <div className="flex items-center gap-3 mb-5 pb-5 border-b border-neutral-100">
           <Stars />
           <span className="text-xs text-neutral-500 font-medium">
@@ -106,22 +94,20 @@ function UpsellCard({
           </span>
         </div>
 
-        {/* Top features */}
         <ul className="space-y-2 mb-6">
           {tool.features.slice(0, 3).map((f, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700">
               <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <span>{typeof f === 'string' ? f.split(' â€” ')[0] : String(f)}</span>
+              <span>{typeof f === 'string' ? f.split(' — ')[0] : String(f)}</span>
             </li>
           ))}
         </ul>
 
-        {/* Discount callout */}
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-5 flex items-center gap-3">
           <Zap className="w-5 h-5 text-amber-500 flex-shrink-0" />
           <div>
             <p className="text-xs font-bold text-amber-800">
-              Add this now and save 20% â€” available only at checkout
+              Add this now and save 20% — available only at checkout
             </p>
             <p className="text-xs text-amber-600 mt-0.5">
               Full price after this page: <span className="line-through">${tool.price}</span>
@@ -129,7 +115,6 @@ function UpsellCard({
           </div>
         </div>
 
-        {/* CTA */}
         <button
           onClick={onAccept}
           disabled={accepting}
@@ -138,11 +123,11 @@ function UpsellCard({
           {accepting ? (
             <span className="flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Adding to your orderâ€¦
+              Adding to your order…
             </span>
           ) : (
             <>
-              Yes â€” Add {tool.name} for ${Math.round(tool.price * 0.8)}
+              Yes — Add {tool.name} for ${Math.round(tool.price * 0.8)}
               <ChevronRight className="w-4 h-4" />
             </>
           )}
@@ -159,22 +144,19 @@ function UpsellCard({
   )
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Main page
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main page ────────────────────────────────────────────
 export default function PurchaseConfirmationPage() {
-  const router   = useRouter()
-  const params   = useParams()
-  const toolId   = params?.toolId as string
+  const router = useRouter()
+  const params = useParams()
+  const toolId = params?.toolId as string
 
-  const [tool,          setTool]          = useState<Tool | null>(null)
-  const [upsellTool,    setUpsellTool]    = useState<Tool | null>(null)
-  const [showUpsell,    setShowUpsell]    = useState(true)
-  const [accepting,     setAccepting]     = useState(false)
-  const [upsellAdded,   setUpsellAdded]   = useState(false)
-  const [countdown,     setCountdown]     = useState(600) // 10 min delivery timer
+  const [tool,        setTool]        = useState<Tool | null>(null)
+  const [upsellTool,  setUpsellTool]  = useState<Tool | null>(null)
+  const [showUpsell,  setShowUpsell]  = useState(true)
+  const [accepting,   setAccepting]   = useState(false)
+  const [upsellAdded, setUpsellAdded] = useState(false)
+  const [countdown,   setCountdown]   = useState(600)
 
-  // Load purchased tool and resolve upsell
   useEffect(() => {
     if (!toolId) return
     const t = getToolById(toolId)
@@ -185,13 +167,11 @@ export default function PurchaseConfirmationPage() {
       const u = getToolById(upsellId)
       setUpsellTool(u ?? null)
     } else {
-      // Default upsell â€” most popular tool not already purchased
       const fallback = allTools.find(t => t.isPopular && t.id !== toolId)
       setUpsellTool(fallback ?? null)
     }
   }, [toolId])
 
-  // Delivery countdown
   useEffect(() => {
     if (countdown <= 0) return
     const interval = setInterval(() => setCountdown(c => c - 1), 1000)
@@ -199,7 +179,7 @@ export default function PurchaseConfirmationPage() {
   }, [countdown])
 
   const formatTime = (s: number) => {
-    const m = Math.floor(s / 60)
+    const m   = Math.floor(s / 60)
     const sec = s % 60
     return `${m}:${sec.toString().padStart(2, '0')}`
   }
@@ -207,14 +187,11 @@ export default function PurchaseConfirmationPage() {
   const handleAcceptUpsell = async () => {
     if (!upsellTool) return
     setAccepting(true)
-    // Route to purchase page with discount applied
     await new Promise(r => setTimeout(r, 800))
     router.push(`/purchase/${upsellTool.id}?discount=20&source=confirmation-upsell&from=${toolId}`)
   }
 
-  const handleDeclineUpsell = () => {
-    setShowUpsell(false)
-  }
+  const handleDeclineUpsell = () => setShowUpsell(false)
 
   if (!tool) {
     return (
@@ -246,12 +223,13 @@ export default function PurchaseConfirmationPage() {
               <CheckCircle className="w-9 h-9 text-emerald-500" />
             </motion.div>
 
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Your reading is being prepared</h1>
+            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
+              Your reading is being prepared
+            </h1>
             <p className="text-neutral-500 text-sm mb-5">
               {tool.emoji} <strong>{tool.name}</strong> has been confirmed. Your complete synthesis is loading.
             </p>
 
-            {/* Delivery timer */}
             <div className="flex items-center justify-center gap-2 bg-neutral-50 rounded-xl py-3 px-5 border border-neutral-100 mb-5">
               <Clock className="w-4 h-4 text-amber-500" />
               <span className="text-sm text-neutral-700 font-medium">
@@ -262,12 +240,11 @@ export default function PurchaseConfirmationPage() {
               </span>
             </div>
 
-            {/* What happens next */}
             <div className="text-left space-y-3">
               {[
                 { step: '1', text: 'Your synthesis engine is loading your complete chart data' },
-                { step: '2', text: 'The AI is generating your personalised reading right now' },
-                { step: '3', text: 'You\'ll receive a notification the moment it\'s ready' },
+                { step: '2', text: 'The AI is generating your personalised reading right now'  },
+                { step: '3', text: "You'll receive a notification the moment it's ready"       },
               ].map(({ step, text }) => (
                 <div key={step} className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
@@ -292,7 +269,7 @@ export default function PurchaseConfirmationPage() {
           )}
         </AnimatePresence>
 
-        {/* Upsell added confirmation */}
+        {/* Upsell added */}
         <AnimatePresence>
           {upsellAdded && (
             <motion.div
@@ -325,8 +302,9 @@ export default function PurchaseConfirmationPage() {
         </div>
 
         <p className="text-center text-xs text-neutral-400">
-          Questions? Email support@kayal.com â€” we respond within 2 hours.
+          Questions? Email support@kayalsoulpath.com — we respond within 2 hours.
         </p>
+
       </div>
     </div>
   )
