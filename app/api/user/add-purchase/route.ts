@@ -1,9 +1,9 @@
 // app/api/user/add-purchase/route.ts
 // Changes from original:
-//  1. commission_rate 15 → 30 (flat model)
-//  2. affiliate_cookies lookup removed — now reads ref_code from request body
+//  1. commission_rate 15 Ã¢â€ â€™ 30 (flat model)
+//  2. affiliate_cookies lookup removed Ã¢â‚¬â€ now reads ref_code from request body
 //  3. affiliate_conversions insert aligned to our schema
-//  4. users insert: 'name' → 'full_name', 'membership_tier' removed
+//  4. users insert: 'name' Ã¢â€ â€™ 'full_name', 'membership_tier' removed
 //  5. purchases insert: added user_email (needed for returning customer detection)
 //  6. GET handler extended: supports ?email=xxx lookup for check-email functionality
 //     (removes need for a separate check-email route)
@@ -17,9 +17,9 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// ─────────────────────────────────────────────────────────────
-// POST — record a purchase and credit affiliate commission
-// ─────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// POST Ã¢â‚¬â€ record a purchase and credit affiliate commission
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export async function POST(request: Request) {
   try {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid user ID format' }, { status: 400 })
     }
 
-    // ── Ensure user record exists ─────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Ensure user record exists Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id')
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // ── Coupon handling (unchanged from original) ─────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Coupon handling (unchanged from original) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     let finalPrice      = price
     let appliedCouponId = null
 
@@ -106,9 +106,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── Insert purchase ────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Insert purchase Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // Core fields always present; optional columns added only if they exist
-    // in the schema — prevents PGRST204 errors on older deployments.
+    // in the schema Ã¢â‚¬â€ prevents PGRST204 errors on older deployments.
     const purchaseRow: Record<string, any> = {
       user_id:       userId,
       tool_id:       toolId,
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       tool_type:     toolType      || 'report',
       category:      category      || 'universal',
       destination:   destination   || toolType || 'report',
-      emoji:         emoji         || '📦',
+      emoji:         emoji         || 'Ã°Å¸â€œÂ¦',
       price:         finalPrice    || price || 0,
       original_price: originalPrice || price || 0,
       coupon_id:     appliedCouponId,
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       created_at:    new Date().toISOString(),
     }
 
-    // Add optional columns — these require ALTER TABLE if not present.
+    // Add optional columns Ã¢â‚¬â€ these require ALTER TABLE if not present.
     // Run supabase/migrations/add_missing_columns.sql to add them.
     if (email)    purchaseRow.user_email = email
     if (ref_code) purchaseRow.ref_code   = ref_code
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       .single()
 
     if (result.error?.code === 'PGRST204') {
-      // Column doesn't exist yet — retry without optional columns
+      // Column doesn't exist yet Ã¢â‚¬â€ retry without optional columns
       const { user_email, ref_code: rc, link_id: li, ...coreRow } = purchaseRow
       const fallback = await supabaseAdmin
         .from('purchases')
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: purchaseError.message }, { status: 500 })
     }
 
-    // ── Coupon usage record ───────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Coupon usage record Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     if (appliedCouponId) {
       await supabaseAdmin.from('coupon_usage').insert({
         coupon_id:       appliedCouponId,
@@ -175,7 +175,27 @@ export async function POST(request: Request) {
       })
     }
 
-    // ── Affiliate commission ──────────────────────────────────
+    // ── Send purchase confirmation email ────────────────────────
+    try {
+      if (email) {
+        const { sendPurchaseConfirmation } = await import('@/lib/email/emailService')
+        await sendPurchaseConfirmation({
+          to:             email,
+          firstName:      (name || 'Seeker').split(' ')[0],
+          toolName:       toolName,
+          toolEmoji:      emoji || '✨',
+          price:          finalPrice,
+          jobId:          job_id || null,
+          requiresImages: !!(images && Object.keys(images).length > 0),
+          imageType:      undefined,
+          isGuest:        !userId,
+        })
+      }
+    } catch (emailErr) {
+      console.error('[add-purchase] Email error:', emailErr)
+    }
+
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Affiliate commission Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // FIX 1+2+3: use ref_code from request body (not affiliate_cookies table)
     // FIX 1: commission is flat 30%, not 15%
     if (ref_code) {
@@ -232,7 +252,7 @@ export async function POST(request: Request) {
               await supabaseAdmin.from('notifications').insert({
                 user_id:    affiliate.id,
                 type:       'affiliate_conversion',
-                title:      '🎉 New Sale!',
+                title:      'Ã°Å¸Å½â€° New Sale!',
                 message:    `Someone purchased ${toolName} using your link. You earned $${commissionAmount.toFixed(2)}!`,
                 data:       { conversion_id: conversion.id, amount: commissionAmount },
                 read:       false,
@@ -265,13 +285,13 @@ export async function POST(request: Request) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// GET — fetch purchases
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// GET Ã¢â‚¬â€ fetch purchases
 // Supports two modes:
-//   ?userId=xxx     → returns all active purchases for a user (original behaviour)
-//   ?email=xxx      → returns purchase count + name for returning customer detection
+//   ?userId=xxx     Ã¢â€ â€™ returns all active purchases for a user (original behaviour)
+//   ?email=xxx      Ã¢â€ â€™ returns purchase count + name for returning customer detection
 //                     (replaces the need for a separate check-email route)
-// ─────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export async function GET(request: Request) {
   try {
@@ -279,7 +299,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get('userId')
     const email  = searchParams.get('email')?.toLowerCase().trim()
 
-    // ── Email lookup mode (for returning customer detection) ──
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Email lookup mode (for returning customer detection) Ã¢â€â‚¬Ã¢â€â‚¬
     if (email) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return NextResponse.json({ hasPurchases: false, purchaseCount: 0 })
@@ -311,7 +331,7 @@ export async function GET(request: Request) {
       })
     }
 
-    // ── User ID lookup mode (original behaviour) ──────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ User ID lookup mode (original behaviour) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     if (!userId) {
       return NextResponse.json({ error: 'userId or email is required' }, { status: 400 })
     }
@@ -339,9 +359,9 @@ export async function GET(request: Request) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// DELETE — unchanged from original
-// ─────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// DELETE Ã¢â‚¬â€ unchanged from original
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export async function DELETE(request: Request) {
   try {
