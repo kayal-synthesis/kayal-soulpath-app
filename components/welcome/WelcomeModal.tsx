@@ -10,19 +10,20 @@ import {
 import type { WelcomeCard } from '@/lib/welcome/paragraph-library'
 
 const T = {
-  bg:        '#0a0a0f',
-  surface:   '#13121a',
-  surfaceB:  '#1a1926',
-  border:    'rgba(201,168,76,0.18)',
-  borderSub: 'rgba(255,255,255,0.07)',
-  gold:      '#c9a84c',
-  goldDim:   'rgba(201,168,76,0.5)',
-  goldFaint: 'rgba(201,168,76,0.1)',
-  text:      '#f5f0e8',
-  textSub:   '#9a9488',
-  textFaint: 'rgba(245,240,232,0.3)',
-  serif:     'Georgia, "Times New Roman", serif',
-  sans:      '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  bg:         '#faf7f2',
+  surface:    '#ffffff',
+  surfaceAlt: '#f5f1ea',
+  border:     'rgba(184,148,63,0.25)',
+  borderSub:  'rgba(26,23,20,0.08)',
+  gold:       '#b8943f',
+  goldDark:   '#8b6e2e',
+  goldFaint:  'rgba(184,148,63,0.1)',
+  goldBorder: 'rgba(184,148,63,0.3)',
+  text:       '#1a1714',
+  textSub:    '#6b6560',
+  textFaint:  'rgba(26,23,20,0.35)',
+  serif:      'Georgia, "Times New Roman", serif',
+  sans:       '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -42,11 +43,11 @@ function ProgressBar({ total, current }: { total: number; current: number }) {
         <div
           key={i}
           style={{
-            flex: 1, height: 1.5, borderRadius: 1,
+            flex: 1, height: 2, borderRadius: 1,
             background: i < current
               ? T.gold
               : i === current
-              ? T.goldDim
+              ? 'rgba(184,148,63,0.45)'
               : T.borderSub,
             transition: 'background 0.4s',
           }}
@@ -73,8 +74,16 @@ function IconBtn({
         width: 30, height: 30,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         borderRadius: 8, border: 'none', cursor: 'pointer',
-        background: active ? T.goldFaint : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
-        color: active ? (activeColor || T.gold) : hovered ? T.textSub : T.textFaint,
+        background: active
+          ? T.goldFaint
+          : hovered
+          ? 'rgba(26,23,20,0.05)'
+          : 'transparent',
+        color: active
+          ? (activeColor || T.gold)
+          : hovered
+          ? T.textSub
+          : T.textFaint,
         transition: 'all 0.18s',
       }}
     >
@@ -91,7 +100,9 @@ interface WelcomeModalProps {
   fullName:  string
 }
 
-export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: WelcomeModalProps) {
+export function WelcomeModal({
+  isOpen, onClose, cards, firstName, fullName,
+}: WelcomeModalProps) {
   const [current,    setCurrent]    = useState(0)
   const [direction,  setDirection]  = useState(1)
   const [isPlaying,  setIsPlaying]  = useState(false)
@@ -103,6 +114,7 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
   const card   = cards[current]
   const isLast = current === cards.length - 1
 
+  // Inject animation CSS once
   useEffect(() => {
     const id = 'kayal-modal-css'
     if (document.getElementById(id)) return
@@ -110,22 +122,23 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
     s.id = id
     s.textContent = `
       @keyframes kayal-eq {
-        from { transform: scaleY(0.2); opacity: 0.5; }
+        from { transform: scaleY(0.2); opacity: 0.4; }
         to   { transform: scaleY(1);   opacity: 1;   }
-      }
-      @keyframes kayal-fadein {
-        from { opacity: 0; transform: translateY(8px); }
-        to   { opacity: 1; transform: translateY(0);   }
       }
     `
     document.head.appendChild(s)
   }, [])
 
+  // Stop audio on close
   useEffect(() => {
-    if (!isOpen) { window.speechSynthesis?.cancel(); setIsPlaying(false) }
+    if (!isOpen) {
+      window.speechSynthesis?.cancel()
+      setIsPlaying(false)
+    }
     return () => { window.speechSynthesis?.cancel() }
   }, [isOpen])
 
+  // Stop audio on card change
   useEffect(() => {
     window.speechSynthesis?.cancel()
     setIsPlaying(false)
@@ -247,15 +260,15 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
           position: 'fixed', inset: 0, zIndex: 50,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: '16px',
-          background: 'rgba(4,3,10,0.93)',
-          backdropFilter: 'blur(14px)',
+          background: 'rgba(26,23,20,0.55)',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <motion.div
           key="kayal-modal"
-          initial={{ opacity: 0, y: 28, scale: 0.97 }}
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0,  scale: 1    }}
-          exit={{ opacity: 0, y: 28, scale: 0.97 }}
+          exit={{ opacity: 0, y: 24, scale: 0.97 }}
           transition={{ type: 'spring', damping: 28, stiffness: 340 }}
           style={{
             width: '100%', maxWidth: 500,
@@ -265,10 +278,7 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
             border: `1px solid ${T.border}`,
             borderRadius: 20,
             overflow: 'hidden',
-            boxShadow: [
-              '0 40px 80px rgba(0,0,0,0.85)',
-              `0 0 0 1px rgba(201,168,76,0.06)`,
-            ].join(', '),
+            boxShadow: '0 32px 64px rgba(26,23,20,0.18), 0 2px 8px rgba(26,23,20,0.08)',
           }}
         >
 
@@ -278,22 +288,49 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
             padding: '14px 16px 12px',
             borderBottom: `1px solid ${T.borderSub}`,
             flexShrink: 0,
+            background: T.bg,
           }}>
             <ProgressBar total={cards.length} current={current} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-              <IconBtn onClick={handlePlayPause} title={isPlaying ? 'Pause' : 'Listen to this section'} active={isPlaying}>
-                {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              <IconBtn
+                onClick={handlePlayPause}
+                title={isPlaying ? 'Pause' : 'Listen to this section'}
+                active={isPlaying}
+              >
+                {isPlaying
+                  ? <Pause  className="w-3.5 h-3.5" />
+                  : <Play   className="w-3.5 h-3.5" />}
               </IconBtn>
               <IconBtn onClick={handleMute} title={isMuted ? 'Unmute' : 'Mute'}>
-                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                {isMuted
+                  ? <VolumeX className="w-3.5 h-3.5" />
+                  : <Volume2 className="w-3.5 h-3.5" />}
               </IconBtn>
-              <IconBtn onClick={handleDownload} title="Download your reading" active={downloaded} activeColor="#86efac">
-                {downloaded ? <Check className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
+              <IconBtn
+                onClick={handleDownload}
+                title="Download your reading"
+                active={downloaded}
+                activeColor="#15803d"
+              >
+                {downloaded
+                  ? <Check     className="w-3.5 h-3.5" />
+                  : <Download  className="w-3.5 h-3.5" />}
               </IconBtn>
-              <IconBtn onClick={handleShare} title="Share with a friend" active={shared} activeColor="#86efac">
-                {shared ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+              <IconBtn
+                onClick={handleShare}
+                title="Share with a friend"
+                active={shared}
+                activeColor="#15803d"
+              >
+                {shared
+                  ? <Check   className="w-3.5 h-3.5" />
+                  : <Share2  className="w-3.5 h-3.5" />}
               </IconBtn>
-              <div style={{ width: 1, height: 14, background: T.borderSub, margin: '0 3px' }} />
+              <div style={{
+                width: 1, height: 14,
+                background: T.borderSub,
+                margin: '0 3px',
+              }} />
               <IconBtn onClick={onClose} title="Close">
                 <X className="w-3.5 h-3.5" />
               </IconBtn>
@@ -308,12 +345,17 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: direction > 0 ? -8 : 8 }}
               transition={{ duration: 0.2 }}
-              style={{ padding: '16px 20px 10px', flexShrink: 0 }}
+              style={{
+                padding: '16px 20px 12px',
+                flexShrink: 0,
+                background: T.surface,
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  border: `1px solid ${T.border}`,
+                  width: 36, height: 36,
+                  borderRadius: '50%',
+                  border: `1px solid ${T.goldBorder}`,
                   background: T.goldFaint,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: T.gold, flexShrink: 0,
@@ -322,34 +364,44 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <p style={{
-                    fontSize: 10, color: T.goldDim, margin: '0 0 3px',
-                    fontFamily: T.sans, letterSpacing: '0.14em',
-                    textTransform: 'uppercase', fontWeight: 600,
+                    fontSize: 10, color: T.gold,
+                    margin: '0 0 3px',
+                    fontFamily: T.sans,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
                   }}>
                     {current + 1} of {cards.length}
                   </p>
                   <h2 style={{
-                    fontSize: 18, color: T.text, margin: 0,
-                    fontFamily: T.serif, fontWeight: 400,
-                    letterSpacing: '0.015em', lineHeight: 1.25,
+                    fontSize: 19, color: T.text,
+                    margin: 0,
+                    fontFamily: T.serif,
+                    fontWeight: 400,
+                    letterSpacing: '0.01em',
+                    lineHeight: 1.25,
                   }}>
                     {card?.section}
                   </h2>
                 </div>
               </div>
 
+              {/* Gold hairline divider */}
               <div style={{
                 marginTop: 14, height: 1,
-                background: `linear-gradient(90deg, ${T.border}, transparent)`,
+                background: `linear-gradient(90deg, ${T.goldBorder}, transparent)`,
               }} />
             </motion.div>
           </AnimatePresence>
 
           {/* Content */}
           <div style={{
-            flex: 1, overflowY: 'auto',
-            padding: '6px 20px 16px',
-            scrollbarWidth: 'none',
+            flex: 1,
+            overflowY: 'auto',
+            padding: '8px 20px 16px',
+            scrollbarWidth: 'thin',
+            scrollbarColor: `${T.borderSub} transparent`,
+            background: T.surface,
           }}>
             <AnimatePresence mode="wait">
               <motion.div
@@ -369,7 +421,7 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
                       margin: i === 0 ? '0 0 20px' : '0',
                       fontFamily: T.serif,
                       fontSize: 15,
-                      lineHeight: 1.95,
+                      lineHeight: 2.0,
                       color: T.text,
                       textAlign: 'justify',
                       letterSpacing: '0.012em',
@@ -379,6 +431,7 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
                   </motion.p>
                 ))}
 
+                {/* Audio playing indicator */}
                 {isPlaying && (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -389,7 +442,8 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
                     }}
                   >
                     <div style={{
-                      display: 'flex', gap: 2.5, alignItems: 'flex-end', height: 14,
+                      display: 'flex', gap: 2.5,
+                      alignItems: 'flex-end', height: 14,
                     }}>
                       {[0.1, 0.22, 0.05, 0.17].map((delay, i) => (
                         <div key={i} style={{
@@ -402,7 +456,7 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
                       ))}
                     </div>
                     <span style={{
-                      fontSize: 11, color: T.goldDim,
+                      fontSize: 11, color: T.gold,
                       fontFamily: T.sans, letterSpacing: '0.06em',
                     }}>
                       Listening
@@ -419,18 +473,20 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
             borderTop: `1px solid ${T.borderSub}`,
             display: 'flex', alignItems: 'center', gap: 10,
             flexShrink: 0,
+            background: T.bg,
           }}>
             <button
               onClick={goPrev}
               disabled={current === 0}
               style={{
-                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                width: 40, height: 40,
+                borderRadius: 10, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'transparent',
                 border: `1px solid ${T.borderSub}`,
                 color: current === 0 ? T.textFaint : T.textSub,
                 cursor: current === 0 ? 'not-allowed' : 'pointer',
-                opacity: current === 0 ? 0.3 : 1,
+                opacity: current === 0 ? 0.35 : 1,
                 transition: 'all 0.2s',
               }}
             >
@@ -444,59 +500,63 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 background: T.gold,
                 border: 'none', cursor: 'pointer',
-                color: '#0a0a0f',
+                color: '#faf7f2',
                 fontSize: 14, fontWeight: 700,
                 fontFamily: T.sans, letterSpacing: '0.02em',
+                boxShadow: '0 2px 10px rgba(184,148,63,0.3)',
                 transition: 'opacity 0.2s',
               }}
             >
-              {isLast
-                ? 'Begin My Journey'
-                : <><span>Continue</span><ChevronRight style={{ width: 15, height: 15 }} /></>
-              }
+              {isLast ? (
+                'Begin My Journey'
+              ) : (
+                <>
+                  Continue
+                  <ChevronRight style={{ width: 15, height: 15 }} />
+                </>
+              )}
             </button>
           </div>
 
-          {/* Last card download and share */}
+          {/* Last card — download and share */}
           {isLast && (
             <div style={{
               display: 'flex', gap: 10,
               padding: '0 16px 14px',
               flexShrink: 0,
+              background: T.bg,
             }}>
               <button
                 onClick={handleDownload}
                 style={{
                   flex: 1, height: 36, borderRadius: 9,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  background: 'transparent',
-                  border: `1px solid ${downloaded ? 'rgba(134,239,172,0.3)' : T.borderSub}`,
-                  color: downloaded ? '#86efac' : T.textSub,
+                  background: downloaded ? 'rgba(21,128,61,0.08)' : 'transparent',
+                  border: `1px solid ${downloaded ? 'rgba(21,128,61,0.3)' : T.borderSub}`,
+                  color: downloaded ? '#15803d' : T.textSub,
                   fontSize: 12, fontWeight: 500, cursor: 'pointer',
                   fontFamily: T.sans, transition: 'all 0.2s',
                 }}
               >
                 {downloaded
-                  ? <><Check style={{ width: 12, height: 12 }} />Saved</>
-                  : <><Download style={{ width: 12, height: 12 }} />Download</>
-                }
+                  ? <><Check    style={{ width: 12, height: 12 }} />Saved</>
+                  : <><Download style={{ width: 12, height: 12 }} />Download</>}
               </button>
               <button
                 onClick={handleShare}
                 style={{
                   flex: 1, height: 36, borderRadius: 9,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  background: 'transparent',
-                  border: `1px solid ${shared ? 'rgba(134,239,172,0.3)' : T.borderSub}`,
-                  color: shared ? '#86efac' : T.textSub,
+                  background: shared ? 'rgba(21,128,61,0.08)' : 'transparent',
+                  border: `1px solid ${shared ? 'rgba(21,128,61,0.3)' : T.borderSub}`,
+                  color: shared ? '#15803d' : T.textSub,
                   fontSize: 12, fontWeight: 500, cursor: 'pointer',
                   fontFamily: T.sans, transition: 'all 0.2s',
                 }}
               >
                 {shared
-                  ? <><Check style={{ width: 12, height: 12 }} />Shared</>
-                  : <><Share2 style={{ width: 12, height: 12 }} />Share</>
-                }
+                  ? <><Check  style={{ width: 12, height: 12 }} />Shared</>
+                  : <><Share2 style={{ width: 12, height: 12 }} />Share</>}
               </button>
             </div>
           )}
@@ -507,6 +567,7 @@ export function WelcomeModal({ isOpen, onClose, cards, firstName, fullName }: We
               textAlign: 'center',
               paddingBottom: 14,
               flexShrink: 0,
+              background: T.bg,
             }}>
               <button
                 onClick={onClose}

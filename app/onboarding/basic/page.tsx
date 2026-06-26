@@ -18,16 +18,18 @@ import { WelcomeModal }           from '@/components/welcome/WelcomeModal'
 import type { WelcomeCard }       from '@/lib/welcome/paragraph-library'
 
 const T = {
-  bg:         '#0a0a0f',
-  surface:    '#13121a',
-  border:     'rgba(201,168,76,0.18)',
-  borderSub:  'rgba(255,255,255,0.06)',
-  gold:       '#c9a84c',
-  goldDim:    'rgba(201,168,76,0.55)',
-  goldFaint:  'rgba(201,168,76,0.12)',
-  text:       '#f5f0e8',
-  textSub:    '#9a9488',
-  textFaint:  'rgba(245,240,232,0.35)',
+  bg:         '#faf7f2',
+  surface:    '#ffffff',
+  surfaceAlt: '#f5f1ea',
+  border:     'rgba(184,148,63,0.25)',
+  borderSub:  'rgba(26,23,20,0.08)',
+  gold:       '#b8943f',
+  goldDark:   '#8b6e2e',
+  goldFaint:  'rgba(184,148,63,0.1)',
+  goldBorder: 'rgba(184,148,63,0.3)',
+  text:       '#1a1714',
+  textSub:    '#6b6560',
+  textFaint:  'rgba(26,23,20,0.35)',
   serif:      'Georgia, "Times New Roman", serif',
   sans:       '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 }
@@ -40,14 +42,16 @@ function WhySection({ explanation }: { explanation: string }) {
         onClick={() => setOpen(!open)}
         style={{
           display: 'flex', alignItems: 'center', gap: 5,
-          fontSize: 11, color: T.goldDim, background: 'none',
+          fontSize: 11, color: T.gold, background: 'none',
           border: 'none', cursor: 'pointer', padding: 0,
           fontFamily: T.sans, letterSpacing: '0.03em',
         }}
       >
         <Info style={{ width: 11, height: 11 }} />
         Why do we need this?
-        {open ? <ChevronUp style={{ width: 11, height: 11 }} /> : <ChevronDown style={{ width: 11, height: 11 }} />}
+        {open
+          ? <ChevronUp  style={{ width: 11, height: 11 }} />
+          : <ChevronDown style={{ width: 11, height: 11 }} />}
       </button>
       <AnimatePresence>
         {open && (
@@ -59,8 +63,10 @@ function WhySection({ explanation }: { explanation: string }) {
           >
             <div style={{
               marginTop: 8, padding: '12px 14px', borderRadius: 10,
-              background: T.goldFaint, border: `1px solid ${T.border}`,
-              fontSize: 12, lineHeight: 1.7, color: T.textSub, fontFamily: T.sans,
+              background: T.goldFaint,
+              border: `1px solid ${T.goldBorder}`,
+              fontSize: 12, lineHeight: 1.75,
+              color: T.textSub, fontFamily: T.sans,
             }}>
               {explanation}
             </div>
@@ -86,8 +92,12 @@ function StepBar({ steps, current }: { steps: string[]; current: number }) {
             {label}
           </div>
           <div style={{
-            height: 1, borderRadius: 1,
-            background: i < current ? T.gold : i === current ? T.goldDim : T.borderSub,
+            height: 1.5, borderRadius: 1,
+            background: i < current
+              ? T.gold
+              : i === current
+              ? `linear-gradient(90deg, ${T.gold}, rgba(184,148,63,0.4))`
+              : T.borderSub,
             transition: 'background 0.4s',
           }} />
         </div>
@@ -123,9 +133,9 @@ function FieldInput({
         max={max}
         style={{
           width: '100%',
-          padding: '15px 15px 15px 44px',
-          background: focused ? '#1a1926' : T.surface,
-          border: `1px solid ${focused ? T.border : T.borderSub}`,
+          padding: '14px 14px 14px 44px',
+          background: focused ? '#ffffff' : T.surfaceAlt,
+          border: `1px solid ${focused ? T.gold : T.borderSub}`,
           borderRadius: 12,
           color: T.text,
           fontSize: 15,
@@ -133,7 +143,6 @@ function FieldInput({
           outline: 'none',
           transition: 'all 0.25s',
           boxShadow: focused ? `0 0 0 3px ${T.goldFaint}` : 'none',
-          colorScheme: 'dark',
           WebkitAppearance: 'none' as const,
         }}
         onFocus={() => setFocused(true)}
@@ -143,7 +152,10 @@ function FieldInput({
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}
+          style={{
+            position: 'absolute', right: 14, top: '50%',
+            transform: 'translateY(-50%)',
+          }}
         >
           <Check style={{ width: 15, height: 15, color: T.gold }} />
         </motion.div>
@@ -179,10 +191,10 @@ function BasicInfoPageInner() {
 
   useEffect(() => {
     if (!isClient) return
-    const n = searchParams.get('name')?.trim()   || ''
-    const d = searchParams.get('dob')            || ''
-    const t = searchParams.get('birthTime')      || ''
-    const l = searchParams.get('birthLocation')  || ''
+    const n = searchParams.get('name')?.trim()  || ''
+    const d = searchParams.get('dob')           || ''
+    const t = searchParams.get('birthTime')     || ''
+    const l = searchParams.get('birthLocation') || ''
     if (n || d) {
       setFormData({ name: n, dob: d, birthTime: t, birthLocation: l })
       setPrefilled(true)
@@ -241,9 +253,9 @@ function BasicInfoPageInner() {
       const welcomeCards = buildWelcomeCards(formData.name, numProfile, astProfile)
       setCards(welcomeCards)
       confetti({
-        particleCount: 60, spread: 80, origin: { y: 0.5 },
-        colors: ['#c9a84c', '#f5f0e8', '#8b7a4a'],
-        startVelocity: 24, decay: 0.92, ticks: 260,
+        particleCount: 55, spread: 75, origin: { y: 0.5 },
+        colors: ['#b8943f', '#1a1714', '#d4af6e', '#8b6e2e'],
+        startVelocity: 22, decay: 0.93, ticks: 250,
       })
     } catch (err) {
       console.error('Welcome engine error:', err)
@@ -267,8 +279,11 @@ function BasicInfoPageInner() {
   }
 
   if (!isClient) return (
-    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Loader2 style={{ width: 28, height: 28, color: T.gold }} className="animate-spin" />
+    <div style={{
+      minHeight: '100vh', background: T.bg,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Loader2 style={{ width: 26, height: 26, color: T.gold }} className="animate-spin" />
     </div>
   )
 
@@ -280,8 +295,7 @@ function BasicInfoPageInner() {
         ::placeholder { color: ${T.textFaint}; }
         input[type='date']::-webkit-calendar-picker-indicator,
         input[type='time']::-webkit-calendar-picker-indicator {
-          filter: invert(0.6) sepia(0.3) hue-rotate(10deg);
-          opacity: 0.5; cursor: pointer;
+          opacity: 0.4; cursor: pointer;
         }
         @keyframes loadingdot {
           0%, 100% { transform: translateY(0); opacity: 0.3; }
@@ -298,37 +312,41 @@ function BasicInfoPageInner() {
 
           {/* Brand */}
           <motion.div
-            initial={{ opacity: 0, y: -16 }}
+            initial={{ opacity: 0, y: -14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            style={{ textAlign: 'center', marginBottom: 40 }}
+            transition={{ duration: 0.65 }}
+            style={{ textAlign: 'center', marginBottom: 36 }}
           >
             <div style={{
-              width: 52, height: 52, margin: '0 auto 20px',
-              border: `1px solid ${T.border}`, borderRadius: '50%',
+              width: 52, height: 52, margin: '0 auto 18px',
+              border: `1px solid ${T.goldBorder}`,
+              borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: T.goldFaint,
             }}>
-              <span style={{ fontSize: 22, color: T.gold }}>✦</span>
+              <span style={{ fontSize: 20, color: T.gold }}>✦</span>
             </div>
+
             <h1 style={{
               fontFamily: T.serif,
-              fontSize: 'clamp(24px, 5vw, 30px)',
+              fontSize: 'clamp(22px, 5vw, 28px)',
               fontWeight: 400, color: T.text,
-              margin: '0 0 8px', letterSpacing: '0.06em',
+              margin: '0 0 6px', letterSpacing: '0.05em',
             }}>
               KAYAL SoulPath
             </h1>
+
             <p style={{
-              fontSize: 10, letterSpacing: '0.22em',
+              fontSize: 10, letterSpacing: '0.2em',
               textTransform: 'uppercase', color: T.gold,
-              margin: '0 0 18px', fontFamily: T.sans,
+              margin: '0 0 16px', fontFamily: T.sans,
             }}>
               Ancient Wisdom · Modern Synthesis
             </p>
+
             <p style={{
               fontSize: 14, color: T.textSub,
-              lineHeight: 1.85, maxWidth: 350,
+              lineHeight: 1.85, maxWidth: 340,
               margin: '0 auto', fontFamily: T.serif,
             }}>
               Enter your birth data and we will calculate your complete personal blueprint — the patterns, gifts, challenges, and timing that have been shaping your life since the day you were born.
@@ -339,8 +357,11 @@ function BasicInfoPageInner() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.6 }}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 28 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            style={{
+              display: 'grid', gridTemplateColumns: 'repeat(3,1fr)',
+              gap: 10, marginBottom: 24,
+            }}
           >
             {[
               { symbol: '✦', label: 'Core Nature and Gifts'   },
@@ -349,11 +370,21 @@ function BasicInfoPageInner() {
             ].map((item, i) => (
               <div key={i} style={{
                 textAlign: 'center', padding: '14px 8px',
-                background: T.surface, border: `1px solid ${T.borderSub}`,
+                background: T.surface,
+                border: `1px solid ${T.borderSub}`,
                 borderRadius: 12,
               }}>
-                <div style={{ fontSize: 16, color: T.gold, marginBottom: 7 }}>{item.symbol}</div>
-                <p style={{ fontSize: 10, color: T.textSub, lineHeight: 1.5, margin: 0, fontFamily: T.sans }}>
+                <div style={{
+                  fontSize: 15, color: T.gold,
+                  marginBottom: 7, fontFamily: T.serif,
+                }}>
+                  {item.symbol}
+                </div>
+                <p style={{
+                  fontSize: 10, color: T.textSub,
+                  lineHeight: 1.5, margin: 0,
+                  fontFamily: T.sans,
+                }}>
                   {item.label}
                 </p>
               </div>
@@ -362,27 +393,36 @@ function BasicInfoPageInner() {
 
           {/* Form card */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.6 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
             style={{
-              background: T.surface, border: `1px solid ${T.border}`,
-              borderRadius: 20, padding: '28px 24px',
+              background: T.surface,
+              border: `1px solid ${T.borderSub}`,
+              borderRadius: 20,
+              padding: '26px 22px',
+              boxShadow: '0 2px 24px rgba(26,23,20,0.06)',
             }}
           >
             {prefilled && formData.name && formData.dob && (
               <motion.div
-                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
                 style={{
                   marginBottom: 20, padding: '10px 14px', borderRadius: 10,
                   display: 'flex', alignItems: 'center', gap: 10,
-                  background: T.goldFaint, border: `1px solid ${T.border}`,
+                  background: T.goldFaint,
+                  border: `1px solid ${T.goldBorder}`,
                 }}
               >
                 <Check style={{ width: 13, height: 13, color: T.gold, flexShrink: 0 }} />
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: T.gold, margin: 0, fontFamily: T.sans }}>Details carried over</p>
-                  <p style={{ fontSize: 11, color: T.textSub, margin: '2px 0 0', fontFamily: T.sans }}>{formData.name} · {formData.dob}</p>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: T.goldDark, margin: 0, fontFamily: T.sans }}>
+                    Details carried over
+                  </p>
+                  <p style={{ fontSize: 11, color: T.textSub, margin: '2px 0 0', fontFamily: T.sans }}>
+                    {formData.name} · {formData.dob}
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -395,32 +435,50 @@ function BasicInfoPageInner() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.22 }}
+                transition={{ duration: 0.2 }}
               >
                 <p style={{
-                  fontSize: 12, color: T.textSub, marginBottom: 14,
-                  textAlign: 'center', fontFamily: T.serif, letterSpacing: '0.02em',
+                  fontSize: 13, color: T.textSub,
+                  marginBottom: 14, textAlign: 'center',
+                  fontFamily: T.serif, letterSpacing: '0.01em',
                 }}>
-                  {['What name shall I call you?','When were you born?','What time were you born?','Where were you born?'][step]}
+                  {[
+                    'What name shall I call you?',
+                    'When were you born?',
+                    'What time were you born?',
+                    'Where were you born?',
+                  ][step]}
                 </p>
 
                 {step === 0 && (
                   <div>
-                    <FieldInput type="text" value={formData.name} autoFocus icon={User} placeholder="Your full name"
-                      onChange={v => { setFormData({ ...formData, name: v }); setError('') }} />
+                    <FieldInput
+                      type="text" value={formData.name} autoFocus
+                      icon={User} placeholder="Your full name"
+                      onChange={v => { setFormData({ ...formData, name: v }); setError('') }}
+                    />
                     <WhySection explanation="Your name carries a vibrational frequency that shapes the expressive dimension of your reading. It is used to calculate your Destiny number — the contribution you are here to make." />
                   </div>
                 )}
 
                 {step === 1 && (
                   <div>
-                    <FieldInput type="date" value={formData.dob} autoFocus icon={Calendar}
+                    <FieldInput
+                      type="date" value={formData.dob} autoFocus
+                      icon={Calendar}
                       max={format(new Date(), 'yyyy-MM-dd')}
                       min={format(subYears(new Date(), 120), 'yyyy-MM-dd')}
-                      onChange={v => { setFormData({ ...formData, dob: v }); setError('') }} />
+                      onChange={v => { setFormData({ ...formData, dob: v }); setError('') }}
+                    />
                     {formData.dob && (
-                      <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                        style={{ fontSize: 12, color: T.gold, marginTop: 8, fontFamily: T.serif }}>
+                      <motion.p
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        style={{
+                          fontSize: 12, color: T.gold,
+                          marginTop: 8, fontFamily: T.serif,
+                        }}
+                      >
                         ✦ You are {calcAge(formData.dob)} years into your journey
                       </motion.p>
                     )}
@@ -430,15 +488,22 @@ function BasicInfoPageInner() {
 
                 {step === 2 && (
                   <div>
-                    <FieldInput type="time" value={formData.birthTime} autoFocus icon={Clock}
-                      onChange={v => setFormData({ ...formData, birthTime: v })} />
-                    <button onClick={() => setStep(3)} style={{
-                      marginTop: 10, fontSize: 12, color: T.goldDim,
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 4,
-                      fontFamily: T.sans, padding: 0,
-                    }}>
-                      Skip this step <ArrowRight style={{ width: 11, height: 11 }} />
+                    <FieldInput
+                      type="time" value={formData.birthTime} autoFocus
+                      icon={Clock}
+                      onChange={v => setFormData({ ...formData, birthTime: v })}
+                    />
+                    <button
+                      onClick={() => setStep(3)}
+                      style={{
+                        marginTop: 10, fontSize: 12, color: T.gold,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        fontFamily: T.sans, padding: 0,
+                      }}
+                    >
+                      Skip this step
+                      <ArrowRight style={{ width: 11, height: 11 }} />
                     </button>
                     <WhySection explanation="Birth time refines the astrological dimension of your reading. It is optional — your reading is complete without it, and deeper with it." />
                   </div>
@@ -446,8 +511,11 @@ function BasicInfoPageInner() {
 
                 {step === 3 && (
                   <div>
-                    <FieldInput type="text" value={formData.birthLocation} autoFocus icon={MapPin} placeholder="City, Country"
-                      onChange={v => setFormData({ ...formData, birthLocation: v })} />
+                    <FieldInput
+                      type="text" value={formData.birthLocation} autoFocus
+                      icon={MapPin} placeholder="City, Country"
+                      onChange={v => setFormData({ ...formData, birthLocation: v })}
+                    />
                     <WhySection explanation="Your birthplace adds geographic context to your astrological reading. Optional but adds further precision to the picture your blueprint reveals." />
                   </div>
                 )}
@@ -455,22 +523,30 @@ function BasicInfoPageInner() {
             </AnimatePresence>
 
             {error && (
-              <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                style={{ fontSize: 12, color: '#e57373', marginTop: 8, fontFamily: T.sans }}>
+              <motion.p
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ fontSize: 12, color: '#b91c1c', marginTop: 8, fontFamily: T.sans }}
+              >
                 {error}
               </motion.p>
             )}
 
-            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
               {step > 0 && (
-                <motion.button initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                <motion.button
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
                   onClick={() => setStep(step - 1)}
                   style={{
                     flex: 1, padding: '14px', borderRadius: 12,
                     fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                    background: 'transparent', border: `1px solid ${T.borderSub}`,
-                    color: T.textSub, fontFamily: T.sans, transition: 'all 0.2s',
-                  }}>
+                    background: 'transparent',
+                    border: `1px solid ${T.borderSub}`,
+                    color: T.textSub,
+                    fontFamily: T.sans, transition: 'all 0.2s',
+                  }}
+                >
                   Back
                 </motion.button>
               )}
@@ -479,30 +555,41 @@ function BasicInfoPageInner() {
                 onClick={handleNext}
                 disabled={!canProceed() || isLoading}
                 style={{
-                  flex: step === 0 ? 1 : 2, padding: '14px', borderRadius: 12,
+                  flex: step === 0 ? 1 : 2,
+                  padding: '14px', borderRadius: 12,
                   fontSize: 14, fontWeight: 600,
                   cursor: canProceed() && !isLoading ? 'pointer' : 'not-allowed',
-                  border: `1px solid ${canProceed() && !isLoading ? T.gold : T.borderSub}`,
-                  color: canProceed() && !isLoading ? '#0a0a0f' : T.textFaint,
-                  background: canProceed() && !isLoading ? T.gold : 'transparent',
+                  border: 'none',
+                  color: '#faf7f2',
+                  background: canProceed() && !isLoading ? T.gold : T.textFaint,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   fontFamily: T.sans, transition: 'all 0.25s',
-                  opacity: !canProceed() || isLoading ? 0.55 : 1,
-                }}>
+                  opacity: !canProceed() || isLoading ? 0.6 : 1,
+                  boxShadow: canProceed() && !isLoading ? '0 2px 12px rgba(184,148,63,0.3)' : 'none',
+                }}
+              >
                 {isLoading ? (
-                  <><Loader2 style={{ width: 15, height: 15 }} className="animate-spin" />Calculating your blueprint...</>
+                  <>
+                    <Loader2 style={{ width: 15, height: 15 }} className="animate-spin" />
+                    Calculating your blueprint...
+                  </>
                 ) : (
-                  <>{step === 3 ? (prefilled ? 'Complete Setup' : 'Reveal My Blueprint') : 'Continue'}{step < 3 && <ArrowRight style={{ width: 15, height: 15 }} />}</>
+                  <>
+                    {step === 3
+                      ? (prefilled ? 'Complete Setup' : 'Reveal My Blueprint')
+                      : 'Continue'}
+                    {step < 3 && <ArrowRight style={{ width: 15, height: 15 }} />}
+                  </>
                 )}
               </motion.button>
             </div>
 
             {isLoading && (
               <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 16 }}>
-                {[0,1,2].map(i => (
+                {[0, 1, 2].map(i => (
                   <div key={i} style={{
                     width: 5, height: 5, borderRadius: '50%', background: T.gold,
-                    animation: `loadingdot 0.75s ${i*0.15}s ease-in-out infinite`,
+                    animation: `loadingdot 0.75s ${i * 0.15}s ease-in-out infinite`,
                   }} />
                 ))}
               </div>
@@ -510,9 +597,13 @@ function BasicInfoPageInner() {
           </motion.div>
 
           {/* Trust signals */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-            style={{ marginTop: 24, textAlign: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 10 }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.55 }}
+            style={{ marginTop: 22, textAlign: 'center' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 8 }}>
               {[
                 { s: '✦', l: 'Encrypted and private' },
                 { s: '◈', l: '50,000+ seekers'       },
@@ -520,7 +611,9 @@ function BasicInfoPageInner() {
               ].map((item, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <span style={{ fontSize: 10, color: T.gold }}>{item.s}</span>
-                  <span style={{ fontSize: 11, color: T.textFaint, fontFamily: T.sans }}>{item.l}</span>
+                  <span style={{ fontSize: 11, color: T.textFaint, fontFamily: T.sans }}>
+                    {item.l}
+                  </span>
                 </div>
               ))}
             </div>
@@ -548,8 +641,11 @@ function BasicInfoPageInner() {
 export default function BasicInfoPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Loader2 style={{ width: 28, height: 28, color: '#c9a84c' }} className="animate-spin" />
+      <div style={{
+        minHeight: '100vh', background: '#faf7f2',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Loader2 style={{ width: 26, height: 26, color: '#b8943f' }} className="animate-spin" />
       </div>
     }>
       <BasicInfoPageInner />
