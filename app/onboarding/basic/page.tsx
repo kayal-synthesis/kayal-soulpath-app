@@ -6,89 +6,48 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAnonymousStore } from '@/lib/store/anonymousStore'
 import {
-  Sparkles, Calendar, Clock, MapPin, User, ArrowRight,
+  Calendar, Clock, MapPin, User, ArrowRight,
   Check, Loader2, ChevronDown, ChevronUp, Info,
 } from 'lucide-react'
 import { format, subYears } from 'date-fns'
 import confetti from 'canvas-confetti'
-import { toast } from 'sonner'
 import { buildNumerologyProfile } from '@/lib/welcome/numerology-engine'
 import { buildAstrologyProfile }  from '@/lib/welcome/astrology-engine'
 import { buildWelcomeCards }      from '@/lib/welcome/paragraph-library'
 import { WelcomeModal }           from '@/components/welcome/WelcomeModal'
 import type { WelcomeCard }       from '@/lib/welcome/paragraph-library'
 
-// ── Star field ────────────────────────────────────────────────
-function StarField() {
-  const stars = Array.from({ length: 80 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 2 + 0.5,
-    duration: Math.random() * 4 + 2,
-    delay: Math.random() * 4,
-  }))
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {stars.map(s => (
-        <div
-          key={s.id}
-          className="absolute rounded-full bg-white"
-          style={{
-            left: `${s.x}%`, top: `${s.y}%`,
-            width: s.size, height: s.size,
-            animation: `twinkle ${s.duration}s ${s.delay}s ease-in-out infinite`,
-          }}
-        />
-      ))}
-    </div>
-  )
+const T = {
+  bg:         '#0a0a0f',
+  surface:    '#13121a',
+  border:     'rgba(201,168,76,0.18)',
+  borderSub:  'rgba(255,255,255,0.06)',
+  gold:       '#c9a84c',
+  goldDim:    'rgba(201,168,76,0.55)',
+  goldFaint:  'rgba(201,168,76,0.12)',
+  text:       '#f5f0e8',
+  textSub:    '#9a9488',
+  textFaint:  'rgba(245,240,232,0.35)',
+  serif:      'Georgia, "Times New Roman", serif',
+  sans:       '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 }
 
-// ── Cosmic background ─────────────────────────────────────────
-function CosmicBackground() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      <div className="absolute inset-0" style={{
-        background: 'linear-gradient(135deg, #0f0c29 0%, #1a0533 35%, #24074a 60%, #0d1b3e 100%)'
-      }} />
-      <div className="absolute inset-0 opacity-30" style={{
-        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
-        backgroundSize: '32px 32px'
-      }} />
-      <div className="absolute rounded-full" style={{
-        width: 600, height: 600, top: '-20%', left: '-10%',
-        background: 'radial-gradient(circle, rgba(147,51,234,0.25) 0%, transparent 70%)',
-        animation: 'blob1 8s ease-in-out infinite',
-      }} />
-      <div className="absolute rounded-full" style={{
-        width: 500, height: 500, bottom: '-15%', right: '-10%',
-        background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)',
-        animation: 'blob2 10s 2s ease-in-out infinite',
-      }} />
-      <div className="absolute rounded-full" style={{
-        width: 300, height: 300, top: '40%', right: '20%',
-        background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)',
-        animation: 'blob3 6s 1s ease-in-out infinite',
-      }} />
-      <StarField />
-    </div>
-  )
-}
-
-// ── Why tooltip ───────────────────────────────────────────────
 function WhySection({ explanation }: { explanation: string }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="mt-2">
+    <div style={{ marginTop: 10 }}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 text-xs transition"
-        style={{ color: 'rgba(168,85,247,0.6)' }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          fontSize: 11, color: T.goldDim, background: 'none',
+          border: 'none', cursor: 'pointer', padding: 0,
+          fontFamily: T.sans, letterSpacing: '0.03em',
+        }}
       >
-        <Info className="w-3 h-3" />
-        <span>Why do we need this?</span>
-        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        <Info style={{ width: 11, height: 11 }} />
+        Why do we need this?
+        {open ? <ChevronUp style={{ width: 11, height: 11 }} /> : <ChevronDown style={{ width: 11, height: 11 }} />}
       </button>
       <AnimatePresence>
         {open && (
@@ -96,12 +55,12 @@ function WhySection({ explanation }: { explanation: string }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
+            style={{ overflow: 'hidden' }}
           >
-            <div className="mt-2 p-3 rounded-xl text-xs leading-relaxed" style={{
-              background: 'rgba(168,85,247,0.08)',
-              border: '1px solid rgba(168,85,247,0.15)',
-              color: 'rgba(255,255,255,0.55)',
+            <div style={{
+              marginTop: 8, padding: '12px 14px', borderRadius: 10,
+              background: T.goldFaint, border: `1px solid ${T.border}`,
+              fontSize: 12, lineHeight: 1.7, color: T.textSub, fontFamily: T.sans,
             }}>
               {explanation}
             </div>
@@ -112,7 +71,87 @@ function WhySection({ explanation }: { explanation: string }) {
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────
+function StepBar({ steps, current }: { steps: string[]; current: number }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
+      {steps.map((label, i) => (
+        <div key={i} style={{ flex: 1 }}>
+          <div style={{
+            fontSize: 9, textAlign: 'center', marginBottom: 6,
+            fontFamily: T.sans, fontWeight: 600,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: i <= current ? T.gold : T.textFaint,
+            transition: 'color 0.4s',
+          }}>
+            {label}
+          </div>
+          <div style={{
+            height: 1, borderRadius: 1,
+            background: i < current ? T.gold : i === current ? T.goldDim : T.borderSub,
+            transition: 'background 0.4s',
+          }} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function FieldInput({
+  type, value, onChange, placeholder, icon: Icon, autoFocus, min, max,
+}: {
+  type: string; value: string; onChange: (v: string) => void
+  placeholder?: string; icon: any; autoFocus?: boolean
+  min?: string; max?: string
+}) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <div style={{ position: 'relative' }}>
+      <Icon style={{
+        position: 'absolute', left: 14, top: '50%',
+        transform: 'translateY(-50%)',
+        width: 15, height: 15,
+        color: focused ? T.gold : T.textFaint,
+        transition: 'color 0.2s', zIndex: 1,
+      }} />
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        min={min}
+        max={max}
+        style={{
+          width: '100%',
+          padding: '15px 15px 15px 44px',
+          background: focused ? '#1a1926' : T.surface,
+          border: `1px solid ${focused ? T.border : T.borderSub}`,
+          borderRadius: 12,
+          color: T.text,
+          fontSize: 15,
+          fontFamily: T.sans,
+          outline: 'none',
+          transition: 'all 0.25s',
+          boxShadow: focused ? `0 0 0 3px ${T.goldFaint}` : 'none',
+          colorScheme: 'dark',
+          WebkitAppearance: 'none' as const,
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+      {value && type === 'text' && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}
+        >
+          <Check style={{ width: 15, height: 15, color: T.gold }} />
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 function BasicInfoPageInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -140,15 +179,15 @@ function BasicInfoPageInner() {
 
   useEffect(() => {
     if (!isClient) return
-    const urlName     = searchParams.get('name')?.trim()     || ''
-    const urlDob      = searchParams.get('dob')              || ''
-    const urlTime     = searchParams.get('birthTime')        || ''
-    const urlLocation = searchParams.get('birthLocation')    || ''
-    if (urlName || urlDob) {
-      setFormData({ name: urlName, dob: urlDob, birthTime: urlTime, birthLocation: urlLocation })
+    const n = searchParams.get('name')?.trim()   || ''
+    const d = searchParams.get('dob')            || ''
+    const t = searchParams.get('birthTime')      || ''
+    const l = searchParams.get('birthLocation')  || ''
+    if (n || d) {
+      setFormData({ name: n, dob: d, birthTime: t, birthLocation: l })
       setPrefilled(true)
-      if (urlName && urlDob) setStep(3)
-      else if (urlName)      setStep(1)
+      if (n && d) setStep(3)
+      else if (n) setStep(1)
     }
   }, [isClient, searchParams])
 
@@ -164,7 +203,7 @@ function BasicInfoPageInner() {
     return () => window.removeEventListener('keydown', handle)
   }, [step, formData, isLoading])
 
-  const calculateAge = (dob: string) => {
+  const calcAge = (dob: string) => {
     const today = new Date(), birth = new Date(dob)
     let age = today.getFullYear() - birth.getFullYear()
     const m = today.getMonth() - birth.getMonth()
@@ -180,71 +219,39 @@ function BasicInfoPageInner() {
 
   const handleNext = () => {
     if (step === 0 && !formData.name.trim()) { setError('Please enter your name'); return }
-    if (step === 1 && !formData.dob)         { setError('Please select your birth date'); return }
+    if (step === 1 && !formData.dob)         { setError('Please select your date of birth'); return }
     setError('')
-    if (step < 3) {
-      setStep(step + 1)
-      confetti({
-        particleCount: 12, spread: 30, origin: { y: 0.6 },
-        colors: ['#a855f7', '#D4AF37'],
-      })
-    } else {
-      handleSubmit()
-    }
+    if (step < 3) { setStep(step + 1) } else { handleSubmit() }
   }
 
   const handleSubmit = async () => {
     setIsLoading(true)
-
-    // Small delay for UX — feels considered, not instant
-    await new Promise(r => setTimeout(r, prefilled ? 1000 : 1800))
-
-    // Set session cookie
+    await new Promise(r => setTimeout(r, prefilled ? 900 : 1600))
     document.cookie = 'anonymous-session=true; path=/; max-age=2592000'
     const sessionId = Math.random().toString(36).substring(2)
-
-    // Save user to store
     setAnonymousUser({
-      sessionId,
-      name:          formData.name,
-      dob:           formData.dob,
-      birthTime:     formData.birthTime,
-      birthLocation: formData.birthLocation,
-      firstVisit:    new Date(),
-      lastVisit:     new Date(),
-      visitCount:    1,
-      viewedTools:   [],
+      sessionId, name: formData.name, dob: formData.dob,
+      birthTime: formData.birthTime, birthLocation: formData.birthLocation,
+      firstVisit: new Date(), lastVisit: new Date(), visitCount: 1, viewedTools: [],
     })
-
     try {
-      // ── Build reading entirely client-side — zero API cost ──
-      // Convert dob from YYYY-MM-DD to components
       const [yearStr, monthStr, dayStr] = formData.dob.split('-')
-      const month = parseInt(monthStr)
-      const day   = parseInt(dayStr)
-      const year  = parseInt(yearStr)
-
-      // Run both engines
-      const numProfile = buildNumerologyProfile(formData.name, formData.dob)
-      const astProfile = buildAstrologyProfile(month, day, year)
-
-      // Build all 9 cards
+      const numProfile   = buildNumerologyProfile(formData.name, formData.dob)
+      const astProfile   = buildAstrologyProfile(parseInt(monthStr), parseInt(dayStr), parseInt(yearStr))
       const welcomeCards = buildWelcomeCards(formData.name, numProfile, astProfile)
       setCards(welcomeCards)
-
       confetti({
-        particleCount: 80, spread: 90, origin: { y: 0.4 },
-        colors: ['#a855f7', '#D4AF37', '#818cf8', '#38bdf8'],
-        startVelocity: 28, decay: 0.91, ticks: 280,
+        particleCount: 60, spread: 80, origin: { y: 0.5 },
+        colors: ['#c9a84c', '#f5f0e8', '#8b7a4a'],
+        startVelocity: 24, decay: 0.92, ticks: 260,
       })
     } catch (err) {
       console.error('Welcome engine error:', err)
-      // Fallback — should never happen since it is pure math
       setCards([{
-        section:    'Your Journey Begins',
-        icon:       'Sparkles',
+        section: 'Your Journey Begins',
+        icon: 'Sparkles',
         paragraphs: [
-          `${formData.name.split(' ')[0]}, your personal blueprint is ready. Welcome to KAYAL LifeOS.`,
+          `${formData.name.trim().split(' ')[0]}, your personal blueprint is ready.`,
           `Explore our tools to discover the insights your birth data reveals about your path, your purpose, and where you are right now.`,
         ],
       }])
@@ -259,466 +266,272 @@ function BasicInfoPageInner() {
     router.push('/dashboard')
   }
 
-  const handleShare = () => {
-    const text = encodeURIComponent(
-      `I just discovered my personal soul blueprint on KAYAL LifeOS and the reading is surprisingly accurate. Try yours: https://app.kayalsoulpath.com`
-    )
-    window.open(`https://wa.me/?text=${text}`, '_blank')
-    toast.success('Opening WhatsApp...')
-  }
-
   if (!isClient) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0c29' }}>
-      <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Loader2 style={{ width: 28, height: 28, color: T.gold }} className="animate-spin" />
     </div>
   )
-
-  const steps = [
-    { label: 'Name',  icon: User     },
-    { label: 'Birth', icon: Calendar },
-    { label: 'Time',  icon: Clock    },
-    { label: 'Place', icon: MapPin   },
-  ]
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '14px 14px 14px 44px',
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(168,85,247,0.25)',
-    borderRadius: 14, color: 'white', fontSize: 15,
-    outline: 'none', transition: 'all 0.2s',
-    WebkitAppearance: 'none',
-  }
-
-  const focusStyle: React.CSSProperties = {
-    borderColor: 'rgba(168,85,247,0.6)',
-    boxShadow: '0 0 0 3px rgba(168,85,247,0.12)',
-  }
-
-  const blurStyle: React.CSSProperties = {
-    borderColor: 'rgba(168,85,247,0.25)',
-    boxShadow: 'none',
-  }
 
   return (
     <>
       <style>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50%       { opacity: 1;   transform: scale(1.4); }
-        }
-        @keyframes blob1 {
-          0%, 100% { transform: translate(0,0) scale(1); }
-          50%       { transform: translate(30px,20px) scale(1.08); }
-        }
-        @keyframes blob2 {
-          0%, 100% { transform: translate(0,0) scale(1); }
-          50%       { transform: translate(-20px,30px) scale(1.06); }
-        }
-        @keyframes blob3 {
-          0%, 100% { transform: translate(0,0) scale(1); }
-          50%       { transform: translate(15px,-20px) scale(1.1); }
-        }
-        @keyframes rockem {
-          0%, 100% { transform: rotate(-8deg) scale(1); }
-          50%       { transform: rotate(8deg) scale(1.12); }
-        }
-        @keyframes loadingdot {
-          0%, 100% { transform: translateY(0); opacity: 0.4; }
-          50%       { transform: translateY(-6px); opacity: 1; }
-        }
+        * { box-sizing: border-box; }
+        body { background: ${T.bg}; margin: 0; }
+        ::placeholder { color: ${T.textFaint}; }
         input[type='date']::-webkit-calendar-picker-indicator,
         input[type='time']::-webkit-calendar-picker-indicator {
-          filter: invert(1) opacity(0.4);
+          filter: invert(0.6) sepia(0.3) hue-rotate(10deg);
+          opacity: 0.5; cursor: pointer;
+        }
+        @keyframes loadingdot {
+          0%, 100% { transform: translateY(0); opacity: 0.3; }
+          50%       { transform: translateY(-5px); opacity: 1; }
         }
       `}</style>
 
-      <div style={{ minHeight: '100dvh', position: 'relative', overflow: 'hidden' }}>
-        <CosmicBackground />
+      <div style={{
+        minHeight: '100dvh', background: T.bg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '32px 20px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 420 }}>
 
-        <div style={{
-          position: 'relative', zIndex: 10, minHeight: '100dvh',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          padding: '24px 16px',
-        }}>
-          <div style={{ width: '100%', maxWidth: 440 }}>
+          {/* Brand */}
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            style={{ textAlign: 'center', marginBottom: 40 }}
+          >
+            <div style={{
+              width: 52, height: 52, margin: '0 auto 20px',
+              border: `1px solid ${T.border}`, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: T.goldFaint,
+            }}>
+              <span style={{ fontSize: 22, color: T.gold }}>✦</span>
+            </div>
+            <h1 style={{
+              fontFamily: T.serif,
+              fontSize: 'clamp(24px, 5vw, 30px)',
+              fontWeight: 400, color: T.text,
+              margin: '0 0 8px', letterSpacing: '0.06em',
+            }}>
+              KAYAL SoulPath
+            </h1>
+            <p style={{
+              fontSize: 10, letterSpacing: '0.22em',
+              textTransform: 'uppercase', color: T.gold,
+              margin: '0 0 18px', fontFamily: T.sans,
+            }}>
+              Ancient Wisdom · Modern Synthesis
+            </p>
+            <p style={{
+              fontSize: 14, color: T.textSub,
+              lineHeight: 1.85, maxWidth: 350,
+              margin: '0 auto', fontFamily: T.serif,
+            }}>
+              Enter your birth data and we will calculate your complete personal blueprint — the patterns, gifts, challenges, and timing that have been shaping your life since the day you were born.
+            </p>
+          </motion.div>
 
-            {/* Brand header */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              style={{ textAlign: 'center', marginBottom: 28 }}
-            >
-              <div style={{
-                fontSize: 48, marginBottom: 12, display: 'block',
-                animation: 'rockem 6s ease-in-out infinite',
+          {/* Three pillars */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25, duration: 0.6 }}
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 28 }}
+          >
+            {[
+              { symbol: '✦', label: 'Core Nature and Gifts'   },
+              { symbol: '◈', label: 'Where You Are Right Now' },
+              { symbol: '◇', label: 'Purpose and Destiny'     },
+            ].map((item, i) => (
+              <div key={i} style={{
+                textAlign: 'center', padding: '14px 8px',
+                background: T.surface, border: `1px solid ${T.borderSub}`,
+                borderRadius: 12,
               }}>
-                🔮
+                <div style={{ fontSize: 16, color: T.gold, marginBottom: 7 }}>{item.symbol}</div>
+                <p style={{ fontSize: 10, color: T.textSub, lineHeight: 1.5, margin: 0, fontFamily: T.sans }}>
+                  {item.label}
+                </p>
               </div>
-              <h1 style={{
-                fontFamily: 'Georgia, serif',
-                fontSize: 'clamp(22px, 5vw, 28px)',
-                fontWeight: 400, color: 'white',
-                marginBottom: 8, letterSpacing: '-0.02em',
-              }}>
-                KAYAL SoulPath
-              </h1>
-              <p style={{
-                fontSize: 11, color: 'rgba(168,85,247,0.8)',
-                letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 14,
-              }}>
-                Ancient Wisdom · Modern Synthesis
-              </p>
-              <p style={{
-                fontSize: 13, color: 'rgba(255,255,255,0.5)',
-                lineHeight: 1.75, maxWidth: 360, margin: '0 auto',
-              }}>
-                We synthesise your birth data into one precise, personalised reading — built entirely from the numbers and energies encoded in the moment you arrived.
-              </p>
-            </motion.div>
+            ))}
+          </motion.div>
 
-            {/* What you will discover */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              style={{
-                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: 10, marginBottom: 24,
-              }}
-            >
-              {[
-                { emoji: '⭐', label: 'Your Core Nature and Gifts' },
-                { emoji: '💫', label: 'Where You Are Right Now' },
-                { emoji: '💎', label: 'Love, Purpose and Destiny' },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.08 }}
-                  style={{
-                    textAlign: 'center', padding: '12px 8px', borderRadius: 16,
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(168,85,247,0.15)',
-                  }}
-                >
-                  <div style={{ fontSize: 20, marginBottom: 5 }}>{item.emoji}</div>
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>
-                    {item.label}
-                  </p>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Form card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              style={{
-                borderRadius: 24, padding: '26px 22px',
-                background: 'rgba(15,12,40,0.88)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(168,85,247,0.2)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.45), 0 0 40px rgba(168,85,247,0.06)',
-              }}
-            >
-              {/* Prefilled notice */}
-              {prefilled && formData.name && formData.dob && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    marginBottom: 18, padding: '10px 14px', borderRadius: 12,
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    background: 'rgba(168,85,247,0.1)',
-                    border: '1px solid rgba(168,85,247,0.2)',
-                  }}
-                >
-                  <Check style={{ width: 14, height: 14, color: '#a855f7', flexShrink: 0 }} />
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: '#a855f7' }}>Details carried over</p>
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                      {formData.name} · {formData.dob}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Step indicators */}
-              <div style={{ display: 'flex', gap: 6, marginBottom: 22 }}>
-                {steps.map((s, i) => (
-                  <div key={i} style={{ flex: 1 }}>
-                    <div style={{
-                      fontSize: 9, textAlign: 'center', marginBottom: 5,
-                      fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-                      color: i <= step ? '#a855f7' : 'rgba(255,255,255,0.2)',
-                      transition: 'color 0.3s',
-                    }}>
-                      {s.label}
-                    </div>
-                    <div style={{
-                      height: 3, borderRadius: 2, transition: 'all 0.4s',
-                      background: i < step
-                        ? '#a855f7'
-                        : i === step
-                        ? 'linear-gradient(90deg, #a855f7, #7c3aed)'
-                        : 'rgba(255,255,255,0.1)',
-                    }} />
-                  </div>
-                ))}
-              </div>
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={step}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <p style={{
-                    fontSize: 13, color: 'rgba(255,255,255,0.38)',
-                    marginBottom: 14, textAlign: 'center',
-                  }}>
-                    {[
-                      'What name shall I call you?',
-                      'When were you born?',
-                      'What time were you born?',
-                      'Where were you born?',
-                    ][step]}
-                  </p>
-
-                  {/* Step 0 — Name */}
-                  {step === 0 && (
-                    <div>
-                      <div style={{ position: 'relative' }}>
-                        <User style={{
-                          position: 'absolute', left: 14, top: '50%',
-                          transform: 'translateY(-50%)',
-                          width: 16, height: 16, color: 'rgba(168,85,247,0.6)',
-                        }} />
-                        <input
-                          type="text" autoFocus
-                          value={formData.name}
-                          onChange={e => { setFormData({ ...formData, name: e.target.value }); setError('') }}
-                          placeholder="Your full name"
-                          style={{ ...inputStyle, colorScheme: 'dark' }}
-                          onFocus={e => Object.assign(e.target.style, focusStyle)}
-                          onBlur={e => Object.assign(e.target.style, blurStyle)}
-                        />
-                        {formData.name && (
-                          <motion.div
-                            initial={{ scale: 0 }} animate={{ scale: 1 }}
-                            style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}
-                          >
-                            <Check style={{ width: 16, height: 16, color: '#4ade80' }} />
-                          </motion.div>
-                        )}
-                      </div>
-                      <WhySection explanation="Your name carries a vibrational frequency that shapes the expressive dimension of your reading. It is used to calculate your Destiny number — the contribution you are here to make." />
-                    </div>
-                  )}
-
-                  {/* Step 1 — Date of birth */}
-                  {step === 1 && (
-                    <div>
-                      <div style={{ position: 'relative' }}>
-                        <Calendar style={{
-                          position: 'absolute', left: 14, top: '50%',
-                          transform: 'translateY(-50%)',
-                          width: 16, height: 16, color: 'rgba(168,85,247,0.6)', zIndex: 1,
-                        }} />
-                        <input
-                          type="date" autoFocus
-                          value={formData.dob}
-                          onChange={e => { setFormData({ ...formData, dob: e.target.value }); setError('') }}
-                          max={format(new Date(), 'yyyy-MM-dd')}
-                          min={format(subYears(new Date(), 120), 'yyyy-MM-dd')}
-                          style={{ ...inputStyle, colorScheme: 'dark' }}
-                          onFocus={e => Object.assign(e.target.style, focusStyle)}
-                          onBlur={e => Object.assign(e.target.style, blurStyle)}
-                        />
-                      </div>
-                      {formData.dob && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          style={{
-                            fontSize: 12, color: '#a855f7', marginTop: 8,
-                            display: 'flex', alignItems: 'center', gap: 4,
-                          }}
-                        >
-                          <Sparkles style={{ width: 12, height: 12 }} />
-                          You are {calculateAge(formData.dob)} years into your journey
-                        </motion.p>
-                      )}
-                      <WhySection explanation="Your birth date is the foundation of your entire reading. Every timing calculation — where you are right now, what this year means, what chapter of your life you are in — begins here." />
-                    </div>
-                  )}
-
-                  {/* Step 2 — Birth time (optional) */}
-                  {step === 2 && (
-                    <div>
-                      <div style={{ position: 'relative' }}>
-                        <Clock style={{
-                          position: 'absolute', left: 14, top: '50%',
-                          transform: 'translateY(-50%)',
-                          width: 16, height: 16, color: 'rgba(168,85,247,0.6)',
-                        }} />
-                        <input
-                          type="time" autoFocus
-                          value={formData.birthTime}
-                          onChange={e => setFormData({ ...formData, birthTime: e.target.value })}
-                          style={{ ...inputStyle, colorScheme: 'dark' }}
-                          onFocus={e => Object.assign(e.target.style, focusStyle)}
-                          onBlur={e => Object.assign(e.target.style, blurStyle)}
-                        />
-                      </div>
-                      <button
-                        onClick={() => {
-                          setStep(3)
-                          confetti({ particleCount: 10, spread: 25, origin: { y: 0.6 }, colors: ['#a855f7'] })
-                        }}
-                        style={{
-                          marginTop: 10, fontSize: 12, color: 'rgba(168,85,247,0.55)',
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', gap: 4,
-                        }}
-                      >
-                        Skip this step <ArrowRight style={{ width: 12, height: 12 }} />
-                      </button>
-                      <WhySection explanation="Birth time refines the astrological dimension of your reading. It is optional — your reading is complete without it, and deeper with it." />
-                    </div>
-                  )}
-
-                  {/* Step 3 — Birth location (optional) */}
-                  {step === 3 && (
-                    <div>
-                      <div style={{ position: 'relative' }}>
-                        <MapPin style={{
-                          position: 'absolute', left: 14, top: '50%',
-                          transform: 'translateY(-50%)',
-                          width: 16, height: 16, color: 'rgba(168,85,247,0.6)',
-                        }} />
-                        <input
-                          type="text" autoFocus
-                          value={formData.birthLocation}
-                          onChange={e => setFormData({ ...formData, birthLocation: e.target.value })}
-                          placeholder="City, Country"
-                          style={{ ...inputStyle, colorScheme: 'dark' }}
-                          onFocus={e => Object.assign(e.target.style, focusStyle)}
-                          onBlur={e => Object.assign(e.target.style, blurStyle)}
-                        />
-                      </div>
-                      <WhySection explanation="Your birthplace adds geographic context to your astrological reading. Optional but adds further precision to the picture your blueprint reveals." />
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Error */}
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{ fontSize: 12, color: '#f87171', marginTop: 8 }}
-                >
-                  {error}
-                </motion.p>
-              )}
-
-              {/* Buttons */}
-              <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-                {step > 0 && (
-                  <motion.button
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    onClick={() => setStep(step - 1)}
-                    style={{
-                      flex: 1, padding: '13px', borderRadius: 14,
-                      fontSize: 14, fontWeight: 500, cursor: 'pointer',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: 'rgba(255,255,255,0.55)', transition: 'all 0.2s',
-                    }}
-                  >
-                    Back
-                  </motion.button>
-                )}
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleNext}
-                  disabled={!canProceed() || isLoading}
-                  style={{
-                    flex: step === 0 ? 1 : 2, padding: '13px', borderRadius: 14,
-                    fontSize: 14, fontWeight: 600,
-                    cursor: canProceed() && !isLoading ? 'pointer' : 'not-allowed',
-                    border: 'none', color: 'white',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    gap: 8, transition: 'all 0.2s',
-                    opacity: !canProceed() || isLoading ? 0.5 : 1,
-                    background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                    boxShadow: canProceed() && !isLoading ? '0 4px 20px rgba(124,58,237,0.4)' : 'none',
-                  }}
-                >
-                  {isLoading ? (
-                    <><Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />Reading your blueprint...</>
-                  ) : (
-                    <>
-                      {step === 3
-                        ? (prefilled ? 'Complete Setup' : 'Reveal My Blueprint')
-                        : 'Continue'}
-                      {step < 3 && <ArrowRight style={{ width: 16, height: 16 }} />}
-                    </>
-                  )}
-                </motion.button>
-              </div>
-
-              {/* Loading dots */}
-              {isLoading && (
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 14 }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{
-                      width: 6, height: 6, borderRadius: '50%', background: '#a855f7',
-                      animation: `loadingdot 0.8s ${i * 0.15}s ease-in-out infinite`,
-                    }} />
-                  ))}
+          {/* Form card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.6 }}
+            style={{
+              background: T.surface, border: `1px solid ${T.border}`,
+              borderRadius: 20, padding: '28px 24px',
+            }}
+          >
+            {prefilled && formData.name && formData.dob && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                style={{
+                  marginBottom: 20, padding: '10px 14px', borderRadius: 10,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: T.goldFaint, border: `1px solid ${T.border}`,
+                }}
+              >
+                <Check style={{ width: 13, height: 13, color: T.gold, flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: T.gold, margin: 0, fontFamily: T.sans }}>Details carried over</p>
+                  <p style={{ fontSize: 11, color: T.textSub, margin: '2px 0 0', fontFamily: T.sans }}>{formData.name} · {formData.dob}</p>
                 </div>
-              )}
-            </motion.div>
+              </motion.div>
+            )}
 
-            {/* Social proof */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              style={{ marginTop: 18, textAlign: 'center' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 8 }}>
-                {[
-                  { emoji: '🔒', label: '256-bit encrypted' },
-                  { emoji: '✨', label: '50k+ seekers'      },
-                  { emoji: '⭐', label: '4.9 / 5 rating'    },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ fontSize: 12 }}>{item.emoji}</span>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{item.label}</span>
+            <StepBar steps={['Name','Birth','Time','Place']} current={step} />
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+              >
+                <p style={{
+                  fontSize: 12, color: T.textSub, marginBottom: 14,
+                  textAlign: 'center', fontFamily: T.serif, letterSpacing: '0.02em',
+                }}>
+                  {['What name shall I call you?','When were you born?','What time were you born?','Where were you born?'][step]}
+                </p>
+
+                {step === 0 && (
+                  <div>
+                    <FieldInput type="text" value={formData.name} autoFocus icon={User} placeholder="Your full name"
+                      onChange={v => { setFormData({ ...formData, name: v }); setError('') }} />
+                    <WhySection explanation="Your name carries a vibrational frequency that shapes the expressive dimension of your reading. It is used to calculate your Destiny number — the contribution you are here to make." />
                   </div>
+                )}
+
+                {step === 1 && (
+                  <div>
+                    <FieldInput type="date" value={formData.dob} autoFocus icon={Calendar}
+                      max={format(new Date(), 'yyyy-MM-dd')}
+                      min={format(subYears(new Date(), 120), 'yyyy-MM-dd')}
+                      onChange={v => { setFormData({ ...formData, dob: v }); setError('') }} />
+                    {formData.dob && (
+                      <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                        style={{ fontSize: 12, color: T.gold, marginTop: 8, fontFamily: T.serif }}>
+                        ✦ You are {calcAge(formData.dob)} years into your journey
+                      </motion.p>
+                    )}
+                    <WhySection explanation="Your birth date is the foundation of your entire reading. Every timing calculation — where you are right now, what this year means, what chapter of your life you are in — begins here." />
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div>
+                    <FieldInput type="time" value={formData.birthTime} autoFocus icon={Clock}
+                      onChange={v => setFormData({ ...formData, birthTime: v })} />
+                    <button onClick={() => setStep(3)} style={{
+                      marginTop: 10, fontSize: 12, color: T.goldDim,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      fontFamily: T.sans, padding: 0,
+                    }}>
+                      Skip this step <ArrowRight style={{ width: 11, height: 11 }} />
+                    </button>
+                    <WhySection explanation="Birth time refines the astrological dimension of your reading. It is optional — your reading is complete without it, and deeper with it." />
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div>
+                    <FieldInput type="text" value={formData.birthLocation} autoFocus icon={MapPin} placeholder="City, Country"
+                      onChange={v => setFormData({ ...formData, birthLocation: v })} />
+                    <WhySection explanation="Your birthplace adds geographic context to your astrological reading. Optional but adds further precision to the picture your blueprint reveals." />
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            {error && (
+              <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                style={{ fontSize: 12, color: '#e57373', marginTop: 8, fontFamily: T.sans }}>
+                {error}
+              </motion.p>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              {step > 0 && (
+                <motion.button initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                  onClick={() => setStep(step - 1)}
+                  style={{
+                    flex: 1, padding: '14px', borderRadius: 12,
+                    fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                    background: 'transparent', border: `1px solid ${T.borderSub}`,
+                    color: T.textSub, fontFamily: T.sans, transition: 'all 0.2s',
+                  }}>
+                  Back
+                </motion.button>
+              )}
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={handleNext}
+                disabled={!canProceed() || isLoading}
+                style={{
+                  flex: step === 0 ? 1 : 2, padding: '14px', borderRadius: 12,
+                  fontSize: 14, fontWeight: 600,
+                  cursor: canProceed() && !isLoading ? 'pointer' : 'not-allowed',
+                  border: `1px solid ${canProceed() && !isLoading ? T.gold : T.borderSub}`,
+                  color: canProceed() && !isLoading ? '#0a0a0f' : T.textFaint,
+                  background: canProceed() && !isLoading ? T.gold : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  fontFamily: T.sans, transition: 'all 0.25s',
+                  opacity: !canProceed() || isLoading ? 0.55 : 1,
+                }}>
+                {isLoading ? (
+                  <><Loader2 style={{ width: 15, height: 15 }} className="animate-spin" />Calculating your blueprint...</>
+                ) : (
+                  <>{step === 3 ? (prefilled ? 'Complete Setup' : 'Reveal My Blueprint') : 'Continue'}{step < 3 && <ArrowRight style={{ width: 15, height: 15 }} />}</>
+                )}
+              </motion.button>
+            </div>
+
+            {isLoading && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+                {[0,1,2].map(i => (
+                  <div key={i} style={{
+                    width: 5, height: 5, borderRadius: '50%', background: T.gold,
+                    animation: `loadingdot 0.75s ${i*0.15}s ease-in-out infinite`,
+                  }} />
                 ))}
               </div>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
-                Your data is private and never shared with third parties
-              </p>
-            </motion.div>
+            )}
+          </motion.div>
 
-          </div>
+          {/* Trust signals */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+            style={{ marginTop: 24, textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 10 }}>
+              {[
+                { s: '✦', l: 'Encrypted and private' },
+                { s: '◈', l: '50,000+ seekers'       },
+                { s: '◇', l: '4.9 out of 5'          },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ fontSize: 10, color: T.gold }}>{item.s}</span>
+                  <span style={{ fontSize: 11, color: T.textFaint, fontFamily: T.sans }}>{item.l}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, color: T.textFaint, fontFamily: T.sans, margin: 0 }}>
+              Your data is never shared with third parties
+            </p>
+          </motion.div>
+
         </div>
       </div>
 
-      {/* Welcome Modal */}
       {showWelcome && cards.length > 0 && (
         <WelcomeModal
           isOpen={showWelcome}
@@ -735,8 +548,8 @@ function BasicInfoPageInner() {
 export default function BasicInfoPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0c29' }}>
-        <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 style={{ width: 28, height: 28, color: '#c9a84c' }} className="animate-spin" />
       </div>
     }>
       <BasicInfoPageInner />
