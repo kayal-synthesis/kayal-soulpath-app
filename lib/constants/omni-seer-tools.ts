@@ -31,211 +31,4069 @@ export interface OmniTool {
 // ─────────────────────────────────────────────────────────────
 // SECTION 1 — 18 CORE SYNTHESIS TOOLS
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// SECTION 1 — 18 CORE SYNTHESIS TOOLS
+// ─────────────────────────────────────────────────────────────
 export const coreTools: OmniTool[] = [
   {
-    id:'complete-love-synthesis',name:'The Complete Love Synthesis',tagline:'Five systems cross-confirmed into one definitive love portrait',emoji:'💞',price:97,domain:'oracle-temple',isPopular:true,isBestSeller:true,isFlagship:true,rating:4.9,reviewCount:1243,deliveryMinutes:20,
-    hook:'The problem is not that you have not tried hard enough in love. The problem is that you have been operating without accurate information about how you are actually built to love. A single system produces a single perspective — and single perspectives have blind spots large enough to repeat the same relationship mistake for years. This synthesis cross-examines five independent systems simultaneously and delivers only what all five confirm. The result is the most accurate love portrait that exists — and it usually names something the person already half-knew but could never quite articulate clearly enough to act on.',
+    id:'complete-love-synthesis',
+    name:'The Complete Love Synthesis',
+    tagline:'Five systems cross-confirmed into one definitive love portrait',
+    emoji:'💞',
+    price:97,
+    domain:'oracle-temple',
+    isPopular:true,
+    isBestSeller:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:1243,
+    deliveryMinutes:20,
+    hook:'The problem is not that you have not tried hard enough in love. The' +
+      ' problem is that you have been operating without accurate information about' +
+      ' how you are actually built to love. A single system produces a single' +
+      ' perspective — and single perspectives have blind spots large enough to' +
+      ' repeat the same relationship mistake for years. This synthesis' +
+      ' cross-examines five independent systems simultaneously and delivers only' +
+      ' what all five confirm. The result is the most accurate love portrait that' +
+      ' exists — and it usually names something the person already half-knew but' +
+      ' could never quite articulate clearly enough to act on.',
     requiresImage:{type:'both'},
-    whatYouGet:['The specific way you are built to give and receive love — confirmed by five systems, stated plainly enough to finally act on','The karmic relationship pattern running beneath your love history — its origin, its lesson, and what completing it unlocks','The precise window when your highest love alignment opens — month-specific, drawn from three independent timing systems','Who you structurally draw and why — the chart signature behind the attraction pattern that keeps recurring','An honest cross-system assessment of your current relationship — what all five systems agree it is and where it is heading','A month-by-month love timing map for the next twelve months — when to move, when to wait, and when the peak windows open','The one internal shift all five systems identify as the highest-leverage change available in your love life right now'],
-    guidanceType:'spiritual-remedy',guidanceText:'A love pattern completion practice drawn from your heritage tradition — not generic self-help but the specific remedy your chart indicates for the most active karmic layer, with three sequenced practical actions calibrated to your current Personal Year cycle.',
+    whatYouGet:[
+      'The specific way you are built to give and receive love — confirmed by five' +
+        ' systems, stated plainly enough to finally act on',
+      'The karmic relationship pattern running beneath your love history — its' +
+        ' origin, its lesson, and what completing it unlocks',
+      'The precise window when your highest love alignment opens — month-specific,' +
+        ' drawn from three independent timing systems',
+      'Who you structurally draw and why — the chart signature behind the attraction' +
+        ' pattern that keeps recurring',
+      'An honest cross-system assessment of your current relationship — what all' +
+        ' five systems agree it is and where it is heading',
+      'A month-by-month love timing map for the next twelve months — when to move,' +
+        ' when to wait, and when the peak windows open',
+      'The one internal shift all five systems identify as the highest-leverage' +
+        ' change available in your love life right now',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A love pattern completion practice drawn from your heritage' +
+      ' tradition — not generic self-help but the specific remedy your chart' +
+      ' indicates for the most active karmic layer, with three sequenced practical' +
+      ' actions calibrated to your current Personal Year cycle.',
     upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
   },
   {
-    id:'complete-wealth-synthesis',name:'The Complete Wealth Synthesis',tagline:'Every wealth system synthesised into one complete financial portrait',emoji:'💰',price:97,domain:'oracle-temple',isPopular:true,isFlagship:true,rating:4.9,reviewCount:987,deliveryMinutes:20,
-    hook:'Every person has a wealth channel — a specific domain where income flows most naturally — and most people have never operated in it. They have been working hard in the wrong channel. Four independent systems cross-confirm not just where your channel is, but what has been blocking it, and the specific move that opens it. Four systems disagreeing is useful information. Four systems agreeing on the same block and the same channel is something else entirely — it is the kind of certainty that changes how you make financial decisions.',
+    id:'complete-wealth-synthesis',
+    name:'The Complete Wealth Synthesis',
+    tagline:'Every wealth system synthesised into one complete financial portrait',
+    emoji:'💰',
+    price:97,
+    domain:'oracle-temple',
+    isPopular:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:987,
+    deliveryMinutes:20,
+    hook:'Every person has a wealth channel — a specific domain where income flows' +
+      ' most naturally — and most people have never operated in it. They have been' +
+      ' working hard in the wrong channel. Four independent systems cross-confirm' +
+      ' not just where your channel is, but what has been blocking it, and the' +
+      ' specific move that opens it. Four systems disagreeing is useful information.' +
+      ' Four systems agreeing on the same block and the same channel is something' +
+      ' else entirely — it is the kind of certainty that changes how you make' +
+      ' financial decisions.',
     requiresImage:{type:'both'},
-    whatYouGet:['Your specific wealth channel confirmed across four systems — the domain where income flows most naturally for your exact blueprint','The precise nature of your income ceiling — whether it is karmic, belief-based, structural, or timing-based, named from all four systems','The facial wealth palace reading — what nose shape, cheekbone structure, and forehead width reveal about your financial decade map','Your fate line wealth trajectory — how earning power develops through specific life stages','The three wealth blocks all four systems agree are most active right now — and the specific conditions under which each dissolves','A three-year financial map synthesised from every timing system currently running','The one wealth move all four systems confirm as highest-leverage in the current Personal Year'],
-    guidanceType:'practical-solution',guidanceText:'A 90-day wealth channel alignment protocol — not generic financial advice but a specific sequence of internal and practical actions calibrated to the wealth block type your four-system reading identified as most active, timed to the windows your current Personal Year supports.',
+    whatYouGet:[
+      'Your specific wealth channel confirmed across four systems — the domain where' +
+        ' income flows most naturally for your exact blueprint',
+      'The precise nature of your income ceiling — whether it is karmic,' +
+        ' belief-based, structural, or timing-based, named from all four systems',
+      'The facial wealth palace reading — what nose shape, cheekbone structure, and' +
+        ' forehead width reveal about your financial decade map',
+      'Your fate line wealth trajectory — how earning power develops through' +
+        ' specific life stages',
+      'The three wealth blocks all four systems agree are most active right now —' +
+        ' and the specific conditions under which each dissolves',
+      'A three-year financial map synthesised from every timing system currently' +
+        ' running',
+      'The one wealth move all four systems confirm as highest-leverage in the' +
+        ' current Personal Year',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A 90-day wealth channel alignment protocol — not generic financial' +
+      ' advice but a specific sequence of internal and practical actions calibrated' +
+      ' to the wealth block type your four-system reading identified as most active,' +
+      ' timed to the windows your current Personal Year supports.',
     upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
   },
   {
-    id:'complete-health-synthesis',name:'The Complete Health Synthesis',tagline:'Why every health protocol you have tried was built for someone else\'s body',emoji:'⚕️',price:97,domain:'oracle-temple',isFlagship:true,rating:4.8,reviewCount:754,deliveryMinutes:20,
-    hook:'Generic health advice fails most people not because they lack discipline but because it was designed for a body type different from theirs. Constitutional medicine has always known that what restores one person depletes another. Four independent traditions — Ayurvedic constitution, Traditional Chinese Medicine, classical chart reading, and classical hand analysis — each developed their frameworks independently across different continents and centuries. When all four arrive at the same picture of your body, the reading carries a confidence no single tradition can produce alone.',
+    id:'complete-health-synthesis',
+    name:'The Complete Health Synthesis',
+    tagline:'Why every health protocol you have tried was built for someone else\'s' +
+      ' body',
+    emoji:'⚕️',
+    price:97,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:754,
+    deliveryMinutes:20,
+    hook:'Generic health advice fails most people not because they lack discipline' +
+      ' but because it was designed for a body type different from theirs.' +
+      ' Constitutional medicine has always known that what restores one person' +
+      ' depletes another. Four independent traditions — Ayurvedic constitution,' +
+      ' Traditional Chinese Medicine, classical chart reading, and classical hand' +
+      ' analysis — each developed their frameworks independently across different' +
+      ' continents and centuries. When all four arrive at the same picture of your' +
+      ' body, the reading carries a confidence no single tradition can produce alone.',
     requiresImage:{type:'both'},
-    whatYouGet:['Your constitutional type confirmed across all four traditions — where they agree, where they diverge, and what the divergence itself reveals','The three body systems most likely to require attention in your lifetime — named from cross-system agreement, not a single tradition\'s guess','A seasonal vulnerability map — the specific months each system flags as requiring more care, and why they often agree on the same periods','A diet and lifestyle prescription confirmed by at least three of the four systems — the adjustments most likely to work because they match your actual constitution','Your vitality trajectory from current patterns — what the chart and hand reading both say about where energy is heading if nothing changes','The one health shift all four systems identify as highest-leverage for your specific constitution right now'],
-    guidanceType:'practical-solution',guidanceText:'A 30-day constitutional recalibration protocol drawn from the tradition that most accurately matches your identified type — specific dietary adjustments, movement prescription, sleep timing, and one practice from the medical tradition with the highest cross-system agreement for your constitution.',
+    whatYouGet:[
+      'Your constitutional type confirmed across all four traditions — where they' +
+        ' agree, where they diverge, and what the divergence itself reveals',
+      'The three body systems most likely to require attention in your lifetime —' +
+        ' named from cross-system agreement, not a single tradition\'s guess',
+      'A seasonal vulnerability map — the specific months each system flags as' +
+        ' requiring more care, and why they often agree on the same periods',
+      'A diet and lifestyle prescription confirmed by at least three of the four' +
+        ' systems — the adjustments most likely to work because they match your' +
+        ' actual constitution',
+      'Your vitality trajectory from current patterns — what the chart and hand' +
+        ' reading both say about where energy is heading if nothing changes',
+      'The one health shift all four systems identify as highest-leverage for your' +
+        ' specific constitution right now',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A 30-day constitutional recalibration protocol drawn from the' +
+      ' tradition that most accurately matches your identified type — specific' +
+      ' dietary adjustments, movement prescription, sleep timing, and one practice' +
+      ' from the medical tradition with the highest cross-system agreement for your' +
+      ' constitution.',
     upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
   },
   {
-    id:'complete-purpose-synthesis',name:'The Complete Purpose Synthesis',tagline:'The specific contribution your blueprint was built to make — confirmed until there is no room left for doubt',emoji:'🎯',price:97,domain:'oracle-temple',isPopular:true,isFlagship:true,rating:4.9,reviewCount:876,deliveryMinutes:20,
-    hook:'Most people know their purpose the way they know a word on the tip of their tongue — close enough to feel it, too far to say it clearly enough to act on. The problem is never lack of self-knowledge. It is that any single system produces a portrait specific enough to nod at but not specific enough to build from. This synthesis reads four independent purpose indicators — the soul contract encoded in your numbers, the dharma written in your sky map, the fate line in your hand, and the Midheaven marking your public calling — and names only what all four confirm. The result is a purpose statement specific enough to change your next decision.',
+    id:'complete-purpose-synthesis',
+    name:'The Complete Purpose Synthesis',
+    tagline:'The specific contribution your blueprint was built to make — confirmed' +
+      ' until there is no room left for doubt',
+    emoji:'🎯',
+    price:97,
+    domain:'oracle-temple',
+    isPopular:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:876,
+    deliveryMinutes:20,
+    hook:'Most people know their purpose the way they know a word on the tip of' +
+      ' their tongue — close enough to feel it, too far to say it clearly enough to' +
+      ' act on. The problem is never lack of self-knowledge. It is that any single' +
+      ' system produces a portrait specific enough to nod at but not specific enough' +
+      ' to build from. This synthesis reads four independent purpose indicators —' +
+      ' the soul contract encoded in your numbers, the dharma written in your sky' +
+      ' map, the fate line in your hand, and the Midheaven marking your public' +
+      ' calling — and names only what all four confirm. The result is a purpose' +
+      ' statement specific enough to change your next decision.',
     requiresImage:{type:'palm'},
-    whatYouGet:['Your purpose named in plain language — the specific contribution all four systems confirm, with no chart jargon and no vague invitation to explore','The gap between your current work and your actual calling — how wide it is, what is causing it, and the most direct bridge across it','Your fate line purpose map — when purpose activates in the hand, and how the life stages already visible in the line connect to what is happening now','The dharmic reading — which planetary energies support your life direction and where the chart is actively pushing you whether you cooperate or not','Your numerical soul contract — the three birth number agreements that govern the shape of this life and which ones are currently being honoured or avoided','The activation timeline from all four systems — when the purpose window is most structurally supported across all indicators simultaneously','The one next move all four systems confirm as the highest-leverage step from your current position toward calling work'],
-    guidanceType:'practical-solution',guidanceText:'A purpose activation sequence built from four-system confirmation — the specific first move from your current position toward calling work, the timing window that supports it based on fate line and Personal Year, and the one condition all four systems say must be in place before the move is made.',
+    whatYouGet:[
+      'Your purpose named in plain language — the specific contribution all four' +
+        ' systems confirm, with no chart jargon and no vague invitation to explore',
+      'The gap between your current work and your actual calling — how wide it is,' +
+        ' what is causing it, and the most direct bridge across it',
+      'Your fate line purpose map — when purpose activates in the hand, and how the' +
+        ' life stages already visible in the line connect to what is happening now',
+      'The dharmic reading — which planetary energies support your life direction' +
+        ' and where the chart is actively pushing you whether you cooperate or not',
+      'Your numerical soul contract — the three birth number agreements that govern' +
+        ' the shape of this life and which ones are currently being honoured or' +
+        ' avoided',
+      'The activation timeline from all four systems — when the purpose window is' +
+        ' most structurally supported across all indicators simultaneously',
+      'The one next move all four systems confirm as the highest-leverage step from' +
+        ' your current position toward calling work',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A purpose activation sequence built from four-system confirmation' +
+      ' — the specific first move from your current position toward calling work,' +
+      ' the timing window that supports it based on fate line and Personal Year, and' +
+      ' the one condition all four systems say must be in place before the move is' +
+      ' made.',
     upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
   },
   {
-    id:'annual-destiny-forecast',name:'The Annual Destiny Forecast',tagline:'The year ahead mapped from five timing systems — so you stop working against your own current',emoji:'📅',price:77,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:2341,deliveryMinutes:20,
-    hook:'There is a specific kind of exhaustion that comes from pushing in the wrong direction — from initiating when the year calls for consolidation, from waiting when the year demands movement, from making major decisions in the month the chart flags as the most unstable window of the year. Five independent timing systems, each tracking the same twelve months from a different angle, map the energetic weather with a completeness no single system achieves. The peaks are identified. The caution windows are named. The critical decision point — the one month where a choice has disproportionate impact on the rest of the year — becomes visible. What you do with that map is the difference between a year of effort and a year of traction.',
-    whatYouGet:['A month-by-month energy map with all five timing systems synthesised — the clearest picture of what each month is structurally built for','Three peak opportunity windows — the specific months where multiple systems simultaneously confirm elevated potential, and what type of action each peak supports','Two caution periods named in advance with specific navigation guidance — not vague warnings but the exact domain each period challenges and what to do differently','Domain emphasis by quarter — which life area each three-month block is most energetically weighted toward','The year\'s critical decision point — the single month where the choice you make will have the most disproportionate impact on the year\'s trajectory','Your year-end position based on current trajectory — what the cumulative timing picture says you will have built if you move with the current rather than against it'],
-    guidanceType:'practical-solution',guidanceText:'A 12-month navigation guide — for each of your three peak windows, the specific type of move most supported and the single action to take; for each caution period, the precise domain to protect and the one decision to defer until the window passes.',
+    id:'annual-destiny-forecast',
+    name:'The Annual Destiny Forecast',
+    tagline:'The year ahead mapped from five timing systems — so you stop working' +
+      ' against your own current',
+    emoji:'📅',
+    price:77,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:2341,
+    deliveryMinutes:20,
+    hook:'There is a specific kind of exhaustion that comes from pushing in the' +
+      ' wrong direction — from initiating when the year calls for consolidation,' +
+      ' from waiting when the year demands movement, from making major decisions in' +
+      ' the month the chart flags as the most unstable window of the year. Five' +
+      ' independent timing systems, each tracking the same twelve months from a' +
+      ' different angle, map the energetic weather with a completeness no single' +
+      ' system achieves. The peaks are identified. The caution windows are named.' +
+      ' The critical decision point — the one month where a choice has' +
+      ' disproportionate impact on the rest of the year — becomes visible. What you' +
+      ' do with that map is the difference between a year of effort and a year of' +
+      ' traction.',
+    whatYouGet:[
+      'A month-by-month energy map with all five timing systems synthesised — the' +
+        ' clearest picture of what each month is structurally built for',
+      'Three peak opportunity windows — the specific months where multiple systems' +
+        ' simultaneously confirm elevated potential, and what type of action each' +
+        ' peak supports',
+      'Two caution periods named in advance with specific navigation guidance — not' +
+        ' vague warnings but the exact domain each period challenges and what to do' +
+        ' differently',
+      'Domain emphasis by quarter — which life area each three-month block is most' +
+        ' energetically weighted toward',
+      'The year\'s critical decision point — the single month where the choice you' +
+        ' make will have the most disproportionate impact on the year\'s trajectory',
+      'Your year-end position based on current trajectory — what the cumulative' +
+        ' timing picture says you will have built if you move with the current' +
+        ' rather than against it',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A 12-month navigation guide — for each of your three peak windows,' +
+      ' the specific type of move most supported and the single action to take; for' +
+      ' each caution period, the precise domain to protect and the one decision to' +
+      ' defer until the window passes.',
     upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
   },
   {
-    id:'shadow-and-light-synthesis',name:'The Shadow and Light Synthesis',tagline:'The quality you suppress and the gift you want to express are the same thing — this shows you why',emoji:'☯️',price:87,domain:'oracle-temple',isFlagship:true,rating:4.9,reviewCount:654,deliveryMinutes:20,
-    hook:'The quality you most suppress and the quality you most want to express are not opposites. They are the same quality operating from different sides of the same door. This is why managing the shadow never works long-term — it costs as much energy as the gift would generate if it were integrated. Six independent indicators from four systems read both simultaneously: the disowned darkness and the unacknowledged power. The integration path is always through the shadow, not around it. Once the pattern is named, the energy spent managing it becomes available as the strength you have been trying to build from the outside.',
-    whatYouGet:['Your primary shadow complex — the specific quality being suppressed, named from 12th house, Pluto aspects, south node, and karmic debt signature in cross-system confirmation','Your primary unacknowledged gift — the strength not yet claimed that lives on the other side of the shadow, confirmed across the same systems','The precise relationship between shadow and gift — always aspects of the same quality, shown as a unified pattern rather than two separate things','How the shadow currently shows up in each major life domain — love, career, wealth, health — and the specific cost in each','The integration path from shadow management to gift activation — the sequence, not just the concept','Your current activation window — whether the chart is in a shadow-surfacing phase or an integration phase, and what that means practically for the work ahead'],
-    guidanceType:'spiritual-remedy',guidanceText:'A 60-day shadow integration practice from your heritage tradition, structured in three phases — recognition (days 1–20), encounter (days 21–40), and integration (days 41–60) — with each phase calibrated to the specific shadow complex identified in your reading, not a generic practice applied to a named category.',
+    id:'shadow-and-light-synthesis',
+    name:'The Shadow and Light Synthesis',
+    tagline:'The quality you suppress and the gift you want to express are the same' +
+      ' thing — this shows you why',
+    emoji:'☯️',
+    price:87,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'The quality you most suppress and the quality you most want to express are' +
+      ' not opposites. They are the same quality operating from different sides of' +
+      ' the same door. This is why managing the shadow never works long-term — it' +
+      ' costs as much energy as the gift would generate if it were integrated. Six' +
+      ' independent indicators from four systems read both simultaneously: the' +
+      ' disowned darkness and the unacknowledged power. The integration path is' +
+      ' always through the shadow, not around it. Once the pattern is named, the' +
+      ' energy spent managing it becomes available as the strength you have been' +
+      ' trying to build from the outside.',
+    whatYouGet:[
+      'Your primary shadow complex — the specific quality being suppressed, named' +
+        ' from 12th house, Pluto aspects, south node, and karmic debt signature in' +
+        ' cross-system confirmation',
+      'Your primary unacknowledged gift — the strength not yet claimed that lives on' +
+        ' the other side of the shadow, confirmed across the same systems',
+      'The precise relationship between shadow and gift — always aspects of the same' +
+        ' quality, shown as a unified pattern rather than two separate things',
+      'How the shadow currently shows up in each major life domain — love, career,' +
+        ' wealth, health — and the specific cost in each',
+      'The integration path from shadow management to gift activation — the' +
+        ' sequence, not just the concept',
+      'Your current activation window — whether the chart is in a shadow-surfacing' +
+        ' phase or an integration phase, and what that means practically for the' +
+        ' work ahead',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A 60-day shadow integration practice from your heritage tradition,' +
+      ' structured in three phases — recognition (days 1–20), encounter (days' +
+      ' 21–40), and integration (days 41–60) — with each phase calibrated to the' +
+      ' specific shadow complex identified in your reading, not a generic practice' +
+      ' applied to a named category.',
     upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
   },
   {
-    id:'relationship-karma-synthesis',name:'The Relationship Karma Synthesis',tagline:'The pattern that follows you across every relationship — named completely for the first time',emoji:'🔄',price:87,domain:'oracle-temple',isFlagship:true,rating:4.8,reviewCount:765,deliveryMinutes:20,
-    hook:'Relationship karma does not announce itself. It operates as a pattern so consistent across different people, different circumstances, and different decades that at a certain point it becomes impossible to attribute it to the other person. Four independent karmic indicators read simultaneously — the debt numbers, the south node and Ketu, the 7th house signatures, and the non-dominant palm relationship lines — surface the full picture: what the pattern is, where it originated across lifetimes, who it currently contracts you to, and what completing it actually looks like in practical rather than theoretical terms.',
+    id:'relationship-karma-synthesis',
+    name:'The Relationship Karma Synthesis',
+    tagline:'The pattern that follows you across every relationship — named' +
+      ' completely for the first time',
+    emoji:'🔄',
+    price:87,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:765,
+    deliveryMinutes:20,
+    hook:'Relationship karma does not announce itself. It operates as a pattern so' +
+      ' consistent across different people, different circumstances, and different' +
+      ' decades that at a certain point it becomes impossible to attribute it to the' +
+      ' other person. Four independent karmic indicators read simultaneously — the' +
+      ' debt numbers, the south node and Ketu, the 7th house signatures, and the' +
+      ' non-dominant palm relationship lines — surface the full picture: what the' +
+      ' pattern is, where it originated across lifetimes, who it currently contracts' +
+      ' you to, and what completing it actually looks like in practical rather than' +
+      ' theoretical terms.',
     requiresImage:{type:'palm'},
-    whatYouGet:['All karmic relationship debts confirmed across four systems — not as abstract categories but as specific patterns with named origins and named completion conditions','Your soul relationship history — the cross-lifetime arc that explains why certain types of people keep appearing and what the soul agreed to work through with them','Who in your current life is karmically contracted with you and what role they are playing — whether completing, activating, or reflecting the primary pattern','What completing this relationship karma looks like practically — the specific shift in behaviour, understanding, or choice that constitutes completion','The next relationship cycle — what becomes structurally available in love and connection once the active karma completes','The primary relationship pattern from which all the secondary patterns branch — the root signature that, when addressed, resolves multiple surface-level issues simultaneously'],
-    guidanceType:'spiritual-remedy',guidanceText:'A 40-day karmic relationship completion practice from your heritage tradition — calibrated specifically to the karma type identified as most active in the reading, not a generic forgiveness or cord-cutting practice, but the specific ritual sequence your tradition prescribes for the exact debt type named.',
+    whatYouGet:[
+      'All karmic relationship debts confirmed across four systems — not as abstract' +
+        ' categories but as specific patterns with named origins and named' +
+        ' completion conditions',
+      'Your soul relationship history — the cross-lifetime arc that explains why' +
+        ' certain types of people keep appearing and what the soul agreed to work' +
+        ' through with them',
+      'Who in your current life is karmically contracted with you and what role they' +
+        ' are playing — whether completing, activating, or reflecting the primary' +
+        ' pattern',
+      'What completing this relationship karma looks like practically — the specific' +
+        ' shift in behaviour, understanding, or choice that constitutes completion',
+      'The next relationship cycle — what becomes structurally available in love and' +
+        ' connection once the active karma completes',
+      'The primary relationship pattern from which all the secondary patterns branch' +
+        ' — the root signature that, when addressed, resolves multiple surface-level' +
+        ' issues simultaneously',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A 40-day karmic relationship completion practice from your' +
+      ' heritage tradition — calibrated specifically to the karma type identified as' +
+      ' most active in the reading, not a generic forgiveness or cord-cutting' +
+      ' practice, but the specific ritual sequence your tradition prescribes for the' +
+      ' exact debt type named.',
     upsell:{id:'complete-love-synthesis',name:'Complete Love Synthesis',price:97},
   },
   {
-    id:'complete-spiritual-synthesis',name:'The Complete Spiritual Synthesis',tagline:'The path, the gifts, and the stage you are actually in — not the one you wish you were in',emoji:'🌌',price:97,domain:'oracle-temple',isFlagship:true,rating:4.9,reviewCount:543,deliveryMinutes:20,
-    hook:'Most spiritual seekers are following a path designed for someone else — a tradition adopted through proximity rather than alignment, a practice inherited rather than chosen, a stage performed rather than actually inhabited. Six independent spiritual indicators from four systems surface three things no single system can confirm alone: the specific tradition most aligned with this blueprint, the specific gifts already active in it, and the specific stage of development actually underway. Where all six agree, the portrait reaches a confidence that makes the ambiguity of the seeking finally unnecessary.',
+    id:'complete-spiritual-synthesis',
+    name:'The Complete Spiritual Synthesis',
+    tagline:'The path, the gifts, and the stage you are actually in — not the one' +
+      ' you wish you were in',
+    emoji:'🌌',
+    price:97,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Most spiritual seekers are following a path designed for someone else — a' +
+      ' tradition adopted through proximity rather than alignment, a practice' +
+      ' inherited rather than chosen, a stage performed rather than actually' +
+      ' inhabited. Six independent spiritual indicators from four systems surface' +
+      ' three things no single system can confirm alone: the specific tradition most' +
+      ' aligned with this blueprint, the specific gifts already active in it, and' +
+      ' the specific stage of development actually underway. Where all six agree,' +
+      ' the portrait reaches a confidence that makes the ambiguity of the seeking' +
+      ' finally unnecessary.',
     requiresImage:{type:'palm'},
-    whatYouGet:['Your spiritual path type confirmed across four systems — the specific approach to practice and devotion that is structurally aligned with your blueprint rather than inherited by circumstance','Your spiritual gifts inventory — the specific capacities confirmed by multiple systems as active, dormant, or developing, described in plain language rather than tradition-specific terminology','Your current awakening stage located within the complete development map — where you actually are, not where you hope you are, and what that stage specifically requires','The tradition or lineage whose practices are most aligned with your chart — the specific lineage whose tools fit the blueprint, with reasoning from the indicators that confirm it','The specific practice calibrated for your chart and your current stage — not a category of practice but a named discipline matched to what the reading identifies as most active right now','Your spiritual legacy — what the soul is building across the long arc of this lifetime, and the contribution the blueprint is designed to make through the spiritual dimension specifically'],
-    guidanceType:'spiritual-remedy',guidanceText:'A complete spiritual practice prescription — the tradition, the specific practice within that tradition, the frequency and timing aligned to your current awakening stage, and the one protection or grounding practice your chart indicates is most necessary given the gifts identified as active.',
+    whatYouGet:[
+      'Your spiritual path type confirmed across four systems — the specific' +
+        ' approach to practice and devotion that is structurally aligned with your' +
+        ' blueprint rather than inherited by circumstance',
+      'Your spiritual gifts inventory — the specific capacities confirmed by' +
+        ' multiple systems as active, dormant, or developing, described in plain' +
+        ' language rather than tradition-specific terminology',
+      'Your current awakening stage located within the complete development map —' +
+        ' where you actually are, not where you hope you are, and what that stage' +
+        ' specifically requires',
+      'The tradition or lineage whose practices are most aligned with your chart —' +
+        ' the specific lineage whose tools fit the blueprint, with reasoning from' +
+        ' the indicators that confirm it',
+      'The specific practice calibrated for your chart and your current stage — not' +
+        ' a category of practice but a named discipline matched to what the reading' +
+        ' identifies as most active right now',
+      'Your spiritual legacy — what the soul is building across the long arc of this' +
+        ' lifetime, and the contribution the blueprint is designed to make through' +
+        ' the spiritual dimension specifically',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A complete spiritual practice prescription — the tradition, the' +
+      ' specific practice within that tradition, the frequency and timing aligned to' +
+      ' your current awakening stage, and the one protection or grounding practice' +
+      ' your chart indicates is most necessary given the gifts identified as active.',
     upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
   },
   {
-    id:'business-destiny-synthesis',name:'The Business Destiny Synthesis',tagline:'The business you were built to run is not the one you have been trying to build — this names what it is',emoji:'🚀',price:87,domain:'oracle-temple',isFlagship:true,rating:4.8,reviewCount:654,deliveryMinutes:20,
-    hook:'Most business struggles are not strategic failures. They are constitutional mismatches — a founder trying to build a model that works for a completely different operator type. The Expert trying to scale like a Builder. The Connector trying to execute like a Visionary. The Healer trying to compete like a Pioneer. Four independent systems read the same business question from different angles: the Founder Archetype from your numbers, the dharmic model from your sky map, the fate line trajectory from your hand, and the Midheaven authority from your chart. Where they agree on the model, the sector, and the timing, the reading produces something a business consultant cannot — the specific structure you were built for and when your window to build it actually opens.',
+    id:'business-destiny-synthesis',
+    name:'The Business Destiny Synthesis',
+    tagline:'The business you were built to run is not the one you have been trying' +
+      ' to build — this names what it is',
+    emoji:'🚀',
+    price:87,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'Most business struggles are not strategic failures. They are' +
+      ' constitutional mismatches — a founder trying to build a model that works for' +
+      ' a completely different operator type. The Expert trying to scale like a' +
+      ' Builder. The Connector trying to execute like a Visionary. The Healer trying' +
+      ' to compete like a Pioneer. Four independent systems read the same business' +
+      ' question from different angles: the Founder Archetype from your numbers, the' +
+      ' dharmic model from your sky map, the fate line trajectory from your hand,' +
+      ' and the Midheaven authority from your chart. Where they agree on the model,' +
+      ' the sector, and the timing, the reading produces something a business' +
+      ' consultant cannot — the specific structure you were built for and when your' +
+      ' window to build it actually opens.',
     requiresImage:{type:'palm'},
-    whatYouGet:['Your Founder Archetype confirmed across systems — the specific operator type your blueprint is built for, with the business model structure that fits it precisely','The business model most aligned with your constitutional design — not the one that sounds impressive but the one all four systems confirm as most naturally sustainable for how you are built','Your dharmic business sector — the specific industry domain where your work carries the most natural authority and the least resistance','Your business timing map — whether the chart currently supports launch, scale, consolidation, or strategic pivot, and the specific window for each across the next three years','The natural team structure your design requires — the specific roles that complement rather than duplicate what you carry, confirmed from multiple chart indicators','The business failure pattern of your Founder Archetype — the specific entrepreneurial blind spot that derails this type, named across systems so it can be seen before it costs something significant'],
-    guidanceType:'practical-solution',guidanceText:'A business readiness assessment specific to your Founder Archetype — the conditions the fate line and Personal Year both indicate must be in place before launch or the next major expansion, presented as a clear go/wait framework with the specific go-signal to watch for.',
+    whatYouGet:[
+      'Your Founder Archetype confirmed across systems — the specific operator type' +
+        ' your blueprint is built for, with the business model structure that fits' +
+        ' it precisely',
+      'The business model most aligned with your constitutional design — not the one' +
+        ' that sounds impressive but the one all four systems confirm as most' +
+        ' naturally sustainable for how you are built',
+      'Your dharmic business sector — the specific industry domain where your work' +
+        ' carries the most natural authority and the least resistance',
+      'Your business timing map — whether the chart currently supports launch,' +
+        ' scale, consolidation, or strategic pivot, and the specific window for each' +
+        ' across the next three years',
+      'The natural team structure your design requires — the specific roles that' +
+        ' complement rather than duplicate what you carry, confirmed from multiple' +
+        ' chart indicators',
+      'The business failure pattern of your Founder Archetype — the specific' +
+        ' entrepreneurial blind spot that derails this type, named across systems so' +
+        ' it can be seen before it costs something significant',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A business readiness assessment specific to your Founder Archetype' +
+      ' — the conditions the fate line and Personal Year both indicate must be in' +
+      ' place before launch or the next major expansion, presented as a clear' +
+      ' go/wait framework with the specific go-signal to watch for.',
     upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97},
   },
   {
-    id:'children-family-synthesis',name:'The Family Destiny Synthesis',tagline:'The ancestral pattern your family has been carrying — and why it stops with the generation that names it',emoji:'👨‍👩‍👧',price:77,domain:'oracle-temple',isFlagship:true,rating:4.8,reviewCount:543,deliveryMinutes:20,
-    hook:'Every family system carries a pattern that predates everyone currently living in it. It arrived before you did and it will continue after you unless someone in the lineage sees it clearly enough to complete it. This synthesis reads the ancestral current from the 4th and 5th house, your parenting archetype from your numbers, and the soul contracts most active in your family — and names what your lineage is working to heal in this generation, the specific role you carry in that healing, and what becomes available for every person in your family when the pattern is addressed rather than repeated.',
-    whatYouGet:['Your parenting archetype — the specific style the chart is designed to express, and why the gap between this archetype and inherited parenting patterns creates the most common family tension','The ancestral pattern most active in your family system right now — what it is, how far back it runs in the lineage, and what completing it in this generation requires','The soul contracts between you and each child provided — what the chart says each child came to learn from you, and what you are being asked to learn from them','The family karma completing in this generation — the specific wound the lineage has been carrying and why it reaches its completion or transmission point with you','A child blueprint for each child whose birth data is provided — Life Path, Moon sign, natural learning style, and three specific parenting adjustments calibrated to their chart','The healing that becomes available for the whole family system when the primary ancestral pattern is addressed — what changes downstream for people you have never met'],
-    guidanceType:'spiritual-remedy',guidanceText:'A family healing practice from your heritage tradition — a specific ancestral offering for the primary pattern your lineage is working to complete, with the traditional protocol for your cultural background, the timing that your current Personal Year most supports, and the one conversation the reading identifies as the most important to have with a living family member.',
+    id:'children-family-synthesis',
+    name:'The Family Destiny Synthesis',
+    tagline:'The ancestral pattern your family has been carrying — and why it stops' +
+      ' with the generation that names it',
+    emoji:'👨‍👩‍👧',
+    price:77,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Every family system carries a pattern that predates everyone currently' +
+      ' living in it. It arrived before you did and it will continue after you' +
+      ' unless someone in the lineage sees it clearly enough to complete it. This' +
+      ' synthesis reads the ancestral current from the 4th and 5th house, your' +
+      ' parenting archetype from your numbers, and the soul contracts most active in' +
+      ' your family — and names what your lineage is working to heal in this' +
+      ' generation, the specific role you carry in that healing, and what becomes' +
+      ' available for every person in your family when the pattern is addressed' +
+      ' rather than repeated.',
+    whatYouGet:[
+      'Your parenting archetype — the specific style the chart is designed to' +
+        ' express, and why the gap between this archetype and inherited parenting' +
+        ' patterns creates the most common family tension',
+      'The ancestral pattern most active in your family system right now — what it' +
+        ' is, how far back it runs in the lineage, and what completing it in this' +
+        ' generation requires',
+      'The soul contracts between you and each child provided — what the chart says' +
+        ' each child came to learn from you, and what you are being asked to learn' +
+        ' from them',
+      'The family karma completing in this generation — the specific wound the' +
+        ' lineage has been carrying and why it reaches its completion or' +
+        ' transmission point with you',
+      'A child blueprint for each child whose birth data is provided — Life Path,' +
+        ' Moon sign, natural learning style, and three specific parenting' +
+        ' adjustments calibrated to their chart',
+      'The healing that becomes available for the whole family system when the' +
+        ' primary ancestral pattern is addressed — what changes downstream for' +
+        ' people you have never met',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A family healing practice from your heritage tradition — a' +
+      ' specific ancestral offering for the primary pattern your lineage is working' +
+      ' to complete, with the traditional protocol for your cultural background, the' +
+      ' timing that your current Personal Year most supports, and the one' +
+      ' conversation the reading identifies as the most important to have with a' +
+      ' living family member.',
     upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
   },
   {
-    id:'relocation-destiny-synthesis',name:'The Relocation Destiny Synthesis',tagline:'You are not the same person in every city — this shows you where you are most powerful right now',emoji:'🗺️',price:77,domain:'oracle-temple',isFlagship:true,rating:4.8,reviewCount:432,deliveryMinutes:20,
-    hook:'The same ambition, the same relationship patterns, the same creative energy all perform differently depending on where on earth you are standing. This is not superstition — it is positional astrology confirmed across four independent location systems. Astrocartography maps the planetary lines running across the globe. Numerical city vibration calculates the resonance between your Life Path and the number of each city. Classical directional analysis identifies the most auspicious compass direction in your current phase. And your Personal Year cycle determines whether now is structurally a time to move or to stay. Where all four point to the same location, the recommendation carries the kind of confidence that turns a relocation decision from a gamble into a strategy.',
-    whatYouGet:['Your three strongest locations globally confirmed by multiple systems — with a specific explanation of what each location activates in the chart and which life domain it most powerfully supports','Your two most draining locations — including an honest cross-system assessment of your current city, what it is costing you, and what it is amplifying that you may not want amplified','The classical directional reading — the most auspicious compass direction for your current dasha or life phase, and how to use directional information when specific city choices are limited','Numerical city vibration for five cities you name — what each city\'s number does to your Life Path energy specifically, and why some cities feel like running uphill','A timing verdict — whether your current Personal Year, Pinnacle, and fate line all support moving now, waiting for a specific future window, or making the most of where you currently are','The specific life domain each recommended location activates most strongly — love, career, health, or spiritual — so the relocation decision can be made based on current life priorities'],
-    guidanceType:'practical-solution',guidanceText:'A relocation decision framework — the single non-negotiable factor that must be satisfied by your next home based on your primary current life goal, the city number that best supports it, the directional constraint that narrows the geography, and the timing window your chart most supports for making the move.',
+    id:'relocation-destiny-synthesis',
+    name:'The Relocation Destiny Synthesis',
+    tagline:'You are not the same person in every city — this shows you where you' +
+      ' are most powerful right now',
+    emoji:'🗺️',
+    price:77,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:432,
+    deliveryMinutes:20,
+    hook:'The same ambition, the same relationship patterns, the same creative' +
+      ' energy all perform differently depending on where on earth you are standing.' +
+      ' This is not superstition — it is positional astrology confirmed across four' +
+      ' independent location systems. Astrocartography maps the planetary lines' +
+      ' running across the globe. Numerical city vibration calculates the resonance' +
+      ' between your Life Path and the number of each city. Classical directional' +
+      ' analysis identifies the most auspicious compass direction in your current' +
+      ' phase. And your Personal Year cycle determines whether now is structurally a' +
+      ' time to move or to stay. Where all four point to the same location, the' +
+      ' recommendation carries the kind of confidence that turns a relocation' +
+      ' decision from a gamble into a strategy.',
+    whatYouGet:[
+      'Your three strongest locations globally confirmed by multiple systems — with' +
+        ' a specific explanation of what each location activates in the chart and' +
+        ' which life domain it most powerfully supports',
+      'Your two most draining locations — including an honest cross-system' +
+        ' assessment of your current city, what it is costing you, and what it is' +
+        ' amplifying that you may not want amplified',
+      'The classical directional reading — the most auspicious compass direction for' +
+        ' your current dasha or life phase, and how to use directional information' +
+        ' when specific city choices are limited',
+      'Numerical city vibration for five cities you name — what each city\'s number' +
+        ' does to your Life Path energy specifically, and why some cities feel like' +
+        ' running uphill',
+      'A timing verdict — whether your current Personal Year, Pinnacle, and fate' +
+        ' line all support moving now, waiting for a specific future window, or' +
+        ' making the most of where you currently are',
+      'The specific life domain each recommended location activates most strongly —' +
+        ' love, career, health, or spiritual — so the relocation decision can be' +
+        ' made based on current life priorities',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A relocation decision framework — the single non-negotiable factor' +
+      ' that must be satisfied by your next home based on your primary current life' +
+      ' goal, the city number that best supports it, the directional constraint that' +
+      ' narrows the geography, and the timing window your chart most supports for' +
+      ' making the move.',
     upsell:{id:'annual-destiny-forecast',name:'Annual Destiny Forecast',price:77},
   },
   {
-    id:'creative-genius-synthesis',name:'The Creative Genius Synthesis',tagline:'Your creative cycle, the block most active right now, and the audience your work was built to reach',emoji:'🎨',price:77,domain:'oracle-temple',isFlagship:true,rating:4.8,reviewCount:543,deliveryMinutes:20,
-    hook:'Creative blocks are not personal failures. They are constitutional events — predictable, cyclical, and in most cases a signal that the medium, the phase, or the direction is misaligned rather than the person. Four independent creative indicators map not just the type of genius present in the chart but the natural rhythm it operates in. Neptune, the 5th house, the Life Path creative signature, and the Apollo line in the palm each read the creative dimension from a different angle. Where they agree on the archetype, the cycle, and the audience, the reading produces something an artistic mentor rarely can — the map of your creative nature precise enough to stop fighting it.',
+    id:'creative-genius-synthesis',
+    name:'The Creative Genius Synthesis',
+    tagline:'Your creative cycle, the block most active right now, and the audience' +
+      ' your work was built to reach',
+    emoji:'🎨',
+    price:77,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Creative blocks are not personal failures. They are constitutional events' +
+      ' — predictable, cyclical, and in most cases a signal that the medium, the' +
+      ' phase, or the direction is misaligned rather than the person. Four' +
+      ' independent creative indicators map not just the type of genius present in' +
+      ' the chart but the natural rhythm it operates in. Neptune, the 5th house, the' +
+      ' Life Path creative signature, and the Apollo line in the palm each read the' +
+      ' creative dimension from a different angle. Where they agree on the' +
+      ' archetype, the cycle, and the audience, the reading produces something an' +
+      ' artistic mentor rarely can — the map of your creative nature precise enough' +
+      ' to stop fighting it.',
     requiresImage:{type:'palm'},
-    whatYouGet:['Your creative archetype confirmed across four systems — poet, performer, builder, healer, storyteller, or visionary — with the specific expression style and medium most naturally aligned with your blueprint','The medium where your potential is highest — the specific art form or creative discipline where all four indicators point simultaneously, explained in enough detail to be actionable','Your creative cycle — the natural rhythm of productive periods and fallow periods encoded in the chart, including the current phase and what it specifically requires','The creative block most active right now — its specific source identified from the chart, whether it is a timing issue, a direction issue, a medium issue, or a permission issue, and the specific dissolution practice for that block type','The audience your work is cosmically aligned to serve — the specific type of person who needs what you carry, described concretely enough to inform every creative and business decision','Your Apollo line reading — what the palm says about creative recognition, the timing of when the work reaches the people it is meant for, and the legacy the creative output is building'],
-    guidanceType:'practical-solution',guidanceText:'A creative activation protocol calibrated to your current cycle phase — the specific daily practice most aligned with moving from your present creative state toward flow, whether that state is blocked, fallow, building, or ready for output, with timing drawn from the Personal Year and Apollo line together.',
+    whatYouGet:[
+      'Your creative archetype confirmed across four systems — poet, performer,' +
+        ' builder, healer, storyteller, or visionary — with the specific expression' +
+        ' style and medium most naturally aligned with your blueprint',
+      'The medium where your potential is highest — the specific art form or' +
+        ' creative discipline where all four indicators point simultaneously,' +
+        ' explained in enough detail to be actionable',
+      'Your creative cycle — the natural rhythm of productive periods and fallow' +
+        ' periods encoded in the chart, including the current phase and what it' +
+        ' specifically requires',
+      'The creative block most active right now — its specific source identified' +
+        ' from the chart, whether it is a timing issue, a direction issue, a medium' +
+        ' issue, or a permission issue, and the specific dissolution practice for' +
+        ' that block type',
+      'The audience your work is cosmically aligned to serve — the specific type of' +
+        ' person who needs what you carry, described concretely enough to inform' +
+        ' every creative and business decision',
+      'Your Apollo line reading — what the palm says about creative recognition, the' +
+        ' timing of when the work reaches the people it is meant for, and the legacy' +
+        ' the creative output is building',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A creative activation protocol calibrated to your current cycle' +
+      ' phase — the specific daily practice most aligned with moving from your' +
+      ' present creative state toward flow, whether that state is blocked, fallow,' +
+      ' building, or ready for output, with timing drawn from the Personal Year and' +
+      ' Apollo line together.',
     upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
   },
   {
-    id:'fertility-soul-synthesis',name:'The Fertility and Soul Arrival Synthesis',tagline:'When biological readiness and soul readiness are in the same window — and when they are not',emoji:'🌱',price:87,domain:'oracle-temple',isFlagship:true,isNew:true,rating:4.9,reviewCount:432,deliveryMinutes:20,
-    hook:'Biological readiness and soul readiness are not always the same window. The most complete fertility and family timing picture available combines five independent timing systems — the Venus cycle, Jupiter\'s 5th house transit windows, Personal Year family openings, classical fertility timing, and numerical soul arrival indicators — into a single map of when all five conditions are most aligned simultaneously. This reading does not replace medical guidance. It adds the layer medicine cannot provide: the specific windows when the blueprint opens most fully for family, and the soul archetype most likely to arrive in each one.',
-    whatYouGet:['Your top three fertility windows in the next 24 months with month-specific timing — confirmed by multiple systems, not extrapolated from one','The soul archetype most likely to arrive in each window — the Life Path, emotional signature, and karmic contract the incoming soul is most likely to carry','Whether the chart carries strong parental karma and which specific period activates it — including the distinction between karma that wants to birth a child and karma that wants to heal the parent','A family timing verdict — whether the chart supports moving toward family now or whether a specific future window carries significantly higher alignment','A 24-month family map with all five systems synthesised month by month — the complete picture of when conditions are rising, peaking, and releasing across the full forecast period','One preparation practice confirmed across all systems as most important for the highest-indicated window — spiritual, physical, and relational preparation unified into a single recommendation'],
-    guidanceType:'spiritual-remedy',guidanceText:'A heritage-calibrated fertility and family preparation practice for your highest-indicated window — the specific spiritual condition each of the five systems identifies as most important to meet before the window opens, combined into a single preparation sequence aligned to your tradition.',
+    id:'fertility-soul-synthesis',
+    name:'The Fertility and Soul Arrival Synthesis',
+    tagline:'When biological readiness and soul readiness are in the same window —' +
+      ' and when they are not',
+    emoji:'🌱',
+    price:87,
+    domain:'oracle-temple',
+    isFlagship:true,
+    isNew:true,
+    rating:4.9,
+    reviewCount:432,
+    deliveryMinutes:20,
+    hook:'Biological readiness and soul readiness are not always the same window.' +
+      ' The most complete fertility and family timing picture available combines' +
+      ' five independent timing systems — the Venus cycle, Jupiter\'s 5th house' +
+      ' transit windows, Personal Year family openings, classical fertility timing,' +
+      ' and numerical soul arrival indicators — into a single map of when all five' +
+      ' conditions are most aligned simultaneously. This reading does not replace' +
+      ' medical guidance. It adds the layer medicine cannot provide: the specific' +
+      ' windows when the blueprint opens most fully for family, and the soul' +
+      ' archetype most likely to arrive in each one.',
+    whatYouGet:[
+      'Your top three fertility windows in the next 24 months with month-specific' +
+        ' timing — confirmed by multiple systems, not extrapolated from one',
+      'The soul archetype most likely to arrive in each window — the Life Path,' +
+        ' emotional signature, and karmic contract the incoming soul is most likely' +
+        ' to carry',
+      'Whether the chart carries strong parental karma and which specific period' +
+        ' activates it — including the distinction between karma that wants to birth' +
+        ' a child and karma that wants to heal the parent',
+      'A family timing verdict — whether the chart supports moving toward family now' +
+        ' or whether a specific future window carries significantly higher alignment',
+      'A 24-month family map with all five systems synthesised month by month — the' +
+        ' complete picture of when conditions are rising, peaking, and releasing' +
+        ' across the full forecast period',
+      'One preparation practice confirmed across all systems as most important for' +
+        ' the highest-indicated window — spiritual, physical, and relational' +
+        ' preparation unified into a single recommendation',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A heritage-calibrated fertility and family preparation practice' +
+      ' for your highest-indicated window — the specific spiritual condition each of' +
+      ' the five systems identifies as most important to meet before the window' +
+      ' opens, combined into a single preparation sequence aligned to your tradition.',
     upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
   },
   {
-    id:'digital-identity-synthesis',name:'The Digital Identity Synthesis',tagline:'The niche four systems all point to simultaneously — and why it is the only one that feels effortless to hold',emoji:'📱',price:77,domain:'oracle-temple',isFlagship:true,rating:4.8,reviewCount:543,deliveryMinutes:20,
-    hook:'Most personal brands fail not from lack of effort but from frequency mismatch — the person is broadcasting on a channel that does not match what they actually carry. Audiences can feel the gap between performed authority and natural authority, even when they cannot name it. Four independent systems define public frequency from completely different angles: Midheaven sign governs what the world is designed to receive from you, Destiny number encodes the specific contribution your name is built to make, Life Path authority describes the domain where you are naturally believed, and Soul Urge transmission reveals what you cannot help but communicate even when you are not trying. This synthesis finds the specific position where all four agree — and that convergence is the only brand position that feels effortless to maintain because it is not a position. It is the natural frequency.',
-    whatYouGet:['Your Personal Brand Archetype confirmed across four systems — the specific public identity all four indicators agree on, described concretely enough to inform content, copy, and positioning decisions immediately','The specific niche you are cosmically aligned to own — not a broad category but a precise enough domain that you could explain it in one sentence and it would not describe anyone else in the same way','The content style most natural and highest-performing for your frequency — the format, tone, and approach that feels effortless because it matches how information moves through you naturally','The platform most aligned with your expression style — where your specific combination of authority type and content style produces the most traction with the least friction','The audience archetype that is already looking for exactly what you carry — described specifically enough to inform every piece of content, offer, and message you put into the world','The optimal timing for brand launch or significant expansion based on your current Personal Year and Midheaven cycle'],
-    guidanceType:'practical-solution',guidanceText:'A brand activation guide — the specific first public action that makes your natural authority most visible to your identified audience, confirmed across all four systems, with the optimal Personal Year timing for making it and the one message your chart says is the most underserved and most naturally yours to carry.',
+    id:'digital-identity-synthesis',
+    name:'The Digital Identity Synthesis',
+    tagline:'The niche four systems all point to simultaneously — and why it is the' +
+      ' only one that feels effortless to hold',
+    emoji:'📱',
+    price:77,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Most personal brands fail not from lack of effort but from frequency' +
+      ' mismatch — the person is broadcasting on a channel that does not match what' +
+      ' they actually carry. Audiences can feel the gap between performed authority' +
+      ' and natural authority, even when they cannot name it. Four independent' +
+      ' systems define public frequency from completely different angles: Midheaven' +
+      ' sign governs what the world is designed to receive from you, Destiny number' +
+      ' encodes the specific contribution your name is built to make, Life Path' +
+      ' authority describes the domain where you are naturally believed, and Soul' +
+      ' Urge transmission reveals what you cannot help but communicate even when you' +
+      ' are not trying. This synthesis finds the specific position where all four' +
+      ' agree — and that convergence is the only brand position that feels' +
+      ' effortless to maintain because it is not a position. It is the natural' +
+      ' frequency.',
+    whatYouGet:[
+      'Your Personal Brand Archetype confirmed across four systems — the specific' +
+        ' public identity all four indicators agree on, described concretely enough' +
+        ' to inform content, copy, and positioning decisions immediately',
+      'The specific niche you are cosmically aligned to own — not a broad category' +
+        ' but a precise enough domain that you could explain it in one sentence and' +
+        ' it would not describe anyone else in the same way',
+      'The content style most natural and highest-performing for your frequency —' +
+        ' the format, tone, and approach that feels effortless because it matches' +
+        ' how information moves through you naturally',
+      'The platform most aligned with your expression style — where your specific' +
+        ' combination of authority type and content style produces the most traction' +
+        ' with the least friction',
+      'The audience archetype that is already looking for exactly what you carry —' +
+        ' described specifically enough to inform every piece of content, offer, and' +
+        ' message you put into the world',
+      'The optimal timing for brand launch or significant expansion based on your' +
+        ' current Personal Year and Midheaven cycle',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A brand activation guide — the specific first public action that' +
+      ' makes your natural authority most visible to your identified audience,' +
+      ' confirmed across all four systems, with the optimal Personal Year timing for' +
+      ' making it and the one message your chart says is the most underserved and' +
+      ' most naturally yours to carry.',
     upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
   },
   {
-    id:'elder-years-synthesis',name:'The Elder Years Synthesis',tagline:'The second half of your life has its own peak — and the map for reaching it before it arrives',emoji:'🌅',price:77,domain:'oracle-temple',isFlagship:true,rating:4.9,reviewCount:432,deliveryMinutes:20,
-    hook:'The second half of life is not the first half slowing down. It is a completely different chapter — with different gifts, different authority, and in many charts a higher ceiling than anything that came before. Four independent timing systems, including one that maps specific decades directly to facial structure, identify not only when the second half reaches its peak but what that peak is specifically built for and what the first half was actually preparing. This reading is most useful before the peak arrives — because knowing what is coming changes how you build toward it.',
+    id:'elder-years-synthesis',
+    name:'The Elder Years Synthesis',
+    tagline:'The second half of your life has its own peak — and the map for' +
+      ' reaching it before it arrives',
+    emoji:'🌅',
+    price:77,
+    domain:'oracle-temple',
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:432,
+    deliveryMinutes:20,
+    hook:'The second half of life is not the first half slowing down. It is a' +
+      ' completely different chapter — with different gifts, different authority,' +
+      ' and in many charts a higher ceiling than anything that came before. Four' +
+      ' independent timing systems, including one that maps specific decades' +
+      ' directly to facial structure, identify not only when the second half reaches' +
+      ' its peak but what that peak is specifically built for and what the first' +
+      ' half was actually preparing. This reading is most useful before the peak' +
+      ' arrives — because knowing what is coming changes how you build toward it.',
     requiresImage:{type:'face'},
-    whatYouGet:['Your second-half purpose from four independent systems — what the chart, the palm, the face, and your numbers all say this chapter of life is designed to build or express','The facial structure period map — the specific decade-by-decade reading that identifies which features govern each life phase and what the features governing your current age actually indicate','Your Saturn maturity indicators — when the planet of mastery completes its foundational work and what that completion unlocks specifically for your chart','Your 4th Pinnacle theme — the final life chapter, its exact duration, the gifts it carries, and the specific demands it makes on anyone moving through it','What to release from the first half — the identities, patterns, or commitments the chart identifies as belonging to the earlier chapter rather than the one now opening','Your legacy architecture — the specific things to build, protect, or commit to now that will still be standing and still be serving in twenty years'],
-    guidanceType:'practical-solution',guidanceText:'A second-half activation sequence — the two highest-leverage moves at the threshold between the first and second half of your life, confirmed across all four systems, with the specific timing your Pinnacle and Personal Year most support for making each one.',
+    whatYouGet:[
+      'Your second-half purpose from four independent systems — what the chart, the' +
+        ' palm, the face, and your numbers all say this chapter of life is designed' +
+        ' to build or express',
+      'The facial structure period map — the specific decade-by-decade reading that' +
+        ' identifies which features govern each life phase and what the features' +
+        ' governing your current age actually indicate',
+      'Your Saturn maturity indicators — when the planet of mastery completes its' +
+        ' foundational work and what that completion unlocks specifically for your' +
+        ' chart',
+      'Your 4th Pinnacle theme — the final life chapter, its exact duration, the' +
+        ' gifts it carries, and the specific demands it makes on anyone moving' +
+        ' through it',
+      'What to release from the first half — the identities, patterns, or' +
+        ' commitments the chart identifies as belonging to the earlier chapter' +
+        ' rather than the one now opening',
+      'Your legacy architecture — the specific things to build, protect, or commit' +
+        ' to now that will still be standing and still be serving in twenty years',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A second-half activation sequence — the two highest-leverage moves' +
+      ' at the threshold between the first and second half of your life, confirmed' +
+      ' across all four systems, with the specific timing your Pinnacle and Personal' +
+      ' Year most support for making each one.',
     upsell:{id:'annual-destiny-forecast',name:'Annual Destiny Forecast',price:77},
   },
   {
-    id:'full-soul-portrait',name:'The Full Soul Portrait',tagline:'When five independent systems all describe the same person — what they agree on is who you actually are',emoji:'🖼️',price:197,domain:'oracle-temple',isPopular:true,isBestSeller:true,isFlagship:true,rating:5.0,reviewCount:876,deliveryMinutes:20,
-    hook:'Most people have encountered pieces of themselves across different readings — a portrait that was accurate in one dimension, an insight that landed in another, a timing reading that explained a period in retrospect. But they have never had the complete picture assembled in one place. The Full Soul Portrait is that document. Five independent synthesis disciplines. Every domain of your life. And one strict rule applied throughout: only what all five systems confirm simultaneously is included in the final portrait. No statement stands on the authority of one system alone. The result is not a collection of readings placed side by side. It is a single coherent portrait of who you are, what you are here for, and what your life is building toward — with every insight carrying the confidence of five-system cross-confirmation. This is the reading you return to for the rest of your life.',
+    id:'full-soul-portrait',
+    name:'The Full Soul Portrait',
+    tagline:'When five independent systems all describe the same person — what they' +
+      ' agree on is who you actually are',
+    emoji:'🖼️',
+    price:197,
+    domain:'oracle-temple',
+    isPopular:true,
+    isBestSeller:true,
+    isFlagship:true,
+    rating:5.0,
+    reviewCount:876,
+    deliveryMinutes:20,
+    hook:'Most people have encountered pieces of themselves across different' +
+      ' readings — a portrait that was accurate in one dimension, an insight that' +
+      ' landed in another, a timing reading that explained a period in retrospect.' +
+      ' But they have never had the complete picture assembled in one place. The' +
+      ' Full Soul Portrait is that document. Five independent synthesis disciplines.' +
+      ' Every domain of your life. And one strict rule applied throughout: only what' +
+      ' all five systems confirm simultaneously is included in the final portrait.' +
+      ' No statement stands on the authority of one system alone. The result is not' +
+      ' a collection of readings placed side by side. It is a single coherent' +
+      ' portrait of who you are, what you are here for, and what your life is' +
+      ' building toward — with every insight carrying the confidence of five-system' +
+      ' cross-confirmation. This is the reading you return to for the rest of your' +
+      ' life.',
     requiresImage:{type:'both'},
-    whatYouGet:['A complete character portrait drawn from all five systems — where they agree, the traits are stated as fact; where they diverge, the divergence itself is named as a growth edge or active integration point','A complete love portrait — heart line, Venus placement, facial attachment markers, soul urge, and relationship karma all integrated into a single unified picture of how you love and what your love life is moving toward','A complete wealth portrait — fate line trajectory, Jupiter channel, facial wealth palace, Life Path authority, and Destiny number all unified into the most complete financial picture that exists for your specific blueprint','A complete health portrait — three independent medical traditions synthesised with hand analysis vitality indicators into a constitutional picture and a forward vitality assessment','A complete spiritual portrait — path type, active gifts, current awakening stage, most aligned tradition, and specific practice, confirmed across six independent spiritual indicators','A unified three-year timing analysis — every timing system synthesised into a single forward map with peak windows, caution periods, and critical decision points identified','A convergence map — every domain and insight where all five systems agree flagged as highest-confidence, the reading\'s most certain truths','A divergence map — every domain where systems disagree revealed as active growth edges, not contradictions but invitations','A personalised reading priority guide — based on all five systems and your current timing, the three insights most important to act on now and the sequence for working through the rest'],
-    guidanceType:'practical-solution',guidanceText:'A reading priority guide built from five-system cross-confirmation — the three specific insights from the full portrait that your current Pinnacle, Personal Year, and timing indicators identify as most important to act on now, presented in sequence with a specific first action for each, and the complete order for working through the rest of the portrait as each life chapter opens.',
+    whatYouGet:[
+      'A complete character portrait drawn from all five systems — where they agree,' +
+        ' the traits are stated as fact; where they diverge, the divergence itself' +
+        ' is named as a growth edge or active integration point',
+      'A complete love portrait — heart line, Venus placement, facial attachment' +
+        ' markers, soul urge, and relationship karma all integrated into a single' +
+        ' unified picture of how you love and what your love life is moving toward',
+      'A complete wealth portrait — fate line trajectory, Jupiter channel, facial' +
+        ' wealth palace, Life Path authority, and Destiny number all unified into' +
+        ' the most complete financial picture that exists for your specific blueprint',
+      'A complete health portrait — three independent medical traditions synthesised' +
+        ' with hand analysis vitality indicators into a constitutional picture and a' +
+        ' forward vitality assessment',
+      'A complete spiritual portrait — path type, active gifts, current awakening' +
+        ' stage, most aligned tradition, and specific practice, confirmed across six' +
+        ' independent spiritual indicators',
+      'A unified three-year timing analysis — every timing system synthesised into a' +
+        ' single forward map with peak windows, caution periods, and critical' +
+        ' decision points identified',
+      'A convergence map — every domain and insight where all five systems agree' +
+        ' flagged as highest-confidence, the reading\'s most certain truths',
+      'A divergence map — every domain where systems disagree revealed as active' +
+        ' growth edges, not contradictions but invitations',
+      'A personalised reading priority guide — based on all five systems and your' +
+        ' current timing, the three insights most important to act on now and the' +
+        ' sequence for working through the rest',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A reading priority guide built from five-system cross-confirmation' +
+      ' — the three specific insights from the full portrait that your current' +
+      ' Pinnacle, Personal Year, and timing indicators identify as most important to' +
+      ' act on now, presented in sequence with a specific first action for each, and' +
+      ' the complete order for working through the rest of the portrait as each life' +
+      ' chapter opens.',
     upsell:{id:'destiny-portal',name:'Destiny Portal',price:297},
   },
-  {id:'individual-life-blueprint',name:'The Individual Life Blueprint',tagline:'The complete picture of who you are, what you are here for, and what your life is building toward — twelve domains, one coherent narrative',emoji:'📖',price:297,domain:'oracle-temple',isFlagship:true,isBestSeller:true,rating:5.0,reviewCount:0,deliveryMinutes:40,
-    hook:'Most people have encountered accurate pieces of themselves across different readings over the years — a numerology session that named something real, an astrology reading that explained a recurring pattern, a palm reading that confirmed a feeling they could never articulate. But pieces are not the same as the complete picture. And the complete picture is the only one that is actually useful for making the kind of decisions that determine the shape of a life. The KAYAL Individual Life Blueprint synthesises twelve domains simultaneously — character, identity, spiritual path, timing, career, wealth, love, health, spirit world, legacy, and a complete remedies protocol — into a single coherent narrative that tells the complete story of who you are, what you are here for, and what your life is actively building toward. Every insight is cross-confirmed across systems. What all systems agree on is named as certainty. What they diverge on is named as growth edge. Nothing is invented and nothing is omitted.',
-    whatYouGet:['A complete character portrait confirmed across numerology, astrology, physiognomy, and palmistry — who you actually are at the level that determines every pattern, not who any single system describes in isolation','Your precise vocational calling named from four independent systems — specific enough to evaluate against current work and make a concrete decision about what to do next','The love and relationship portrait — your emotional design, attraction pattern, karmic relationship history, and the timing of the highest love window in the next 24 months','The complete wealth picture — your specific earning channel, the nature and location of the current ceiling, a three-year financial map, and the single highest-leverage move available right now','A health constitution reading from three independent medical traditions — your constitutional type, the primary vulnerabilities, and the specific diet and lifestyle most aligned with your design','Your spiritual path, gifts, and current awakening stage — confirmed across six independent indicators, named in plain language, with the specific practice most aligned with both your tradition and your current stage','The complete timing map — your current Personal Year energy, active Pinnacle chapter, and the specific windows in the next 12 months where different life domains are most structurally supported','A spirit world and ancestral reading — the patterns running from the lineage, the soul\'s karmic history, and the spiritual contracts currently most active in the life','A legacy and mission reading — what this specific life is building toward in the long arc, the contribution the blueprint is designed to make, and what to invest in now that will still be standing in twenty years','A complete remedies protocol — five specific practices confirmed across systems as the highest-leverage actions available right now, each concrete and sequenced rather than vaguely prescribed','The convergence map — every domain where all systems agree simultaneously, representing the portrait elements with the highest confidence and the insights most worth acting on first','A reading priority guide — the three most important insights to engage with now based on your current timing, with the specific first action for each and the sequence for the rest'],
-    guidanceType:'practical-solution',guidanceText:'A personalised activation protocol drawn from the complete synthesis — the three highest-leverage actions your full portrait and current timing both confirm as most important in the next 90 days, with a specific first step for each, the reasoning from the systems that confirm each action, and the sequencing that produces the most traction across the first cycle.',
-    upsell:{id:'complete-union-blueprint',name:'Complete Union Blueprint',price:397}},
-  {id:'complete-union-blueprint',name:'The Complete Union Blueprint',tagline:'What two charts reveal together that neither person can see from their own chart alone — sixteen domains, all compatibility verdicts as percentages',emoji:'💑',price:397,domain:'oracle-temple',isFlagship:true,requiresPartner:true,rating:5.0,reviewCount:0,deliveryMinutes:60,requiresImage:null,
-    hook:'There are things about a relationship that are simply not visible from inside it. The recurring dynamic feels like personality, like chemistry, or like irreconcilable difference — but it is structural. Two charts read separately each produce a portrait of that person. Read together, cross-referenced across sixteen domains, they produce something neither portrait contains alone: the soul-level purpose of the connection, the structural source of the recurring friction, the compatibility percentages across every domain that matters, and the specific path that makes the union\'s highest potential available rather than permanently theoretical. The KAYAL Complete Union Blueprint is the most complete two-person synthesis available. Every compatibility verdict is expressed as a percentage — no vague assessments, no binary good/bad verdicts, no omissions for sensitivity. Love compatibility, marriage longevity, intimacy, career synergy, wealth alignment, children potential, spiritual compatibility, legacy alignment — all read, assessed, and delivered with the specificity that allows two people to actually do something with the information rather than simply feeling validated or unsettled by it.',
-    whatYouGet:['An overall compatibility score and individual percentages across every major domain — love, wealth, health, spiritual life, career synergy, children potential, and legacy alignment — each expressed as a percentage so the portrait is honest rather than averaged into a number that conceals more than it reveals','A complete character portrait for each person — who Person A is structurally, who Person B is structurally, and the specific quality each brings into the dynamic that neither sees clearly about themselves','The soul-level purpose of this union — what the charts say this connection is for, the karmic agreements operating between the two people, and whether this is a growth relationship building something new or a harvest relationship completing something from before','Marriage longevity score with the primary bonding aspects and tension aspects both named — the structural factors that sustain the union over decades and the specific dynamic that, if left unaddressed, erodes it','Intimacy compatibility percentage with the Venus-Mars cross-chart dynamic, physical chemistry indicators, and the specific way intimacy is designed to evolve in this particular union across time','Career synergy percentage — whether joint ventures are structurally supported, the professional dynamic between the two charts, and the domain of highest collaborative potential versus where professional independence most protects the relationship','Wealth compatibility percentage — financial value alignment, the specific financial structure most indicated for this union, and the Jupiter channel for shared abundance','Children potential percentage — the karmic agreements around parenthood in the combined chart, what kind of parents these two charts are structurally designed to be, and the timing windows most indicated for family','The fidelity structure reading — risk factors and stabilising indicators named together, with three specific agreements the reading identifies as most important to make explicit between these two people','The relational dynamics portrait — the power structure, how authority rotates across domains, and specific domain-level leadership assignments calibrated to the combined chart','The ancestral inheritance reading — which parental templates from each lineage are most active in the dynamic, the healing this union is designed to provide to both family lines, and the pattern that stops with this generation if the work is done','Union legacy alignment percentage — what this specific partnership is building together that outlasts both people, and what both charts say needs to be committed to now for that legacy to become real','The union remedies protocol — seven concrete practices across spiritual, relational, fidelity, power balance, career, health, and wealth dimensions, each specific to what the combined chart indicates','Longevity and transition reading — what both charts indicate about the relationship with impermanence and how to prepare for eventual separation with wisdom rather than avoidance','The convergence map — every domain where both charts agree simultaneously, representing the union\'s highest-confidence strengths and the foundation most worth investing in','A union activation guide — the three most important moves this specific couple can make in the next 90 days based on what the complete synthesis reveals, with the one explicit agreement the reading identifies as most structurally important to make first'],
-    guidanceType:'practical-solution',guidanceText:'A union activation protocol specific to this couple — the three moves the complete synthesis identifies as most important in the next 90 days, with the specific first action for each, the reasoning from the systems that confirm each move, and the one explicit agreement the reading identifies as the single highest-leverage commitment these two people can make to each other right now.',
-    upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197}},
+  {
+    id:'individual-life-blueprint',
+    name:'The Individual Life Blueprint',
+    tagline:'The complete picture of who you are, what you are here for, and what' +
+      ' your life is building toward — twelve domains, one coherent narrative',
+    emoji:'📖',
+    price:297,
+    domain:'oracle-temple',
+    isFlagship:true,
+    isBestSeller:true,
+    rating:5.0,
+    reviewCount:0,
+    deliveryMinutes:40,
+    hook:'Most people have encountered accurate pieces of themselves across' +
+      ' different readings over the years — a numerology session that named' +
+      ' something real, an astrology reading that explained a recurring pattern, a' +
+      ' palm reading that confirmed a feeling they could never articulate. But' +
+      ' pieces are not the same as the complete picture. And the complete picture is' +
+      ' the only one that is actually useful for making the kind of decisions that' +
+      ' determine the shape of a life. The KAYAL Individual Life Blueprint' +
+      ' synthesises twelve domains simultaneously — character, identity, spiritual' +
+      ' path, timing, career, wealth, love, health, spirit world, legacy, and a' +
+      ' complete remedies protocol — into a single coherent narrative that tells the' +
+      ' complete story of who you are, what you are here for, and what your life is' +
+      ' actively building toward. Every insight is cross-confirmed across systems.' +
+      ' What all systems agree on is named as certainty. What they diverge on is' +
+      ' named as growth edge. Nothing is invented and nothing is omitted.',
+    whatYouGet:[
+      'A complete character portrait confirmed across numerology, astrology,' +
+        ' physiognomy, and palmistry — who you actually are at the level that' +
+        ' determines every pattern, not who any single system describes in isolation',
+      'Your precise vocational calling named from four independent systems —' +
+        ' specific enough to evaluate against current work and make a concrete' +
+        ' decision about what to do next',
+      'The love and relationship portrait — your emotional design, attraction' +
+        ' pattern, karmic relationship history, and the timing of the highest love' +
+        ' window in the next 24 months',
+      'The complete wealth picture — your specific earning channel, the nature and' +
+        ' location of the current ceiling, a three-year financial map, and the' +
+        ' single highest-leverage move available right now',
+      'A health constitution reading from three independent medical traditions —' +
+        ' your constitutional type, the primary vulnerabilities, and the specific' +
+        ' diet and lifestyle most aligned with your design',
+      'Your spiritual path, gifts, and current awakening stage — confirmed across' +
+        ' six independent indicators, named in plain language, with the specific' +
+        ' practice most aligned with both your tradition and your current stage',
+      'The complete timing map — your current Personal Year energy, active Pinnacle' +
+        ' chapter, and the specific windows in the next 12 months where different' +
+        ' life domains are most structurally supported',
+      'A spirit world and ancestral reading — the patterns running from the lineage,' +
+        ' the soul\'s karmic history, and the spiritual contracts currently most' +
+        ' active in the life',
+      'A legacy and mission reading — what this specific life is building toward in' +
+        ' the long arc, the contribution the blueprint is designed to make, and what' +
+        ' to invest in now that will still be standing in twenty years',
+      'A complete remedies protocol — five specific practices confirmed across' +
+        ' systems as the highest-leverage actions available right now, each concrete' +
+        ' and sequenced rather than vaguely prescribed',
+      'The convergence map — every domain where all systems agree simultaneously,' +
+        ' representing the portrait elements with the highest confidence and the' +
+        ' insights most worth acting on first',
+      'A reading priority guide — the three most important insights to engage with' +
+        ' now based on your current timing, with the specific first action for each' +
+        ' and the sequence for the rest',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A personalised activation protocol drawn from the complete' +
+      ' synthesis — the three highest-leverage actions your full portrait and' +
+      ' current timing both confirm as most important in the next 90 days, with a' +
+      ' specific first step for each, the reasoning from the systems that confirm' +
+      ' each action, and the sequencing that produces the most traction across the' +
+      ' first cycle.',
+    upsell:{id:'complete-union-blueprint',name:'Complete Union Blueprint',price:397},
+  },
+  {
+    id:'complete-union-blueprint',
+    name:'The Complete Union Blueprint',
+    tagline:'What two charts reveal together that neither person can see from their' +
+      ' own chart alone — sixteen domains, all compatibility verdicts as percentages',
+    emoji:'💑',
+    price:397,
+    domain:'oracle-temple',
+    isFlagship:true,
+    requiresPartner:true,
+    rating:5.0,
+    reviewCount:0,
+    deliveryMinutes:60,
+    requiresImage:null,
+    hook:'There are things about a relationship that are simply not visible from' +
+      ' inside it. The recurring dynamic feels like personality, like chemistry, or' +
+      ' like irreconcilable difference — but it is structural. Two charts read' +
+      ' separately each produce a portrait of that person. Read together,' +
+      ' cross-referenced across sixteen domains, they produce something neither' +
+      ' portrait contains alone: the soul-level purpose of the connection, the' +
+      ' structural source of the recurring friction, the compatibility percentages' +
+      ' across every domain that matters, and the specific path that makes the' +
+      ' union\'s highest potential available rather than permanently theoretical.' +
+      ' The KAYAL Complete Union Blueprint is the most complete two-person synthesis' +
+      ' available. Every compatibility verdict is expressed as a percentage — no' +
+      ' vague assessments, no binary good/bad verdicts, no omissions for' +
+      ' sensitivity. Love compatibility, marriage longevity, intimacy, career' +
+      ' synergy, wealth alignment, children potential, spiritual compatibility,' +
+      ' legacy alignment — all read, assessed, and delivered with the specificity' +
+      ' that allows two people to actually do something with the information rather' +
+      ' than simply feeling validated or unsettled by it.',
+    whatYouGet:[
+      'An overall compatibility score and individual percentages across every major' +
+        ' domain — love, wealth, health, spiritual life, career synergy, children' +
+        ' potential, and legacy alignment — each expressed as a percentage so the' +
+        ' portrait is honest rather than averaged into a number that conceals more' +
+        ' than it reveals',
+      'A complete character portrait for each person — who Person A is structurally,' +
+        ' who Person B is structurally, and the specific quality each brings into' +
+        ' the dynamic that neither sees clearly about themselves',
+      'The soul-level purpose of this union — what the charts say this connection is' +
+        ' for, the karmic agreements operating between the two people, and whether' +
+        ' this is a growth relationship building something new or a harvest' +
+        ' relationship completing something from before',
+      'Marriage longevity score with the primary bonding aspects and tension aspects' +
+        ' both named — the structural factors that sustain the union over decades' +
+        ' and the specific dynamic that, if left unaddressed, erodes it',
+      'Intimacy compatibility percentage with the Venus-Mars cross-chart dynamic,' +
+        ' physical chemistry indicators, and the specific way intimacy is designed' +
+        ' to evolve in this particular union across time',
+      'Career synergy percentage — whether joint ventures are structurally' +
+        ' supported, the professional dynamic between the two charts, and the domain' +
+        ' of highest collaborative potential versus where professional independence' +
+        ' most protects the relationship',
+      'Wealth compatibility percentage — financial value alignment, the specific' +
+        ' financial structure most indicated for this union, and the Jupiter channel' +
+        ' for shared abundance',
+      'Children potential percentage — the karmic agreements around parenthood in' +
+        ' the combined chart, what kind of parents these two charts are structurally' +
+        ' designed to be, and the timing windows most indicated for family',
+      'The fidelity structure reading — risk factors and stabilising indicators' +
+        ' named together, with three specific agreements the reading identifies as' +
+        ' most important to make explicit between these two people',
+      'The relational dynamics portrait — the power structure, how authority rotates' +
+        ' across domains, and specific domain-level leadership assignments' +
+        ' calibrated to the combined chart',
+      'The ancestral inheritance reading — which parental templates from each' +
+        ' lineage are most active in the dynamic, the healing this union is designed' +
+        ' to provide to both family lines, and the pattern that stops with this' +
+        ' generation if the work is done',
+      'Union legacy alignment percentage — what this specific partnership is' +
+        ' building together that outlasts both people, and what both charts say' +
+        ' needs to be committed to now for that legacy to become real',
+      'The union remedies protocol — seven concrete practices across spiritual,' +
+        ' relational, fidelity, power balance, career, health, and wealth' +
+        ' dimensions, each specific to what the combined chart indicates',
+      'Longevity and transition reading — what both charts indicate about the' +
+        ' relationship with impermanence and how to prepare for eventual separation' +
+        ' with wisdom rather than avoidance',
+      'The convergence map — every domain where both charts agree simultaneously,' +
+        ' representing the union\'s highest-confidence strengths and the foundation' +
+        ' most worth investing in',
+      'A union activation guide — the three most important moves this specific' +
+        ' couple can make in the next 90 days based on what the complete synthesis' +
+        ' reveals, with the one explicit agreement the reading identifies as most' +
+        ' structurally important to make first',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A union activation protocol specific to this couple — the three' +
+      ' moves the complete synthesis identifies as most important in the next 90' +
+      ' days, with the specific first action for each, the reasoning from the' +
+      ' systems that confirm each move, and the one explicit agreement the reading' +
+      ' identifies as the single highest-leverage commitment these two people can' +
+      ' make to each other right now.',
+    upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
+  },
+]
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 2 — 30 FLAGSHIP TOOLS (no image requirement)
 // ─────────────────────────────────────────────────────────────
 export const flagshipTools: OmniTool[] = [
-  {id:'soulmate-arrival-window-os',name:'The Soulmate Arrival Window',tagline:'The windows when your chart is most open for the person you are looking for — month-specific, not vague',emoji:'⌛',price:37,domain:'oracle-temple',isPopular:true,isBestSeller:true,rating:4.9,reviewCount:3847,deliveryMinutes:20,hook:'The soulmate arrival window is not a fixed date. It is a recurring pattern of alignment between your Personal Year cycle, Venus timing, and Life Path receptivity — and it opens and closes on a schedule that is already visible in your chart. The problem is not that the window has passed or that you are not ready. The problem is that you have been looking for a person when you should have been reading the timing. Your next window is already visible. This reading names it, names the type of person most likely to arrive in it, and names the one pattern that has been closing your previous windows before they fully opened.',whatYouGet:['The month-specific timing of your three love windows in the next 24 months — not a vague season but the actual months when your chart is most structurally open for romantic alignment','The type of person who arrives in each window — the numerical and chart-based signature of who is most likely to appear when each window is open, specific enough to recognise','What you need to be doing differently in each window to be recognisable and available to the person the chart is sending — specific and actionable, not philosophical','The one pattern that has been closing your windows early — the specific behaviour or belief the chart identifies as the primary obstacle to romantic alignment, named from three independent indicators','Whether the next 12 months or the following year carries your highest love window — so you can decide now which period to invest in and which to use as preparation'],guidanceType:'spiritual-remedy',guidanceText:'A 21-day opening practice from your heritage tradition — not a generic attraction routine but the specific daily action calibrated to your window type and timing, drawn from the tradition most aligned with your cultural background.',upsell:{id:'soulmate-compatibility-verdict',name:'Soulmate Compatibility Verdict',price:37}},
-  {id:'love-wound-reading-os',name:'The Love Wound Reading',tagline:'The pattern beneath every heartbreak you have had — named precisely so it cannot repeat in the same way',emoji:'💔',price:47,domain:'oracle-temple',isPopular:true,rating:4.9,reviewCount:2341,deliveryMinutes:20,hook:'You have not had five different heartbreaks. You have had one heartbreak five times, with different people playing the same role. The pattern is structural — it is written simultaneously in the Heart Line, the Venus placement, and the karmic debt signature. Once it is named with that level of specificity, something changes. Not because the insight alone heals it, but because you can no longer be unconscious of the pattern at the exact moment it would normally activate. The 90-day protocol that follows the reading targets that specific activation moment.',whatYouGet:['The exact repeating pattern across your entire love history — named with enough precision that you will recognise it in the last five years immediately','The chart-based and numerical root of the pattern — where it was written into the blueprint and why it keeps recreating the same circumstances with different people','The specific type of person who reliably triggers the pattern — and the chart-based explanation for why this type keeps appearing across different relationships','The karmic origin — what past-life agreement or incomplete lesson this pattern is the surface expression of, and what demonstrating the lesson actually looks like in practice','A 90-day pattern interruption protocol — day-specific, structured in three phases, targeting the activation trigger identified in your specific chart'],guidanceType:'spiritual-remedy',guidanceText:'A 90-day pattern interruption practice from your heritage tradition — not a generic healing protocol but a specific three-phase sequence calibrated to the wound type identified in your reading: the spiritual clearing for the karmic layer, the daily practice for the belief layer, and the behavioural interruption for the activation moment.',upsell:{id:'karmic-love-debt',name:'Karmic Love Debt',price:57}},
-  {id:'income-ceiling-breaker-os',name:'The Income Ceiling Breaker',tagline:'The specific thing holding your income at the same number — found across four independent indicators',emoji:'💥',price:47,domain:'oracle-temple',isPopular:true,isBestSeller:true,rating:4.9,reviewCount:2897,deliveryMinutes:20,hook:'Income ceilings are not created by the market and rarely by skill gaps. They are created by a specific internal pattern that runs consistently across multiple dimensions of the blueprint simultaneously — which is precisely why willpower, strategy, and favourable market conditions have not been able to move it. This reading locates the pattern from four independent angles. The nature of your ceiling only becomes fully visible when all four agree on what it is. Once named from four directions simultaneously, the ceiling changes its character — from something that feels like external resistance to something that can actually be addressed.',whatYouGet:['The exact nature of your income ceiling — what created it, where it sits in the chart, and which system shows it most clearly','Whether the block is karmic, belief-based, structural, or timing-based — because the resolution protocol is completely different depending on the type','The specific thought or behavioural pattern that enforces the ceiling — the internal mechanism that resets income to the same level whenever it rises above it','The wealth channel most naturally aligned with your Life Path — the earning mode the blueprint is built for versus the mode currently being used','The Personal Year window when the ceiling is structurally most dissoluble — the specific timing when the chart supports breakthrough most strongly','Three specific moves to break through — sequenced to the ceiling type, not generic wealth mindset advice'],guidanceType:'practical-solution',guidanceText:'A ceiling dissolution protocol specific to your ceiling type — internal actions for the belief or karmic layer, practical actions for the structural layer, and timing actions for the Personal Year window, sequenced across one complete cycle rather than prescribed as a generic 90-day plan.',upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97}},
-  {id:'calling-decoder-os',name:'The Calling Decoder',tagline:'What you were built to do — named specifically enough to change what you do next week',emoji:'🧭',price:47,domain:'oracle-temple',isPopular:true,rating:4.9,reviewCount:1876,deliveryMinutes:20,hook:'Most descriptions of purpose are either too broad to act on or too narrow to feel complete. Four independent systems read the calling from completely different angles — Founder Archetype from the numbers, dharmic direction from the sky map, fate line trajectory from the hand, and Midheaven authority from the chart — and names only what all four confirm simultaneously. The result is not a category. It is a specific enough description of your calling that it changes an actual decision you will make in the next seven days.',whatYouGet:['Your dharmic calling in plain language — what all four systems agree you were built to contribute, stated specifically enough to evaluate against your current work','The specific type of work that activates your highest expression — not an industry category but a mode of contribution precise enough to guide hiring, business, or repositioning decisions','The gap between your current work and the calling — named honestly, with an assessment of how wide it is and what the most direct bridge looks like from your current position','The income model most naturally aligned with the calling — how the contribution type translates into sustainable earnings without requiring you to operate against your design','The one gift you consistently undervalue that others would pay premium for — identified from the divergence between what feels easy to you and what is genuinely rare in the market','The timeline for transitioning toward calling work — the Personal Year and Pinnacle combination that most supports the move, with a specific first step'],guidanceType:'practical-solution',guidanceText:'A calling activation guide — the single most important first move from your current position toward calling work, the exact timing your current Personal Year and fate line most support for making it, and the one income-generating step that can happen immediately before the full transition, drawn from what all four systems confirm as most accessible right now.',upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97}},
-  {id:'shadow-self-reading-os',name:'The Shadow Self Reading',tagline:'What you have been suppressing — and the specific strength that lives on the other side of it',emoji:'🌑',price:47,domain:'oracle-temple',isPopular:true,rating:4.9,reviewCount:1654,deliveryMinutes:20,hook:'The shadow is not the worst version of you. It is the quality you decided was too dangerous, too much, or too strange to express — and then spent years and enormous energy managing. The cost of that management is rarely noticed until it is named: the same energy suppressing the shadow could be generating the gift. This reading maps your specific shadow complex from five independent indicators, names the gift that lives on the other side of it, and gives you the specific integration path for your chart — not a universal shadow work framework applied to a named category but the practice that works for this particular complex.',whatYouGet:['Your primary shadow pattern — the specific quality being suppressed, named from 12th house, Pluto aspects, south node, and karmic debt signature in cross-system agreement','Which life domain is most affected by the active suppression — where the energy cost of managing the shadow shows up most concretely in daily life','The chart-based and numerical signature that originally created the suppression — the moment in the blueprint when the quality was decided to be unacceptable','The gold in the shadow — the specific disowned strength that becomes available when the suppression energy is redirected toward integration rather than management','A 60-day integration practice tailored specifically to your shadow type — structured so the work remains contained and productive rather than destabilising'],guidanceType:'spiritual-remedy',guidanceText:'A 60-day shadow integration practice from your heritage tradition — structured in three phases calibrated to your specific complex: the recognition phase that names the shadow without judgment, the encounter phase that develops a direct relationship with it, and the integration phase that makes the suppressed quality available as functional strength.',upsell:{id:'shadow-and-light-synthesis',name:'Shadow and Light Synthesis',price:87}},
-  {id:'spiritual-gifts-inventory-os',name:'The Spiritual Gifts Inventory',tagline:'The specific gifts already active in you — named from six indicators, not inferred from a category',emoji:'✨',price:47,domain:'oracle-temple',isPopular:true,rating:4.9,reviewCount:1234,deliveryMinutes:20,hook:'Most spiritual frameworks assign you a type and call it a path. Six independent spiritual indicators — Neptune, the 12th house, Ketu, master number signatures, Moon mount, and intuition line — read simultaneously, surface only what all six confirm about your specific gifts. The result is not a category shared by millions of people who took the same quiz. It is an inventory of what is actually present in this blueprint: the capacities already active, the gifts dormant and waiting for development, the stage actually inhabited rather than performed.',whatYouGet:['Your primary active gift named plainly — clairsentience, clairvoyance, healing, prophecy, teaching, or channelling — with the specific form it takes in your chart rather than the generic definition','Your secondary dormant gift and the specific conditions or practices that activate it — what needs to happen before this capacity becomes consistently available','The life experiences already developing these gifts — the retrospective that shows the gifts have been operating even when they were not being called that','How to use the primary gift both professionally and personally — the specific contexts where it is most reliable and the specific ways to offer it that match the chart','The spiritual practice most calibrated to your gift archetype — not a general spiritual recommendation but the specific discipline that develops this particular gift most directly'],guidanceType:'spiritual-remedy',guidanceText:'A gift activation and protection practice specific to your gift type — the daily discipline most effective for developing the primary gift responsibly, the protection practice your gift type specifically requires, and the one boundary the chart says is most essential to establish before the gift is used in service of others.',upsell:{id:'complete-spiritual-synthesis',name:'Complete Spiritual Synthesis',price:97}},
-  {id:'soul-contract-reading-os',name:'The Soul Contract Reading',tagline:'The agreements encoded in your chart before you arrived — including the ones you have been actively avoiding',emoji:'📋',price:57,domain:'oracle-temple',isPopular:true,isFlagship:true,rating:4.9,reviewCount:1543,deliveryMinutes:20,hook:'A soul contract is not motivational language for your deepest preferences. It is a specific set of agreements encoded in your birth data with precision — about what this life was designed to accomplish, who it was designed to be accomplished with, and what consistently happens when the agreements are avoided. This reading decodes three primary soul agreements from four independent indicators, identifies which are being honoured and which are being actively avoided, names the karmic debts still outstanding, and maps the timeline showing when each agreement becomes most structurally active in the current chapter of life.',whatYouGet:['Your three primary soul agreements encoded in the chart — named specifically from the convergence of four independent indicators, each reading the same soul dimension from a different angle','Which agreements are currently being honoured — the areas where life flows, doors open, and effort compounds rather than drains','Which agreements are currently being avoided — the areas where resistance, repetition, and friction are the consistent experience, and what the avoidance is actually costing','The karmic debts still outstanding — what remains incomplete from prior agreements and what demonstrating the lesson in this lifetime actually requires practically','The soul\'s ultimate contribution — what this particular life is building toward in the long arc, beyond the current chapter and its immediate demands','Timing — which soul agreements become most structurally active in the current Pinnacle and Personal Year, creating the highest-leverage window to address them'],guidanceType:'practical-solution',guidanceText:'A soul contract alignment guide — for each of your three primary soul agreements, the specific practical action most aligned with honouring it in the current chapter, calibrated to your Pinnacle and Personal Year so the guidance is timely rather than perpetually aspirational.',upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97}},
-  {id:'nine-year-cycle-reading-os',name:'The Nine-Year Cycle Reading',tagline:'The map of your entire life in nine-year chapters — the past explained and the future made navigable',emoji:'∞',price:47,domain:'oracle-temple',isPopular:true,isBestSeller:true,rating:4.8,reviewCount:4123,deliveryMinutes:20,hook:'Most people navigate each year the same way — the same level of effort, the same type of action, the same decision-making approach — regardless of what the year is actually asking for. A Year 1 demands initiation. A Year 9 demands release. Pushing initiation energy in a Year 9 is like rowing against a current moving at twice your speed. Five independent timing systems mapped against the same nine-year cycle produce two things: a retrospective that explains why certain periods felt like running uphill when nothing was wrong with you, and a forward map that makes the windows ahead navigable before they arrive.',whatYouGet:['A retrospective map of your last two complete nine-year cycles — the explanation for why specific periods of your past felt the way they did, finally coherent in the context of what the cycle was actually asking for','The exact cycle currently active, what it specifically demands, and the single most common mistake people make when they are in this particular year without knowing it','A forward map of the next nine years — what each year calls for, when to initiate, when to consolidate, when to release, and when the biggest opportunity windows open','The specific mistake most people make in your current year — the action that feels right but works against the cycle, named precisely so it can be avoided','The one decision to make now versus wait on — the specific choice your current cycle supports versus the one that will create less friction if deferred to the next supporting year','How your current Pinnacle cycle overlays with your Personal Year — the combined picture that shows where both major timing systems are aligned and where they are in tension'],guidanceType:'practical-solution',guidanceText:'A cycle-aligned action guide for the next 12 months — the specific type of move most supported in your current Personal Year, the one decision to make now while the cycle supports it, and the one decision to defer until the cycle shifts, with the month where the deferral window opens.',upsell:{id:'annual-destiny-forecast',name:'Annual Destiny Forecast',price:77}},
-  {id:'soulmate-compatibility-verdict',name:'The Soulmate Compatibility Verdict',tagline:'Two names. Six compatibility domains. The complete picture of what this connection actually is.',emoji:'⚖️',price:37,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:2341,deliveryMinutes:20,hook:'Chemistry is real data — but it is only one data point, and it is the least predictive of long-term compatibility. Two people can feel magnetic and be structurally incompatible across the dimensions that determine whether a relationship sustains. This reading cross-examines the connection from six independent angles — emotional compatibility, financial alignment, physical chemistry, intellectual resonance, spiritual direction, and long-term vision — and delivers the complete picture: what all six confirm, what they reveal about the friction points, and whether this is a growth relationship or a harvest relationship.',requiresPartner:true,whatYouGet:['A compatibility score across all six domains — emotional, financial, physical, intellectual, spiritual, and long-term vision — each scored independently so the portrait is honest rather than averaged into a single number','The one area of strongest natural harmony between the two charts — the domain where the connection creates something neither person produces as effectively alone','The one area of guaranteed structural friction — named specifically with the chart-based explanation for why it will keep recurring regardless of goodwill or communication improvements','The karmic contract between the two people — what the soul agreement says this connection is for, and whether it is completing karma or building something new','Whether this is a growth relationship or a harvest relationship — the distinction that determines what the connection is designed to produce and what staying or leaving each means','The specific communication approach that most effectively prevents the most likely conflict between these two charts — practical and specific rather than generic conflict resolution advice'],guidanceType:'practical-solution',guidanceText:'A compatibility navigation guide for the most significant structural tension between the two charts — the one conversation or explicit agreement that addresses the gap most likely to become a recurring problem, with the specific framing that makes it possible to have that conversation productively.',upsell:{id:'complete-love-synthesis',name:'Complete Love Synthesis',price:97}},
-  {id:'professional-compatibility-scan',name:'The Professional Compatibility Scan',tagline:'Before you sign anything with this person — run four compatibility indicators that business strategy cannot tell you',emoji:'🤝',price:29,domain:'oracle-temple',isPopular:true,rating:4.7,reviewCount:1876,deliveryMinutes:20,hook:'Professional partnerships fail more often at the human layer than at the strategic layer. Two people can have a compelling business concept, complementary skill sets, and shared goals — and still collapse because of incompatible decision-making styles under pressure, misaligned financial ethics, or a power dynamic that was never acknowledged and therefore never agreed on. This reading examines the partnership across four professional compatibility indicators and delivers three things: the most likely point of conflict, the specific conversation that must happen before committing, and a clear proceed, proceed with caution, or significant friction verdict.',requiresPartner:true,whatYouGet:['Compatibility across four professional domains — vision alignment, work style fit, financial ethics, and communication under pressure — each scored and explained rather than combined into a single number','The most likely point of conflict between the two charts — the specific dynamic that will surface under stress, named from the chart interaction rather than inferred from personality','The power dynamic that will naturally emerge between these two charts — and whether it is a dynamic both people can actually work with over time','Whether the timing is right for this partnership — what the current Personal Year and Pinnacle of each person says about their readiness for the specific type of venture being considered','A verdict: proceed, proceed with caution naming the specific friction, or significant friction requiring explicit agreement before proceeding','The one conversation that must happen before committing — the specific topic the charts identify as the structural gap most likely to derail the partnership if left unaddressed'],guidanceType:'practical-solution',guidanceText:'A partnership decision framework — the specific red flags and green lights for this partnership calibrated to the compatibility gaps identified, plus the explicit agreement or boundary that most directly addresses the primary structural tension between the two charts.',upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87}},
-  {id:'birthday-blueprint',name:'The Birthday Blueprint',tagline:'The natural talent and the soul test encoded in your birth day — and why they are always the same quality',emoji:'🎂',price:19,domain:'oracle-temple',isPopular:true,isBestSeller:true,rating:4.8,reviewCount:5231,deliveryMinutes:20,hook:'The day you were born encodes two things with unusual precision: the specific natural talent you arrived with, and the specific test your soul agreed to master in this lifetime. These two things are not separate. They are always the same quality — one expressing freely as the gift, one creating the primary life friction when suppressed or avoided. The Birthday Blueprint names both, shows you the relationship between them, and gives you the practice that accelerates moving from the challenge into the gift. Most people recognise both within the first paragraph.',whatYouGet:['Your Birthday Gift — the specific natural talent encoded in your birth day, described in enough detail to recognise it in your own history and use it as a lens for professional positioning','Your Birthday Challenge — the soul test your chart agreed to master, described so concretely that you will recognise exactly where it shows up and how it has been showing up','How the Gift and Challenge are the same quality — the specific relationship between them that explains why addressing the Challenge is always the path to the Gift, not an obstacle to it','What happens when the Challenge is left unaddressed — the specific pattern it creates across love, career, and money when the lesson is avoided rather than engaged','What full expression of the Birthday Gift looks like in your specific life context — not the generic description of the number but how it manifests given your Life Path and current chapter','The practice that most directly accelerates moving from Challenge to Gift — the daily action that works on both simultaneously'],guidanceType:'practical-solution',guidanceText:'A Birthday Gift activation practice — the single daily action that develops the Gift and works through the Challenge at the same time, calibrated to the specific gift type identified, with guidance on the most common ways this gift type is suppressed and the earliest signal that the activation is working.',upsell:{id:'life-path-deep-dive',name:'Life Path Deep Dive',price:57}},
-  {id:'birthday-gift-career-map',name:'The Birthday Gift Career Map',tagline:'The specific work your Birthday Gift encodes you to do — and why it is different from what you are merely good at',emoji:'🎯',price:29,domain:'oracle-temple',rating:4.7,reviewCount:1543,deliveryMinutes:20,hook:'There is a specific type of professional competence that comes easily — where you produce results with less effort than peers require and where the work feels generative rather than draining. This is not the same as what you are good at from training or habit. It is what you arrived with. The Birthday Gift number encodes the specific vocation most naturally aligned with how you are built, and this reading maps four things: the gift itself named precisely, the three career paths where it operates at highest leverage, the business model that monetises it most directly, and the one repositioning move that makes it most visible to the people most likely to pay premium for it.',whatYouGet:['Your Birthday Gift number and its precise vocational expression — specific enough to evaluate against the work you currently do and the work you have been considering','Three career paths most naturally aligned with the Gift — described specifically enough to know whether your current path is among them or adjacent to them','The business model that monetises the Gift most directly — the revenue structure that allows the gift to generate income without requiring you to work against the design that makes it valuable','The type of client or employer most naturally willing to pay premium for this specific gift — the audience profile that values what you do most highly','What has been draining the Gift in your current setup — the specific mismatch between the gift type and the current work context that explains why the work takes more energy than it should','The one repositioning move that most immediately increases income aligned to the Gift — the specific change in offer, positioning, or role that makes the gift more visible to the people who most need it'],guidanceType:'practical-solution',guidanceText:'A career repositioning guide — the single most impactful professional change that makes the Birthday Gift most visible and most valued by the market most willing to pay for it, with the specific framing that differentiates the gift from what others in the same field offer and the first step that can happen in the next 30 days.',upsell:{id:'calling-decoder-os',name:'Calling Decoder',price:47}},
-  {id:'pinnacle-portal',name:'The Pinnacle Portal',tagline:'The life chapter you are in right now — its specific gifts, its demands, and what you have left to harvest from it',emoji:'⛰️',price:37,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:2103,deliveryMinutes:20,hook:'Every life unfolds in four major chapters — four Pinnacle periods of roughly nine years each, each with its own specific theme, its own gifts, and its own specific demands. Most people live their current Pinnacle unconsciously — which means they spend the chapter pushing against what it requires rather than working with what it offers. This reading identifies your current Pinnacle precisely, names what this chapter is designed to build in you, what it is asking you to release, how much time remains, and the one move that extracts maximum value from the time still available in it.',whatYouGet:['Your current Pinnacle number and its precise age range — where in the chapter you are and how much time remains before the next chapter opens','What this Pinnacle specifically opens up — the gift of the chapter, the domain it activates, and the specific opportunity type that is structurally more available during this period than at any other','What this Pinnacle specifically challenges — what it is asking you to release, develop, or master, and why that challenge is inseparable from the gift it offers','What the next chapter brings — enough forward visibility to make decisions now that are aligned with what is coming rather than what has already passed','The retrospective — what the previous Pinnacle was building and why this chapter is the natural continuation of that work even when it does not feel connected','The one move that harvests the maximum value from the current chapter before it closes — the specific action most aligned with what this Pinnacle period is designed to produce'],guidanceType:'practical-solution',guidanceText:'A Pinnacle harvest guide — the specific move that extracts the most value from your current chapter, timed to where you are within the period, with guidance on what to initiate if you are in the first half and what to complete if you are in the second half.',upsell:{id:'nine-year-cycle-reading-os',name:'Nine-Year Cycle Reading',price:47}},
-  {id:'pinnacle-transition-forecast',name:'The Pinnacle Transition Forecast',tagline:'The chapter leaving and the chapter arriving — and the two to three years where both are running simultaneously',emoji:'🌉',price:37,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:1432,deliveryMinutes:20,hook:'A Pinnacle transition is not a gradual shift. It is the close of one nine-year chapter and the opening of another — and the two to three years surrounding that transition carry a specific quality unlike any other period in the cycle. What the departing chapter built, what it leaves incomplete, what the arriving chapter will demand and reward — all of this is visible in the numbers before the transition happens. This reading identifies whether you are within three years of a transition, maps both sides of it in detail, and names the specific thing to complete and the specific thing to initiate in the window surrounding it.',whatYouGet:['Whether you are within three years of a Pinnacle transition — and if so, which side of the threshold you are on and how much runway remains','What the departing Pinnacle accomplished — a retrospective of what the chapter built, what it completed, and what it is leaving behind as the foundation for the next one','What the incoming Pinnacle demands and rewards — the specific theme, the opportunity type it opens, and what it asks you to be different about compared to the chapter closing','The specific domain of life that will shift most dramatically at the transition — the area where the change between chapters will be most visible and most consequential','The one thing to complete before the transition — the specific action or decision the departing chapter needs in order to close cleanly rather than carry its unfinished business into the next period','The one thing to initiate now that the new chapter will amplify — the seed planted in the final period of the current chapter that the next chapter is most structurally designed to grow'],guidanceType:'practical-solution',guidanceText:'A transition navigation guide — what to complete and what to initiate in the 12 months surrounding your specific transition date, with the reasoning drawn from both the departing and arriving Pinnacle numbers and the Personal Year cycle running concurrently.',upsell:{id:'soul-contract-reading-os',name:'Soul Contract Reading',price:57}},
-  {id:'karmic-debt-cleanser',name:'The Karmic Debt Cleanser',tagline:'The pattern that has been following you across relationships, money, and work — its origin and the repayment path',emoji:'🧹',price:47,domain:'oracle-temple',isPopular:true,isBestSeller:true,rating:4.9,reviewCount:2987,deliveryMinutes:20,hook:'Karmic debt is not a punishment. It is an incomplete lesson — a quality the soul agreed to master but has been avoiding, which means life keeps recreating the circumstances for the lesson until it is genuinely demonstrated. The debt shows up with remarkable consistency: always the same type of dynamic, always the same outcome, until something fundamentally different is understood and acted on. This reading finds every place the debt is encoded in the chart, names the specific past-life origin with enough specificity to make it feel true rather than theoretical, shows how it is manifesting across the primary affected domain, and maps the 90-day resolution protocol specific to the debt type identified.',whatYouGet:['Whether karmic debts are present in the chart and in which part — the specific placement that shows the debt and what it says about which life domain carries the heaviest karmic weight','The specific past-life origin story for each debt identified — named with enough specificity that the pattern in this life makes historical sense rather than feeling like random misfortune','How the debt is currently manifesting across the primary affected domains — the specific recurring dynamic that is the surface expression of the karmic pattern','The precise lesson the debt is waiting to be demonstrated — what the soul agreed to master, described in practical behavioural terms rather than abstract spiritual language','A 90-day karmic resolution protocol — specific daily practices for the internal layer combined with the heritage-calibrated spiritual clearing for the karmic layer, sequenced in the order that creates the most traction','A timing signal — what in the current chart indicates the debt is ready to resolve now, and what that readiness looks like when it is real versus when it is wishful'],guidanceType:'spiritual-remedy',guidanceText:'A 90-day karmic debt resolution protocol specific to the debt type identified — combining the heritage-calibrated spiritual clearing from your tradition for the karmic layer with the specific daily practice for the belief and behavioural layer, structured so the two work together rather than in parallel.',upsell:{id:'relationship-karma-synthesis',name:'Relationship Karma Synthesis',price:87}},
-  {id:'pattern-breaker',name:'The Pattern Breaker',tagline:'The loop you keep living — why it keeps starting, and the one moment where it can actually be interrupted',emoji:'🔓',price:37,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:2341,deliveryMinutes:20,hook:'Repeating patterns are not failures of willpower or self-awareness. They are karmic or conditioned grooves running deep enough that the usual self-improvement approaches cannot reach them. Each repetition carries a soul lesson hidden inside the frustration — and the pattern loses its charge only when that lesson is genuinely demonstrated, not merely understood intellectually. This reading names your specific repeating pattern, identifies whether it is karmic or conditioned, locates the precise trigger that activates it each time, and gives you the one interruption move — the specific different action at the exact moment the pattern would normally begin.',whatYouGet:['Your specific repeating pattern identified from the primary affected domain — named with enough precision that you will recognise it as the thing that has been recurring, not a generic description of a common experience','Whether the pattern is karmic or conditioned — the distinction that determines which resolution approach actually works, because the intervention for a karmic pattern is completely different from the intervention for a conditioned one','The soul lesson hidden inside the pattern — what the repetition is designed to teach, described in practical terms that make the next time it surfaces feel like a test you can pass rather than a punishment repeating','The precise trigger that activates the pattern every time — the specific circumstance, person type, or emotional state that starts the loop, named specifically enough to recognise it before the pattern is already running','The interruption move — the specific different action at the exact moment the pattern would normally activate, not a general mindset shift but a concrete behavioural change at the identified trigger point','The integration practice — the sustained 21-day work that completes the lesson so the pattern loses its charge rather than just being interrupted'],guidanceType:'spiritual-remedy',guidanceText:'A 21-day pattern interruption protocol targeting the specific activation trigger identified in your chart — structured in three weeks: week one builds awareness of the trigger before it activates, week two practises the interruption move at the trigger point, week three installs the new response until it runs automatically.',upsell:{id:'shadow-self-reading-os',name:'Shadow Self Reading',price:47}},
-  {id:'wealth-timing-oracle',name:'The Wealth Timing Oracle',tagline:'Your financial peak windows in the next five years — specific enough to prepare for rather than stumble into',emoji:'💎',price:37,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:2341,deliveryMinutes:20,hook:'Financial peaks are not random. They are convergences — periods when Personal Year cycle, Jupiter transit, fate line trajectory, and numerical wealth timing all point in the same direction simultaneously. Most people encounter their financial peak windows unprepared and extract only a fraction of the potential the window carries. This reading identifies your three financial peak windows in the next five years with year-specific timing, names the type of wealth move optimal in each one, and gives you the specific actions to take in the next three months to be positioned when the next peak opens.',whatYouGet:['Your three financial peak windows in the next five years — year-specific, with the type of wealth movement each window most strongly supports and why that type is particularly suited to that period','The optimal wealth move in each window — not generic financial advice but the specific category of financial action each timing convergence most supports for your chart','Your two caution years — the specific years to avoid major financial risk-taking, with the chart-based explanation for why the window is structurally closed during those periods','Your natural wealth channel from your Birthday Gift number — the earning mode the blueprint is most naturally aligned with, and how the peak windows interact with that channel','The one financial behaviour your Birthday Challenge is costing you the most — the specific pattern that is most reliably reducing financial results across all your peak windows','The specific action to take in the next three months to position for the next peak — the preparatory move that makes the difference between entering the window ready and entering it from behind'],guidanceType:'practical-solution',guidanceText:'A peak window preparation guide — the specific actions that must be in place before each of your three peak windows opens, with exact timing for each action and the rationale drawn from the timing systems confirming each window.',upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97}},
-  {id:'career-opportunity-window',name:'The Career Opportunity Window',tagline:'When to move, when to wait — and what the next twelve months actually support for your specific career situation',emoji:'📈',price:29,domain:'oracle-temple',isPopular:true,rating:4.7,reviewCount:1876,deliveryMinutes:20,hook:'Career timing is not about courage or readiness in the abstract. It is about whether the specific move being considered is supported or resisted by the current energetic structure of the chart. Making a major career move in a consolidation year is not brave — it is poorly timed. Making the same move in a peak year is not lucky — it is aligned. This reading maps the current Personal Year energy for career decisions, identifies the next career peak window, assesses whether the chart currently supports employment, entrepreneurship, or a hybrid model, and gives a clear go or wait verdict for any specific career move being considered.',whatYouGet:['Your current Personal Year assessed specifically for career decisions — the type of career energy it carries and whether it supports initiating, expanding, consolidating, or releasing','A clear verdict on whether now is a year to move or consolidate — with the specific reasoning from the timing indicators rather than a generic prescription','Your next career peak window — the specific period when the chart most strongly supports new opportunity, with the type of opportunity most aligned with what the window opens for','How your Birthday Gift number positions you specifically in your industry — the unique angle or contribution the gift creates that distinguishes you from others doing similar work','The one career move most aligned with both your current Pinnacle and your Birthday Gift — the specific action that works with the chapter you are in rather than against it','Whether the chart currently supports employment, entrepreneurship, or a hybrid model — the structural assessment of which mode is most aligned with the present combination of timing indicators'],guidanceType:'practical-solution',guidanceText:'A career timing decision guide — a go or wait verdict for any specific career move you identify, with the reasoning drawn from your current Personal Year and Pinnacle, plus the optimal window for the ask, negotiation, or transition if the verdict is wait.',upsell:{id:'calling-decoder-os',name:'Calling Decoder',price:47}},
-  {id:'constitutional-health-blueprint',name:'The Constitutional Health Blueprint',tagline:'Your body\'s specific constitutional type — and the diet, movement, and lifestyle that was actually built for it',emoji:'⚕️',price:47,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:1876,deliveryMinutes:20,hook:'Constitutional medicine starts from a fundamentally different premise than generic health advice: your body has a specific type, and what serves one type consistently depletes another. Ayurvedic constitution, classical chart analysis, and the 6th house health signature each read the same constitutional question from traditions developed independently across different centuries and continents. Where two or more of these independent traditions agree on your type, your primary vulnerabilities, and your optimal conditions, the health guidance that follows carries a confidence that population-averaged advice cannot approach — because it was derived from your specific blueprint.',whatYouGet:['Your constitutional type confirmed across Ayurvedic and chart-based frameworks — the dominant dosha or elemental constitution identified by at least two independent systems, with the specific physical and emotional characteristics that confirm the type','The three body systems most likely to need attention in your lifetime — not vague vulnerability categories but specific organ or physiological systems named from multi-system agreement','The early warning signs in each system to watch for — the specific signals your constitution type sends before a system becomes significantly stressed, described in observable terms','Your seasonal vulnerability pattern — the specific months your constitution most consistently flags as requiring more care, and why your type tends to become depleted in those particular periods','The diet and lifestyle approach most aligned with your specific constitution — practical dietary adjustments, movement type, sleep approach, and stress management calibrated to the constitutional type rather than to general wellness principles','What your current Personal Year means for your health specifically — the domain or system the current cycle is most likely to stress, and the protective practice most relevant right now'],guidanceType:'practical-solution',guidanceText:'A 30-day constitutional recalibration protocol — specific dietary adjustments, movement prescription, sleep timing, and one practice from the tradition with the highest agreement for your constitution type, sequenced for the first month and designed to create enough feedback that the protocol can be refined for sustained use.',upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97}},
-  {id:'stress-body-reading',name:'The Stress Body Reading',tagline:'Which emotions live in which part of your body — and what to do before they become symptoms',emoji:'🫁',price:37,domain:'oracle-temple',rating:4.7,reviewCount:1432,deliveryMinutes:20,hook:'The body keeps a specific record of the emotional states that have been most consistently active. That record shows up as tension patterns, organ vulnerabilities, and the type of physical complaint that recurs under pressure — and it is readable from the chart. This reading identifies your primary emotional-physical pattern from your chart signature, shows which emotional state most reliably affects which body system, reads the early signals that the connection is activating, and gives you a somatic practice calibrated to that specific emotional-physical dynamic rather than to stress reduction in general.',whatYouGet:['Your primary emotional-physical pattern — the specific emotional state that most reliably creates physical response in your constitution, and the specific body system or organ most consistently affected when that state runs for extended periods','The chart-based signature creating the pattern — the planetary placement or aspect that encodes the emotional-physical connection and why your particular constitution is more sensitive to this specific dynamic than others','The specific health manifestation most likely to appear if the pattern runs unaddressed — named from the constitutional and chart indicators so you recognise early signals rather than late symptoms','The early signals that the emotional-physical connection is activating — the specific physical sensations or early symptoms that indicate the pattern has become active before it compounds into something harder to address','A somatic practice calibrated specifically to your emotional-physical type — not a general stress reduction technique but the specific physical practice most effective for the particular emotional-body connection in your chart','Whether the current Personal Year is activating this pattern — the timing assessment that tells you whether right now is a period of heightened vulnerability to this specific dynamic'],guidanceType:'spiritual-remedy',guidanceText:'A body-emotion release practice from your heritage tradition — the specific somatic practice most effective for your particular emotional-physical pattern, drawn from the tradition most aligned with your constitution type, with guidance on frequency, timing, and the early signal that tells you the practice is working.',upsell:{id:'constitutional-health-blueprint',name:'Constitutional Health Blueprint',price:47}},
-  {id:'child-blueprint-os',name:'The Child Blueprint',tagline:'Who your child actually is — the blueprint no parenting book was written about because no two are the same',emoji:'👶',price:37,domain:'oracle-temple',isPopular:true,rating:4.9,reviewCount:2103,deliveryMinutes:20,hook:'Every parenting challenge that feels like a personality clash is usually a chart mismatch — a parent using the communication style, motivation approach, and discipline method designed for a different child type. Your child arrived with a specific Life Path, a specific emotional need encoded in the Moon sign, a specific learning style, and a specific shadow pattern that appears as difficult behaviour when the underlying need is not met. This reading gives you the manual — not the general parenting manual, but the specific guide for this child\'s exact blueprint.',whatYouGet:['Your child\'s Life Path, Sun sign, and Moon sign translated into plain parenting language — what each number and placement actually means for how this child thinks, feels, and needs to be related to, without chart jargon','Your child\'s natural learning style from the chart — the specific way this child absorbs and retains information, and the environments and approaches that make learning feel natural rather than forced','The primary emotional need — the specific thing this child requires to feel safe, seen, and capable, which when unmet consistently produces the behaviours parents find most challenging','The shadow pattern — the specific quality appearing as difficult behaviour that is actually an unmet need or suppressed gift, named so the behaviour can be responded to at the level of its actual cause','How to motivate, discipline, and connect with this specific child — the approaches that work for this chart type and the common approaches that consistently backfire for it','A parent-child compatibility score — an honest assessment of where parent and child charts naturally align and where they will consistently create friction without intentional adjustment'],guidanceType:'practical-solution',guidanceText:'A personalised parenting guide for this child\'s specific chart — three concrete communication adjustments calibrated to the parent-child dynamic, the single most impactful change in how the parent relates to this child based on the chart interaction, and the one thing this child most needs to hear regularly that most directly addresses the primary emotional need identified.',upsell:{id:'children-family-synthesis',name:'Family Destiny Synthesis',price:77}},
-  {id:'parent-child-mirror',name:'The Parent-Child Relationship Mirror',tagline:'The conflict between you and your child is not a personality clash — this shows you what it actually is',emoji:'👨‍👧',price:37,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:1654,deliveryMinutes:20,hook:'The argument that keeps recurring between a parent and child is almost never about what it appears to be about on the surface. It is about a specific dynamic written into the interaction between two charts — a trigger on one side that activates a reaction on the other in a loop that escalates the same way every time. This reading identifies the core dynamic between the two charts, names the specific trigger that starts the escalation pattern, reveals what the child is actually communicating through the behaviour that frustrates the parent most, and gives three communication practices calibrated to the actual dynamic rather than to generic conflict resolution.',requiresPartner:true,whatYouGet:['The core dynamic between parent and child chart — the structural relationship between the two blueprints that produces the consistent patterns in the relationship, positive and negative','The specific trigger that escalates every major argument — named from the chart interaction so it can be recognised before the escalation is already running rather than only in retrospect','What the child is communicating through the behaviour that frustrates the parent most — the unmet need or suppressed quality the behaviour is expressing, translated from behaviour language into need language','What the parent is unconsciously projecting onto the child — the quality from the parent\'s own chart that the child is activating, which makes the behaviour feel more charged than it would from a neutral observer','The karmic contract between parent and child — what the soul agreement says each person came to give and receive from the other, and how the current conflict dynamic relates to that agreement','Three specific communication practices calibrated to the combined chart — concrete language adjustments for the three most common friction points between these two specific blueprints'],guidanceType:'practical-solution',guidanceText:'A parent-child communication guide — specific language for the three most common friction points between these two charts, the single reframe that most reduces the charge of the recurring conflict, and the one acknowledgment this child most needs from this parent based on what the chart interaction reveals.',upsell:{id:'children-family-synthesis',name:'Family Destiny Synthesis',price:77}},
-  {id:'relocation-power-map',name:'The Relocation Power Map',tagline:'Three locations where your blueprint activates most powerfully — and an honest reading of where you currently live',emoji:'🗺️',price:57,domain:'oracle-temple',isPopular:true,isFlagship:true,rating:4.8,reviewCount:987,deliveryMinutes:20,hook:'You are not the same person in every location. Your ambition finds different traction, your relationships carry different quality, your health responds differently to the same habits depending on where you are standing on earth. These are not coincidences — they are the predictable result of how planetary lines intersect geography. Four independent location systems map where your blueprint activates most powerfully for your primary current goal. The honest current-city assessment is included: what your present location is amplifying, what it is suppressing, and what that means for whether staying or moving is the higher-leverage decision right now.',whatYouGet:['Your three strongest power locations globally for your primary current goal — with the specific explanation of what each location activates in the chart and which life domain it most strongly supports','Your two most draining locations — including an honest cross-system assessment of your current city, what it is costing you in the domain that matters most right now, and what it is amplifying that you may not want amplified','What your current city activates in the chart — the specific dimension it strengthens and the specific dimension it suppresses, assessed without softening','The optimal location type for your Life Path archetype — the environmental qualities, energy profile, and setting characteristics that structurally support your blueprint rather than resist it','Whether the chart currently supports staying versus moving — the timing verdict from your Personal Year and fate line on whether now is a period for geographic commitment or geographic exploration','A city-level recommendation for five cities you name — the cross-system assessment of what each one does to your specific Life Path energy'],guidanceType:'practical-solution',guidanceText:'A relocation decision framework — the single non-negotiable factor your primary life goal requires in the next location, the city number that best supports it, and the timing verdict on whether the current Personal Year supports making the move now or preparing for a specific future window.',upsell:{id:'relocation-destiny-synthesis',name:'Relocation Destiny Synthesis',price:77}},
-  {id:'home-address-reading',name:'The Home Address Reading',tagline:'Your home address has a number — and that number is either aligned with your Life Path or creating friction you cannot explain',emoji:'🏠',price:29,domain:'oracle-temple',isPopular:true,rating:4.7,reviewCount:2341,deliveryMinutes:20,hook:'Numerological address vibration is different from general location astrology — it is specific to the exact address, including the apartment or house number, and it interacts directly with your Life Path in ways specific enough to test against actual experience. The number of where you live affects which life domain is amplified, which is suppressed, and what kind of energy accumulates in the space over time. Most people notice the effect without knowing what is causing it. This reading calculates the precise vibration of your current address, shows how it interacts with your Life Path, and names the number to look for in a next home based on your current life priorities.',whatYouGet:['Your current address number calculated correctly — the precise vibration of the full address including unit or floor number, and what that vibration means structurally for the type of energy it creates in the space','How that vibration interacts with your specific Life Path — whether the two are harmonious, neutral, or in structural tension, and what that interaction has been creating in the life domains the address governs','Which life domain the current address most amplifies — the specific area of life that the address number strengthens, and whether that amplification is currently an asset or a source of imbalance','The optimal address number for your current life chapter and goals — not a single answer but the range of numbers most aligned with what you are trying to build, with the reasoning behind each recommendation','Whether to move or transform the current space energetically — the assessment of whether the vibration mismatch is significant enough to warrant a move or whether it can be sufficiently addressed with energetic adjustment','The specific number to look for in a next address — the exact number or range most aligned with your Life Path and current chapter goals, so the next search has a clear numerical criterion'],guidanceType:'practical-solution',guidanceText:'A home energy optimisation guide — if staying, the specific adjustment that most improves the address vibration without moving; if searching, the number or range to prioritise and the secondary criteria to evaluate once the number is satisfied.',upsell:{id:'relocation-power-map',name:'Relocation Power Map',price:57}},
-  {id:'business-name-audit',name:'The Business Name Vibration Audit',tagline:'Your business name is either amplifying your Life Path authority or working against it — this tells you which',emoji:'🏢',price:47,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:1432,deliveryMinutes:20,hook:'Every business name reduces to a single digit, and that digit either harmonises with or conflicts with the founder\'s Life Path. When they conflict, the business creates a specific type of friction — the kind that no amount of branding strategy, marketing, or effort can fully resolve because the friction is structural. When they align, the business name amplifies the founder\'s natural authority in the market. This audit calculates the precise numerical vibration of your business name, shows how it interacts with your Life Path, and — if a rebrand is indicated — provides five alternative name suggestions with specifically higher vibration and the reasoning behind each.',whatYouGet:['Your business name\'s Destiny number calculated precisely — the specific vibration it carries and what that vibration tends to create in the market over time','Whether it aligns or conflicts with your Life Path number — the structural assessment of whether the name is amplifying your natural authority or creating a subtle resistance that compounds over time','Which domain the name most supports — customer trust, wealth accumulation, authority recognition, or longevity — and whether that is the domain your business most needs to strengthen right now','How it performs against your top three competitor names — the numerical comparison that shows whether the name creates an advantage or a disadvantage in the specific competitive context','Whether a rebrand is recommended and specifically why — the honest assessment, including the threshold below which the mismatch is not worth the disruption of a name change','Five alternative name suggestions with higher vibration for your specific Life Path — each calculated and explained, with guidance on which works best for the specific goal of the business'],guidanceType:'practical-solution',guidanceText:'A naming decision framework — the specific numerical principles for choosing a name aligned with your Life Path, the evaluation criteria for assessing any name candidate, and the process for testing vibration before committing to a rebrand.',upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87}},
-  {id:'founder-archetype',name:'The Founder Archetype',tagline:'The type of business you are built to run — specific enough to stop building the wrong model',emoji:'🏗️',price:47,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:1234,deliveryMinutes:20,hook:'There are eight Founder Archetypes, and most business failures are not failed ideas — they are the right person building the wrong model for who they actually are. The Expert trying to scale like a Builder. The Connector trying to execute like a Visionary. The Healer trying to compete like a Pioneer. Four independent systems identify which of the eight archetypes your blueprint is built for — along with the business model, revenue structure, team composition, and natural marketing style that fits it — and name the failure pattern of that archetype so it can be seen before it costs something significant.',whatYouGet:['Your Founder Archetype from four independent indicators — Builder, Connector, Expert, Performer, Healer, Visionary, Steward, or Pioneer — with the specific characteristics that confirm which type and how each indicator arrived at the same answer','The business model most naturally aligned with your archetype — not the most popular model or the most profitable model in general but the model that fits how you are built to operate, generate authority, and sustain energy','The revenue model that works best for your specific Life Path and Soul Urge combination — the pricing structure, offer type, and revenue timing that aligns with the natural cadence of your design','The team structure your archetype specifically requires — the roles that complement what you carry rather than duplicating it, and the one role most commonly missing from teams built by your archetype type','The natural marketing style that feels authentic — the approach to client attraction that works with your energy rather than requiring you to perform a type you are not','The failure pattern of your archetype — the specific entrepreneurial blind spot that derails this type most consistently, named with enough specificity to recognise it in your current business before it becomes a crisis'],guidanceType:'practical-solution',guidanceText:'A business model alignment audit — the single structural change most likely to unstick your current business based on your Founder Archetype, the one role to hire next that most directly addresses the archetype\'s natural gap, and the failure pattern to watch for in the next six months given where your business currently is.',upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87}},
-  {id:'fertility-timing-map',name:'The Fertility Timing Map',tagline:'Your three highest fertility windows in the next 24 months — month-specific, drawn from five independent timing systems',emoji:'🌸',price:57,domain:'oracle-temple',isPopular:true,isFlagship:true,rating:4.9,reviewCount:876,deliveryMinutes:20,hook:'Biological readiness is one dimension of fertility timing. Soul readiness is another. And energetic alignment — the specific convergence of Venus cycle, Jupiter 5th house timing, Personal Year energy, classical fertility indicators, and numerical soul arrival windows — is a third dimension that medicine cannot read. This reading does not replace medical guidance. It maps the dimension medicine cannot: the specific months when all five timing systems simultaneously confirm the highest alignment for family, and the soul archetype most likely to arrive in each of those windows.',whatYouGet:['Your three highest fertility windows in the next 24 months — with month-specific timing, not seasonal ranges, and the specific reason each window is indicated by multiple independent timing systems','A current Personal Year assessment for family specifically — whether this year is energetically open for family or whether a specific future window carries significantly higher alignment','Whether your chart carries strong parental karma — the assessment of how significant the parental soul contract is in your blueprint and which specific period activates it most strongly','Classical fertility timing indicators across the reading — what the Venus cycle, Jupiter 5th house transit, and chart timing each indicate about family readiness and how they interact with each other','Energetic preparation practices for the highest-indicated window — the specific spiritual and physical preparations that align with the timing systems confirming the window, not generic fertility support','What the chart indicates about the parent-child soul contract — the nature of the agreement the arriving soul is most likely to carry and what it suggests about the kind of parent this chart is most designed to be'],guidanceType:'spiritual-remedy',guidanceText:'A heritage-calibrated fertility preparation practice for your highest-indicated window — the spiritual condition each of the five timing systems identifies as most important to meet before the window opens, unified into a single preparation sequence from the tradition most aligned with your background, with timing guidance on when to begin.',upsell:{id:'fertility-soul-synthesis',name:'Fertility and Soul Arrival Synthesis',price:87}},
-  {id:'family-blueprint',name:'The Family Blueprint',tagline:'The ancestral pattern running through your family — your specific role in it and what you can change for everyone who comes after',emoji:'👨‍👩‍👧‍👦',price:47,domain:'oracle-temple',rating:4.8,reviewCount:654,deliveryMinutes:20,hook:'Family patterns are not inherited through conversation or example alone. They are encoded in the lineage and arrive with each person born into it — a recurring dynamic that gets passed forward until someone in the family sees it clearly enough to address it rather than transmit it. This reading maps the karmic legacy of your family of origin, identifies the specific pattern your lineage is working to complete in this generation, names your role in that completion, and shows what becomes available for everyone downstream when the pattern is broken rather than carried forward.',whatYouGet:['The karmic legacy of your family of origin — the specific patterns inherited from the lineage and how they arrived in your family rather than how they were consciously transmitted','Which patterns your specific chart is positioned to complete versus transmit — the honest assessment of which lineage patterns you are healing and which you are at risk of passing forward without intervention','The type of soul contract most active in your current family relationships — what the chart says about the agreements operating between you and the family members you are most closely in relationship with','Whether your chart indicates a single-child, multi-child, or no-children path as the soul\'s agreement — not a prediction but a structural indicator of what the blueprint is most designed for in terms of family building','The spiritual function the family unit is currently serving — what the collection of charts present in your immediate family is working to accomplish at a soul level beyond the personal','The one inherited pattern most urgent to address before passing it forward — the pattern the reading identifies as most active, most transmissible, and most transformable in this generation'],guidanceType:'spiritual-remedy',guidanceText:'A family healing practice from your heritage tradition — the specific ancestral offering for the primary inherited pattern identified as most urgent, from the tradition most aligned with your lineage, with guidance on timing the practice within the current Personal Year cycle and the one living family conversation the chart identifies as most important to have.',upsell:{id:'children-family-synthesis',name:'Family Destiny Synthesis',price:77}},
-  {id:'personal-brand-frequency',name:'The Personal Brand Frequency',tagline:'The brand position four systems all point to before strategy enters the conversation — the only one you can hold indefinitely',emoji:'📣',price:47,domain:'oracle-temple',isPopular:true,rating:4.8,reviewCount:1654,deliveryMinutes:20,hook:'The most sustainable personal brands are not positions that were chosen — they are natural frequencies that were recognised. When what you say publicly matches what you actually carry at the level of your name, your numbers, your Midheaven, and your Soul Urge, the audience you were built to reach finds you with less friction and stays with deeper loyalty. This reading finds where all four systems agree on your specific public frequency — the niche, the content style, the audience, the message — and that convergence is the only brand position you can hold indefinitely without performing it.',whatYouGet:['Your Personal Brand Archetype confirmed from four systems — the specific public identity all four indicators agree on, described concretely enough to inform content, copy, and positioning decisions immediately rather than serving as an inspiration for more exploration','The specific niche you are cosmically aligned to own — not a broad category but a precise enough domain that you could explain it in one sentence and it would not describe anyone else doing similar work in the same way','The content style most natural and highest-performing for your frequency — the format, tone, depth, and approach that feels effortless from the inside because it matches how information moves through you naturally','The audience archetype most magnetically attracted to your energy — described specifically enough to inform every piece of content, every offer, and every message without needing a separate market research process','The platform most aligned with your expression style — where your specific combination of authority type and content style produces the most traction with the least friction relative to alternatives','One message your chart says is most underserved in the market and most naturally yours to carry — the specific insight, perspective, or contribution that your blueprint is uniquely positioned to deliver'],guidanceType:'practical-solution',guidanceText:'A brand activation guide — the specific first public action that makes your natural authority most visible to your identified audience, confirmed across all four systems, with the optimal Personal Year timing for making it and the framing that most clearly differentiates your natural frequency from what others in the same space are doing.',upsell:{id:'digital-identity-synthesis',name:'Digital Identity Synthesis',price:77}},
-  {id:'authority-voice-reading',name:'The Authority Voice Reading',tagline:'Why some people command attention the moment they speak — and whether your chart supports that or something subtler',emoji:'🎤',price:37,domain:'oracle-temple',rating:4.7,reviewCount:1234,deliveryMinutes:20,hook:'Natural authority is not volume or confidence. It is coherence — the alignment between what someone carries internally and what they project publicly. When there is a gap between the two, people sense the incoherence before they can name it, and it costs credibility that no communication technique can fully restore. This reading identifies whether your current public expression is aligned or in conflict with your internal chart authority, names the specific point of incoherence, identifies your natural authority archetype, and gives you the one communication shift that most directly closes the gap.',whatYouGet:['Whether your current public expression is aligned or conflicted with your internal chart — the assessment of whether what you present publicly matches what your Destiny number, Midheaven, and Life Path actually carry','The specific point of incoherence — what you are presenting versus what you are actually carrying, described specifically enough to recognise it in recent content, conversations, or professional interactions','Your natural authority archetype and the domain where it is most convincing — the type of authority your chart is built to project and where in your professional context that authority is most naturally recognised','The one communication shift that most immediately increases perceived credibility — not a general confidence recommendation but the specific change in how you frame, open, or position what you say','Which medium transmits your authority best — whether writing, speaking, video, or one-to-one conversation is most aligned with how your authority type actually travels','Whether this year supports speaking louder or building depth quietly — the timing assessment of whether the current Personal Year most supports public visibility or internal development of the authority foundation'],guidanceType:'practical-solution',guidanceText:'A communication coherence guide — the specific language shift that resolves the primary incoherence between what you carry internally and what you project publicly, the one framing change that makes the authority more visible, and the medium to prioritise in the current Personal Year based on how your authority type travels best.',upsell:{id:'personal-brand-frequency',name:'Personal Brand Frequency',price:47}},
+  {
+    id:'soulmate-arrival-window-os',
+    name:'The Soulmate Arrival Window',
+    tagline:'The windows when your chart is most open for the person you are looking' +
+      ' for — month-specific, not vague',
+    emoji:'⌛',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    isBestSeller:true,
+    rating:4.9,
+    reviewCount:3847,
+    deliveryMinutes:20,
+    hook:'The soulmate arrival window is not a fixed date. It is a recurring pattern' +
+      ' of alignment between your Personal Year cycle, Venus timing, and Life Path' +
+      ' receptivity — and it opens and closes on a schedule that is already visible' +
+      ' in your chart. The problem is not that the window has passed or that you are' +
+      ' not ready. The problem is that you have been looking for a person when you' +
+      ' should have been reading the timing. Your next window is already visible.' +
+      ' This reading names it, names the type of person most likely to arrive in it,' +
+      ' and names the one pattern that has been closing your previous windows before' +
+      ' they fully opened.',
+    whatYouGet:[
+      'The month-specific timing of your three love windows in the next 24 months —' +
+        ' not a vague season but the actual months when your chart is most' +
+        ' structurally open for romantic alignment',
+      'The type of person who arrives in each window — the numerical and chart-based' +
+        ' signature of who is most likely to appear when each window is open,' +
+        ' specific enough to recognise',
+      'What you need to be doing differently in each window to be recognisable and' +
+        ' available to the person the chart is sending — specific and actionable,' +
+        ' not philosophical',
+      'The one pattern that has been closing your windows early — the specific' +
+        ' behaviour or belief the chart identifies as the primary obstacle to' +
+        ' romantic alignment, named from three independent indicators',
+      'Whether the next 12 months or the following year carries your highest love' +
+        ' window — so you can decide now which period to invest in and which to use' +
+        ' as preparation',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A 21-day opening practice from your heritage tradition — not a' +
+      ' generic attraction routine but the specific daily action calibrated to your' +
+      ' window type and timing, drawn from the tradition most aligned with your' +
+      ' cultural background.',
+    upsell:{id:'soulmate-compatibility-verdict',name:'Soulmate Compatibility Verdict',price:37},
+  },
+  {
+    id:'love-wound-reading-os',
+    name:'The Love Wound Reading',
+    tagline:'The pattern beneath every heartbreak you have had — named precisely so' +
+      ' it cannot repeat in the same way',
+    emoji:'💔',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.9,
+    reviewCount:2341,
+    deliveryMinutes:20,
+    hook:'You have not had five different heartbreaks. You have had one heartbreak' +
+      ' five times, with different people playing the same role. The pattern is' +
+      ' structural — it is written simultaneously in the Heart Line, the Venus' +
+      ' placement, and the karmic debt signature. Once it is named with that level' +
+      ' of specificity, something changes. Not because the insight alone heals it,' +
+      ' but because you can no longer be unconscious of the pattern at the exact' +
+      ' moment it would normally activate. The 90-day protocol that follows the' +
+      ' reading targets that specific activation moment.',
+    whatYouGet:[
+      'The exact repeating pattern across your entire love history — named with' +
+        ' enough precision that you will recognise it in the last five years' +
+        ' immediately',
+      'The chart-based and numerical root of the pattern — where it was written into' +
+        ' the blueprint and why it keeps recreating the same circumstances with' +
+        ' different people',
+      'The specific type of person who reliably triggers the pattern — and the' +
+        ' chart-based explanation for why this type keeps appearing across different' +
+        ' relationships',
+      'The karmic origin — what past-life agreement or incomplete lesson this' +
+        ' pattern is the surface expression of, and what demonstrating the lesson' +
+        ' actually looks like in practice',
+      'A 90-day pattern interruption protocol — day-specific, structured in three' +
+        ' phases, targeting the activation trigger identified in your specific chart',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A 90-day pattern interruption practice from your heritage' +
+      ' tradition — not a generic healing protocol but a specific three-phase' +
+      ' sequence calibrated to the wound type identified in your reading: the' +
+      ' spiritual clearing for the karmic layer, the daily practice for the belief' +
+      ' layer, and the behavioural interruption for the activation moment.',
+    upsell:{id:'karmic-love-debt',name:'Karmic Love Debt',price:57},
+  },
+  {
+    id:'income-ceiling-breaker-os',
+    name:'The Income Ceiling Breaker',
+    tagline:'The specific thing holding your income at the same number — found' +
+      ' across four independent indicators',
+    emoji:'💥',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    isBestSeller:true,
+    rating:4.9,
+    reviewCount:2897,
+    deliveryMinutes:20,
+    hook:'Income ceilings are not created by the market and rarely by skill gaps.' +
+      ' They are created by a specific internal pattern that runs consistently' +
+      ' across multiple dimensions of the blueprint simultaneously — which is' +
+      ' precisely why willpower, strategy, and favourable market conditions have not' +
+      ' been able to move it. This reading locates the pattern from four independent' +
+      ' angles. The nature of your ceiling only becomes fully visible when all four' +
+      ' agree on what it is. Once named from four directions simultaneously, the' +
+      ' ceiling changes its character — from something that feels like external' +
+      ' resistance to something that can actually be addressed.',
+    whatYouGet:[
+      'The exact nature of your income ceiling — what created it, where it sits in' +
+        ' the chart, and which system shows it most clearly',
+      'Whether the block is karmic, belief-based, structural, or timing-based —' +
+        ' because the resolution protocol is completely different depending on the' +
+        ' type',
+      'The specific thought or behavioural pattern that enforces the ceiling — the' +
+        ' internal mechanism that resets income to the same level whenever it rises' +
+        ' above it',
+      'The wealth channel most naturally aligned with your Life Path — the earning' +
+        ' mode the blueprint is built for versus the mode currently being used',
+      'The Personal Year window when the ceiling is structurally most dissoluble —' +
+        ' the specific timing when the chart supports breakthrough most strongly',
+      'Three specific moves to break through — sequenced to the ceiling type, not' +
+        ' generic wealth mindset advice',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A ceiling dissolution protocol specific to your ceiling type —' +
+      ' internal actions for the belief or karmic layer, practical actions for the' +
+      ' structural layer, and timing actions for the Personal Year window, sequenced' +
+      ' across one complete cycle rather than prescribed as a generic 90-day plan.',
+    upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97},
+  },
+  {
+    id:'calling-decoder-os',
+    name:'The Calling Decoder',
+    tagline:'What you were built to do — named specifically enough to change what' +
+      ' you do next week',
+    emoji:'🧭',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.9,
+    reviewCount:1876,
+    deliveryMinutes:20,
+    hook:'Most descriptions of purpose are either too broad to act on or too narrow' +
+      ' to feel complete. Four independent systems read the calling from completely' +
+      ' different angles — Founder Archetype from the numbers, dharmic direction' +
+      ' from the sky map, fate line trajectory from the hand, and Midheaven' +
+      ' authority from the chart — and names only what all four confirm' +
+      ' simultaneously. The result is not a category. It is a specific enough' +
+      ' description of your calling that it changes an actual decision you will make' +
+      ' in the next seven days.',
+    whatYouGet:[
+      'Your dharmic calling in plain language — what all four systems agree you were' +
+        ' built to contribute, stated specifically enough to evaluate against your' +
+        ' current work',
+      'The specific type of work that activates your highest expression — not an' +
+        ' industry category but a mode of contribution precise enough to guide' +
+        ' hiring, business, or repositioning decisions',
+      'The gap between your current work and the calling — named honestly, with an' +
+        ' assessment of how wide it is and what the most direct bridge looks like' +
+        ' from your current position',
+      'The income model most naturally aligned with the calling — how the' +
+        ' contribution type translates into sustainable earnings without requiring' +
+        ' you to operate against your design',
+      'The one gift you consistently undervalue that others would pay premium for —' +
+        ' identified from the divergence between what feels easy to you and what is' +
+        ' genuinely rare in the market',
+      'The timeline for transitioning toward calling work — the Personal Year and' +
+        ' Pinnacle combination that most supports the move, with a specific first' +
+        ' step',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A calling activation guide — the single most important first move' +
+      ' from your current position toward calling work, the exact timing your' +
+      ' current Personal Year and fate line most support for making it, and the one' +
+      ' income-generating step that can happen immediately before the full' +
+      ' transition, drawn from what all four systems confirm as most accessible' +
+      ' right now.',
+    upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
+  },
+  {
+    id:'shadow-self-reading-os',
+    name:'The Shadow Self Reading',
+    tagline:'What you have been suppressing — and the specific strength that lives' +
+      ' on the other side of it',
+    emoji:'🌑',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.9,
+    reviewCount:1654,
+    deliveryMinutes:20,
+    hook:'The shadow is not the worst version of you. It is the quality you decided' +
+      ' was too dangerous, too much, or too strange to express — and then spent' +
+      ' years and enormous energy managing. The cost of that management is rarely' +
+      ' noticed until it is named: the same energy suppressing the shadow could be' +
+      ' generating the gift. This reading maps your specific shadow complex from' +
+      ' five independent indicators, names the gift that lives on the other side of' +
+      ' it, and gives you the specific integration path for your chart — not a' +
+      ' universal shadow work framework applied to a named category but the practice' +
+      ' that works for this particular complex.',
+    whatYouGet:[
+      'Your primary shadow pattern — the specific quality being suppressed, named' +
+        ' from 12th house, Pluto aspects, south node, and karmic debt signature in' +
+        ' cross-system agreement',
+      'Which life domain is most affected by the active suppression — where the' +
+        ' energy cost of managing the shadow shows up most concretely in daily life',
+      'The chart-based and numerical signature that originally created the' +
+        ' suppression — the moment in the blueprint when the quality was decided to' +
+        ' be unacceptable',
+      'The gold in the shadow — the specific disowned strength that becomes' +
+        ' available when the suppression energy is redirected toward integration' +
+        ' rather than management',
+      'A 60-day integration practice tailored specifically to your shadow type —' +
+        ' structured so the work remains contained and productive rather than' +
+        ' destabilising',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A 60-day shadow integration practice from your heritage tradition' +
+      ' — structured in three phases calibrated to your specific complex: the' +
+      ' recognition phase that names the shadow without judgment, the encounter' +
+      ' phase that develops a direct relationship with it, and the integration phase' +
+      ' that makes the suppressed quality available as functional strength.',
+    upsell:{id:'shadow-and-light-synthesis',name:'Shadow and Light Synthesis',price:87},
+  },
+  {
+    id:'spiritual-gifts-inventory-os',
+    name:'The Spiritual Gifts Inventory',
+    tagline:'The specific gifts already active in you — named from six indicators,' +
+      ' not inferred from a category',
+    emoji:'✨',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.9,
+    reviewCount:1234,
+    deliveryMinutes:20,
+    hook:'Most spiritual frameworks assign you a type and call it a path. Six' +
+      ' independent spiritual indicators — Neptune, the 12th house, Ketu, master' +
+      ' number signatures, Moon mount, and intuition line — read simultaneously,' +
+      ' surface only what all six confirm about your specific gifts. The result is' +
+      ' not a category shared by millions of people who took the same quiz. It is an' +
+      ' inventory of what is actually present in this blueprint: the capacities' +
+      ' already active, the gifts dormant and waiting for development, the stage' +
+      ' actually inhabited rather than performed.',
+    whatYouGet:[
+      'Your primary active gift named plainly — clairsentience, clairvoyance,' +
+        ' healing, prophecy, teaching, or channelling — with the specific form it' +
+        ' takes in your chart rather than the generic definition',
+      'Your secondary dormant gift and the specific conditions or practices that' +
+        ' activate it — what needs to happen before this capacity becomes' +
+        ' consistently available',
+      'The life experiences already developing these gifts — the retrospective that' +
+        ' shows the gifts have been operating even when they were not being called' +
+        ' that',
+      'How to use the primary gift both professionally and personally — the specific' +
+        ' contexts where it is most reliable and the specific ways to offer it that' +
+        ' match the chart',
+      'The spiritual practice most calibrated to your gift archetype — not a general' +
+        ' spiritual recommendation but the specific discipline that develops this' +
+        ' particular gift most directly',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A gift activation and protection practice specific to your gift' +
+      ' type — the daily discipline most effective for developing the primary gift' +
+      ' responsibly, the protection practice your gift type specifically requires,' +
+      ' and the one boundary the chart says is most essential to establish before' +
+      ' the gift is used in service of others.',
+    upsell:{id:'complete-spiritual-synthesis',name:'Complete Spiritual Synthesis',price:97},
+  },
+  {
+    id:'soul-contract-reading-os',
+    name:'The Soul Contract Reading',
+    tagline:'The agreements encoded in your chart before you arrived — including the' +
+      ' ones you have been actively avoiding',
+    emoji:'📋',
+    price:57,
+    domain:'oracle-temple',
+    isPopular:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:1543,
+    deliveryMinutes:20,
+    hook:'A soul contract is not motivational language for your deepest preferences.' +
+      ' It is a specific set of agreements encoded in your birth data with precision' +
+      ' — about what this life was designed to accomplish, who it was designed to be' +
+      ' accomplished with, and what consistently happens when the agreements are' +
+      ' avoided. This reading decodes three primary soul agreements from four' +
+      ' independent indicators, identifies which are being honoured and which are' +
+      ' being actively avoided, names the karmic debts still outstanding, and maps' +
+      ' the timeline showing when each agreement becomes most structurally active in' +
+      ' the current chapter of life.',
+    whatYouGet:[
+      'Your three primary soul agreements encoded in the chart — named specifically' +
+        ' from the convergence of four independent indicators, each reading the same' +
+        ' soul dimension from a different angle',
+      'Which agreements are currently being honoured — the areas where life flows,' +
+        ' doors open, and effort compounds rather than drains',
+      'Which agreements are currently being avoided — the areas where resistance,' +
+        ' repetition, and friction are the consistent experience, and what the' +
+        ' avoidance is actually costing',
+      'The karmic debts still outstanding — what remains incomplete from prior' +
+        ' agreements and what demonstrating the lesson in this lifetime actually' +
+        ' requires practically',
+      'The soul\'s ultimate contribution — what this particular life is building' +
+        ' toward in the long arc, beyond the current chapter and its immediate' +
+        ' demands',
+      'Timing — which soul agreements become most structurally active in the current' +
+        ' Pinnacle and Personal Year, creating the highest-leverage window to' +
+        ' address them',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A soul contract alignment guide — for each of your three primary' +
+      ' soul agreements, the specific practical action most aligned with honouring' +
+      ' it in the current chapter, calibrated to your Pinnacle and Personal Year so' +
+      ' the guidance is timely rather than perpetually aspirational.',
+    upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
+  },
+  {
+    id:'nine-year-cycle-reading-os',
+    name:'The Nine-Year Cycle Reading',
+    tagline:'The map of your entire life in nine-year chapters — the past explained' +
+      ' and the future made navigable',
+    emoji:'∞',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    isBestSeller:true,
+    rating:4.8,
+    reviewCount:4123,
+    deliveryMinutes:20,
+    hook:'Most people navigate each year the same way — the same level of effort,' +
+      ' the same type of action, the same decision-making approach — regardless of' +
+      ' what the year is actually asking for. A Year 1 demands initiation. A Year 9' +
+      ' demands release. Pushing initiation energy in a Year 9 is like rowing' +
+      ' against a current moving at twice your speed. Five independent timing' +
+      ' systems mapped against the same nine-year cycle produce two things: a' +
+      ' retrospective that explains why certain periods felt like running uphill' +
+      ' when nothing was wrong with you, and a forward map that makes the windows' +
+      ' ahead navigable before they arrive.',
+    whatYouGet:[
+      'A retrospective map of your last two complete nine-year cycles — the' +
+        ' explanation for why specific periods of your past felt the way they did,' +
+        ' finally coherent in the context of what the cycle was actually asking for',
+      'The exact cycle currently active, what it specifically demands, and the' +
+        ' single most common mistake people make when they are in this particular' +
+        ' year without knowing it',
+      'A forward map of the next nine years — what each year calls for, when to' +
+        ' initiate, when to consolidate, when to release, and when the biggest' +
+        ' opportunity windows open',
+      'The specific mistake most people make in your current year — the action that' +
+        ' feels right but works against the cycle, named precisely so it can be' +
+        ' avoided',
+      'The one decision to make now versus wait on — the specific choice your' +
+        ' current cycle supports versus the one that will create less friction if' +
+        ' deferred to the next supporting year',
+      'How your current Pinnacle cycle overlays with your Personal Year — the' +
+        ' combined picture that shows where both major timing systems are aligned' +
+        ' and where they are in tension',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A cycle-aligned action guide for the next 12 months — the specific' +
+      ' type of move most supported in your current Personal Year, the one decision' +
+      ' to make now while the cycle supports it, and the one decision to defer until' +
+      ' the cycle shifts, with the month where the deferral window opens.',
+    upsell:{id:'annual-destiny-forecast',name:'Annual Destiny Forecast',price:77},
+  },
+  {
+    id:'soulmate-compatibility-verdict',
+    name:'The Soulmate Compatibility Verdict',
+    tagline:'Two names. Six compatibility domains. The complete picture of what this' +
+      ' connection actually is.',
+    emoji:'⚖️',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:2341,
+    deliveryMinutes:20,
+    hook:'Chemistry is real data — but it is only one data point, and it is the' +
+      ' least predictive of long-term compatibility. Two people can feel magnetic' +
+      ' and be structurally incompatible across the dimensions that determine' +
+      ' whether a relationship sustains. This reading cross-examines the connection' +
+      ' from six independent angles — emotional compatibility, financial alignment,' +
+      ' physical chemistry, intellectual resonance, spiritual direction, and' +
+      ' long-term vision — and delivers the complete picture: what all six confirm,' +
+      ' what they reveal about the friction points, and whether this is a growth' +
+      ' relationship or a harvest relationship.',
+    requiresPartner:true,
+    whatYouGet:[
+      'A compatibility score across all six domains — emotional, financial,' +
+        ' physical, intellectual, spiritual, and long-term vision — each scored' +
+        ' independently so the portrait is honest rather than averaged into a single' +
+        ' number',
+      'The one area of strongest natural harmony between the two charts — the domain' +
+        ' where the connection creates something neither person produces as' +
+        ' effectively alone',
+      'The one area of guaranteed structural friction — named specifically with the' +
+        ' chart-based explanation for why it will keep recurring regardless of' +
+        ' goodwill or communication improvements',
+      'The karmic contract between the two people — what the soul agreement says' +
+        ' this connection is for, and whether it is completing karma or building' +
+        ' something new',
+      'Whether this is a growth relationship or a harvest relationship — the' +
+        ' distinction that determines what the connection is designed to produce and' +
+        ' what staying or leaving each means',
+      'The specific communication approach that most effectively prevents the most' +
+        ' likely conflict between these two charts — practical and specific rather' +
+        ' than generic conflict resolution advice',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A compatibility navigation guide for the most significant' +
+      ' structural tension between the two charts — the one conversation or explicit' +
+      ' agreement that addresses the gap most likely to become a recurring problem,' +
+      ' with the specific framing that makes it possible to have that conversation' +
+      ' productively.',
+    upsell:{id:'complete-love-synthesis',name:'Complete Love Synthesis',price:97},
+  },
+  {
+    id:'professional-compatibility-scan',
+    name:'The Professional Compatibility Scan',
+    tagline:'Before you sign anything with this person — run four compatibility' +
+      ' indicators that business strategy cannot tell you',
+    emoji:'🤝',
+    price:29,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.7,
+    reviewCount:1876,
+    deliveryMinutes:20,
+    hook:'Professional partnerships fail more often at the human layer than at the' +
+      ' strategic layer. Two people can have a compelling business concept,' +
+      ' complementary skill sets, and shared goals — and still collapse because of' +
+      ' incompatible decision-making styles under pressure, misaligned financial' +
+      ' ethics, or a power dynamic that was never acknowledged and therefore never' +
+      ' agreed on. This reading examines the partnership across four professional' +
+      ' compatibility indicators and delivers three things: the most likely point of' +
+      ' conflict, the specific conversation that must happen before committing, and' +
+      ' a clear proceed, proceed with caution, or significant friction verdict.',
+    requiresPartner:true,
+    whatYouGet:[
+      'Compatibility across four professional domains — vision alignment, work style' +
+        ' fit, financial ethics, and communication under pressure — each scored and' +
+        ' explained rather than combined into a single number',
+      'The most likely point of conflict between the two charts — the specific' +
+        ' dynamic that will surface under stress, named from the chart interaction' +
+        ' rather than inferred from personality',
+      'The power dynamic that will naturally emerge between these two charts — and' +
+        ' whether it is a dynamic both people can actually work with over time',
+      'Whether the timing is right for this partnership — what the current Personal' +
+        ' Year and Pinnacle of each person says about their readiness for the' +
+        ' specific type of venture being considered',
+      'A verdict: proceed, proceed with caution naming the specific friction, or' +
+        ' significant friction requiring explicit agreement before proceeding',
+      'The one conversation that must happen before committing — the specific topic' +
+        ' the charts identify as the structural gap most likely to derail the' +
+        ' partnership if left unaddressed',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A partnership decision framework — the specific red flags and' +
+      ' green lights for this partnership calibrated to the compatibility gaps' +
+      ' identified, plus the explicit agreement or boundary that most directly' +
+      ' addresses the primary structural tension between the two charts.',
+    upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87},
+  },
+  {
+    id:'birthday-blueprint',
+    name:'The Birthday Blueprint',
+    tagline:'The natural talent and the soul test encoded in your birth day — and' +
+      ' why they are always the same quality',
+    emoji:'🎂',
+    price:19,
+    domain:'oracle-temple',
+    isPopular:true,
+    isBestSeller:true,
+    rating:4.8,
+    reviewCount:5231,
+    deliveryMinutes:20,
+    hook:'The day you were born encodes two things with unusual precision: the' +
+      ' specific natural talent you arrived with, and the specific test your soul' +
+      ' agreed to master in this lifetime. These two things are not separate. They' +
+      ' are always the same quality — one expressing freely as the gift, one' +
+      ' creating the primary life friction when suppressed or avoided. The Birthday' +
+      ' Blueprint names both, shows you the relationship between them, and gives you' +
+      ' the practice that accelerates moving from the challenge into the gift. Most' +
+      ' people recognise both within the first paragraph.',
+    whatYouGet:[
+      'Your Birthday Gift — the specific natural talent encoded in your birth day,' +
+        ' described in enough detail to recognise it in your own history and use it' +
+        ' as a lens for professional positioning',
+      'Your Birthday Challenge — the soul test your chart agreed to master,' +
+        ' described so concretely that you will recognise exactly where it shows up' +
+        ' and how it has been showing up',
+      'How the Gift and Challenge are the same quality — the specific relationship' +
+        ' between them that explains why addressing the Challenge is always the path' +
+        ' to the Gift, not an obstacle to it',
+      'What happens when the Challenge is left unaddressed — the specific pattern it' +
+        ' creates across love, career, and money when the lesson is avoided rather' +
+        ' than engaged',
+      'What full expression of the Birthday Gift looks like in your specific life' +
+        ' context — not the generic description of the number but how it manifests' +
+        ' given your Life Path and current chapter',
+      'The practice that most directly accelerates moving from Challenge to Gift —' +
+        ' the daily action that works on both simultaneously',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A Birthday Gift activation practice — the single daily action that' +
+      ' develops the Gift and works through the Challenge at the same time,' +
+      ' calibrated to the specific gift type identified, with guidance on the most' +
+      ' common ways this gift type is suppressed and the earliest signal that the' +
+      ' activation is working.',
+    upsell:{id:'life-path-deep-dive',name:'Life Path Deep Dive',price:57},
+  },
+  {
+    id:'birthday-gift-career-map',
+    name:'The Birthday Gift Career Map',
+    tagline:'The specific work your Birthday Gift encodes you to do — and why it is' +
+      ' different from what you are merely good at',
+    emoji:'🎯',
+    price:29,
+    domain:'oracle-temple',
+    rating:4.7,
+    reviewCount:1543,
+    deliveryMinutes:20,
+    hook:'There is a specific type of professional competence that comes easily —' +
+      ' where you produce results with less effort than peers require and where the' +
+      ' work feels generative rather than draining. This is not the same as what you' +
+      ' are good at from training or habit. It is what you arrived with. The' +
+      ' Birthday Gift number encodes the specific vocation most naturally aligned' +
+      ' with how you are built, and this reading maps four things: the gift itself' +
+      ' named precisely, the three career paths where it operates at highest' +
+      ' leverage, the business model that monetises it most directly, and the one' +
+      ' repositioning move that makes it most visible to the people most likely to' +
+      ' pay premium for it.',
+    whatYouGet:[
+      'Your Birthday Gift number and its precise vocational expression — specific' +
+        ' enough to evaluate against the work you currently do and the work you have' +
+        ' been considering',
+      'Three career paths most naturally aligned with the Gift — described' +
+        ' specifically enough to know whether your current path is among them or' +
+        ' adjacent to them',
+      'The business model that monetises the Gift most directly — the revenue' +
+        ' structure that allows the gift to generate income without requiring you to' +
+        ' work against the design that makes it valuable',
+      'The type of client or employer most naturally willing to pay premium for this' +
+        ' specific gift — the audience profile that values what you do most highly',
+      'What has been draining the Gift in your current setup — the specific mismatch' +
+        ' between the gift type and the current work context that explains why the' +
+        ' work takes more energy than it should',
+      'The one repositioning move that most immediately increases income aligned to' +
+        ' the Gift — the specific change in offer, positioning, or role that makes' +
+        ' the gift more visible to the people who most need it',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A career repositioning guide — the single most impactful' +
+      ' professional change that makes the Birthday Gift most visible and most' +
+      ' valued by the market most willing to pay for it, with the specific framing' +
+      ' that differentiates the gift from what others in the same field offer and' +
+      ' the first step that can happen in the next 30 days.',
+    upsell:{id:'calling-decoder-os',name:'Calling Decoder',price:47},
+  },
+  {
+    id:'pinnacle-portal',
+    name:'The Pinnacle Portal',
+    tagline:'The life chapter you are in right now — its specific gifts, its' +
+      ' demands, and what you have left to harvest from it',
+    emoji:'⛰️',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:2103,
+    deliveryMinutes:20,
+    hook:'Every life unfolds in four major chapters — four Pinnacle periods of' +
+      ' roughly nine years each, each with its own specific theme, its own gifts,' +
+      ' and its own specific demands. Most people live their current Pinnacle' +
+      ' unconsciously — which means they spend the chapter pushing against what it' +
+      ' requires rather than working with what it offers. This reading identifies' +
+      ' your current Pinnacle precisely, names what this chapter is designed to' +
+      ' build in you, what it is asking you to release, how much time remains, and' +
+      ' the one move that extracts maximum value from the time still available in it.',
+    whatYouGet:[
+      'Your current Pinnacle number and its precise age range — where in the chapter' +
+        ' you are and how much time remains before the next chapter opens',
+      'What this Pinnacle specifically opens up — the gift of the chapter, the' +
+        ' domain it activates, and the specific opportunity type that is' +
+        ' structurally more available during this period than at any other',
+      'What this Pinnacle specifically challenges — what it is asking you to' +
+        ' release, develop, or master, and why that challenge is inseparable from' +
+        ' the gift it offers',
+      'What the next chapter brings — enough forward visibility to make decisions' +
+        ' now that are aligned with what is coming rather than what has already' +
+        ' passed',
+      'The retrospective — what the previous Pinnacle was building and why this' +
+        ' chapter is the natural continuation of that work even when it does not' +
+        ' feel connected',
+      'The one move that harvests the maximum value from the current chapter before' +
+        ' it closes — the specific action most aligned with what this Pinnacle' +
+        ' period is designed to produce',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A Pinnacle harvest guide — the specific move that extracts the' +
+      ' most value from your current chapter, timed to where you are within the' +
+      ' period, with guidance on what to initiate if you are in the first half and' +
+      ' what to complete if you are in the second half.',
+    upsell:{id:'nine-year-cycle-reading-os',name:'Nine-Year Cycle Reading',price:47},
+  },
+  {
+    id:'pinnacle-transition-forecast',
+    name:'The Pinnacle Transition Forecast',
+    tagline:'The chapter leaving and the chapter arriving — and the two to three' +
+      ' years where both are running simultaneously',
+    emoji:'🌉',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:1432,
+    deliveryMinutes:20,
+    hook:'A Pinnacle transition is not a gradual shift. It is the close of one' +
+      ' nine-year chapter and the opening of another — and the two to three years' +
+      ' surrounding that transition carry a specific quality unlike any other period' +
+      ' in the cycle. What the departing chapter built, what it leaves incomplete,' +
+      ' what the arriving chapter will demand and reward — all of this is visible in' +
+      ' the numbers before the transition happens. This reading identifies whether' +
+      ' you are within three years of a transition, maps both sides of it in detail,' +
+      ' and names the specific thing to complete and the specific thing to initiate' +
+      ' in the window surrounding it.',
+    whatYouGet:[
+      'Whether you are within three years of a Pinnacle transition — and if so,' +
+        ' which side of the threshold you are on and how much runway remains',
+      'What the departing Pinnacle accomplished — a retrospective of what the' +
+        ' chapter built, what it completed, and what it is leaving behind as the' +
+        ' foundation for the next one',
+      'What the incoming Pinnacle demands and rewards — the specific theme, the' +
+        ' opportunity type it opens, and what it asks you to be different about' +
+        ' compared to the chapter closing',
+      'The specific domain of life that will shift most dramatically at the' +
+        ' transition — the area where the change between chapters will be most' +
+        ' visible and most consequential',
+      'The one thing to complete before the transition — the specific action or' +
+        ' decision the departing chapter needs in order to close cleanly rather than' +
+        ' carry its unfinished business into the next period',
+      'The one thing to initiate now that the new chapter will amplify — the seed' +
+        ' planted in the final period of the current chapter that the next chapter' +
+        ' is most structurally designed to grow',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A transition navigation guide — what to complete and what to' +
+      ' initiate in the 12 months surrounding your specific transition date, with' +
+      ' the reasoning drawn from both the departing and arriving Pinnacle numbers' +
+      ' and the Personal Year cycle running concurrently.',
+    upsell:{id:'soul-contract-reading-os',name:'Soul Contract Reading',price:57},
+  },
+  {
+    id:'karmic-debt-cleanser',
+    name:'The Karmic Debt Cleanser',
+    tagline:'The pattern that has been following you across relationships, money,' +
+      ' and work — its origin and the repayment path',
+    emoji:'🧹',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    isBestSeller:true,
+    rating:4.9,
+    reviewCount:2987,
+    deliveryMinutes:20,
+    hook:'Karmic debt is not a punishment. It is an incomplete lesson — a quality' +
+      ' the soul agreed to master but has been avoiding, which means life keeps' +
+      ' recreating the circumstances for the lesson until it is genuinely' +
+      ' demonstrated. The debt shows up with remarkable consistency: always the same' +
+      ' type of dynamic, always the same outcome, until something fundamentally' +
+      ' different is understood and acted on. This reading finds every place the' +
+      ' debt is encoded in the chart, names the specific past-life origin with' +
+      ' enough specificity to make it feel true rather than theoretical, shows how' +
+      ' it is manifesting across the primary affected domain, and maps the 90-day' +
+      ' resolution protocol specific to the debt type identified.',
+    whatYouGet:[
+      'Whether karmic debts are present in the chart and in which part — the' +
+        ' specific placement that shows the debt and what it says about which life' +
+        ' domain carries the heaviest karmic weight',
+      'The specific past-life origin story for each debt identified — named with' +
+        ' enough specificity that the pattern in this life makes historical sense' +
+        ' rather than feeling like random misfortune',
+      'How the debt is currently manifesting across the primary affected domains —' +
+        ' the specific recurring dynamic that is the surface expression of the' +
+        ' karmic pattern',
+      'The precise lesson the debt is waiting to be demonstrated — what the soul' +
+        ' agreed to master, described in practical behavioural terms rather than' +
+        ' abstract spiritual language',
+      'A 90-day karmic resolution protocol — specific daily practices for the' +
+        ' internal layer combined with the heritage-calibrated spiritual clearing' +
+        ' for the karmic layer, sequenced in the order that creates the most traction',
+      'A timing signal — what in the current chart indicates the debt is ready to' +
+        ' resolve now, and what that readiness looks like when it is real versus' +
+        ' when it is wishful',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A 90-day karmic debt resolution protocol specific to the debt type' +
+      ' identified — combining the heritage-calibrated spiritual clearing from your' +
+      ' tradition for the karmic layer with the specific daily practice for the' +
+      ' belief and behavioural layer, structured so the two work together rather' +
+      ' than in parallel.',
+    upsell:{id:'relationship-karma-synthesis',name:'Relationship Karma Synthesis',price:87},
+  },
+  {
+    id:'pattern-breaker',
+    name:'The Pattern Breaker',
+    tagline:'The loop you keep living — why it keeps starting, and the one moment' +
+      ' where it can actually be interrupted',
+    emoji:'🔓',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:2341,
+    deliveryMinutes:20,
+    hook:'Repeating patterns are not failures of willpower or self-awareness. They' +
+      ' are karmic or conditioned grooves running deep enough that the usual' +
+      ' self-improvement approaches cannot reach them. Each repetition carries a' +
+      ' soul lesson hidden inside the frustration — and the pattern loses its charge' +
+      ' only when that lesson is genuinely demonstrated, not merely understood' +
+      ' intellectually. This reading names your specific repeating pattern,' +
+      ' identifies whether it is karmic or conditioned, locates the precise trigger' +
+      ' that activates it each time, and gives you the one interruption move — the' +
+      ' specific different action at the exact moment the pattern would normally' +
+      ' begin.',
+    whatYouGet:[
+      'Your specific repeating pattern identified from the primary affected domain —' +
+        ' named with enough precision that you will recognise it as the thing that' +
+        ' has been recurring, not a generic description of a common experience',
+      'Whether the pattern is karmic or conditioned — the distinction that' +
+        ' determines which resolution approach actually works, because the' +
+        ' intervention for a karmic pattern is completely different from the' +
+        ' intervention for a conditioned one',
+      'The soul lesson hidden inside the pattern — what the repetition is designed' +
+        ' to teach, described in practical terms that make the next time it surfaces' +
+        ' feel like a test you can pass rather than a punishment repeating',
+      'The precise trigger that activates the pattern every time — the specific' +
+        ' circumstance, person type, or emotional state that starts the loop, named' +
+        ' specifically enough to recognise it before the pattern is already running',
+      'The interruption move — the specific different action at the exact moment the' +
+        ' pattern would normally activate, not a general mindset shift but a' +
+        ' concrete behavioural change at the identified trigger point',
+      'The integration practice — the sustained 21-day work that completes the' +
+        ' lesson so the pattern loses its charge rather than just being interrupted',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A 21-day pattern interruption protocol targeting the specific' +
+      ' activation trigger identified in your chart — structured in three weeks:' +
+      ' week one builds awareness of the trigger before it activates, week two' +
+      ' practises the interruption move at the trigger point, week three installs' +
+      ' the new response until it runs automatically.',
+    upsell:{id:'shadow-self-reading-os',name:'Shadow Self Reading',price:47},
+  },
+  {
+    id:'wealth-timing-oracle',
+    name:'The Wealth Timing Oracle',
+    tagline:'Your financial peak windows in the next five years — specific enough to' +
+      ' prepare for rather than stumble into',
+    emoji:'💎',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:2341,
+    deliveryMinutes:20,
+    hook:'Financial peaks are not random. They are convergences — periods when' +
+      ' Personal Year cycle, Jupiter transit, fate line trajectory, and numerical' +
+      ' wealth timing all point in the same direction simultaneously. Most people' +
+      ' encounter their financial peak windows unprepared and extract only a' +
+      ' fraction of the potential the window carries. This reading identifies your' +
+      ' three financial peak windows in the next five years with year-specific' +
+      ' timing, names the type of wealth move optimal in each one, and gives you the' +
+      ' specific actions to take in the next three months to be positioned when the' +
+      ' next peak opens.',
+    whatYouGet:[
+      'Your three financial peak windows in the next five years — year-specific,' +
+        ' with the type of wealth movement each window most strongly supports and' +
+        ' why that type is particularly suited to that period',
+      'The optimal wealth move in each window — not generic financial advice but the' +
+        ' specific category of financial action each timing convergence most' +
+        ' supports for your chart',
+      'Your two caution years — the specific years to avoid major financial' +
+        ' risk-taking, with the chart-based explanation for why the window is' +
+        ' structurally closed during those periods',
+      'Your natural wealth channel from your Birthday Gift number — the earning mode' +
+        ' the blueprint is most naturally aligned with, and how the peak windows' +
+        ' interact with that channel',
+      'The one financial behaviour your Birthday Challenge is costing you the most —' +
+        ' the specific pattern that is most reliably reducing financial results' +
+        ' across all your peak windows',
+      'The specific action to take in the next three months to position for the next' +
+        ' peak — the preparatory move that makes the difference between entering the' +
+        ' window ready and entering it from behind',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A peak window preparation guide — the specific actions that must' +
+      ' be in place before each of your three peak windows opens, with exact timing' +
+      ' for each action and the rationale drawn from the timing systems confirming' +
+      ' each window.',
+    upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97},
+  },
+  {
+    id:'career-opportunity-window',
+    name:'The Career Opportunity Window',
+    tagline:'When to move, when to wait — and what the next twelve months actually' +
+      ' support for your specific career situation',
+    emoji:'📈',
+    price:29,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.7,
+    reviewCount:1876,
+    deliveryMinutes:20,
+    hook:'Career timing is not about courage or readiness in the abstract. It is' +
+      ' about whether the specific move being considered is supported or resisted by' +
+      ' the current energetic structure of the chart. Making a major career move in' +
+      ' a consolidation year is not brave — it is poorly timed. Making the same move' +
+      ' in a peak year is not lucky — it is aligned. This reading maps the current' +
+      ' Personal Year energy for career decisions, identifies the next career peak' +
+      ' window, assesses whether the chart currently supports employment,' +
+      ' entrepreneurship, or a hybrid model, and gives a clear go or wait verdict' +
+      ' for any specific career move being considered.',
+    whatYouGet:[
+      'Your current Personal Year assessed specifically for career decisions — the' +
+        ' type of career energy it carries and whether it supports initiating,' +
+        ' expanding, consolidating, or releasing',
+      'A clear verdict on whether now is a year to move or consolidate — with the' +
+        ' specific reasoning from the timing indicators rather than a generic' +
+        ' prescription',
+      'Your next career peak window — the specific period when the chart most' +
+        ' strongly supports new opportunity, with the type of opportunity most' +
+        ' aligned with what the window opens for',
+      'How your Birthday Gift number positions you specifically in your industry —' +
+        ' the unique angle or contribution the gift creates that distinguishes you' +
+        ' from others doing similar work',
+      'The one career move most aligned with both your current Pinnacle and your' +
+        ' Birthday Gift — the specific action that works with the chapter you are in' +
+        ' rather than against it',
+      'Whether the chart currently supports employment, entrepreneurship, or a' +
+        ' hybrid model — the structural assessment of which mode is most aligned' +
+        ' with the present combination of timing indicators',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A career timing decision guide — a go or wait verdict for any' +
+      ' specific career move you identify, with the reasoning drawn from your' +
+      ' current Personal Year and Pinnacle, plus the optimal window for the ask,' +
+      ' negotiation, or transition if the verdict is wait.',
+    upsell:{id:'calling-decoder-os',name:'Calling Decoder',price:47},
+  },
+  {
+    id:'constitutional-health-blueprint',
+    name:'The Constitutional Health Blueprint',
+    tagline:'Your body\'s specific constitutional type — and the diet, movement, and' +
+      ' lifestyle that was actually built for it',
+    emoji:'⚕️',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:1876,
+    deliveryMinutes:20,
+    hook:'Constitutional medicine starts from a fundamentally different premise than' +
+      ' generic health advice: your body has a specific type, and what serves one' +
+      ' type consistently depletes another. Ayurvedic constitution, classical chart' +
+      ' analysis, and the 6th house health signature each read the same' +
+      ' constitutional question from traditions developed independently across' +
+      ' different centuries and continents. Where two or more of these independent' +
+      ' traditions agree on your type, your primary vulnerabilities, and your' +
+      ' optimal conditions, the health guidance that follows carries a confidence' +
+      ' that population-averaged advice cannot approach — because it was derived' +
+      ' from your specific blueprint.',
+    whatYouGet:[
+      'Your constitutional type confirmed across Ayurvedic and chart-based' +
+        ' frameworks — the dominant dosha or elemental constitution identified by at' +
+        ' least two independent systems, with the specific physical and emotional' +
+        ' characteristics that confirm the type',
+      'The three body systems most likely to need attention in your lifetime — not' +
+        ' vague vulnerability categories but specific organ or physiological systems' +
+        ' named from multi-system agreement',
+      'The early warning signs in each system to watch for — the specific signals' +
+        ' your constitution type sends before a system becomes significantly' +
+        ' stressed, described in observable terms',
+      'Your seasonal vulnerability pattern — the specific months your constitution' +
+        ' most consistently flags as requiring more care, and why your type tends to' +
+        ' become depleted in those particular periods',
+      'The diet and lifestyle approach most aligned with your specific constitution' +
+        ' — practical dietary adjustments, movement type, sleep approach, and stress' +
+        ' management calibrated to the constitutional type rather than to general' +
+        ' wellness principles',
+      'What your current Personal Year means for your health specifically — the' +
+        ' domain or system the current cycle is most likely to stress, and the' +
+        ' protective practice most relevant right now',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A 30-day constitutional recalibration protocol — specific dietary' +
+      ' adjustments, movement prescription, sleep timing, and one practice from the' +
+      ' tradition with the highest agreement for your constitution type, sequenced' +
+      ' for the first month and designed to create enough feedback that the protocol' +
+      ' can be refined for sustained use.',
+    upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97},
+  },
+  {
+    id:'stress-body-reading',
+    name:'The Stress Body Reading',
+    tagline:'Which emotions live in which part of your body — and what to do before' +
+      ' they become symptoms',
+    emoji:'🫁',
+    price:37,
+    domain:'oracle-temple',
+    rating:4.7,
+    reviewCount:1432,
+    deliveryMinutes:20,
+    hook:'The body keeps a specific record of the emotional states that have been' +
+      ' most consistently active. That record shows up as tension patterns, organ' +
+      ' vulnerabilities, and the type of physical complaint that recurs under' +
+      ' pressure — and it is readable from the chart. This reading identifies your' +
+      ' primary emotional-physical pattern from your chart signature, shows which' +
+      ' emotional state most reliably affects which body system, reads the early' +
+      ' signals that the connection is activating, and gives you a somatic practice' +
+      ' calibrated to that specific emotional-physical dynamic rather than to stress' +
+      ' reduction in general.',
+    whatYouGet:[
+      'Your primary emotional-physical pattern — the specific emotional state that' +
+        ' most reliably creates physical response in your constitution, and the' +
+        ' specific body system or organ most consistently affected when that state' +
+        ' runs for extended periods',
+      'The chart-based signature creating the pattern — the planetary placement or' +
+        ' aspect that encodes the emotional-physical connection and why your' +
+        ' particular constitution is more sensitive to this specific dynamic than' +
+        ' others',
+      'The specific health manifestation most likely to appear if the pattern runs' +
+        ' unaddressed — named from the constitutional and chart indicators so you' +
+        ' recognise early signals rather than late symptoms',
+      'The early signals that the emotional-physical connection is activating — the' +
+        ' specific physical sensations or early symptoms that indicate the pattern' +
+        ' has become active before it compounds into something harder to address',
+      'A somatic practice calibrated specifically to your emotional-physical type —' +
+        ' not a general stress reduction technique but the specific physical' +
+        ' practice most effective for the particular emotional-body connection in' +
+        ' your chart',
+      'Whether the current Personal Year is activating this pattern — the timing' +
+        ' assessment that tells you whether right now is a period of heightened' +
+        ' vulnerability to this specific dynamic',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A body-emotion release practice from your heritage tradition — the' +
+      ' specific somatic practice most effective for your particular' +
+      ' emotional-physical pattern, drawn from the tradition most aligned with your' +
+      ' constitution type, with guidance on frequency, timing, and the early signal' +
+      ' that tells you the practice is working.',
+    upsell:{id:'constitutional-health-blueprint',name:'Constitutional Health Blueprint',price:47},
+  },
+  {
+    id:'child-blueprint-os',
+    name:'The Child Blueprint',
+    tagline:'Who your child actually is — the blueprint no parenting book was' +
+      ' written about because no two are the same',
+    emoji:'👶',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.9,
+    reviewCount:2103,
+    deliveryMinutes:20,
+    hook:'Every parenting challenge that feels like a personality clash is usually a' +
+      ' chart mismatch — a parent using the communication style, motivation' +
+      ' approach, and discipline method designed for a different child type. Your' +
+      ' child arrived with a specific Life Path, a specific emotional need encoded' +
+      ' in the Moon sign, a specific learning style, and a specific shadow pattern' +
+      ' that appears as difficult behaviour when the underlying need is not met.' +
+      ' This reading gives you the manual — not the general parenting manual, but' +
+      ' the specific guide for this child\'s exact blueprint.',
+    whatYouGet:[
+      'Your child\'s Life Path, Sun sign, and Moon sign translated into plain' +
+        ' parenting language — what each number and placement actually means for how' +
+        ' this child thinks, feels, and needs to be related to, without chart jargon',
+      'Your child\'s natural learning style from the chart — the specific way this' +
+        ' child absorbs and retains information, and the environments and approaches' +
+        ' that make learning feel natural rather than forced',
+      'The primary emotional need — the specific thing this child requires to feel' +
+        ' safe, seen, and capable, which when unmet consistently produces the' +
+        ' behaviours parents find most challenging',
+      'The shadow pattern — the specific quality appearing as difficult behaviour' +
+        ' that is actually an unmet need or suppressed gift, named so the behaviour' +
+        ' can be responded to at the level of its actual cause',
+      'How to motivate, discipline, and connect with this specific child — the' +
+        ' approaches that work for this chart type and the common approaches that' +
+        ' consistently backfire for it',
+      'A parent-child compatibility score — an honest assessment of where parent and' +
+        ' child charts naturally align and where they will consistently create' +
+        ' friction without intentional adjustment',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A personalised parenting guide for this child\'s specific chart —' +
+      ' three concrete communication adjustments calibrated to the parent-child' +
+      ' dynamic, the single most impactful change in how the parent relates to this' +
+      ' child based on the chart interaction, and the one thing this child most' +
+      ' needs to hear regularly that most directly addresses the primary emotional' +
+      ' need identified.',
+    upsell:{id:'children-family-synthesis',name:'Family Destiny Synthesis',price:77},
+  },
+  {
+    id:'parent-child-mirror',
+    name:'The Parent-Child Relationship Mirror',
+    tagline:'The conflict between you and your child is not a personality clash —' +
+      ' this shows you what it actually is',
+    emoji:'👨‍👧',
+    price:37,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:1654,
+    deliveryMinutes:20,
+    hook:'The argument that keeps recurring between a parent and child is almost' +
+      ' never about what it appears to be about on the surface. It is about a' +
+      ' specific dynamic written into the interaction between two charts — a trigger' +
+      ' on one side that activates a reaction on the other in a loop that escalates' +
+      ' the same way every time. This reading identifies the core dynamic between' +
+      ' the two charts, names the specific trigger that starts the escalation' +
+      ' pattern, reveals what the child is actually communicating through the' +
+      ' behaviour that frustrates the parent most, and gives three communication' +
+      ' practices calibrated to the actual dynamic rather than to generic conflict' +
+      ' resolution.',
+    requiresPartner:true,
+    whatYouGet:[
+      'The core dynamic between parent and child chart — the structural relationship' +
+        ' between the two blueprints that produces the consistent patterns in the' +
+        ' relationship, positive and negative',
+      'The specific trigger that escalates every major argument — named from the' +
+        ' chart interaction so it can be recognised before the escalation is already' +
+        ' running rather than only in retrospect',
+      'What the child is communicating through the behaviour that frustrates the' +
+        ' parent most — the unmet need or suppressed quality the behaviour is' +
+        ' expressing, translated from behaviour language into need language',
+      'What the parent is unconsciously projecting onto the child — the quality from' +
+        ' the parent\'s own chart that the child is activating, which makes the' +
+        ' behaviour feel more charged than it would from a neutral observer',
+      'The karmic contract between parent and child — what the soul agreement says' +
+        ' each person came to give and receive from the other, and how the current' +
+        ' conflict dynamic relates to that agreement',
+      'Three specific communication practices calibrated to the combined chart —' +
+        ' concrete language adjustments for the three most common friction points' +
+        ' between these two specific blueprints',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A parent-child communication guide — specific language for the' +
+      ' three most common friction points between these two charts, the single' +
+      ' reframe that most reduces the charge of the recurring conflict, and the one' +
+      ' acknowledgment this child most needs from this parent based on what the' +
+      ' chart interaction reveals.',
+    upsell:{id:'children-family-synthesis',name:'Family Destiny Synthesis',price:77},
+  },
+  {
+    id:'relocation-power-map',
+    name:'The Relocation Power Map',
+    tagline:'Three locations where your blueprint activates most powerfully — and an' +
+      ' honest reading of where you currently live',
+    emoji:'🗺️',
+    price:57,
+    domain:'oracle-temple',
+    isPopular:true,
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:987,
+    deliveryMinutes:20,
+    hook:'You are not the same person in every location. Your ambition finds' +
+      ' different traction, your relationships carry different quality, your health' +
+      ' responds differently to the same habits depending on where you are standing' +
+      ' on earth. These are not coincidences — they are the predictable result of' +
+      ' how planetary lines intersect geography. Four independent location systems' +
+      ' map where your blueprint activates most powerfully for your primary current' +
+      ' goal. The honest current-city assessment is included: what your present' +
+      ' location is amplifying, what it is suppressing, and what that means for' +
+      ' whether staying or moving is the higher-leverage decision right now.',
+    whatYouGet:[
+      'Your three strongest power locations globally for your primary current goal —' +
+        ' with the specific explanation of what each location activates in the chart' +
+        ' and which life domain it most strongly supports',
+      'Your two most draining locations — including an honest cross-system' +
+        ' assessment of your current city, what it is costing you in the domain that' +
+        ' matters most right now, and what it is amplifying that you may not want' +
+        ' amplified',
+      'What your current city activates in the chart — the specific dimension it' +
+        ' strengthens and the specific dimension it suppresses, assessed without' +
+        ' softening',
+      'The optimal location type for your Life Path archetype — the environmental' +
+        ' qualities, energy profile, and setting characteristics that structurally' +
+        ' support your blueprint rather than resist it',
+      'Whether the chart currently supports staying versus moving — the timing' +
+        ' verdict from your Personal Year and fate line on whether now is a period' +
+        ' for geographic commitment or geographic exploration',
+      'A city-level recommendation for five cities you name — the cross-system' +
+        ' assessment of what each one does to your specific Life Path energy',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A relocation decision framework — the single non-negotiable factor' +
+      ' your primary life goal requires in the next location, the city number that' +
+      ' best supports it, and the timing verdict on whether the current Personal' +
+      ' Year supports making the move now or preparing for a specific future window.',
+    upsell:{id:'relocation-destiny-synthesis',name:'Relocation Destiny Synthesis',price:77},
+  },
+  {
+    id:'home-address-reading',
+    name:'The Home Address Reading',
+    tagline:'Your home address has a number — and that number is either aligned with' +
+      ' your Life Path or creating friction you cannot explain',
+    emoji:'🏠',
+    price:29,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.7,
+    reviewCount:2341,
+    deliveryMinutes:20,
+    hook:'Numerological address vibration is different from general location' +
+      ' astrology — it is specific to the exact address, including the apartment or' +
+      ' house number, and it interacts directly with your Life Path in ways specific' +
+      ' enough to test against actual experience. The number of where you live' +
+      ' affects which life domain is amplified, which is suppressed, and what kind' +
+      ' of energy accumulates in the space over time. Most people notice the effect' +
+      ' without knowing what is causing it. This reading calculates the precise' +
+      ' vibration of your current address, shows how it interacts with your Life' +
+      ' Path, and names the number to look for in a next home based on your current' +
+      ' life priorities.',
+    whatYouGet:[
+      'Your current address number calculated correctly — the precise vibration of' +
+        ' the full address including unit or floor number, and what that vibration' +
+        ' means structurally for the type of energy it creates in the space',
+      'How that vibration interacts with your specific Life Path — whether the two' +
+        ' are harmonious, neutral, or in structural tension, and what that' +
+        ' interaction has been creating in the life domains the address governs',
+      'Which life domain the current address most amplifies — the specific area of' +
+        ' life that the address number strengthens, and whether that amplification' +
+        ' is currently an asset or a source of imbalance',
+      'The optimal address number for your current life chapter and goals — not a' +
+        ' single answer but the range of numbers most aligned with what you are' +
+        ' trying to build, with the reasoning behind each recommendation',
+      'Whether to move or transform the current space energetically — the assessment' +
+        ' of whether the vibration mismatch is significant enough to warrant a move' +
+        ' or whether it can be sufficiently addressed with energetic adjustment',
+      'The specific number to look for in a next address — the exact number or range' +
+        ' most aligned with your Life Path and current chapter goals, so the next' +
+        ' search has a clear numerical criterion',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A home energy optimisation guide — if staying, the specific' +
+      ' adjustment that most improves the address vibration without moving; if' +
+      ' searching, the number or range to prioritise and the secondary criteria to' +
+      ' evaluate once the number is satisfied.',
+    upsell:{id:'relocation-power-map',name:'Relocation Power Map',price:57},
+  },
+  {
+    id:'business-name-audit',
+    name:'The Business Name Vibration Audit',
+    tagline:'Your business name is either amplifying your Life Path authority or' +
+      ' working against it — this tells you which',
+    emoji:'🏢',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:1432,
+    deliveryMinutes:20,
+    hook:'Every business name reduces to a single digit, and that digit either' +
+      ' harmonises with or conflicts with the founder\'s Life Path. When they' +
+      ' conflict, the business creates a specific type of friction — the kind that' +
+      ' no amount of branding strategy, marketing, or effort can fully resolve' +
+      ' because the friction is structural. When they align, the business name' +
+      ' amplifies the founder\'s natural authority in the market. This audit' +
+      ' calculates the precise numerical vibration of your business name, shows how' +
+      ' it interacts with your Life Path, and — if a rebrand is indicated — provides' +
+      ' five alternative name suggestions with specifically higher vibration and the' +
+      ' reasoning behind each.',
+    whatYouGet:[
+      'Your business name\'s Destiny number calculated precisely — the specific' +
+        ' vibration it carries and what that vibration tends to create in the market' +
+        ' over time',
+      'Whether it aligns or conflicts with your Life Path number — the structural' +
+        ' assessment of whether the name is amplifying your natural authority or' +
+        ' creating a subtle resistance that compounds over time',
+      'Which domain the name most supports — customer trust, wealth accumulation,' +
+        ' authority recognition, or longevity — and whether that is the domain your' +
+        ' business most needs to strengthen right now',
+      'How it performs against your top three competitor names — the numerical' +
+        ' comparison that shows whether the name creates an advantage or a' +
+        ' disadvantage in the specific competitive context',
+      'Whether a rebrand is recommended and specifically why — the honest' +
+        ' assessment, including the threshold below which the mismatch is not worth' +
+        ' the disruption of a name change',
+      'Five alternative name suggestions with higher vibration for your specific' +
+        ' Life Path — each calculated and explained, with guidance on which works' +
+        ' best for the specific goal of the business',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A naming decision framework — the specific numerical principles' +
+      ' for choosing a name aligned with your Life Path, the evaluation criteria for' +
+      ' assessing any name candidate, and the process for testing vibration before' +
+      ' committing to a rebrand.',
+    upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87},
+  },
+  {
+    id:'founder-archetype',
+    name:'The Founder Archetype',
+    tagline:'The type of business you are built to run — specific enough to stop' +
+      ' building the wrong model',
+    emoji:'🏗️',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:1234,
+    deliveryMinutes:20,
+    hook:'There are eight Founder Archetypes, and most business failures are not' +
+      ' failed ideas — they are the right person building the wrong model for who' +
+      ' they actually are. The Expert trying to scale like a Builder. The Connector' +
+      ' trying to execute like a Visionary. The Healer trying to compete like a' +
+      ' Pioneer. Four independent systems identify which of the eight archetypes' +
+      ' your blueprint is built for — along with the business model, revenue' +
+      ' structure, team composition, and natural marketing style that fits it — and' +
+      ' name the failure pattern of that archetype so it can be seen before it costs' +
+      ' something significant.',
+    whatYouGet:[
+      'Your Founder Archetype from four independent indicators — Builder, Connector,' +
+        ' Expert, Performer, Healer, Visionary, Steward, or Pioneer — with the' +
+        ' specific characteristics that confirm which type and how each indicator' +
+        ' arrived at the same answer',
+      'The business model most naturally aligned with your archetype — not the most' +
+        ' popular model or the most profitable model in general but the model that' +
+        ' fits how you are built to operate, generate authority, and sustain energy',
+      'The revenue model that works best for your specific Life Path and Soul Urge' +
+        ' combination — the pricing structure, offer type, and revenue timing that' +
+        ' aligns with the natural cadence of your design',
+      'The team structure your archetype specifically requires — the roles that' +
+        ' complement what you carry rather than duplicating it, and the one role' +
+        ' most commonly missing from teams built by your archetype type',
+      'The natural marketing style that feels authentic — the approach to client' +
+        ' attraction that works with your energy rather than requiring you to' +
+        ' perform a type you are not',
+      'The failure pattern of your archetype — the specific entrepreneurial blind' +
+        ' spot that derails this type most consistently, named with enough' +
+        ' specificity to recognise it in your current business before it becomes a' +
+        ' crisis',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A business model alignment audit — the single structural change' +
+      ' most likely to unstick your current business based on your Founder' +
+      ' Archetype, the one role to hire next that most directly addresses the' +
+      ' archetype\'s natural gap, and the failure pattern to watch for in the next' +
+      ' six months given where your business currently is.',
+    upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87},
+  },
+  {
+    id:'fertility-timing-map',
+    name:'The Fertility Timing Map',
+    tagline:'Your three highest fertility windows in the next 24 months —' +
+      ' month-specific, drawn from five independent timing systems',
+    emoji:'🌸',
+    price:57,
+    domain:'oracle-temple',
+    isPopular:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:876,
+    deliveryMinutes:20,
+    hook:'Biological readiness is one dimension of fertility timing. Soul readiness' +
+      ' is another. And energetic alignment — the specific convergence of Venus' +
+      ' cycle, Jupiter 5th house timing, Personal Year energy, classical fertility' +
+      ' indicators, and numerical soul arrival windows — is a third dimension that' +
+      ' medicine cannot read. This reading does not replace medical guidance. It' +
+      ' maps the dimension medicine cannot: the specific months when all five timing' +
+      ' systems simultaneously confirm the highest alignment for family, and the' +
+      ' soul archetype most likely to arrive in each of those windows.',
+    whatYouGet:[
+      'Your three highest fertility windows in the next 24 months — with' +
+        ' month-specific timing, not seasonal ranges, and the specific reason each' +
+        ' window is indicated by multiple independent timing systems',
+      'A current Personal Year assessment for family specifically — whether this' +
+        ' year is energetically open for family or whether a specific future window' +
+        ' carries significantly higher alignment',
+      'Whether your chart carries strong parental karma — the assessment of how' +
+        ' significant the parental soul contract is in your blueprint and which' +
+        ' specific period activates it most strongly',
+      'Classical fertility timing indicators across the reading — what the Venus' +
+        ' cycle, Jupiter 5th house transit, and chart timing each indicate about' +
+        ' family readiness and how they interact with each other',
+      'Energetic preparation practices for the highest-indicated window — the' +
+        ' specific spiritual and physical preparations that align with the timing' +
+        ' systems confirming the window, not generic fertility support',
+      'What the chart indicates about the parent-child soul contract — the nature of' +
+        ' the agreement the arriving soul is most likely to carry and what it' +
+        ' suggests about the kind of parent this chart is most designed to be',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A heritage-calibrated fertility preparation practice for your' +
+      ' highest-indicated window — the spiritual condition each of the five timing' +
+      ' systems identifies as most important to meet before the window opens,' +
+      ' unified into a single preparation sequence from the tradition most aligned' +
+      ' with your background, with timing guidance on when to begin.',
+    upsell:{id:'fertility-soul-synthesis',name:'Fertility and Soul Arrival Synthesis',price:87},
+  },
+  {
+    id:'family-blueprint',
+    name:'The Family Blueprint',
+    tagline:'The ancestral pattern running through your family — your specific role' +
+      ' in it and what you can change for everyone who comes after',
+    emoji:'👨‍👩‍👧‍👦',
+    price:47,
+    domain:'oracle-temple',
+    rating:4.8,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'Family patterns are not inherited through conversation or example alone.' +
+      ' They are encoded in the lineage and arrive with each person born into it — a' +
+      ' recurring dynamic that gets passed forward until someone in the family sees' +
+      ' it clearly enough to address it rather than transmit it. This reading maps' +
+      ' the karmic legacy of your family of origin, identifies the specific pattern' +
+      ' your lineage is working to complete in this generation, names your role in' +
+      ' that completion, and shows what becomes available for everyone downstream' +
+      ' when the pattern is broken rather than carried forward.',
+    whatYouGet:[
+      'The karmic legacy of your family of origin — the specific patterns inherited' +
+        ' from the lineage and how they arrived in your family rather than how they' +
+        ' were consciously transmitted',
+      'Which patterns your specific chart is positioned to complete versus transmit' +
+        ' — the honest assessment of which lineage patterns you are healing and' +
+        ' which you are at risk of passing forward without intervention',
+      'The type of soul contract most active in your current family relationships —' +
+        ' what the chart says about the agreements operating between you and the' +
+        ' family members you are most closely in relationship with',
+      'Whether your chart indicates a single-child, multi-child, or no-children path' +
+        ' as the soul\'s agreement — not a prediction but a structural indicator of' +
+        ' what the blueprint is most designed for in terms of family building',
+      'The spiritual function the family unit is currently serving — what the' +
+        ' collection of charts present in your immediate family is working to' +
+        ' accomplish at a soul level beyond the personal',
+      'The one inherited pattern most urgent to address before passing it forward —' +
+        ' the pattern the reading identifies as most active, most transmissible, and' +
+        ' most transformable in this generation',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A family healing practice from your heritage tradition — the' +
+      ' specific ancestral offering for the primary inherited pattern identified as' +
+      ' most urgent, from the tradition most aligned with your lineage, with' +
+      ' guidance on timing the practice within the current Personal Year cycle and' +
+      ' the one living family conversation the chart identifies as most important to' +
+      ' have.',
+    upsell:{id:'children-family-synthesis',name:'Family Destiny Synthesis',price:77},
+  },
+  {
+    id:'personal-brand-frequency',
+    name:'The Personal Brand Frequency',
+    tagline:'The brand position four systems all point to before strategy enters the' +
+      ' conversation — the only one you can hold indefinitely',
+    emoji:'📣',
+    price:47,
+    domain:'oracle-temple',
+    isPopular:true,
+    rating:4.8,
+    reviewCount:1654,
+    deliveryMinutes:20,
+    hook:'The most sustainable personal brands are not positions that were chosen —' +
+      ' they are natural frequencies that were recognised. When what you say' +
+      ' publicly matches what you actually carry at the level of your name, your' +
+      ' numbers, your Midheaven, and your Soul Urge, the audience you were built to' +
+      ' reach finds you with less friction and stays with deeper loyalty. This' +
+      ' reading finds where all four systems agree on your specific public frequency' +
+      ' — the niche, the content style, the audience, the message — and that' +
+      ' convergence is the only brand position you can hold indefinitely without' +
+      ' performing it.',
+    whatYouGet:[
+      'Your Personal Brand Archetype confirmed from four systems — the specific' +
+        ' public identity all four indicators agree on, described concretely enough' +
+        ' to inform content, copy, and positioning decisions immediately rather than' +
+        ' serving as an inspiration for more exploration',
+      'The specific niche you are cosmically aligned to own — not a broad category' +
+        ' but a precise enough domain that you could explain it in one sentence and' +
+        ' it would not describe anyone else doing similar work in the same way',
+      'The content style most natural and highest-performing for your frequency —' +
+        ' the format, tone, depth, and approach that feels effortless from the' +
+        ' inside because it matches how information moves through you naturally',
+      'The audience archetype most magnetically attracted to your energy — described' +
+        ' specifically enough to inform every piece of content, every offer, and' +
+        ' every message without needing a separate market research process',
+      'The platform most aligned with your expression style — where your specific' +
+        ' combination of authority type and content style produces the most traction' +
+        ' with the least friction relative to alternatives',
+      'One message your chart says is most underserved in the market and most' +
+        ' naturally yours to carry — the specific insight, perspective, or' +
+        ' contribution that your blueprint is uniquely positioned to deliver',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A brand activation guide — the specific first public action that' +
+      ' makes your natural authority most visible to your identified audience,' +
+      ' confirmed across all four systems, with the optimal Personal Year timing for' +
+      ' making it and the framing that most clearly differentiates your natural' +
+      ' frequency from what others in the same space are doing.',
+    upsell:{id:'digital-identity-synthesis',name:'Digital Identity Synthesis',price:77},
+  },
+  {
+    id:'authority-voice-reading',
+    name:'The Authority Voice Reading',
+    tagline:'Why some people command attention the moment they speak — and whether' +
+      ' your chart supports that or something subtler',
+    emoji:'🎤',
+    price:37,
+    domain:'oracle-temple',
+    rating:4.7,
+    reviewCount:1234,
+    deliveryMinutes:20,
+    hook:'Natural authority is not volume or confidence. It is coherence — the' +
+      ' alignment between what someone carries internally and what they project' +
+      ' publicly. When there is a gap between the two, people sense the incoherence' +
+      ' before they can name it, and it costs credibility that no communication' +
+      ' technique can fully restore. This reading identifies whether your current' +
+      ' public expression is aligned or in conflict with your internal chart' +
+      ' authority, names the specific point of incoherence, identifies your natural' +
+      ' authority archetype, and gives you the one communication shift that most' +
+      ' directly closes the gap.',
+    whatYouGet:[
+      'Whether your current public expression is aligned or conflicted with your' +
+        ' internal chart — the assessment of whether what you present publicly' +
+        ' matches what your Destiny number, Midheaven, and Life Path actually carry',
+      'The specific point of incoherence — what you are presenting versus what you' +
+        ' are actually carrying, described specifically enough to recognise it in' +
+        ' recent content, conversations, or professional interactions',
+      'Your natural authority archetype and the domain where it is most convincing —' +
+        ' the type of authority your chart is built to project and where in your' +
+        ' professional context that authority is most naturally recognised',
+      'The one communication shift that most immediately increases perceived' +
+        ' credibility — not a general confidence recommendation but the specific' +
+        ' change in how you frame, open, or position what you say',
+      'Which medium transmits your authority best — whether writing, speaking,' +
+        ' video, or one-to-one conversation is most aligned with how your authority' +
+        ' type actually travels',
+      'Whether this year supports speaking louder or building depth quietly — the' +
+        ' timing assessment of whether the current Personal Year most supports' +
+        ' public visibility or internal development of the authority foundation',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A communication coherence guide — the specific language shift that' +
+      ' resolves the primary incoherence between what you carry internally and what' +
+      ' you project publicly, the one framing change that makes the authority more' +
+      ' visible, and the medium to prioritise in the current Personal Year based on' +
+      ' how your authority type travels best.',
+    upsell:{id:'personal-brand-frequency',name:'Personal Brand Frequency',price:47},
+  },
 ]
 
 // ─────────────────────────────────────────────────────────────
 // SECTION 3 — 30 PHYSICAL TOOLS (face / palm / both)
 // ─────────────────────────────────────────────────────────────
 export const physicalTools: OmniTool[] = [
-  {id:'face-shape-character-verdict',name:'The Face Shape Character Verdict',tagline:'Your face shape is the oldest character reading system in existence — this is the cross-tradition verdict on yours',emoji:'👤',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:654,deliveryMinutes:20,hook:'Face shape physiognomy was developed independently across Chinese, Ayurvedic, and classical Greek traditions — three entirely separate civilisations that arrived at remarkably consistent conclusions about the relationship between facial structure and character. This reading applies the most rigorous cross-tradition framework to your specific face shape and cross-confirms what it finds against your Life Path and Sun sign. When face shape, Life Path, and Sun sign all describe the same person from different angles simultaneously, the portrait that emerges carries a quality of certainty that no single-system reading can produce alone.',requiresImage:{type:'face'},whatYouGet:['Your face shape\'s elemental classification — the specific tradition-confirmed category and what it says about your fundamental way of engaging with the world, your relationship with authority, and the type of challenge you find most activating','The ruling planet of your face shape and the specific domain of life it most directly governs — the area where the face shape\'s gifts are most naturally expressed and where its shadow most consistently appears','Your character core — the central strength, the central shadow, and the specific paradox that makes your face shape type both the most powerful and the most self-limiting version of itself','How your face element compares to your Sun sign element — whether they confirm the same character or reveal a more layered picture where the two systems describe different dimensions of the same person','The life period most strongly supported by your face shape — the specific decade when the structural gifts of this face type are most naturally expressed in the external world','Triple-confirmed character traits — the specific qualities where face shape, Life Path, and Sun sign all arrive at the same conclusion, representing the highest-confidence insights in the entire reading'],guidanceType:'practical-solution',guidanceText:'A character alignment guide — the one area where your face shape, Life Path, and Sun sign most significantly diverge from each other, the explanation for what that divergence has been creating in daily life, and the specific integration practice for bringing the three systems into greater coherence.',upsell:{id:'complete-character-portrait',name:'Complete Character Portrait',price:57}},
-  {id:'facial-symmetry-relationship',name:'The Facial Symmetry and Relationship Pattern',tagline:'Your facial symmetry score maps a specific pattern in how consistently you show up in relationships',emoji:'🔀',price:37,domain:'oracle-temple',isNew:true,isPopular:true,rating:4.8,reviewCount:876,deliveryMinutes:20,hook:'Facial symmetry has been studied across cultures for millennia as a predictor of character consistency — how reliably someone is the same person in different contexts, under different pressures, and with different audiences. This reading measures symmetry across three zones independently: the upper face governs intellectual consistency, the middle face governs perceptual consistency, and the lower face governs social consistency. The score in each zone predicts something specific about how you show up in relationships — and the zone with the most significant asymmetry names the specific area of inconsistency that others experience before you are aware of it.',requiresImage:{type:'face'},whatYouGet:['Your bilateral symmetry score across three zones independently — upper, middle, and lower face — so the portrait is specific rather than averaged into a single number that obscures which zone is creating the most friction','What each zone\'s symmetry level reveals — the upper face reading for intellectual reliability, the middle face for perceptual consistency, and the lower face for how stable your social presence feels to others over time','How your specific symmetry score affects how you are perceived in close relationships — the specific pattern it creates and whether it reads as grounded reliability, complex mystery, or contextual variability depending on audience','How your symmetry pattern interacts with your Venus placement — where the chart and the face agree on the relational pattern and where they reveal different dimensions of the same person','The specific relationship dynamic your combined symmetry profile tends to create — with the explanation for why it draws the types of partners it does','The integration practice for the most asymmetric zone — the specific daily action that develops greater consistency in the area showing most variation'],guidanceType:'practical-solution',guidanceText:'A relationship coherence practice — the specific daily action that develops greater consistency in your most asymmetric zone, with guidance on how long the practice takes to produce a measurable shift and the early signal that it is working.',upsell:{id:'soulmate-compatibility-verdict',name:'Soulmate Compatibility Verdict',price:37}},
-  {id:'mian-xiang-wealth-face',name:'The Facial Structure Wealth Reading',tagline:'The nose is the wealth palace — and the cheekbones govern authority. This reads what yours say about your financial design.',emoji:'👃',price:47,domain:'oracle-temple',isNew:true,isPopular:true,rating:4.8,reviewCount:934,deliveryMinutes:20,hook:'In classical Chinese face reading, specific facial features correspond to specific wealth indicators — the nose governs the wealth palace and reveals the capacity to accumulate and retain; the cheekbones govern the authority that commands resources; the forehead governs the early wealth foundation. This is not superstition but a system refined across three thousand years of observation. Confirmed against the Life Path and Personal Year cycle, the facial wealth reading produces three things: the type of wealth the face is built to generate, the financial decade when that wealth-generating capacity peaks, and the one structural adjustment most directly improving the wealth palace reading.',requiresImage:{type:'face'},whatYouGet:['Your nose type classified in the classical Chinese system — the specific facial structure category and what it says about wealth retention capacity, whether you are a natural accumulator or a natural circulator, and what that means for how you should structure your finances','Wealth leadership indicators from the cheekbones and brow ridge — the authority style that commands resources and the professional domain where that authority is most naturally recognised in financial contexts','Your money luck cycle by decade — the classical face reading of which life periods carry the most auspicious wealth energy and which require more conservative financial management','A current period assessment — what the specific facial feature governing your current age decade indicates about the financial opportunities and risks most relevant right now','A cross-system wealth verdict — the specific points where the facial wealth reading, your Life Path number, and your current Personal Year all agree on the same wealth direction','The traditional Chinese remedy for your specific face and nose type — the element, colour, direction, and daily practice the classical system prescribes for strengthening the wealth palace'],guidanceType:'practical-solution',guidanceText:'The traditional Mian Xiang remedy for your specific nose and face type — the classical prescription including the colour most supportive of your wealth palace, the compass direction most auspicious for your wealth energy, the element to work with this year, and the specific daily practice the system recommends for your face type.',upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97}},
-  {id:'eye-reading-intelligence',name:'The Eye Reading',tagline:'What your eyes communicate about intelligence, soul depth, and emotional availability before you speak a word',emoji:'👁️',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:765,deliveryMinutes:20,hook:'The eyes are the most read feature on any human face — and they communicate far more precisely than most people are aware of. Left and right eye shape often differ, and the difference is meaningful: the left eye reads the internal emotional reality and the right reads the social presentation. The canthus tilt, the set position, and the socket depth each encode specific intelligence and perceptual characteristics that classical physiognomy has mapped with unusual precision. When the eye reading confirms the Mercury placement in the chart, the intelligence portrait reaches maximum confidence. When they diverge, that gap itself reveals the distance between how you prefer to think and how you are actually wired.',requiresImage:{type:'face'},whatYouGet:['A reading of both eyes separately — what the left eye reveals about internal emotional processing and what the right eye communicates about social presentation, and the specific character implications when the two differ','Your eye set position reading — wide-set, average, or close-set — with the full perceptual and relational implications of each configuration and why the set position affects how others initially read you','Your canthus tilt reading — upturned, downturned, or neutral — and the specific character qualities that each configuration has been consistently mapped to across multiple physiognomy traditions','The intelligence type most strongly indicated by the combined eye reading — the specific cognitive style, perceptual strength, and domain where mental energy operates most efficiently for this eye configuration','How the eye reading confirms or complicates the Mercury placement in your chart — where the physical and the chart agree on the same intelligence type and where they reveal a more layered picture','The emotional availability and depth of feeling revealed by the combined eye reading — what the eye configuration says about how much internal emotional life is accessible versus how much is screened before it reaches expression'],guidanceType:'practical-solution',guidanceText:'A perceptual strength development guide — the specific discipline, work environment, and cognitive practice most aligned with the intelligence type revealed by your eye configuration, including the specific learning or thinking mode to lean into and the one that consistently drains.',upsell:{id:'face-shape-character-verdict',name:'Face Shape Character Verdict',price:37}},
-  {id:'jaw-power-reading',name:'The Jaw Power Reading',tagline:'The jaw encodes authority, endurance, and the power that develops in the later decades — this reads yours',emoji:'💪',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:654,deliveryMinutes:20,hook:'In facial structure reading across Chinese, Greek, and Vedic traditions, the jaw encodes three things simultaneously: willpower under sustained pressure, endurance across time, and the authority style that develops in the later decades of life. The jawline classification, the gonial angle measurement, the chin shape, and the chin projection each read a different dimension of this complex. Confirmed against the Saturn placement — the planet most directly governing mastery, discipline, and earned authority — the combined reading produces a portrait of how power develops in the specific life, when it peaks, and the specific leadership style most naturally supported by the structure.',requiresImage:{type:'face'},whatYouGet:['Your jawline classification and the character qualities the specific configuration predicts — including the primary strength the jaw encodes and the shadow that comes with the same structural quality','Your gonial angle measurement and its precise character reading — what the angle between the jaw and the vertical face plane indicates about determination style, stubbornness threshold, and how authority is held under challenge','Your chin shape analysis and what it says about the later life period — the classical prediction for how the character develops and what it is most capable of expressing in the decades after 50','Your chin projection reading — the specific degree of decisiveness and follow-through encoded in the projection, and how it interacts with the overall jaw configuration to either reinforce or moderate the willpower reading','How the jaw reading interacts with your Saturn placement — where the face and the chart agree on the same quality of authority and endurance, and where they describe different aspects of the same life','The specific leadership style the jaw structure most naturally supports — and the specific professional context where that style is most effective versus where it creates unnecessary friction'],guidanceType:'practical-solution',guidanceText:'A later-life authority positioning guide — the specific professional move that positions for the power period the jaw indicates, timed to the Pinnacle and Personal Year most aligned with making it, with the one environment or role most likely to make the jaw-indicated authority visible to the right audience.',upsell:{id:'elder-years-synthesis',name:'Elder Years Synthesis',price:77}},
-  {id:'forehead-intelligence-reading',name:'The Forehead Intelligence Reading',tagline:'The forehead reads early life, mind quality, and spiritual capacity — this is what yours reveals',emoji:'🧠',price:29,domain:'oracle-temple',isNew:true,rating:4.6,reviewCount:543,deliveryMinutes:20,hook:'The forehead is the feature that physiognomy traditions across Chinese, Indian, and Greek systems most consistently associated with intellectual quality and the early life foundation. Height indicates the scope of ambition and the quality of the early life period. Width indicates the breadth of thinking range. Slope indicates the balance between intuitive and analytical processing. When the forehead reading confirms the Mercury and Uranus placements in the chart, the intellectual portrait gains precision that neither the face nor the chart alone can produce. When they diverge, the gap between forehead and chart reveals the distance between natural inclination and developed capability.',requiresImage:{type:'face'},whatYouGet:['Your forehead height classification and its intellectual significance — what the height range indicates about the scope of thinking, the quality of the early life foundation, and the ambition structure that developed from it','Your forehead width reading and the thinking breadth it reveals — the range of subjects and domains the mind most naturally spans versus the depth and specialisation the configuration supports','Your slope analysis and the intelligence style encoded — whether the forehead indicates a more intuitive or a more analytical approach to processing, and how that interacts with the overall character picture','The facial structure analysis early life reading for ages 15–30 — what the forehead indicates about the quality of the formative period and the experiences most likely to have shaped the foundational patterns still active now','How your forehead compares to your Mercury and Uranus placements — where the face and the chart confirm the same intellectual character and where they describe different dimensions of the same mind','The spiritual capacity indicated by the forehead structure — the classical reading of Ajna chakra development from the brow structure, and what it says about the person\'s relationship with perception beyond the ordinary'],guidanceType:'practical-solution',guidanceText:'An intellectual environment guide — the specific work context, thinking format, and creative or professional structure most aligned with the intelligence type your forehead indicates, including the setting that produces most and the setting that most consistently drains the particular mind configuration identified.',upsell:{id:'face-shape-character-verdict',name:'Face Shape Character Verdict',price:37}},
-  {id:'skin-vitality-reading',name:'The Skin Vitality Reading',tagline:'Your complexion is a live report from your internal organs — this reads what it is saying right now',emoji:'✨',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:765,deliveryMinutes:20,hook:'In both Chinese medicine and Ayurveda, the complexion is read as a live report from the internal organs — specific colour casts, textures, radiance levels, and moisture patterns each corresponding to the state of specific organ systems. Unlike symptoms, which are late signals, the complexion catches patterns early — before they compound into something harder to address. This reading scores skin vitality across six parameters and cross-reads the findings through both traditions to identify the organ system showing the most current stress and the constitutional correction most likely to address it.',requiresImage:{type:'face'},whatYouGet:['A skin vitality score across six parameters — tone evenness, texture quality, moisture level, colour cast, radiance, and overall luminosity — each scored and interpreted rather than combined into a single number','The Chinese medicine interpretation of any specific colour cast present — the organ system correspondence for yellow, grey, red, green, or purple undertones and what each says about internal health patterns currently active','The Ayurvedic constitutional reading from your skin type — the dosha-based assessment of what the skin texture, moisture level, and reactivity pattern indicates about your constitutional type and current state','Your current radiance level and the factors most likely responsible for it — the lifestyle, nutritional, and stress factors the two traditions agree are most directly affecting the skin\'s luminosity right now','How your skin reading interacts with your Sun sign constitution and 6th house health indicators — where the face and the chart confirm the same constitutional picture and where they add different layers','The specific nutritional or lifestyle factor most likely responsible for the most prominent current skin reading — named specifically rather than as a category of intervention'],guidanceType:'practical-solution',guidanceText:'A skin-constitutional correction protocol — the specific dietary adjustment, the herbal or nutritional supplement, and the practice adjustment most directly addressing the organ system showing most stress in the complexion, drawn from the tradition that most accurately maps to the skin type identified.',upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97}},
-  {id:'habitual-expression-reading',name:'The Habitual Expression Reading',tagline:'What your face has learned to show the world — and the professional cost of the lines it is forming',emoji:'😶',price:29,domain:'oracle-temple',isNew:true,rating:4.6,reviewCount:543,deliveryMinutes:20,hook:'The face remembers what the emotions have been doing. Lines form where muscles habitually contract. The resting expression reveals what state the nervous system has most consistently occupied. And the expression signal captured in any photograph communicates something to everyone who sees it before a single word is spoken. This reading identifies the dominant expression signal your face currently broadcasts, reads the habitual expression note from the aging markers already forming, cross-references it with your Moon sign for the emotional signature it confirms, and names the one expression habit most affecting how you are received professionally.',requiresImage:{type:'face'},whatYouGet:['Your dominant expression signal at capture — the specific emotional state the face is currently broadcasting and what it communicates to people seeing it for the first time, before context or conversation','Your habitual expression note from the aging markers — what the lines currently forming in your face say about the emotional state the nervous system has been most consistently in, and which states are creating the most structural imprint','The facial structure analysis interpretation of each line present — the classical Chinese reading of what each specific line location indicates about character, habit, and internal state','How your habitual expression interacts with your Moon sign — where the emotional signature the face is broadcasting aligns with the Moon sign\'s natural emotional expression and where there is a gap between the two','What others unconsciously read from your face before you speak — the specific first impression the current expression creates and how it affects initial trust, warmth, and credibility perception','The one expression habit that most affects your professional reception — the specific facial default that is most consistently working against how you want to be received, named precisely enough to address'],guidanceType:'practical-solution',guidanceText:'An expression recalibration practice — the specific daily awareness exercise most effective for shifting the identified habitual resting expression, with guidance on the timeframe for measurable change and the early signal that the recalibration is working.',upsell:{id:'personal-brand-frequency',name:'Personal Brand Frequency',price:47}},
-  {id:'cheekbone-authority-map',name:'The Cheekbone Authority Map',tagline:'The cheekbones govern your social authority peak — this maps when it arrives and who naturally follows you',emoji:'⬆️',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:654,deliveryMinutes:20,hook:'In classical Chinese face reading, the cheekbones govern the midlife authority period — the specific years when the face transmits its highest level of social command and when the environment is most responsive to the person\'s natural leadership. This is not metaphorical. The cheekbone position, width, and fullness each correspond to specific authority style, authority domain, and authority timeline that have been mapped with consistency across three millennia of observation. Combined with the Sun sign and 10th house, this reading maps not just when the authority peak arrives but what type of authority it is and where it is most naturally recognised.',requiresImage:{type:'face'},whatYouGet:['Your cheekbone position, width, and fullness reading — the three-dimensional assessment that reveals the authority style, the social domain most naturally governed, and the timing of when the authority expression reaches its highest point','Your authority style classification — commanding, collaborative, or earned — with the specific professional and social contexts where each style is most effective and where it creates unnecessary resistance','The classical Chinese prediction for your social authority peak period — the decade or period the cheekbone structure most strongly indicates as the time of highest social influence and what that means for decisions being made now','The specific domain where your authority is most naturally recognised — whether it is in professional leadership, community, creative direction, or advisory roles, and why the cheekbone configuration points to this domain specifically','How your cheekbone reading interacts with your Sun sign and 10th house — where the face and the chart confirm the same authority type and timing, and where they reveal different dimensions of the same quality','The risk reading for your specific authority configuration — how the particular authority style indicated can be misused or overapplied, named as a pattern to watch for rather than a prediction of failure'],guidanceType:'practical-solution',guidanceText:'An authority positioning guide — the specific professional move that makes your cheekbone-indicated authority most visible to the right audience in your current timing cycle, with guidance on the environment where the authority type is most naturally recognised and the one positioning shift that reduces the gap between the authority you carry and the authority that is currently being acknowledged.',upsell:{id:'leadership-signature',name:'Leadership Signature',price:47}},
-  {id:'aging-marker-vitality',name:'The Aging Marker Vitality Forecast',tagline:'Your structural age versus your calendar age — which one your body is actually living and what the markers are communicating',emoji:'⏰',price:47,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:543,deliveryMinutes:20,hook:'Structural aging markers tell a different story than calendar age. The specific pattern of where and how the face ages — which zones accelerate, which lag, which respond most dramatically to stress — corresponds to specific vitality patterns inside the body. Chinese medicine has mapped these correspondences across three thousand years of observation: specific zones of the face correspond to specific organ systems, and the aging pattern in each zone is a reading of the state of the corresponding system. This reading scores aging markers across six structural measurements, identifies whether structural age is ahead of, behind, or aligned with calendar age, and names the single most impactful change that would shift the trajectory.',requiresImage:{type:'face'},whatYouGet:['Your aging marker score across six structural measurements — the specific parameters assessed and what each one indicates about the vitality state of the corresponding body system','A structural age reading — whether your structural aging pattern places you ahead of, behind, or aligned with your calendar age, and what the specific pattern of advancement or lag indicates about primary vitality patterns','What the specific configuration of aging markers indicates about the primary vitality stressor — the system or habit the overall pattern most consistently points to as the dominant drain on your vitality','The Chinese medicine reading of your aging markers — the organ system correspondence for the most prominent aging patterns identified, what it indicates about Qi, Blood, or Jing depletion, and the classical correction most indicated','How your current Personal Year cycle interacts with your structural vitality — whether the current period is one that tends to stress the primary system identified or one that supports recovery and recalibration','The single most impactful change that would most directly shift the aging trajectory — the specific lifestyle, nutritional, or practice adjustment all indicators agree on as the highest-leverage intervention right now'],guidanceType:'practical-solution',guidanceText:'A vitality recalibration protocol — the specific lifestyle adjustment most directly addressing the primary stressor identified in the aging marker pattern, drawn from the Chinese medicine system with the highest correspondence to the markers identified, with a 30-day sequence and the early signal that the protocol is creating traction.',upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97}},
-  {id:'hand-shape-character-reading',name:'The Hand Shape Character Reading',tagline:'Your hand element confirmed against your chart element — where both agree, the character portrait has nowhere left to hide',emoji:'✋',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:765,deliveryMinutes:20,hook:'The hand shape encodes one of four elemental character types — Fire, Earth, Air, or Water — each describing a fundamentally different way of engaging with every domain of life: how energy moves, how decisions are made, what restores and what drains, what kind of work produces the most natural flow. When the hand element is confirmed by both the Sun sign element and the Life Path, the character portrait reaches the kind of specificity that makes people stop and re-read it — because it names something they have always known about themselves but never had language for.',requiresImage:{type:'palm'},whatYouGet:['Your hand element identified — Fire, Earth, Air, or Water — with the full character description of what each element encodes about natural engagement style, energy management, decision-making approach, and the life domains where the element is most naturally expressed','The ruling planet of your hand shape and the specific domain of life its influence most directly governs — where the planetary energy expressed through the hand structure creates the most natural flow and the most consistent pattern','Your character core from the hand reading — the fundamental nature encoded in the hand structure, the primary strength the element carries, and the specific challenge that accompanies the same quality in its less-integrated form','How your hand element compares to your Sun sign and Life Path element — whether they confirm the same elemental nature or describe a person operating across multiple elements, with the implications of each combination','The specific life domain where your hand element provides the strongest natural advantage — the area of life where working with the elemental quality produces the most traction with the least effort','The classical reading of your hand type — the soul quality the elemental hand configuration has been associated with across multiple traditions and what it says about the fundamental orientation of the life'],guidanceType:'practical-solution',guidanceText:'A hand element alignment guide — the specific environment, work style, relationship approach, and daily practice most naturally suited to your hand element type, with the one context adjustment most likely to reduce the friction between how you are currently operating and how your hand element is built to operate.',upsell:{id:'complete-character-portrait',name:'Complete Character Portrait',price:57}},
-  {id:'life-line-vitality-reading',name:'The Life Line Vitality Reading',tagline:'The life line does not predict how long you live — it maps how fully your vitality is being deployed right now',emoji:'💫',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:876,deliveryMinutes:20,hook:'The life line is the most misunderstood line in palmistry. It does not predict the length of life. It maps the quality and expression of vitality — how fully the person\'s energy is being deployed, where it drains, and where it regenerates. A short but deep life line carries more vitality than a long but faint one. A line with strong upward branches marks the points of significant new beginning. Islands mark the depletion periods. This reading decodes the complete vitality map and confirms it against the Sun sign constitution and 6th house health indicators to produce a forward vitality forecast.',requiresImage:{type:'palm'},whatYouGet:['Your life line presence and depth reading — the first and most important assessment that determines whether the vitality signature is strong, moderate, or faint, and what each level means for how energy is available and how it depletes','Your curvature analysis — whether the line curves outward toward the thumb side or sits closer to the centre of the palm, and what each configuration says about whether vitality is directed outward into the world or held more internally','Your branch pattern reading — the upward branches that mark significant new beginnings, periods of elevated energy and external expression, and what they say about when vitality has historically peaked and is most likely to peak next','Island interpretation mapped to life stages — the specific periods of depletion encoded in the line, what they correspond to in the life narrative, and what the depletion pattern says about constitutional vulnerability','How the life line reading interacts with your Sun sign vitality indicator — where the palm and the chart agree on the same vitality pattern and where they add different layers to the same picture','A forward vitality forecast from the line\'s trajectory — what the life line indicates about the direction vitality is moving in the current period and the specific conditions under which it is most likely to recover or deplete further'],guidanceType:'practical-solution',guidanceText:'A vitality recovery protocol — the specific daily practice addressing the primary vitality drain identified in the life line reading, drawn from the constitutional tradition most aligned with your Sun sign type, with guidance on the timeframe for measurable recovery and the signal that the drain is resolving.',upsell:{id:'constitutional-health-blueprint',name:'Constitutional Health Blueprint',price:47}},
-  {id:'heart-line-love-map',name:'The Heart Line Love Map',tagline:'How you actually love in private — not how you think you love, and not how you present love',emoji:'❤️',price:37,domain:'oracle-temple',isNew:true,isPopular:true,rating:4.9,reviewCount:1543,deliveryMinutes:20,hook:'The heart line is the most consistent predictor of emotional style in the entire palm. Length and curvature encode the love style — whether it is demonstrative or internalised, idealistic or pragmatic. Branch patterns reveal the capacity for depth and the specific experiences that opened or closed the heart. Islands mark specific periods of emotional pain. The terminal point shows whether romantic drive is more idealistic or more pragmatic. This reading decodes the heart line completely and confirms each finding against the Venus placement — the combination producing a portrait of the private emotional reality rather than the presented version.',requiresImage:{type:'palm'},whatYouGet:['Your heart line length and curvature reading — the love style it encodes: whether the emotional expression is more outward and demonstrative or more inward and reserved, more idealistic or more pragmatic, and what that means for the specific types of love experiences that create most fulfilment','Your branch count reading — what the number and position of branches reveal about the capacity for depth of connection, the periods when new love has opened, and the overall emotional range available across the lifetime','Island interpretation mapped to life stages — the specific periods of emotional pain encoded in the line, where they fall in the life narrative, and what the overall island pattern says about the emotional experience that has been most consistently challenging','Your terminal point reading — where the heart line ends and what the endpoint indicates about the balance between romantic idealism and romantic pragmatism in how love decisions are ultimately made','How your heart line interacts with your Venus placement — where the palm and the chart confirm the same emotional style and where they describe different dimensions of the same person\'s love life','The emotional expression gap — the specific difference between what is felt internally and what is expressed externally, identified from the heart line configuration, and what this gap has been creating in close relationships'],guidanceType:'spiritual-remedy',guidanceText:'A heart line healing practice — the specific heritage-calibrated practice for the most significant island or break in the heart line, drawn from the tradition most aligned with your background, addressing the specific emotional pattern the island represents rather than offering a general emotional healing protocol.',upsell:{id:'complete-love-synthesis',name:'Complete Love Synthesis',price:97}},
-  {id:'fate-line-mission-reading',name:'The Fate Line Mission Reading',tagline:'The only line in the palm that maps where the life is going — this reads the complete trajectory',emoji:'🧭',price:47,domain:'oracle-temple',isNew:true,isFlagship:true,rating:4.8,reviewCount:987,deliveryMinutes:20,hook:'Not everyone has a fate line. For those who do, it is the most direct physical map of the life\'s direction available in the palm — and the most specific predictor of when the direction shifts, when external support arrives, and when the work begins to carry the person rather than the person carrying the work. Absence of a fate line is itself a reading: it indicates an instinct-driven, self-determined path rather than the absence of direction. This reading decodes fate line presence, depth, trajectory, and branch pattern, and confirms each finding against the Life Path and Destiny number to produce the most accurate purpose portrait available from physical indicators alone.',requiresImage:{type:'palm'},whatYouGet:['Your fate line presence, depth, and length reading — the first assessment that determines whether the line indicates a strong defined mission, a moderate emerging direction, or an instinct-driven self-determined path, with the specific character implications of each','Your starting point interpretation — whether the line begins near the base of the palm, the wrist, or emerges mid-palm, and what each starting point says about whether the calling was early-established, arrived through mid-life shift, or built through accumulated public support','Your branch count reading — what parallel fate line branches indicate about a multi-discipline career, a major pivot, or a simultaneous contribution across more than one domain, with the specific professional implications of each pattern','A continuity reading — the specific breaks, gaps, and overlaps in the line mapped to life stages, showing where career pivots and major redirections have already occurred and what the pattern says about how direction changes in this particular life','How the fate line interacts with your Life Path and Destiny number — where the palm and the chart confirm the same directional calling and where they describe different dimensions of the same soul mission','The classical destiny line reading — what the palmistry tradition says about the type of support and recognition that accompanies the fate line configuration identified, and the period when external recognition most naturally arrives'],guidanceType:'practical-solution',guidanceText:'A fate line alignment guide — the specific career or purpose action most supported by the fate line trajectory in your current life stage, with guidance on how the trajectory shifts over the next five years based on what the line shows, and the one decision the fate line most clearly supports making now.',upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97}},
-  {id:'mount-venus-love-vitality',name:'The Mount Venus Love and Vitality Reading',tagline:'The Mount of Venus encodes the love capacity and physical vitality the hand was built with — this reads yours',emoji:'♀️',price:37,domain:'oracle-temple',isNew:true,rating:4.8,reviewCount:765,deliveryMinutes:20,hook:'The Mount of Venus is the largest mount in the palm and the one that most directly encodes the capacity for love, physical vitality, and magnetic attraction. Its elevation and firmness together indicate not just the ability to love but the specific quality of love available — whether it is generous, reserved, passionate, steady, conditional, or freely given. This is not about romantic timing or window prediction. It is about the fundamental love architecture the hand was built with. Confirmed against the Venus placement in the chart, the combined reading reaches a precision about the love dimension that neither system produces alone.',requiresImage:{type:'palm'},whatYouGet:['Your Venus mount elevation and firmness reading — the combined assessment that indicates love capacity, vitality level, and magnetic attraction signature, with the specific character implications of each configuration from high-firm to low-soft','Your love capacity and expression style from the mount configuration — the specific way this particular Venus mount indicates love is given, received, and experienced, and what the configuration says about the conditions under which love expression is most natural versus most constrained','Your physical vitality reading from the Mount of Venus — what the mount says about constitutional vitality, physical warmth and sensuality, and the relationship between emotional and physical energy in this specific constitution','Your magnetic attraction signature — what type of people, experiences, and resources the energy of this mount configuration most naturally draws, and the relationship between the mount\'s quality and the quality of what consistently arrives','How your palm Venus mount compares to your Venus placement in the chart — where the physical reading and the chart confirm the same love signature and where they describe different dimensions of the same person\'s love nature','The classical love indicator reading from the mount — what the palmistry tradition says about marital harmony, beauty appreciation, and the type of love most fulfilling for this specific mount configuration'],guidanceType:'spiritual-remedy',guidanceText:'A Venus mount activation practice — the specific daily practice that develops the love and magnetic attraction energy of the mount in its current state, calibrated to whether the mount is high-firm, high-soft, low-firm, or low-soft, with the tradition-specific guidance most aligned with your cultural background.',upsell:{id:'soulmate-arrival-window-os',name:'Soulmate Arrival Window',price:37}},
-  {id:'mount-jupiter-ambition',name:'The Mount Jupiter Ambition Reading',tagline:'The Mount of Jupiter reads the quality and character of your ambition — not as motivation but as structural fact',emoji:'♃',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:654,deliveryMinutes:20,hook:'The Mount of Jupiter does not measure how ambitious someone is. It measures the type of ambition — whether it is oriented toward command authority, toward earned wisdom, toward collaborative leadership, or toward purposeful contribution. Elevation and firmness read different dimensions. The classical dharma indicator reading adds the soul-level leadership question: what kind of wisdom is this person designed to develop and transmit? Confirmed against the Jupiter placement in the chart and the Life Path authority number, the combined reading produces an ambition portrait specific enough to change how professional decisions are made.',requiresImage:{type:'palm'},whatYouGet:['Your Jupiter mount elevation and firmness reading — the baseline ambition assessment that identifies whether ambition is strong-consistent, strong-intermittent, moderate, or understated, and the specific professional implications of each configuration','Your ambition archetype — natural commander, earned authority, collaborative leader, or purposeful contributor — with the specific professional environments and relationship dynamics that most activate each type versus the ones that consistently suppress it','How your Jupiter mount reading interacts with your Life Path authority number — where the physical mount reading and the numerical authority indicator agree on the same type and scale of ambition, and where they reveal a more layered picture','The career environment most aligned with your actual ambition level versus your current professional position — the honest assessment of whether there is a gap between the ambition the mount indicates and the environment currently being operated in','The classical wisdom indicator reading — what the Jupiter mount tradition says about the type of dharmic leadership and wisdom expansion this mount configuration is most designed to develop and eventually transmit to others','The risk pattern of your specific Jupiter mount configuration — the specific way this ambition type tends to overextend or underutilise, named as a pattern to watch for rather than a fixed verdict'],guidanceType:'practical-solution',guidanceText:'An ambition alignment guide — the specific professional environment or role that most accurately matches the actual ambition level and type shown in the mount, the gap between current position and optimal alignment, and the one structural change most likely to close that gap.',upsell:{id:'founder-archetype',name:'Founder Archetype',price:47}},
-  {id:'moon-mount-intuition',name:'The Moon Mount Intuition Reading',tagline:'Your psychic and intuitive capacity — not as a claim but as a structural reading of what is actually present',emoji:'🌙',price:37,domain:'oracle-temple',isNew:true,rating:4.8,reviewCount:876,deliveryMinutes:20,hook:'Most people with significant spiritual gifts have spent years questioning whether what they experience is real — and the doubt itself is part of the pattern of how unexplained capacity is managed in the absence of a framework. The Moon mount reads the intuitive capacity as a structural fact: elevation and firmness indicate the archetype, and the specific form of intuition most consistently active. Five independent indicators confirm the reading: the Moon mount, the Neptune placement, the Moon sign, any master number signatures, and the intuition line. This reading does not ask you to believe anything. It reads what is structurally present and names it in terms specific enough to develop and use.',requiresImage:{type:'palm'},whatYouGet:['Your Moon mount elevation and firmness reading — the baseline intuition assessment that identifies whether the capacity is strongly active, moderately present, emerging, or dormant, and the specific character implications of each configuration','Your intuition archetype — prophetic dreamer, clairsentient empath, creative visionary, or lunar strategist — with the specific form that intuition takes most reliably for this mount configuration and the environments where it is most consistently accurate','The specific form intuition most commonly takes for your configuration — whether it arrives as dreams, body sensations, sudden knowing, emotional absorption, image or symbol, or pattern recognition — named specifically so it can be trusted rather than questioned','How your Moon mount interacts with your Neptune placement and Moon sign — where all three indicators confirm the same intuitive character and where they describe different dimensions of the same capacity','The classical mind indicator reading — what the Moon mount tradition says about the subconscious processing quality of this configuration and the relationship between intuitive capacity and creative or healing ability','The specific domain where your intuition is most reliable — the life area where the mount configuration indicates the intuitive signal is most consistently accurate and can most confidently be trusted'],guidanceType:'spiritual-remedy',guidanceText:'A Moon mount development practice — the specific daily practice most effective for the particular intuition type shown in the mount configuration, the protection practice appropriate for the sensitivity level identified, and the specific boundary the reading indicates is most important to establish before using the capacity in service of others.',upsell:{id:'spiritual-gifts-inventory-os',name:'Spiritual Gifts Inventory',price:47}},
-  {id:'thumb-willpower-reading',name:'The Thumb Willpower Reading',tagline:'The thumb reveals the quality and character of the will — the part of you that determines whether decisions get executed',emoji:'👍',price:29,domain:'oracle-temple',isNew:true,rating:4.6,reviewCount:543,deliveryMinutes:20,hook:'The thumb is the most revealing feature of the hand for character assessment in both Chinese and Western palmistry traditions. Length indicates the baseline willpower available. Flexibility reveals whether the will is adaptable or resistant. Tip shape shows the expression style of the will — whether it tends toward deliberate, impulsive, diplomatic, or direct. The knuckle prominence reads the balance between reason and instinct in decision-making. Confirmed against the Saturn placement — the planet most directly associated with discipline, follow-through, and mastery — the combined reading produces a specific portrait of how the will actually operates rather than how it is ideally intended to operate.',requiresImage:{type:'palm'},whatYouGet:['Your thumb length analysis and the willpower reading it produces — the baseline assessment of available determination and the specific situations where that willpower is most consistently accessible versus where it most consistently drains or stalls','Your thumb flexibility reading — whether the thumb bends readily under light pressure or holds firm, and what the specific flexibility level indicates about adaptability, stubbornness, open-mindedness, and how the will responds to resistance from external circumstances','Your tip shape reading and the expression style of will it encodes — whether the thumb tip is square, round, spatulate, or pointed, and what each configuration says about how decisiveness is expressed and how it is received by others','Your knuckle prominence reading — the balance between logic and emotion in decision-making, and whether the will tends to lead with reason and defer to instinct only under pressure or leads with instinct and rationalises after','How your thumb reading interacts with your Saturn placement — where the physical willpower portrait and the Saturn placement agree on the same character of discipline and where they describe different dimensions of how structure and follow-through operate in the life','Your willpower archetype — iron will, flexible strength, impulsive driver, or considered decisiveness — with the specific professional and personal contexts where each archetype is most effective and where it creates its characteristic friction'],guidanceType:'practical-solution',guidanceText:'A willpower development practice — the specific daily discipline most aligned with developing the particular willpower type identified into its highest expression, with guidance on the one context where this willpower type most consistently underperforms and the specific practice that addresses that gap directly.',upsell:{id:'shadow-self-reading-os',name:'Shadow Self Reading',price:47}},
-  {id:'marriage-line-reading',name:'The Marriage Line Reading',tagline:'The marriage lines map the relationships significant enough to leave a structural mark on the hand — this reads the complete picture',emoji:'💍',price:37,domain:'oracle-temple',isNew:true,isPopular:true,rating:4.8,reviewCount:1234,deliveryMinutes:20,hook:'The marriage lines do not predict exactly how many times you will marry. They map the relationships significant enough to leave a structural mark on the hand — the connections that carry real karmic and emotional weight. The number of lines, the depth and clarity of each, the position relative to the heart line, and the curvature all read different dimensions of the relational pattern. Confirmed against the Venus placement and current Personal Year cycle, this reading produces the most direct physical indicator of relationship timing and significance available in the palm.',requiresImage:{type:'palm'},whatYouGet:['Your marriage line count and what the specific number indicates — not as a prediction of marriages but as a reading of the number of relationships significant enough to be encoded in the hand structure, with the specific character implications of each count','The depth and clarity of each line — the honest assessment of which bonds have been most significant, whether the depth was mutual or one-sided, and what the clarity or faintness of each line says about the quality of the connection it represents','Your position reading — whether the lines sit close to the heart line, mid-field, or high on the mount, and what each position indicates about whether the significant connections have arrived in younger life, middle life, or are indicated for the later decades','How your marriage lines interact with your heart line and Venus placement — where the lines, the heart, and the Venus chart reading all confirm the same relational pattern and where they add different layers to the same picture','A current Personal Year cycle assessment — whether the current period is one that supports new relationship formation, deepening of existing connection, or completion and release of a significant bond','A timing indicator from the most prominent remaining marriage line — what the position and depth of the deepest future-oriented line indicates about the life stage or approximate age range when the connection it represents is most likely to arrive or deepen'],guidanceType:'practical-solution',guidanceText:'A relationship timeline guide — the specific preparation indicated for the most prominent remaining marriage line, calibrated to both the line\'s characteristics and the current Personal Year timing, with the one internal readiness shift the reading identifies as most important before the connection encoded in the line can be fully received.',upsell:{id:'soulmate-arrival-window-os',name:'Soulmate Arrival Window',price:37}},
-  {id:'head-line-mind-map',name:'The Head Line Mind Map',tagline:'The most direct physical map of how your mind works — the thinking style, depth, and decision pattern encoded in the palm',emoji:'🔍',price:37,domain:'oracle-temple',isNew:true,rating:4.7,reviewCount:765,deliveryMinutes:20,hook:'The head line is the most direct physical map of the mind available in the palm. Presence, curvature, length, depth, and terminal point each encode a different dimension of the thinking style — the type of intelligence dominant, the decision-making pattern, the relationship between intuition and analysis, and the specific domain where mental energy is most efficiently deployed. Note: some palms have no distinct head line — this indicates a particular type of instinctive, pattern-based intelligence rather than the absence of mental capacity. Confirmed against the Mercury placement, the combined reading reaches maximum precision about thinking style, cognitive strength, and the specific work context where the mind produces most.',requiresImage:{type:'palm'},whatYouGet:['Your head line presence reading — the first assessment, including the specific significance when the line is absent (instinctive intelligence) or merged with the life line at the start (caution-dominant thinking) versus clearly separate (independent thought)','Your curvature analysis and the thinking style it encodes — whether the line curves toward the Moon area (creative, imaginative, narrative thinking), runs straight (practical, logical, sequential), or takes a complex path, with the specific cognitive implications of each','Your length reading — what a long head line indicates about the range of interests and thinking scope versus what a shorter or more concentrated line indicates about depth, specialisation, and focused reasoning','Your depth and clarity reading — the honest assessment of whether the line shows confident, focused mental energy or indicates scattered attention or multiple competing priorities, and what the current clarity level says about mental state','Your terminal point reading — where the head line ends and the specific intelligence type most dominant for that endpoint: analytical, intuitive, creative, pragmatic, or visionary — with the professional and personal implications of the terminal point position','Your decision-making pattern from the combined line characteristics — whether the palm indicates an analytical decision process, an intuitive one, a creative and lateral one, a practical and evidence-based one, or a visionary and systems-thinking one'],guidanceType:'practical-solution',guidanceText:'A thinking style optimisation guide — the specific mental environment, work structure, and decision-making process most aligned with the intelligence type your head line indicates, including the work context where this thinking style produces most and the one most likely to drain it, with the single structural change most likely to improve the match between thinking style and current work.',upsell:{id:'founder-archetype',name:'Founder Archetype',price:47}},
-  {id:'complete-character-portrait',name:'The Complete Character Portrait',tagline:'Face and palm cross-confirmed — where both arrive at the same character conclusion, there is no room left for doubt',emoji:'🎭',price:57,domain:'oracle-temple',isNew:true,isFlagship:true,rating:4.9,reviewCount:543,deliveryMinutes:20,hook:'Face shape and hand shape are measured by entirely independent systems — and they often arrive at the same character conclusion from different physical starting points. When both describe the same elemental nature, the same character core, and the same primary tension, the portrait that emerges carries a quality of certainty that neither physical reading alone can produce. When they diverge — which they sometimes do — the divergence becomes the reading: the gap between who you project to the world and who you experience yourself to be, mapped with the precision that two independent physical systems allow.',requiresImage:{type:'both'},whatYouGet:['Your face element and hand element placed side by side — the first assessment of whether the two systems confirm the same elemental nature or describe a person operating across two different elements simultaneously, with the specific character implications of each scenario','Triple-confirmed character traits — the specific qualities where face element, palm element, and chart all arrive at the same conclusion simultaneously, representing the highest-confidence character insights in the entire reading','The gap between your presented self and your private self — the specific character qualities the face projects that the palm either confirms or quietly contradicts, named with enough specificity to recognise in social and professional patterns','The authority reading — which physical system currently carries more energy, what that means for how authority is experienced internally versus expressed externally, and whether the two are currently aligned or in productive tension','A five-domain cross-system matrix — how the face-palm combination reads across love, career, wealth, health, and spiritual life, showing where the combined reading creates a consistent portrait and where it reveals a more complex picture','The one character trait visible in the palm that the face actively conceals — the quality present in the hand that the face has learned not to show, named directly because knowing it changes how the person understands both their private experience and their social patterns'],guidanceType:'practical-solution',guidanceText:'A character integration guide — the specific practice for closing the most significant gap between your face element and palm element, with guidance on how long the integration takes to produce a noticeable shift and the early signal that both physical expressions are moving toward greater coherence.',upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197}},
-  {id:'love-architecture-reading',name:'The Love Architecture Reading',tagline:'The face reveals how you love in public. The palm reveals how you love in private. The gap between the two is the reading.',emoji:'🏗️',price:47,domain:'oracle-temple',isNew:true,isPopular:true,rating:4.9,reviewCount:654,deliveryMinutes:20,hook:'The face and palm each read love from a different angle. The face reads the love pattern as it is presented — the attachment signals the expression communicates, the asymmetry zones that reveal emotional consistency or inconsistency, the features that broadcast availability or guardedness before a word is spoken. The palm reads the private reality — the heart line\'s actual emotional style, the Venus mount\'s love capacity, the marriage lines\' significance patterns. The gap between the two is always the most important thing in the reading, because the gap between how you present love and how you actually experience it is the root of most recurring love problems.',requiresImage:{type:'both'},whatYouGet:['Your face love signature — the specific combination of what your eyes, lips, and expression communicate about love availability, emotional warmth, and attachment style, read from the three facial features most reliably associated with relational presentation in physiognomy','Your palm love signature — the private reality that the heart line, Venus mount, and marriage lines reveal about the actual emotional capacity, love style, and depth of connection available, independent of what the face projects','The love gap — the specific difference between public and private love expression that the combined reading identifies, named with enough precision to recognise it in patterns across past and current relationships','Whether the gap creates connection problems or hidden depth — the distinction between a gap that creates misalignment with partners and one that creates the kind of complexity that deepens long-term connection over time','How the combined physical reading interacts with your Venus placement and Soul Urge — where all four indicators confirm the same love pattern and where the face-palm dynamic adds something neither the chart nor the numbers alone can reveal','The one love communication shift that most effectively closes the identified gap — the specific change in how love is expressed that most directly addresses the disconnect between the face\'s presentation and the palm\'s private reality'],guidanceType:'spiritual-remedy',guidanceText:'A love coherence practice — the specific daily action for developing the love quality that most bridges the gap between your public love presentation and your private love experience, with guidance on how long the practice takes to produce a measurable shift in how love is both given and received.',upsell:{id:'complete-love-synthesis',name:'Complete Love Synthesis',price:97}},
-  {id:'wealth-signature-reading',name:'The Wealth Signature Reading',tagline:'The face shows the wealth palace. The palm shows the earning channel. Where they agree is where your wealth actually flows.',emoji:'💎',price:57,domain:'oracle-temple',isNew:true,isFlagship:true,rating:4.9,reviewCount:543,deliveryMinutes:20,hook:'Wealth in physical reading is encoded in two different places and through two different mechanisms. The face — specifically the nose, cheekbones, and forehead — maps the wealth palace: the capacity to accumulate, the authority that commands resources, and the financial decade map showing when wealth-generating power peaks. The palm — specifically the fate line, Venus mount, and thumb — maps the earning channel: the active wealth-generation mode, the effort-to-income ratio, and the follow-through that determines whether financial potential becomes financial reality. This reading cross-confirms both and surfaces the specific point where face and palm most agree on your wealth path — which is the direction most worth investing energy in.',requiresImage:{type:'both'},whatYouGet:['Your face wealth reading — the combined reading of nose type for wealth palace capacity, cheekbone structure for resource authority, and forehead height for the foundational wealth ambition, with the specific financial implications of how these three features interact','Your palm wealth reading — the combined reading of fate line for wealth trajectory, Venus mount for resource magnetic attraction, and thumb willpower for follow-through capacity, with the assessment of how the three palm indicators interact with each other','The wealth channel confirmed by both systems — the specific earning mode and wealth direction where face and palm are most aligned, representing the highest-confidence wealth guidance the combined reading can produce','Where face and palm diverge on the wealth picture — the specific tension between potential and drive, between capacity and execution, or between timing and positioning, named as a gap to consciously address','The elemental wealth match — what it means when your face element and hand element are the same or different in the wealth context, and how the combination shapes the natural wealth approach','Your life period wealth map — which decade the face reading most strongly flags as the financial peak and which the palm reading most strongly supports, with the implications for decisions being made now'],guidanceType:'practical-solution',guidanceText:'A physical wealth alignment protocol — the specific action confirmed by both face and palm as the most direct path to the wealth channel identified, with guidance on the preparation required before the action, the timing most supported by the current Personal Year, and the signal that the alignment is producing traction.',upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97}},
-  {id:'health-constitution-reading',name:'The Health Constitution Reading',tagline:'Four ancient medical traditions read face and hands together for three thousand years — this applies that method to yours',emoji:'⚕️',price:57,domain:'oracle-temple',isNew:true,isFlagship:true,rating:4.8,reviewCount:432,deliveryMinutes:20,hook:'Traditional Chinese Medicine, Ayurveda, classical chart health reading, and classical hand analysis were each developed independently on different continents over different centuries — and each arrived at frameworks for reading constitutional type from physical indicators that are remarkably consistent with each other. In each tradition, practitioners read multiple physical features simultaneously to reach a constitutional diagnosis. This reading applies all four frameworks to your face and hands together, looking specifically for what all four agree on — because where independent traditions developed in isolation across different cultures arrive at the same conclusion about the same person, the confidence reaches a level that single-system health advice cannot approach.',requiresImage:{type:'both'},whatYouGet:['Your face health reading — the combined assessment of skin tone, colour cast, radiance, texture, and moisture level, cross-read through both Chinese medicine and Ayurvedic frameworks to identify the constitutional type and organ system correspondences most clearly expressed in the complexion','Your palm health reading — the combined assessment of skin tone, moisture level, elasticity, and life line vitality, adding the physical hand layer to the constitution picture and showing how the internal health state is expressed through both face and hands simultaneously','A Chinese medicine cross-reading — the current state of Qi, Blood, and Jing as indicated by the combined face and palm reading, with the specific imbalance pattern most clearly present across both physical indicators','An Ayurvedic combined reading — the Dosha indication from the combined skin and hand type assessment, and how the two readings together confirm or refine the constitutional type beyond what either alone can produce','The three organ systems showing the most stress across both the face and palm readings — identified from the convergence of Chinese medicine and Ayurvedic indicators rather than from either tradition alone','The lifestyle, dietary, and practice adjustments most aligned with the combined constitution — the specific recommendations that both Chinese medicine and Ayurvedic analysis agree on, rather than the recommendations that belong to only one tradition'],guidanceType:'practical-solution',guidanceText:'A two-system health protocol — the specific dietary adjustments, movement prescription, and practice recommendations that both Chinese medicine and constitutional Ayurveda agree on for the constitution identified in the combined face and palm reading, presented as a 30-day sequence with the early signal that the protocol is producing the right results.',upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97}},
-  {id:'career-authority-reading',name:'The Career Authority Reading',tagline:'The cheekbones and Jupiter mount read from two different systems — when they agree on the same authority type, stop second-guessing',emoji:'🏆',price:47,domain:'oracle-temple',isNew:true,rating:4.8,reviewCount:543,deliveryMinutes:20,hook:'The cheekbones and the Mount of Jupiter each read professional authority from a different angle — the face from the outside and the palm from the inside. The cheekbones govern how authority is perceived socially and in the public domain. The Jupiter mount governs the internal ambition quality and the type of leadership the person is built to exercise from within. When both physical indicators read the same authority configuration, the portrait reaches maximum confidence and the specific professional positioning most aligned with that authority type becomes clear. When they diverge, the divergence names the gap between how authority is held internally and how it is expressed publicly.',requiresImage:{type:'both'},whatYouGet:['Your cheekbone authority reading from the face — the specific authority style, social domain, and timing peak indicated by the cheekbone position, width, and fullness, read as a public-facing authority portrait','Your Jupiter mount reading from the palm — the internal ambition quality, the leadership type most naturally expressed from the inside, and the wisdom the mount indicates is being developed toward transmitting to others','Your authority configuration from the combined reading — structural, aspiring, projected, or collaborative — with the specific meaning of each configuration in both professional and social contexts, and which one the combined face-palm reading most clearly indicates','What each specific authority configuration demands in professional contexts — the environment, relationship structure, and positioning that allows the identified configuration to express most effectively and the contexts that consistently suppress it','How the combined physical authority reading interacts with your 10th house Midheaven and Life Path authority number — where all four indicators agree on the same authority type and where the physical and chart readings describe different layers of the same quality','The specific professional environment where your combined authority configuration thrives — named with enough specificity to evaluate current and potential professional contexts against the portrait the reading produces'],guidanceType:'practical-solution',guidanceText:'A leadership positioning guide — the one professional repositioning move that makes the physical authority configuration most visible to the right people, with guidance on the environment most likely to recognise the specific authority type and the one framing or positioning shift that closes the gap between the authority being held and the authority being acknowledged.',upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87}},
-  {id:'spiritual-blueprint-reading',name:'The Spiritual Blueprint Reading',tagline:'Your face element and hand element each describe a spiritual pathway — together they name yours specifically',emoji:'🕉️',price:47,domain:'oracle-temple',isNew:true,rating:4.8,reviewCount:432,deliveryMinutes:20,hook:'Face element and hand element each identify a spiritual pathway — the type of practice, the tradition most resonant, and the form that contact with the sacred most naturally takes for this particular constitution. Fire hands are built for devotional movement and active prayer. Earth hands for grounding ritual and embodied practice. Air hands for contemplative study and philosophical depth. Water hands for receptive meditation and healing work. When the face element confirms the hand element, the spiritual archetype reaches its most specific definition. When they differ, the combination itself names a more complex and interesting path — one that draws from multiple elemental traditions rather than fitting neatly into one.',requiresImage:{type:'both'},whatYouGet:['Your face element spiritual pathway — the specific type of spiritual practice, the approach to the sacred, and the tradition most naturally aligned with the face element type, with the reasoning from classical physiognomy that maps each face element to a specific spiritual orientation','Your hand element spiritual pathway — the specific practice format and tradition most naturally expressed through the hands and body, which often describes the practice style more than the conceptual framework','Your elemental combination and the specific spiritual archetype it produces — whether the combination creates a unified path or a more complex integration of two different elemental approaches to practice, and what that means for how the spiritual life is most effectively structured','The practice format most aligned with your specific elemental combination — whether active prayer, contemplative study, devotional movement, creative ritual, service, or healing work is most structurally suited to the combination of face and hand elements identified','The specific tradition or lineage most resonant with your elemental combination — the spiritual framework that most naturally fits the combined physical reading, named with enough specificity to evaluate against current and past spiritual experiences','The one spiritual shift most available and most transformative right now — the specific change in practice or approach that the combined reading indicates is most likely to deepen the spiritual dimension of the life in the current period'],guidanceType:'spiritual-remedy',guidanceText:'A complete spiritual practice prescription — the tradition most aligned with your elemental combination, the specific practice format within that tradition, the frequency and timing most suited to your current stage, and the one protection or grounding practice your physical spiritual indicators say is most necessary given the elemental configuration identified.',upsell:{id:'complete-spiritual-synthesis',name:'Complete Spiritual Synthesis',price:97}},
-  {id:'relationship-readiness-scan',name:'The Relationship Readiness Scan',tagline:'The face signals openness to love. The palm carries the internal reality. This reads both simultaneously.',emoji:'💚',price:47,domain:'oracle-temple',isNew:true,isPopular:true,rating:4.9,reviewCount:654,deliveryMinutes:20,hook:'The face and palm often tell different stories about relationship readiness. The face communicates the social signal — the expression openness, the symmetry score, the features that broadcast availability or guardedness. The palm carries the private reality — the continuity of the heart line, the firmness of the Venus mount, the position of the marriage lines. This reading measures both simultaneously and identifies the gap between the two. The gap is what most sabotages love — not the absence of opportunity but the incoherence between what is being projected outward and what is actually available internally.',requiresImage:{type:'both'},whatYouGet:['Your face readiness reading — the combined assessment of expression signal, symmetry score, and lip corner direction that indicates the social openness currently being projected and what that projection communicates to potential partners before any conversation begins','Your palm readiness reading — the combined assessment of heart line continuity, Venus mount firmness, and marriage line position that indicates the private emotional availability and what the internal reality actually is beneath the social signal the face is broadcasting','The readiness gap — the specific area where the internal state most diverges from the projected state, named with enough precision to recognise in patterns across recent interactions and relationship attempts','What the gap means practically — the specific experience pattern the gap creates in dating and early relationship stages, and why potential connections often stall or develop differently than expected','How the combined physical readiness picture interacts with the current Personal Year cycle — whether the timing is energetically open for new relationship formation or whether the current period calls for a different type of relational work','The specific inner shift that aligns face and palm into coherent readiness — the one internal change that most directly resolves the gap between projected openness and actual availability, named as a concrete internal practice rather than a mindset prescription'],guidanceType:'spiritual-remedy',guidanceText:'A readiness alignment practice — the specific internal work the palm indicates is most needed before the openness the face is already broadcasting can be genuinely sustained in the depth of a real relationship, calibrated to the specific gap identified rather than to general emotional readiness principles.',upsell:{id:'soulmate-arrival-window-os',name:'Soulmate Arrival Window',price:37}},
-  {id:'dual-elemental-conflict',name:'The Dual Elemental Conflict Reading',tagline:'Most people\'s face and hand carry different elements — this names what that specific combination means for how you live',emoji:'☯️',price:47,domain:'oracle-temple',isNew:true,isFlagship:true,rating:4.9,reviewCount:543,deliveryMinutes:20,hook:'Your face and your hand are measured by entirely independent systems — which makes their agreement meaningful in a way that a single system cannot replicate. And when they disagree, the disagreement is equally meaningful. Most people\'s face and hand carry different elements, producing a specific gap between the character projected to the world and the character experienced internally. This gap is not a problem to fix. It is the most specific thing about you — and once it is named, the patterns across love, career, health, and relationships suddenly make sense in a way they did not before.',requiresImage:{type:'both'},whatYouGet:['Your face element and hand element identified and placed in direct comparison — with the specific character of each element named in full so the nature of the gap between them is immediately recognisable in daily life','The specific identity gap your elemental difference creates — the particular way the two elements create a person who is experienced differently from the outside than from the inside, and what that gap has been producing across relationships and professional contexts','Which element is currently dominant — whether you are living more face-led or palm-led right now, and what the dominance pattern says about where the most energy is currently invested','The five life domains most affected by the elemental gap — how the face-palm divergence expresses specifically across love, career, wealth, health, and spiritual life, with the specific pattern each domain tends to produce','How the elemental gap interacts with your Sun sign element — the triple elemental picture that shows whether the Sun sign confirms the face, the palm, or creates a third layer, with the implications of each three-way combination','The integration path — what it looks like when both elements are expressed as a coherent whole rather than in alternation or conflict, and the specific practice that most directly develops the less-expressed element toward that integration'],guidanceType:'spiritual-remedy',guidanceText:'An elemental integration practice — the specific daily practice most effective for developing the qualities of your less-expressed element, reducing the gap between projected self and experienced self, with guidance on the timeline for integration and the early signal that both elements are beginning to express more coherently together.',upsell:{id:'complete-character-portrait',name:'Complete Character Portrait',price:57}},
-  {id:'peak-decade-map',name:'The Peak Decade Map',tagline:'When face and palm both identify the same life period as the peak — that convergence is the map you need',emoji:'🏔️',price:57,domain:'oracle-temple',isNew:true,isFlagship:true,rating:4.9,reviewCount:432,deliveryMinutes:20,hook:'Classical face reading maps specific life decades to specific facial features — the forehead governs the teens and twenties, the nose and eyes the thirties and forties, the cheeks and mouth the fifties, the chin and jaw the sixties and beyond. Classical palm reading maps peak periods independently through the life line trajectory, Apollo line presence, and mount development over time. When both systems independently identify the same decade as the period of highest power, the confidence is unlike anything a single-system timing assessment can produce. This reading identifies your physical peak period from both systems, confirms how it aligns with your numerical Pinnacle, and maps the preparation that determines whether you enter the peak window ready or arrive at it from behind.',requiresImage:{type:'both'},whatYouGet:['The classical face decade map from your specific facial features — which period each feature governs, what the current age decade indicates about what is most structurally supported right now, and what the face says about when the highest-power period arrives','The classical palm peak period map — which decade the life line trajectory, Apollo line, and mount development indicate as the period of highest expression, and how the hand reading arrives at that conclusion independently from the face','The agreement reading — where both systems identify the same decade as the peak, creating a cross-system confirmation that carries maximum confidence about the timing of highest-power expression','How the physical peak period aligns with or diverges from your numerical Pinnacle — the assessment of whether the physical timing systems and the numerological timing system are all pointing to the same period or describing different layers of a more complex timing picture','Your current decade assessment — whether you are currently in the physical peak period or approaching it, and what the current decade is most structurally designed to build toward','If not yet in the peak: how long until it opens and the specific preparation that most determines whether you arrive at the peak window positioned to use it fully or positioned to spend the first years of it catching up'],guidanceType:'practical-solution',guidanceText:'A peak decade preparation guide — the three specific actions your combined physical and numerical timing indicators say must be in place before the peak window opens, each with the reasoning from the systems that confirm it and the specific timing for when each action is most supported.',upsell:{id:'elder-years-synthesis',name:'Elder Years Synthesis',price:77}},
-  {id:'full-physical-reading',name:'The Full Physical Reading',tagline:'Face, palm, numerology, and astrology — four independent systems, one person, the most complete portrait available from physical and birth indicators',emoji:'🔮',price:97,domain:'oracle-temple',isNew:true,isBestSeller:true,isFlagship:true,rating:4.9,reviewCount:654,deliveryMinutes:20,hook:'Four independent reading systems developed in different centuries on different continents — classical face reading, classical palm reading, numerology, and astrology — each arrived at remarkably consistent frameworks for reading character, purpose, timing, and health from different sets of indicators. When all four are applied to the same person simultaneously and only what they all confirm is included in the portrait, the result carries a confidence that no single-system reading can approach. This is the complete physical and birth-data reading: every readable feature of the face and hand decoded, every major system of numerology and chart reading applied, and the convergence between all four systems surfaced as the highest-confidence truths about this specific person.',requiresImage:{type:'both'},whatYouGet:['A complete facial analysis — every readable feature addressed: face shape, symmetry, all major features individually, skin vitality, habitual expression signal, and aging markers — with each reading confirmed against at least one other system','A complete hand analysis — hand shape, all major lines including the life, heart, head, fate, and intuition lines, all major mounts, thumb configuration, and skin quality — assembled into a unified palm portrait rather than isolated feature readings','A complete numerology reading — Life Path, Destiny, Soul Urge, Personality, Birthday Gift and Challenge, current Pinnacle, current Personal Year — confirmed where possible against the face and palm indicators','A complete astrology reading — Sun, Moon, Ascendant, Midheaven, all planets in their signs and houses — cross-referenced with the physical readings to identify the highest-confidence character and timing insights','A convergence map — every domain where all four systems agree, flagged as the highest-confidence insights in the reading, the portrait elements most worth acting on','A divergence map — every domain where the four systems describe different things, revealed as active growth edges, integration points, or the specific character complexity that makes this person who they are','A five-domain synthesis across love, career, wealth, health, and spiritual life — drawing from all four systems for each domain to produce the most complete domain portrait available','A personalised reading priority guide — based on all four systems and current timing, the three most important insights to engage with now'],guidanceType:'practical-solution',guidanceText:'A reading priority guide specific to your four-system portrait — the three insights from the combined reading that your current Pinnacle, Personal Year, and physical peak period all indicate are most important to act on now, presented in sequence with the specific first action for each, and the complete order for engaging the rest of the portrait as each life chapter opens.',upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197}},
+  {
+    id:'face-shape-character-verdict',
+    name:'The Face Shape Character Verdict',
+    tagline:'Your face shape is the oldest character reading system in existence —' +
+      ' this is the cross-tradition verdict on yours',
+    emoji:'👤',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'Face shape physiognomy was developed independently across Chinese,' +
+      ' Ayurvedic, and classical Greek traditions — three entirely separate' +
+      ' civilisations that arrived at remarkably consistent conclusions about the' +
+      ' relationship between facial structure and character. This reading applies' +
+      ' the most rigorous cross-tradition framework to your specific face shape and' +
+      ' cross-confirms what it finds against your Life Path and Sun sign. When face' +
+      ' shape, Life Path, and Sun sign all describe the same person from different' +
+      ' angles simultaneously, the portrait that emerges carries a quality of' +
+      ' certainty that no single-system reading can produce alone.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your face shape\'s elemental classification — the specific' +
+        ' tradition-confirmed category and what it says about your fundamental way' +
+        ' of engaging with the world, your relationship with authority, and the type' +
+        ' of challenge you find most activating',
+      'The ruling planet of your face shape and the specific domain of life it most' +
+        ' directly governs — the area where the face shape\'s gifts are most' +
+        ' naturally expressed and where its shadow most consistently appears',
+      'Your character core — the central strength, the central shadow, and the' +
+        ' specific paradox that makes your face shape type both the most powerful' +
+        ' and the most self-limiting version of itself',
+      'How your face element compares to your Sun sign element — whether they' +
+        ' confirm the same character or reveal a more layered picture where the two' +
+        ' systems describe different dimensions of the same person',
+      'The life period most strongly supported by your face shape — the specific' +
+        ' decade when the structural gifts of this face type are most naturally' +
+        ' expressed in the external world',
+      'Triple-confirmed character traits — the specific qualities where face shape,' +
+        ' Life Path, and Sun sign all arrive at the same conclusion, representing' +
+        ' the highest-confidence insights in the entire reading',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A character alignment guide — the one area where your face shape,' +
+      ' Life Path, and Sun sign most significantly diverge from each other, the' +
+      ' explanation for what that divergence has been creating in daily life, and' +
+      ' the specific integration practice for bringing the three systems into' +
+      ' greater coherence.',
+    upsell:{id:'complete-character-portrait',name:'Complete Character Portrait',price:57},
+  },
+  {
+    id:'facial-symmetry-relationship',
+    name:'The Facial Symmetry and Relationship Pattern',
+    tagline:'Your facial symmetry score maps a specific pattern in how consistently' +
+      ' you show up in relationships',
+    emoji:'🔀',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    isPopular:true,
+    rating:4.8,
+    reviewCount:876,
+    deliveryMinutes:20,
+    hook:'Facial symmetry has been studied across cultures for millennia as a' +
+      ' predictor of character consistency — how reliably someone is the same person' +
+      ' in different contexts, under different pressures, and with different' +
+      ' audiences. This reading measures symmetry across three zones independently:' +
+      ' the upper face governs intellectual consistency, the middle face governs' +
+      ' perceptual consistency, and the lower face governs social consistency. The' +
+      ' score in each zone predicts something specific about how you show up in' +
+      ' relationships — and the zone with the most significant asymmetry names the' +
+      ' specific area of inconsistency that others experience before you are aware' +
+      ' of it.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your bilateral symmetry score across three zones independently — upper,' +
+        ' middle, and lower face — so the portrait is specific rather than averaged' +
+        ' into a single number that obscures which zone is creating the most friction',
+      'What each zone\'s symmetry level reveals — the upper face reading for' +
+        ' intellectual reliability, the middle face for perceptual consistency, and' +
+        ' the lower face for how stable your social presence feels to others over' +
+        ' time',
+      'How your specific symmetry score affects how you are perceived in close' +
+        ' relationships — the specific pattern it creates and whether it reads as' +
+        ' grounded reliability, complex mystery, or contextual variability depending' +
+        ' on audience',
+      'How your symmetry pattern interacts with your Venus placement — where the' +
+        ' chart and the face agree on the relational pattern and where they reveal' +
+        ' different dimensions of the same person',
+      'The specific relationship dynamic your combined symmetry profile tends to' +
+        ' create — with the explanation for why it draws the types of partners it' +
+        ' does',
+      'The integration practice for the most asymmetric zone — the specific daily' +
+        ' action that develops greater consistency in the area showing most variation',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A relationship coherence practice — the specific daily action that' +
+      ' develops greater consistency in your most asymmetric zone, with guidance on' +
+      ' how long the practice takes to produce a measurable shift and the early' +
+      ' signal that it is working.',
+    upsell:{id:'soulmate-compatibility-verdict',name:'Soulmate Compatibility Verdict',price:37},
+  },
+  {
+    id:'mian-xiang-wealth-face',
+    name:'The Facial Structure Wealth Reading',
+    tagline:'The nose is the wealth palace — and the cheekbones govern authority.' +
+      ' This reads what yours say about your financial design.',
+    emoji:'👃',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    isPopular:true,
+    rating:4.8,
+    reviewCount:934,
+    deliveryMinutes:20,
+    hook:'In classical Chinese face reading, specific facial features correspond to' +
+      ' specific wealth indicators — the nose governs the wealth palace and reveals' +
+      ' the capacity to accumulate and retain; the cheekbones govern the authority' +
+      ' that commands resources; the forehead governs the early wealth foundation.' +
+      ' This is not superstition but a system refined across three thousand years of' +
+      ' observation. Confirmed against the Life Path and Personal Year cycle, the' +
+      ' facial wealth reading produces three things: the type of wealth the face is' +
+      ' built to generate, the financial decade when that wealth-generating capacity' +
+      ' peaks, and the one structural adjustment most directly improving the wealth' +
+      ' palace reading.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your nose type classified in the classical Chinese system — the specific' +
+        ' facial structure category and what it says about wealth retention' +
+        ' capacity, whether you are a natural accumulator or a natural circulator,' +
+        ' and what that means for how you should structure your finances',
+      'Wealth leadership indicators from the cheekbones and brow ridge — the' +
+        ' authority style that commands resources and the professional domain where' +
+        ' that authority is most naturally recognised in financial contexts',
+      'Your money luck cycle by decade — the classical face reading of which life' +
+        ' periods carry the most auspicious wealth energy and which require more' +
+        ' conservative financial management',
+      'A current period assessment — what the specific facial feature governing your' +
+        ' current age decade indicates about the financial opportunities and risks' +
+        ' most relevant right now',
+      'A cross-system wealth verdict — the specific points where the facial wealth' +
+        ' reading, your Life Path number, and your current Personal Year all agree' +
+        ' on the same wealth direction',
+      'The traditional Chinese remedy for your specific face and nose type — the' +
+        ' element, colour, direction, and daily practice the classical system' +
+        ' prescribes for strengthening the wealth palace',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'The traditional Mian Xiang remedy for your specific nose and face' +
+      ' type — the classical prescription including the colour most supportive of' +
+      ' your wealth palace, the compass direction most auspicious for your wealth' +
+      ' energy, the element to work with this year, and the specific daily practice' +
+      ' the system recommends for your face type.',
+    upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97},
+  },
+  {
+    id:'eye-reading-intelligence',
+    name:'The Eye Reading',
+    tagline:'What your eyes communicate about intelligence, soul depth, and' +
+      ' emotional availability before you speak a word',
+    emoji:'👁️',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:765,
+    deliveryMinutes:20,
+    hook:'The eyes are the most read feature on any human face — and they' +
+      ' communicate far more precisely than most people are aware of. Left and right' +
+      ' eye shape often differ, and the difference is meaningful: the left eye reads' +
+      ' the internal emotional reality and the right reads the social presentation.' +
+      ' The canthus tilt, the set position, and the socket depth each encode' +
+      ' specific intelligence and perceptual characteristics that classical' +
+      ' physiognomy has mapped with unusual precision. When the eye reading confirms' +
+      ' the Mercury placement in the chart, the intelligence portrait reaches' +
+      ' maximum confidence. When they diverge, that gap itself reveals the distance' +
+      ' between how you prefer to think and how you are actually wired.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'A reading of both eyes separately — what the left eye reveals about internal' +
+        ' emotional processing and what the right eye communicates about social' +
+        ' presentation, and the specific character implications when the two differ',
+      'Your eye set position reading — wide-set, average, or close-set — with the' +
+        ' full perceptual and relational implications of each configuration and why' +
+        ' the set position affects how others initially read you',
+      'Your canthus tilt reading — upturned, downturned, or neutral — and the' +
+        ' specific character qualities that each configuration has been consistently' +
+        ' mapped to across multiple physiognomy traditions',
+      'The intelligence type most strongly indicated by the combined eye reading —' +
+        ' the specific cognitive style, perceptual strength, and domain where mental' +
+        ' energy operates most efficiently for this eye configuration',
+      'How the eye reading confirms or complicates the Mercury placement in your' +
+        ' chart — where the physical and the chart agree on the same intelligence' +
+        ' type and where they reveal a more layered picture',
+      'The emotional availability and depth of feeling revealed by the combined eye' +
+        ' reading — what the eye configuration says about how much internal' +
+        ' emotional life is accessible versus how much is screened before it reaches' +
+        ' expression',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A perceptual strength development guide — the specific discipline,' +
+      ' work environment, and cognitive practice most aligned with the intelligence' +
+      ' type revealed by your eye configuration, including the specific learning or' +
+      ' thinking mode to lean into and the one that consistently drains.',
+    upsell:{id:'face-shape-character-verdict',name:'Face Shape Character Verdict',price:37},
+  },
+  {
+    id:'jaw-power-reading',
+    name:'The Jaw Power Reading',
+    tagline:'The jaw encodes authority, endurance, and the power that develops in' +
+      ' the later decades — this reads yours',
+    emoji:'💪',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'In facial structure reading across Chinese, Greek, and Vedic traditions,' +
+      ' the jaw encodes three things simultaneously: willpower under sustained' +
+      ' pressure, endurance across time, and the authority style that develops in' +
+      ' the later decades of life. The jawline classification, the gonial angle' +
+      ' measurement, the chin shape, and the chin projection each read a different' +
+      ' dimension of this complex. Confirmed against the Saturn placement — the' +
+      ' planet most directly governing mastery, discipline, and earned authority —' +
+      ' the combined reading produces a portrait of how power develops in the' +
+      ' specific life, when it peaks, and the specific leadership style most' +
+      ' naturally supported by the structure.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your jawline classification and the character qualities the specific' +
+        ' configuration predicts — including the primary strength the jaw encodes' +
+        ' and the shadow that comes with the same structural quality',
+      'Your gonial angle measurement and its precise character reading — what the' +
+        ' angle between the jaw and the vertical face plane indicates about' +
+        ' determination style, stubbornness threshold, and how authority is held' +
+        ' under challenge',
+      'Your chin shape analysis and what it says about the later life period — the' +
+        ' classical prediction for how the character develops and what it is most' +
+        ' capable of expressing in the decades after 50',
+      'Your chin projection reading — the specific degree of decisiveness and' +
+        ' follow-through encoded in the projection, and how it interacts with the' +
+        ' overall jaw configuration to either reinforce or moderate the willpower' +
+        ' reading',
+      'How the jaw reading interacts with your Saturn placement — where the face and' +
+        ' the chart agree on the same quality of authority and endurance, and where' +
+        ' they describe different aspects of the same life',
+      'The specific leadership style the jaw structure most naturally supports — and' +
+        ' the specific professional context where that style is most effective' +
+        ' versus where it creates unnecessary friction',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A later-life authority positioning guide — the specific' +
+      ' professional move that positions for the power period the jaw indicates,' +
+      ' timed to the Pinnacle and Personal Year most aligned with making it, with' +
+      ' the one environment or role most likely to make the jaw-indicated authority' +
+      ' visible to the right audience.',
+    upsell:{id:'elder-years-synthesis',name:'Elder Years Synthesis',price:77},
+  },
+  {
+    id:'forehead-intelligence-reading',
+    name:'The Forehead Intelligence Reading',
+    tagline:'The forehead reads early life, mind quality, and spiritual capacity —' +
+      ' this is what yours reveals',
+    emoji:'🧠',
+    price:29,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.6,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'The forehead is the feature that physiognomy traditions across Chinese,' +
+      ' Indian, and Greek systems most consistently associated with intellectual' +
+      ' quality and the early life foundation. Height indicates the scope of' +
+      ' ambition and the quality of the early life period. Width indicates the' +
+      ' breadth of thinking range. Slope indicates the balance between intuitive and' +
+      ' analytical processing. When the forehead reading confirms the Mercury and' +
+      ' Uranus placements in the chart, the intellectual portrait gains precision' +
+      ' that neither the face nor the chart alone can produce. When they diverge,' +
+      ' the gap between forehead and chart reveals the distance between natural' +
+      ' inclination and developed capability.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your forehead height classification and its intellectual significance — what' +
+        ' the height range indicates about the scope of thinking, the quality of the' +
+        ' early life foundation, and the ambition structure that developed from it',
+      'Your forehead width reading and the thinking breadth it reveals — the range' +
+        ' of subjects and domains the mind most naturally spans versus the depth and' +
+        ' specialisation the configuration supports',
+      'Your slope analysis and the intelligence style encoded — whether the forehead' +
+        ' indicates a more intuitive or a more analytical approach to processing,' +
+        ' and how that interacts with the overall character picture',
+      'The facial structure analysis early life reading for ages 15–30 — what the' +
+        ' forehead indicates about the quality of the formative period and the' +
+        ' experiences most likely to have shaped the foundational patterns still' +
+        ' active now',
+      'How your forehead compares to your Mercury and Uranus placements — where the' +
+        ' face and the chart confirm the same intellectual character and where they' +
+        ' describe different dimensions of the same mind',
+      'The spiritual capacity indicated by the forehead structure — the classical' +
+        ' reading of Ajna chakra development from the brow structure, and what it' +
+        ' says about the person\'s relationship with perception beyond the ordinary',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'An intellectual environment guide — the specific work context,' +
+      ' thinking format, and creative or professional structure most aligned with' +
+      ' the intelligence type your forehead indicates, including the setting that' +
+      ' produces most and the setting that most consistently drains the particular' +
+      ' mind configuration identified.',
+    upsell:{id:'face-shape-character-verdict',name:'Face Shape Character Verdict',price:37},
+  },
+  {
+    id:'skin-vitality-reading',
+    name:'The Skin Vitality Reading',
+    tagline:'Your complexion is a live report from your internal organs — this reads' +
+      ' what it is saying right now',
+    emoji:'✨',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:765,
+    deliveryMinutes:20,
+    hook:'In both Chinese medicine and Ayurveda, the complexion is read as a live' +
+      ' report from the internal organs — specific colour casts, textures, radiance' +
+      ' levels, and moisture patterns each corresponding to the state of specific' +
+      ' organ systems. Unlike symptoms, which are late signals, the complexion' +
+      ' catches patterns early — before they compound into something harder to' +
+      ' address. This reading scores skin vitality across six parameters and' +
+      ' cross-reads the findings through both traditions to identify the organ' +
+      ' system showing the most current stress and the constitutional correction' +
+      ' most likely to address it.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'A skin vitality score across six parameters — tone evenness, texture quality,' +
+        ' moisture level, colour cast, radiance, and overall luminosity — each' +
+        ' scored and interpreted rather than combined into a single number',
+      'The Chinese medicine interpretation of any specific colour cast present — the' +
+        ' organ system correspondence for yellow, grey, red, green, or purple' +
+        ' undertones and what each says about internal health patterns currently' +
+        ' active',
+      'The Ayurvedic constitutional reading from your skin type — the dosha-based' +
+        ' assessment of what the skin texture, moisture level, and reactivity' +
+        ' pattern indicates about your constitutional type and current state',
+      'Your current radiance level and the factors most likely responsible for it —' +
+        ' the lifestyle, nutritional, and stress factors the two traditions agree' +
+        ' are most directly affecting the skin\'s luminosity right now',
+      'How your skin reading interacts with your Sun sign constitution and 6th house' +
+        ' health indicators — where the face and the chart confirm the same' +
+        ' constitutional picture and where they add different layers',
+      'The specific nutritional or lifestyle factor most likely responsible for the' +
+        ' most prominent current skin reading — named specifically rather than as a' +
+        ' category of intervention',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A skin-constitutional correction protocol — the specific dietary' +
+      ' adjustment, the herbal or nutritional supplement, and the practice' +
+      ' adjustment most directly addressing the organ system showing most stress in' +
+      ' the complexion, drawn from the tradition that most accurately maps to the' +
+      ' skin type identified.',
+    upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97},
+  },
+  {
+    id:'habitual-expression-reading',
+    name:'The Habitual Expression Reading',
+    tagline:'What your face has learned to show the world — and the professional' +
+      ' cost of the lines it is forming',
+    emoji:'😶',
+    price:29,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.6,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'The face remembers what the emotions have been doing. Lines form where' +
+      ' muscles habitually contract. The resting expression reveals what state the' +
+      ' nervous system has most consistently occupied. And the expression signal' +
+      ' captured in any photograph communicates something to everyone who sees it' +
+      ' before a single word is spoken. This reading identifies the dominant' +
+      ' expression signal your face currently broadcasts, reads the habitual' +
+      ' expression note from the aging markers already forming, cross-references it' +
+      ' with your Moon sign for the emotional signature it confirms, and names the' +
+      ' one expression habit most affecting how you are received professionally.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your dominant expression signal at capture — the specific emotional state the' +
+        ' face is currently broadcasting and what it communicates to people seeing' +
+        ' it for the first time, before context or conversation',
+      'Your habitual expression note from the aging markers — what the lines' +
+        ' currently forming in your face say about the emotional state the nervous' +
+        ' system has been most consistently in, and which states are creating the' +
+        ' most structural imprint',
+      'The facial structure analysis interpretation of each line present — the' +
+        ' classical Chinese reading of what each specific line location indicates' +
+        ' about character, habit, and internal state',
+      'How your habitual expression interacts with your Moon sign — where the' +
+        ' emotional signature the face is broadcasting aligns with the Moon sign\'s' +
+        ' natural emotional expression and where there is a gap between the two',
+      'What others unconsciously read from your face before you speak — the specific' +
+        ' first impression the current expression creates and how it affects initial' +
+        ' trust, warmth, and credibility perception',
+      'The one expression habit that most affects your professional reception — the' +
+        ' specific facial default that is most consistently working against how you' +
+        ' want to be received, named precisely enough to address',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'An expression recalibration practice — the specific daily' +
+      ' awareness exercise most effective for shifting the identified habitual' +
+      ' resting expression, with guidance on the timeframe for measurable change and' +
+      ' the early signal that the recalibration is working.',
+    upsell:{id:'personal-brand-frequency',name:'Personal Brand Frequency',price:47},
+  },
+  {
+    id:'cheekbone-authority-map',
+    name:'The Cheekbone Authority Map',
+    tagline:'The cheekbones govern your social authority peak — this maps when it' +
+      ' arrives and who naturally follows you',
+    emoji:'⬆️',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'In classical Chinese face reading, the cheekbones govern the midlife' +
+      ' authority period — the specific years when the face transmits its highest' +
+      ' level of social command and when the environment is most responsive to the' +
+      ' person\'s natural leadership. This is not metaphorical. The cheekbone' +
+      ' position, width, and fullness each correspond to specific authority style,' +
+      ' authority domain, and authority timeline that have been mapped with' +
+      ' consistency across three millennia of observation. Combined with the Sun' +
+      ' sign and 10th house, this reading maps not just when the authority peak' +
+      ' arrives but what type of authority it is and where it is most naturally' +
+      ' recognised.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your cheekbone position, width, and fullness reading — the three-dimensional' +
+        ' assessment that reveals the authority style, the social domain most' +
+        ' naturally governed, and the timing of when the authority expression' +
+        ' reaches its highest point',
+      'Your authority style classification — commanding, collaborative, or earned —' +
+        ' with the specific professional and social contexts where each style is' +
+        ' most effective and where it creates unnecessary resistance',
+      'The classical Chinese prediction for your social authority peak period — the' +
+        ' decade or period the cheekbone structure most strongly indicates as the' +
+        ' time of highest social influence and what that means for decisions being' +
+        ' made now',
+      'The specific domain where your authority is most naturally recognised —' +
+        ' whether it is in professional leadership, community, creative direction,' +
+        ' or advisory roles, and why the cheekbone configuration points to this' +
+        ' domain specifically',
+      'How your cheekbone reading interacts with your Sun sign and 10th house —' +
+        ' where the face and the chart confirm the same authority type and timing,' +
+        ' and where they reveal different dimensions of the same quality',
+      'The risk reading for your specific authority configuration — how the' +
+        ' particular authority style indicated can be misused or overapplied, named' +
+        ' as a pattern to watch for rather than a prediction of failure',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'An authority positioning guide — the specific professional move' +
+      ' that makes your cheekbone-indicated authority most visible to the right' +
+      ' audience in your current timing cycle, with guidance on the environment' +
+      ' where the authority type is most naturally recognised and the one' +
+      ' positioning shift that reduces the gap between the authority you carry and' +
+      ' the authority that is currently being acknowledged.',
+    upsell:{id:'leadership-signature',name:'Leadership Signature',price:47},
+  },
+  {
+    id:'aging-marker-vitality',
+    name:'The Aging Marker Vitality Forecast',
+    tagline:'Your structural age versus your calendar age — which one your body is' +
+      ' actually living and what the markers are communicating',
+    emoji:'⏰',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Structural aging markers tell a different story than calendar age. The' +
+      ' specific pattern of where and how the face ages — which zones accelerate,' +
+      ' which lag, which respond most dramatically to stress — corresponds to' +
+      ' specific vitality patterns inside the body. Chinese medicine has mapped' +
+      ' these correspondences across three thousand years of observation: specific' +
+      ' zones of the face correspond to specific organ systems, and the aging' +
+      ' pattern in each zone is a reading of the state of the corresponding system.' +
+      ' This reading scores aging markers across six structural measurements,' +
+      ' identifies whether structural age is ahead of, behind, or aligned with' +
+      ' calendar age, and names the single most impactful change that would shift' +
+      ' the trajectory.',
+    requiresImage:{type:'face'},
+    whatYouGet:[
+      'Your aging marker score across six structural measurements — the specific' +
+        ' parameters assessed and what each one indicates about the vitality state' +
+        ' of the corresponding body system',
+      'A structural age reading — whether your structural aging pattern places you' +
+        ' ahead of, behind, or aligned with your calendar age, and what the specific' +
+        ' pattern of advancement or lag indicates about primary vitality patterns',
+      'What the specific configuration of aging markers indicates about the primary' +
+        ' vitality stressor — the system or habit the overall pattern most' +
+        ' consistently points to as the dominant drain on your vitality',
+      'The Chinese medicine reading of your aging markers — the organ system' +
+        ' correspondence for the most prominent aging patterns identified, what it' +
+        ' indicates about Qi, Blood, or Jing depletion, and the classical correction' +
+        ' most indicated',
+      'How your current Personal Year cycle interacts with your structural vitality' +
+        ' — whether the current period is one that tends to stress the primary' +
+        ' system identified or one that supports recovery and recalibration',
+      'The single most impactful change that would most directly shift the aging' +
+        ' trajectory — the specific lifestyle, nutritional, or practice adjustment' +
+        ' all indicators agree on as the highest-leverage intervention right now',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A vitality recalibration protocol — the specific lifestyle' +
+      ' adjustment most directly addressing the primary stressor identified in the' +
+      ' aging marker pattern, drawn from the Chinese medicine system with the' +
+      ' highest correspondence to the markers identified, with a 30-day sequence and' +
+      ' the early signal that the protocol is creating traction.',
+    upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97},
+  },
+  {
+    id:'hand-shape-character-reading',
+    name:'The Hand Shape Character Reading',
+    tagline:'Your hand element confirmed against your chart element — where both' +
+      ' agree, the character portrait has nowhere left to hide',
+    emoji:'✋',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:765,
+    deliveryMinutes:20,
+    hook:'The hand shape encodes one of four elemental character types — Fire,' +
+      ' Earth, Air, or Water — each describing a fundamentally different way of' +
+      ' engaging with every domain of life: how energy moves, how decisions are' +
+      ' made, what restores and what drains, what kind of work produces the most' +
+      ' natural flow. When the hand element is confirmed by both the Sun sign' +
+      ' element and the Life Path, the character portrait reaches the kind of' +
+      ' specificity that makes people stop and re-read it — because it names' +
+      ' something they have always known about themselves but never had language for.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your hand element identified — Fire, Earth, Air, or Water — with the full' +
+        ' character description of what each element encodes about natural' +
+        ' engagement style, energy management, decision-making approach, and the' +
+        ' life domains where the element is most naturally expressed',
+      'The ruling planet of your hand shape and the specific domain of life its' +
+        ' influence most directly governs — where the planetary energy expressed' +
+        ' through the hand structure creates the most natural flow and the most' +
+        ' consistent pattern',
+      'Your character core from the hand reading — the fundamental nature encoded in' +
+        ' the hand structure, the primary strength the element carries, and the' +
+        ' specific challenge that accompanies the same quality in its' +
+        ' less-integrated form',
+      'How your hand element compares to your Sun sign and Life Path element —' +
+        ' whether they confirm the same elemental nature or describe a person' +
+        ' operating across multiple elements, with the implications of each' +
+        ' combination',
+      'The specific life domain where your hand element provides the strongest' +
+        ' natural advantage — the area of life where working with the elemental' +
+        ' quality produces the most traction with the least effort',
+      'The classical reading of your hand type — the soul quality the elemental hand' +
+        ' configuration has been associated with across multiple traditions and what' +
+        ' it says about the fundamental orientation of the life',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A hand element alignment guide — the specific environment, work' +
+      ' style, relationship approach, and daily practice most naturally suited to' +
+      ' your hand element type, with the one context adjustment most likely to' +
+      ' reduce the friction between how you are currently operating and how your' +
+      ' hand element is built to operate.',
+    upsell:{id:'complete-character-portrait',name:'Complete Character Portrait',price:57},
+  },
+  {
+    id:'life-line-vitality-reading',
+    name:'The Life Line Vitality Reading',
+    tagline:'The life line does not predict how long you live — it maps how fully' +
+      ' your vitality is being deployed right now',
+    emoji:'💫',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:876,
+    deliveryMinutes:20,
+    hook:'The life line is the most misunderstood line in palmistry. It does not' +
+      ' predict the length of life. It maps the quality and expression of vitality —' +
+      ' how fully the person\'s energy is being deployed, where it drains, and where' +
+      ' it regenerates. A short but deep life line carries more vitality than a long' +
+      ' but faint one. A line with strong upward branches marks the points of' +
+      ' significant new beginning. Islands mark the depletion periods. This reading' +
+      ' decodes the complete vitality map and confirms it against the Sun sign' +
+      ' constitution and 6th house health indicators to produce a forward vitality' +
+      ' forecast.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your life line presence and depth reading — the first and most important' +
+        ' assessment that determines whether the vitality signature is strong,' +
+        ' moderate, or faint, and what each level means for how energy is available' +
+        ' and how it depletes',
+      'Your curvature analysis — whether the line curves outward toward the thumb' +
+        ' side or sits closer to the centre of the palm, and what each configuration' +
+        ' says about whether vitality is directed outward into the world or held' +
+        ' more internally',
+      'Your branch pattern reading — the upward branches that mark significant new' +
+        ' beginnings, periods of elevated energy and external expression, and what' +
+        ' they say about when vitality has historically peaked and is most likely to' +
+        ' peak next',
+      'Island interpretation mapped to life stages — the specific periods of' +
+        ' depletion encoded in the line, what they correspond to in the life' +
+        ' narrative, and what the depletion pattern says about constitutional' +
+        ' vulnerability',
+      'How the life line reading interacts with your Sun sign vitality indicator —' +
+        ' where the palm and the chart agree on the same vitality pattern and where' +
+        ' they add different layers to the same picture',
+      'A forward vitality forecast from the line\'s trajectory — what the life line' +
+        ' indicates about the direction vitality is moving in the current period and' +
+        ' the specific conditions under which it is most likely to recover or' +
+        ' deplete further',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A vitality recovery protocol — the specific daily practice' +
+      ' addressing the primary vitality drain identified in the life line reading,' +
+      ' drawn from the constitutional tradition most aligned with your Sun sign' +
+      ' type, with guidance on the timeframe for measurable recovery and the signal' +
+      ' that the drain is resolving.',
+    upsell:{id:'constitutional-health-blueprint',name:'Constitutional Health Blueprint',price:47},
+  },
+  {
+    id:'heart-line-love-map',
+    name:'The Heart Line Love Map',
+    tagline:'How you actually love in private — not how you think you love, and not' +
+      ' how you present love',
+    emoji:'❤️',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    isPopular:true,
+    rating:4.9,
+    reviewCount:1543,
+    deliveryMinutes:20,
+    hook:'The heart line is the most consistent predictor of emotional style in the' +
+      ' entire palm. Length and curvature encode the love style — whether it is' +
+      ' demonstrative or internalised, idealistic or pragmatic. Branch patterns' +
+      ' reveal the capacity for depth and the specific experiences that opened or' +
+      ' closed the heart. Islands mark specific periods of emotional pain. The' +
+      ' terminal point shows whether romantic drive is more idealistic or more' +
+      ' pragmatic. This reading decodes the heart line completely and confirms each' +
+      ' finding against the Venus placement — the combination producing a portrait' +
+      ' of the private emotional reality rather than the presented version.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your heart line length and curvature reading — the love style it encodes:' +
+        ' whether the emotional expression is more outward and demonstrative or more' +
+        ' inward and reserved, more idealistic or more pragmatic, and what that' +
+        ' means for the specific types of love experiences that create most' +
+        ' fulfilment',
+      'Your branch count reading — what the number and position of branches reveal' +
+        ' about the capacity for depth of connection, the periods when new love has' +
+        ' opened, and the overall emotional range available across the lifetime',
+      'Island interpretation mapped to life stages — the specific periods of' +
+        ' emotional pain encoded in the line, where they fall in the life narrative,' +
+        ' and what the overall island pattern says about the emotional experience' +
+        ' that has been most consistently challenging',
+      'Your terminal point reading — where the heart line ends and what the endpoint' +
+        ' indicates about the balance between romantic idealism and romantic' +
+        ' pragmatism in how love decisions are ultimately made',
+      'How your heart line interacts with your Venus placement — where the palm and' +
+        ' the chart confirm the same emotional style and where they describe' +
+        ' different dimensions of the same person\'s love life',
+      'The emotional expression gap — the specific difference between what is felt' +
+        ' internally and what is expressed externally, identified from the heart' +
+        ' line configuration, and what this gap has been creating in close' +
+        ' relationships',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A heart line healing practice — the specific heritage-calibrated' +
+      ' practice for the most significant island or break in the heart line, drawn' +
+      ' from the tradition most aligned with your background, addressing the' +
+      ' specific emotional pattern the island represents rather than offering a' +
+      ' general emotional healing protocol.',
+    upsell:{id:'complete-love-synthesis',name:'Complete Love Synthesis',price:97},
+  },
+  {
+    id:'fate-line-mission-reading',
+    name:'The Fate Line Mission Reading',
+    tagline:'The only line in the palm that maps where the life is going — this' +
+      ' reads the complete trajectory',
+    emoji:'🧭',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:987,
+    deliveryMinutes:20,
+    hook:'Not everyone has a fate line. For those who do, it is the most direct' +
+      ' physical map of the life\'s direction available in the palm — and the most' +
+      ' specific predictor of when the direction shifts, when external support' +
+      ' arrives, and when the work begins to carry the person rather than the person' +
+      ' carrying the work. Absence of a fate line is itself a reading: it indicates' +
+      ' an instinct-driven, self-determined path rather than the absence of' +
+      ' direction. This reading decodes fate line presence, depth, trajectory, and' +
+      ' branch pattern, and confirms each finding against the Life Path and Destiny' +
+      ' number to produce the most accurate purpose portrait available from physical' +
+      ' indicators alone.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your fate line presence, depth, and length reading — the first assessment' +
+        ' that determines whether the line indicates a strong defined mission, a' +
+        ' moderate emerging direction, or an instinct-driven self-determined path,' +
+        ' with the specific character implications of each',
+      'Your starting point interpretation — whether the line begins near the base of' +
+        ' the palm, the wrist, or emerges mid-palm, and what each starting point' +
+        ' says about whether the calling was early-established, arrived through' +
+        ' mid-life shift, or built through accumulated public support',
+      'Your branch count reading — what parallel fate line branches indicate about a' +
+        ' multi-discipline career, a major pivot, or a simultaneous contribution' +
+        ' across more than one domain, with the specific professional implications' +
+        ' of each pattern',
+      'A continuity reading — the specific breaks, gaps, and overlaps in the line' +
+        ' mapped to life stages, showing where career pivots and major redirections' +
+        ' have already occurred and what the pattern says about how direction' +
+        ' changes in this particular life',
+      'How the fate line interacts with your Life Path and Destiny number — where' +
+        ' the palm and the chart confirm the same directional calling and where they' +
+        ' describe different dimensions of the same soul mission',
+      'The classical destiny line reading — what the palmistry tradition says about' +
+        ' the type of support and recognition that accompanies the fate line' +
+        ' configuration identified, and the period when external recognition most' +
+        ' naturally arrives',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A fate line alignment guide — the specific career or purpose' +
+      ' action most supported by the fate line trajectory in your current life' +
+      ' stage, with guidance on how the trajectory shifts over the next five years' +
+      ' based on what the line shows, and the one decision the fate line most' +
+      ' clearly supports making now.',
+    upsell:{id:'complete-purpose-synthesis',name:'Complete Purpose Synthesis',price:97},
+  },
+  {
+    id:'mount-venus-love-vitality',
+    name:'The Mount Venus Love and Vitality Reading',
+    tagline:'The Mount of Venus encodes the love capacity and physical vitality the' +
+      ' hand was built with — this reads yours',
+    emoji:'♀️',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.8,
+    reviewCount:765,
+    deliveryMinutes:20,
+    hook:'The Mount of Venus is the largest mount in the palm and the one that most' +
+      ' directly encodes the capacity for love, physical vitality, and magnetic' +
+      ' attraction. Its elevation and firmness together indicate not just the' +
+      ' ability to love but the specific quality of love available — whether it is' +
+      ' generous, reserved, passionate, steady, conditional, or freely given. This' +
+      ' is not about romantic timing or window prediction. It is about the' +
+      ' fundamental love architecture the hand was built with. Confirmed against the' +
+      ' Venus placement in the chart, the combined reading reaches a precision about' +
+      ' the love dimension that neither system produces alone.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your Venus mount elevation and firmness reading — the combined assessment' +
+        ' that indicates love capacity, vitality level, and magnetic attraction' +
+        ' signature, with the specific character implications of each configuration' +
+        ' from high-firm to low-soft',
+      'Your love capacity and expression style from the mount configuration — the' +
+        ' specific way this particular Venus mount indicates love is given,' +
+        ' received, and experienced, and what the configuration says about the' +
+        ' conditions under which love expression is most natural versus most' +
+        ' constrained',
+      'Your physical vitality reading from the Mount of Venus — what the mount says' +
+        ' about constitutional vitality, physical warmth and sensuality, and the' +
+        ' relationship between emotional and physical energy in this specific' +
+        ' constitution',
+      'Your magnetic attraction signature — what type of people, experiences, and' +
+        ' resources the energy of this mount configuration most naturally draws, and' +
+        ' the relationship between the mount\'s quality and the quality of what' +
+        ' consistently arrives',
+      'How your palm Venus mount compares to your Venus placement in the chart —' +
+        ' where the physical reading and the chart confirm the same love signature' +
+        ' and where they describe different dimensions of the same person\'s love' +
+        ' nature',
+      'The classical love indicator reading from the mount — what the palmistry' +
+        ' tradition says about marital harmony, beauty appreciation, and the type of' +
+        ' love most fulfilling for this specific mount configuration',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A Venus mount activation practice — the specific daily practice' +
+      ' that develops the love and magnetic attraction energy of the mount in its' +
+      ' current state, calibrated to whether the mount is high-firm, high-soft,' +
+      ' low-firm, or low-soft, with the tradition-specific guidance most aligned' +
+      ' with your cultural background.',
+    upsell:{id:'soulmate-arrival-window-os',name:'Soulmate Arrival Window',price:37},
+  },
+  {
+    id:'mount-jupiter-ambition',
+    name:'The Mount Jupiter Ambition Reading',
+    tagline:'The Mount of Jupiter reads the quality and character of your ambition —' +
+      ' not as motivation but as structural fact',
+    emoji:'♃',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'The Mount of Jupiter does not measure how ambitious someone is. It' +
+      ' measures the type of ambition — whether it is oriented toward command' +
+      ' authority, toward earned wisdom, toward collaborative leadership, or toward' +
+      ' purposeful contribution. Elevation and firmness read different dimensions.' +
+      ' The classical dharma indicator reading adds the soul-level leadership' +
+      ' question: what kind of wisdom is this person designed to develop and' +
+      ' transmit? Confirmed against the Jupiter placement in the chart and the Life' +
+      ' Path authority number, the combined reading produces an ambition portrait' +
+      ' specific enough to change how professional decisions are made.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your Jupiter mount elevation and firmness reading — the baseline ambition' +
+        ' assessment that identifies whether ambition is strong-consistent,' +
+        ' strong-intermittent, moderate, or understated, and the specific' +
+        ' professional implications of each configuration',
+      'Your ambition archetype — natural commander, earned authority, collaborative' +
+        ' leader, or purposeful contributor — with the specific professional' +
+        ' environments and relationship dynamics that most activate each type versus' +
+        ' the ones that consistently suppress it',
+      'How your Jupiter mount reading interacts with your Life Path authority number' +
+        ' — where the physical mount reading and the numerical authority indicator' +
+        ' agree on the same type and scale of ambition, and where they reveal a more' +
+        ' layered picture',
+      'The career environment most aligned with your actual ambition level versus' +
+        ' your current professional position — the honest assessment of whether' +
+        ' there is a gap between the ambition the mount indicates and the' +
+        ' environment currently being operated in',
+      'The classical wisdom indicator reading — what the Jupiter mount tradition' +
+        ' says about the type of dharmic leadership and wisdom expansion this mount' +
+        ' configuration is most designed to develop and eventually transmit to others',
+      'The risk pattern of your specific Jupiter mount configuration — the specific' +
+        ' way this ambition type tends to overextend or underutilise, named as a' +
+        ' pattern to watch for rather than a fixed verdict',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'An ambition alignment guide — the specific professional' +
+      ' environment or role that most accurately matches the actual ambition level' +
+      ' and type shown in the mount, the gap between current position and optimal' +
+      ' alignment, and the one structural change most likely to close that gap.',
+    upsell:{id:'founder-archetype',name:'Founder Archetype',price:47},
+  },
+  {
+    id:'moon-mount-intuition',
+    name:'The Moon Mount Intuition Reading',
+    tagline:'Your psychic and intuitive capacity — not as a claim but as a' +
+      ' structural reading of what is actually present',
+    emoji:'🌙',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.8,
+    reviewCount:876,
+    deliveryMinutes:20,
+    hook:'Most people with significant spiritual gifts have spent years questioning' +
+      ' whether what they experience is real — and the doubt itself is part of the' +
+      ' pattern of how unexplained capacity is managed in the absence of a' +
+      ' framework. The Moon mount reads the intuitive capacity as a structural fact:' +
+      ' elevation and firmness indicate the archetype, and the specific form of' +
+      ' intuition most consistently active. Five independent indicators confirm the' +
+      ' reading: the Moon mount, the Neptune placement, the Moon sign, any master' +
+      ' number signatures, and the intuition line. This reading does not ask you to' +
+      ' believe anything. It reads what is structurally present and names it in' +
+      ' terms specific enough to develop and use.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your Moon mount elevation and firmness reading — the baseline intuition' +
+        ' assessment that identifies whether the capacity is strongly active,' +
+        ' moderately present, emerging, or dormant, and the specific character' +
+        ' implications of each configuration',
+      'Your intuition archetype — prophetic dreamer, clairsentient empath, creative' +
+        ' visionary, or lunar strategist — with the specific form that intuition' +
+        ' takes most reliably for this mount configuration and the environments' +
+        ' where it is most consistently accurate',
+      'The specific form intuition most commonly takes for your configuration —' +
+        ' whether it arrives as dreams, body sensations, sudden knowing, emotional' +
+        ' absorption, image or symbol, or pattern recognition — named specifically' +
+        ' so it can be trusted rather than questioned',
+      'How your Moon mount interacts with your Neptune placement and Moon sign —' +
+        ' where all three indicators confirm the same intuitive character and where' +
+        ' they describe different dimensions of the same capacity',
+      'The classical mind indicator reading — what the Moon mount tradition says' +
+        ' about the subconscious processing quality of this configuration and the' +
+        ' relationship between intuitive capacity and creative or healing ability',
+      'The specific domain where your intuition is most reliable — the life area' +
+        ' where the mount configuration indicates the intuitive signal is most' +
+        ' consistently accurate and can most confidently be trusted',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A Moon mount development practice — the specific daily practice' +
+      ' most effective for the particular intuition type shown in the mount' +
+      ' configuration, the protection practice appropriate for the sensitivity level' +
+      ' identified, and the specific boundary the reading indicates is most' +
+      ' important to establish before using the capacity in service of others.',
+    upsell:{id:'spiritual-gifts-inventory-os',name:'Spiritual Gifts Inventory',price:47},
+  },
+  {
+    id:'thumb-willpower-reading',
+    name:'The Thumb Willpower Reading',
+    tagline:'The thumb reveals the quality and character of the will — the part of' +
+      ' you that determines whether decisions get executed',
+    emoji:'👍',
+    price:29,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.6,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'The thumb is the most revealing feature of the hand for character' +
+      ' assessment in both Chinese and Western palmistry traditions. Length' +
+      ' indicates the baseline willpower available. Flexibility reveals whether the' +
+      ' will is adaptable or resistant. Tip shape shows the expression style of the' +
+      ' will — whether it tends toward deliberate, impulsive, diplomatic, or direct.' +
+      ' The knuckle prominence reads the balance between reason and instinct in' +
+      ' decision-making. Confirmed against the Saturn placement — the planet most' +
+      ' directly associated with discipline, follow-through, and mastery — the' +
+      ' combined reading produces a specific portrait of how the will actually' +
+      ' operates rather than how it is ideally intended to operate.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your thumb length analysis and the willpower reading it produces — the' +
+        ' baseline assessment of available determination and the specific situations' +
+        ' where that willpower is most consistently accessible versus where it most' +
+        ' consistently drains or stalls',
+      'Your thumb flexibility reading — whether the thumb bends readily under light' +
+        ' pressure or holds firm, and what the specific flexibility level indicates' +
+        ' about adaptability, stubbornness, open-mindedness, and how the will' +
+        ' responds to resistance from external circumstances',
+      'Your tip shape reading and the expression style of will it encodes — whether' +
+        ' the thumb tip is square, round, spatulate, or pointed, and what each' +
+        ' configuration says about how decisiveness is expressed and how it is' +
+        ' received by others',
+      'Your knuckle prominence reading — the balance between logic and emotion in' +
+        ' decision-making, and whether the will tends to lead with reason and defer' +
+        ' to instinct only under pressure or leads with instinct and rationalises' +
+        ' after',
+      'How your thumb reading interacts with your Saturn placement — where the' +
+        ' physical willpower portrait and the Saturn placement agree on the same' +
+        ' character of discipline and where they describe different dimensions of' +
+        ' how structure and follow-through operate in the life',
+      'Your willpower archetype — iron will, flexible strength, impulsive driver, or' +
+        ' considered decisiveness — with the specific professional and personal' +
+        ' contexts where each archetype is most effective and where it creates its' +
+        ' characteristic friction',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A willpower development practice — the specific daily discipline' +
+      ' most aligned with developing the particular willpower type identified into' +
+      ' its highest expression, with guidance on the one context where this' +
+      ' willpower type most consistently underperforms and the specific practice' +
+      ' that addresses that gap directly.',
+    upsell:{id:'shadow-self-reading-os',name:'Shadow Self Reading',price:47},
+  },
+  {
+    id:'marriage-line-reading',
+    name:'The Marriage Line Reading',
+    tagline:'The marriage lines map the relationships significant enough to leave a' +
+      ' structural mark on the hand — this reads the complete picture',
+    emoji:'💍',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    isPopular:true,
+    rating:4.8,
+    reviewCount:1234,
+    deliveryMinutes:20,
+    hook:'The marriage lines do not predict exactly how many times you will marry.' +
+      ' They map the relationships significant enough to leave a structural mark on' +
+      ' the hand — the connections that carry real karmic and emotional weight. The' +
+      ' number of lines, the depth and clarity of each, the position relative to the' +
+      ' heart line, and the curvature all read different dimensions of the' +
+      ' relational pattern. Confirmed against the Venus placement and current' +
+      ' Personal Year cycle, this reading produces the most direct physical' +
+      ' indicator of relationship timing and significance available in the palm.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your marriage line count and what the specific number indicates — not as a' +
+        ' prediction of marriages but as a reading of the number of relationships' +
+        ' significant enough to be encoded in the hand structure, with the specific' +
+        ' character implications of each count',
+      'The depth and clarity of each line — the honest assessment of which bonds' +
+        ' have been most significant, whether the depth was mutual or one-sided, and' +
+        ' what the clarity or faintness of each line says about the quality of the' +
+        ' connection it represents',
+      'Your position reading — whether the lines sit close to the heart line,' +
+        ' mid-field, or high on the mount, and what each position indicates about' +
+        ' whether the significant connections have arrived in younger life, middle' +
+        ' life, or are indicated for the later decades',
+      'How your marriage lines interact with your heart line and Venus placement —' +
+        ' where the lines, the heart, and the Venus chart reading all confirm the' +
+        ' same relational pattern and where they add different layers to the same' +
+        ' picture',
+      'A current Personal Year cycle assessment — whether the current period is one' +
+        ' that supports new relationship formation, deepening of existing' +
+        ' connection, or completion and release of a significant bond',
+      'A timing indicator from the most prominent remaining marriage line — what the' +
+        ' position and depth of the deepest future-oriented line indicates about the' +
+        ' life stage or approximate age range when the connection it represents is' +
+        ' most likely to arrive or deepen',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A relationship timeline guide — the specific preparation indicated' +
+      ' for the most prominent remaining marriage line, calibrated to both the' +
+      ' line\'s characteristics and the current Personal Year timing, with the one' +
+      ' internal readiness shift the reading identifies as most important before the' +
+      ' connection encoded in the line can be fully received.',
+    upsell:{id:'soulmate-arrival-window-os',name:'Soulmate Arrival Window',price:37},
+  },
+  {
+    id:'head-line-mind-map',
+    name:'The Head Line Mind Map',
+    tagline:'The most direct physical map of how your mind works — the thinking' +
+      ' style, depth, and decision pattern encoded in the palm',
+    emoji:'🔍',
+    price:37,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.7,
+    reviewCount:765,
+    deliveryMinutes:20,
+    hook:'The head line is the most direct physical map of the mind available in the' +
+      ' palm. Presence, curvature, length, depth, and terminal point each encode a' +
+      ' different dimension of the thinking style — the type of intelligence' +
+      ' dominant, the decision-making pattern, the relationship between intuition' +
+      ' and analysis, and the specific domain where mental energy is most' +
+      ' efficiently deployed. Note: some palms have no distinct head line — this' +
+      ' indicates a particular type of instinctive, pattern-based intelligence' +
+      ' rather than the absence of mental capacity. Confirmed against the Mercury' +
+      ' placement, the combined reading reaches maximum precision about thinking' +
+      ' style, cognitive strength, and the specific work context where the mind' +
+      ' produces most.',
+    requiresImage:{type:'palm'},
+    whatYouGet:[
+      'Your head line presence reading — the first assessment, including the' +
+        ' specific significance when the line is absent (instinctive intelligence)' +
+        ' or merged with the life line at the start (caution-dominant thinking)' +
+        ' versus clearly separate (independent thought)',
+      'Your curvature analysis and the thinking style it encodes — whether the line' +
+        ' curves toward the Moon area (creative, imaginative, narrative thinking),' +
+        ' runs straight (practical, logical, sequential), or takes a complex path,' +
+        ' with the specific cognitive implications of each',
+      'Your length reading — what a long head line indicates about the range of' +
+        ' interests and thinking scope versus what a shorter or more concentrated' +
+        ' line indicates about depth, specialisation, and focused reasoning',
+      'Your depth and clarity reading — the honest assessment of whether the line' +
+        ' shows confident, focused mental energy or indicates scattered attention or' +
+        ' multiple competing priorities, and what the current clarity level says' +
+        ' about mental state',
+      'Your terminal point reading — where the head line ends and the specific' +
+        ' intelligence type most dominant for that endpoint: analytical, intuitive,' +
+        ' creative, pragmatic, or visionary — with the professional and personal' +
+        ' implications of the terminal point position',
+      'Your decision-making pattern from the combined line characteristics — whether' +
+        ' the palm indicates an analytical decision process, an intuitive one, a' +
+        ' creative and lateral one, a practical and evidence-based one, or a' +
+        ' visionary and systems-thinking one',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A thinking style optimisation guide — the specific mental' +
+      ' environment, work structure, and decision-making process most aligned with' +
+      ' the intelligence type your head line indicates, including the work context' +
+      ' where this thinking style produces most and the one most likely to drain it,' +
+      ' with the single structural change most likely to improve the match between' +
+      ' thinking style and current work.',
+    upsell:{id:'founder-archetype',name:'Founder Archetype',price:47},
+  },
+  {
+    id:'complete-character-portrait',
+    name:'The Complete Character Portrait',
+    tagline:'Face and palm cross-confirmed — where both arrive at the same character' +
+      ' conclusion, there is no room left for doubt',
+    emoji:'🎭',
+    price:57,
+    domain:'oracle-temple',
+    isNew:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Face shape and hand shape are measured by entirely independent systems —' +
+      ' and they often arrive at the same character conclusion from different' +
+      ' physical starting points. When both describe the same elemental nature, the' +
+      ' same character core, and the same primary tension, the portrait that emerges' +
+      ' carries a quality of certainty that neither physical reading alone can' +
+      ' produce. When they diverge — which they sometimes do — the divergence' +
+      ' becomes the reading: the gap between who you project to the world and who' +
+      ' you experience yourself to be, mapped with the precision that two' +
+      ' independent physical systems allow.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your face element and hand element placed side by side — the first assessment' +
+        ' of whether the two systems confirm the same elemental nature or describe a' +
+        ' person operating across two different elements simultaneously, with the' +
+        ' specific character implications of each scenario',
+      'Triple-confirmed character traits — the specific qualities where face' +
+        ' element, palm element, and chart all arrive at the same conclusion' +
+        ' simultaneously, representing the highest-confidence character insights in' +
+        ' the entire reading',
+      'The gap between your presented self and your private self — the specific' +
+        ' character qualities the face projects that the palm either confirms or' +
+        ' quietly contradicts, named with enough specificity to recognise in social' +
+        ' and professional patterns',
+      'The authority reading — which physical system currently carries more energy,' +
+        ' what that means for how authority is experienced internally versus' +
+        ' expressed externally, and whether the two are currently aligned or in' +
+        ' productive tension',
+      'A five-domain cross-system matrix — how the face-palm combination reads' +
+        ' across love, career, wealth, health, and spiritual life, showing where the' +
+        ' combined reading creates a consistent portrait and where it reveals a more' +
+        ' complex picture',
+      'The one character trait visible in the palm that the face actively conceals —' +
+        ' the quality present in the hand that the face has learned not to show,' +
+        ' named directly because knowing it changes how the person understands both' +
+        ' their private experience and their social patterns',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A character integration guide — the specific practice for closing' +
+      ' the most significant gap between your face element and palm element, with' +
+      ' guidance on how long the integration takes to produce a noticeable shift and' +
+      ' the early signal that both physical expressions are moving toward greater' +
+      ' coherence.',
+    upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
+  },
+  {
+    id:'love-architecture-reading',
+    name:'The Love Architecture Reading',
+    tagline:'The face reveals how you love in public. The palm reveals how you love' +
+      ' in private. The gap between the two is the reading.',
+    emoji:'🏗️',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    isPopular:true,
+    rating:4.9,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'The face and palm each read love from a different angle. The face reads' +
+      ' the love pattern as it is presented — the attachment signals the expression' +
+      ' communicates, the asymmetry zones that reveal emotional consistency or' +
+      ' inconsistency, the features that broadcast availability or guardedness' +
+      ' before a word is spoken. The palm reads the private reality — the heart' +
+      ' line\'s actual emotional style, the Venus mount\'s love capacity, the' +
+      ' marriage lines\' significance patterns. The gap between the two is always' +
+      ' the most important thing in the reading, because the gap between how you' +
+      ' present love and how you actually experience it is the root of most' +
+      ' recurring love problems.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your face love signature — the specific combination of what your eyes, lips,' +
+        ' and expression communicate about love availability, emotional warmth, and' +
+        ' attachment style, read from the three facial features most reliably' +
+        ' associated with relational presentation in physiognomy',
+      'Your palm love signature — the private reality that the heart line, Venus' +
+        ' mount, and marriage lines reveal about the actual emotional capacity, love' +
+        ' style, and depth of connection available, independent of what the face' +
+        ' projects',
+      'The love gap — the specific difference between public and private love' +
+        ' expression that the combined reading identifies, named with enough' +
+        ' precision to recognise it in patterns across past and current relationships',
+      'Whether the gap creates connection problems or hidden depth — the distinction' +
+        ' between a gap that creates misalignment with partners and one that creates' +
+        ' the kind of complexity that deepens long-term connection over time',
+      'How the combined physical reading interacts with your Venus placement and' +
+        ' Soul Urge — where all four indicators confirm the same love pattern and' +
+        ' where the face-palm dynamic adds something neither the chart nor the' +
+        ' numbers alone can reveal',
+      'The one love communication shift that most effectively closes the identified' +
+        ' gap — the specific change in how love is expressed that most directly' +
+        ' addresses the disconnect between the face\'s presentation and the palm\'s' +
+        ' private reality',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A love coherence practice — the specific daily action for' +
+      ' developing the love quality that most bridges the gap between your public' +
+      ' love presentation and your private love experience, with guidance on how' +
+      ' long the practice takes to produce a measurable shift in how love is both' +
+      ' given and received.',
+    upsell:{id:'complete-love-synthesis',name:'Complete Love Synthesis',price:97},
+  },
+  {
+    id:'wealth-signature-reading',
+    name:'The Wealth Signature Reading',
+    tagline:'The face shows the wealth palace. The palm shows the earning channel.' +
+      ' Where they agree is where your wealth actually flows.',
+    emoji:'💎',
+    price:57,
+    domain:'oracle-temple',
+    isNew:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Wealth in physical reading is encoded in two different places and through' +
+      ' two different mechanisms. The face — specifically the nose, cheekbones, and' +
+      ' forehead — maps the wealth palace: the capacity to accumulate, the authority' +
+      ' that commands resources, and the financial decade map showing when' +
+      ' wealth-generating power peaks. The palm — specifically the fate line, Venus' +
+      ' mount, and thumb — maps the earning channel: the active wealth-generation' +
+      ' mode, the effort-to-income ratio, and the follow-through that determines' +
+      ' whether financial potential becomes financial reality. This reading' +
+      ' cross-confirms both and surfaces the specific point where face and palm most' +
+      ' agree on your wealth path — which is the direction most worth investing' +
+      ' energy in.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your face wealth reading — the combined reading of nose type for wealth' +
+        ' palace capacity, cheekbone structure for resource authority, and forehead' +
+        ' height for the foundational wealth ambition, with the specific financial' +
+        ' implications of how these three features interact',
+      'Your palm wealth reading — the combined reading of fate line for wealth' +
+        ' trajectory, Venus mount for resource magnetic attraction, and thumb' +
+        ' willpower for follow-through capacity, with the assessment of how the' +
+        ' three palm indicators interact with each other',
+      'The wealth channel confirmed by both systems — the specific earning mode and' +
+        ' wealth direction where face and palm are most aligned, representing the' +
+        ' highest-confidence wealth guidance the combined reading can produce',
+      'Where face and palm diverge on the wealth picture — the specific tension' +
+        ' between potential and drive, between capacity and execution, or between' +
+        ' timing and positioning, named as a gap to consciously address',
+      'The elemental wealth match — what it means when your face element and hand' +
+        ' element are the same or different in the wealth context, and how the' +
+        ' combination shapes the natural wealth approach',
+      'Your life period wealth map — which decade the face reading most strongly' +
+        ' flags as the financial peak and which the palm reading most strongly' +
+        ' supports, with the implications for decisions being made now',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A physical wealth alignment protocol — the specific action' +
+      ' confirmed by both face and palm as the most direct path to the wealth' +
+      ' channel identified, with guidance on the preparation required before the' +
+      ' action, the timing most supported by the current Personal Year, and the' +
+      ' signal that the alignment is producing traction.',
+    upsell:{id:'complete-wealth-synthesis',name:'Complete Wealth Synthesis',price:97},
+  },
+  {
+    id:'health-constitution-reading',
+    name:'The Health Constitution Reading',
+    tagline:'Four ancient medical traditions read face and hands together for three' +
+      ' thousand years — this applies that method to yours',
+    emoji:'⚕️',
+    price:57,
+    domain:'oracle-temple',
+    isNew:true,
+    isFlagship:true,
+    rating:4.8,
+    reviewCount:432,
+    deliveryMinutes:20,
+    hook:'Traditional Chinese Medicine, Ayurveda, classical chart health reading,' +
+      ' and classical hand analysis were each developed independently on different' +
+      ' continents over different centuries — and each arrived at frameworks for' +
+      ' reading constitutional type from physical indicators that are remarkably' +
+      ' consistent with each other. In each tradition, practitioners read multiple' +
+      ' physical features simultaneously to reach a constitutional diagnosis. This' +
+      ' reading applies all four frameworks to your face and hands together, looking' +
+      ' specifically for what all four agree on — because where independent' +
+      ' traditions developed in isolation across different cultures arrive at the' +
+      ' same conclusion about the same person, the confidence reaches a level that' +
+      ' single-system health advice cannot approach.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your face health reading — the combined assessment of skin tone, colour cast,' +
+        ' radiance, texture, and moisture level, cross-read through both Chinese' +
+        ' medicine and Ayurvedic frameworks to identify the constitutional type and' +
+        ' organ system correspondences most clearly expressed in the complexion',
+      'Your palm health reading — the combined assessment of skin tone, moisture' +
+        ' level, elasticity, and life line vitality, adding the physical hand layer' +
+        ' to the constitution picture and showing how the internal health state is' +
+        ' expressed through both face and hands simultaneously',
+      'A Chinese medicine cross-reading — the current state of Qi, Blood, and Jing' +
+        ' as indicated by the combined face and palm reading, with the specific' +
+        ' imbalance pattern most clearly present across both physical indicators',
+      'An Ayurvedic combined reading — the Dosha indication from the combined skin' +
+        ' and hand type assessment, and how the two readings together confirm or' +
+        ' refine the constitutional type beyond what either alone can produce',
+      'The three organ systems showing the most stress across both the face and palm' +
+        ' readings — identified from the convergence of Chinese medicine and' +
+        ' Ayurvedic indicators rather than from either tradition alone',
+      'The lifestyle, dietary, and practice adjustments most aligned with the' +
+        ' combined constitution — the specific recommendations that both Chinese' +
+        ' medicine and Ayurvedic analysis agree on, rather than the recommendations' +
+        ' that belong to only one tradition',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A two-system health protocol — the specific dietary adjustments,' +
+      ' movement prescription, and practice recommendations that both Chinese' +
+      ' medicine and constitutional Ayurveda agree on for the constitution' +
+      ' identified in the combined face and palm reading, presented as a 30-day' +
+      ' sequence with the early signal that the protocol is producing the right' +
+      ' results.',
+    upsell:{id:'complete-health-synthesis',name:'Complete Health Synthesis',price:97},
+  },
+  {
+    id:'career-authority-reading',
+    name:'The Career Authority Reading',
+    tagline:'The cheekbones and Jupiter mount read from two different systems — when' +
+      ' they agree on the same authority type, stop second-guessing',
+    emoji:'🏆',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.8,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'The cheekbones and the Mount of Jupiter each read professional authority' +
+      ' from a different angle — the face from the outside and the palm from the' +
+      ' inside. The cheekbones govern how authority is perceived socially and in the' +
+      ' public domain. The Jupiter mount governs the internal ambition quality and' +
+      ' the type of leadership the person is built to exercise from within. When' +
+      ' both physical indicators read the same authority configuration, the portrait' +
+      ' reaches maximum confidence and the specific professional positioning most' +
+      ' aligned with that authority type becomes clear. When they diverge, the' +
+      ' divergence names the gap between how authority is held internally and how it' +
+      ' is expressed publicly.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your cheekbone authority reading from the face — the specific authority' +
+        ' style, social domain, and timing peak indicated by the cheekbone position,' +
+        ' width, and fullness, read as a public-facing authority portrait',
+      'Your Jupiter mount reading from the palm — the internal ambition quality, the' +
+        ' leadership type most naturally expressed from the inside, and the wisdom' +
+        ' the mount indicates is being developed toward transmitting to others',
+      'Your authority configuration from the combined reading — structural,' +
+        ' aspiring, projected, or collaborative — with the specific meaning of each' +
+        ' configuration in both professional and social contexts, and which one the' +
+        ' combined face-palm reading most clearly indicates',
+      'What each specific authority configuration demands in professional contexts —' +
+        ' the environment, relationship structure, and positioning that allows the' +
+        ' identified configuration to express most effectively and the contexts that' +
+        ' consistently suppress it',
+      'How the combined physical authority reading interacts with your 10th house' +
+        ' Midheaven and Life Path authority number — where all four indicators agree' +
+        ' on the same authority type and where the physical and chart readings' +
+        ' describe different layers of the same quality',
+      'The specific professional environment where your combined authority' +
+        ' configuration thrives — named with enough specificity to evaluate current' +
+        ' and potential professional contexts against the portrait the reading' +
+        ' produces',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A leadership positioning guide — the one professional' +
+      ' repositioning move that makes the physical authority configuration most' +
+      ' visible to the right people, with guidance on the environment most likely to' +
+      ' recognise the specific authority type and the one framing or positioning' +
+      ' shift that closes the gap between the authority being held and the authority' +
+      ' being acknowledged.',
+    upsell:{id:'business-destiny-synthesis',name:'Business Destiny Synthesis',price:87},
+  },
+  {
+    id:'spiritual-blueprint-reading',
+    name:'The Spiritual Blueprint Reading',
+    tagline:'Your face element and hand element each describe a spiritual pathway —' +
+      ' together they name yours specifically',
+    emoji:'🕉️',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    rating:4.8,
+    reviewCount:432,
+    deliveryMinutes:20,
+    hook:'Face element and hand element each identify a spiritual pathway — the type' +
+      ' of practice, the tradition most resonant, and the form that contact with the' +
+      ' sacred most naturally takes for this particular constitution. Fire hands are' +
+      ' built for devotional movement and active prayer. Earth hands for grounding' +
+      ' ritual and embodied practice. Air hands for contemplative study and' +
+      ' philosophical depth. Water hands for receptive meditation and healing work.' +
+      ' When the face element confirms the hand element, the spiritual archetype' +
+      ' reaches its most specific definition. When they differ, the combination' +
+      ' itself names a more complex and interesting path — one that draws from' +
+      ' multiple elemental traditions rather than fitting neatly into one.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your face element spiritual pathway — the specific type of spiritual' +
+        ' practice, the approach to the sacred, and the tradition most naturally' +
+        ' aligned with the face element type, with the reasoning from classical' +
+        ' physiognomy that maps each face element to a specific spiritual orientation',
+      'Your hand element spiritual pathway — the specific practice format and' +
+        ' tradition most naturally expressed through the hands and body, which often' +
+        ' describes the practice style more than the conceptual framework',
+      'Your elemental combination and the specific spiritual archetype it produces —' +
+        ' whether the combination creates a unified path or a more complex' +
+        ' integration of two different elemental approaches to practice, and what' +
+        ' that means for how the spiritual life is most effectively structured',
+      'The practice format most aligned with your specific elemental combination —' +
+        ' whether active prayer, contemplative study, devotional movement, creative' +
+        ' ritual, service, or healing work is most structurally suited to the' +
+        ' combination of face and hand elements identified',
+      'The specific tradition or lineage most resonant with your elemental' +
+        ' combination — the spiritual framework that most naturally fits the' +
+        ' combined physical reading, named with enough specificity to evaluate' +
+        ' against current and past spiritual experiences',
+      'The one spiritual shift most available and most transformative right now —' +
+        ' the specific change in practice or approach that the combined reading' +
+        ' indicates is most likely to deepen the spiritual dimension of the life in' +
+        ' the current period',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A complete spiritual practice prescription — the tradition most' +
+      ' aligned with your elemental combination, the specific practice format within' +
+      ' that tradition, the frequency and timing most suited to your current stage,' +
+      ' and the one protection or grounding practice your physical spiritual' +
+      ' indicators say is most necessary given the elemental configuration' +
+      ' identified.',
+    upsell:{id:'complete-spiritual-synthesis',name:'Complete Spiritual Synthesis',price:97},
+  },
+  {
+    id:'relationship-readiness-scan',
+    name:'The Relationship Readiness Scan',
+    tagline:'The face signals openness to love. The palm carries the internal' +
+      ' reality. This reads both simultaneously.',
+    emoji:'💚',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    isPopular:true,
+    rating:4.9,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'The face and palm often tell different stories about relationship' +
+      ' readiness. The face communicates the social signal — the expression' +
+      ' openness, the symmetry score, the features that broadcast availability or' +
+      ' guardedness. The palm carries the private reality — the continuity of the' +
+      ' heart line, the firmness of the Venus mount, the position of the marriage' +
+      ' lines. This reading measures both simultaneously and identifies the gap' +
+      ' between the two. The gap is what most sabotages love — not the absence of' +
+      ' opportunity but the incoherence between what is being projected outward and' +
+      ' what is actually available internally.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your face readiness reading — the combined assessment of expression signal,' +
+        ' symmetry score, and lip corner direction that indicates the social' +
+        ' openness currently being projected and what that projection communicates' +
+        ' to potential partners before any conversation begins',
+      'Your palm readiness reading — the combined assessment of heart line' +
+        ' continuity, Venus mount firmness, and marriage line position that' +
+        ' indicates the private emotional availability and what the internal reality' +
+        ' actually is beneath the social signal the face is broadcasting',
+      'The readiness gap — the specific area where the internal state most diverges' +
+        ' from the projected state, named with enough precision to recognise in' +
+        ' patterns across recent interactions and relationship attempts',
+      'What the gap means practically — the specific experience pattern the gap' +
+        ' creates in dating and early relationship stages, and why potential' +
+        ' connections often stall or develop differently than expected',
+      'How the combined physical readiness picture interacts with the current' +
+        ' Personal Year cycle — whether the timing is energetically open for new' +
+        ' relationship formation or whether the current period calls for a different' +
+        ' type of relational work',
+      'The specific inner shift that aligns face and palm into coherent readiness —' +
+        ' the one internal change that most directly resolves the gap between' +
+        ' projected openness and actual availability, named as a concrete internal' +
+        ' practice rather than a mindset prescription',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'A readiness alignment practice — the specific internal work the' +
+      ' palm indicates is most needed before the openness the face is already' +
+      ' broadcasting can be genuinely sustained in the depth of a real relationship,' +
+      ' calibrated to the specific gap identified rather than to general emotional' +
+      ' readiness principles.',
+    upsell:{id:'soulmate-arrival-window-os',name:'Soulmate Arrival Window',price:37},
+  },
+  {
+    id:'dual-elemental-conflict',
+    name:'The Dual Elemental Conflict Reading',
+    tagline:'Most people\'s face and hand carry different elements — this names what' +
+      ' that specific combination means for how you live',
+    emoji:'☯️',
+    price:47,
+    domain:'oracle-temple',
+    isNew:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:543,
+    deliveryMinutes:20,
+    hook:'Your face and your hand are measured by entirely independent systems —' +
+      ' which makes their agreement meaningful in a way that a single system cannot' +
+      ' replicate. And when they disagree, the disagreement is equally meaningful.' +
+      ' Most people\'s face and hand carry different elements, producing a specific' +
+      ' gap between the character projected to the world and the character' +
+      ' experienced internally. This gap is not a problem to fix. It is the most' +
+      ' specific thing about you — and once it is named, the patterns across love,' +
+      ' career, health, and relationships suddenly make sense in a way they did not' +
+      ' before.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'Your face element and hand element identified and placed in direct comparison' +
+        ' — with the specific character of each element named in full so the nature' +
+        ' of the gap between them is immediately recognisable in daily life',
+      'The specific identity gap your elemental difference creates — the particular' +
+        ' way the two elements create a person who is experienced differently from' +
+        ' the outside than from the inside, and what that gap has been producing' +
+        ' across relationships and professional contexts',
+      'Which element is currently dominant — whether you are living more face-led or' +
+        ' palm-led right now, and what the dominance pattern says about where the' +
+        ' most energy is currently invested',
+      'The five life domains most affected by the elemental gap — how the face-palm' +
+        ' divergence expresses specifically across love, career, wealth, health, and' +
+        ' spiritual life, with the specific pattern each domain tends to produce',
+      'How the elemental gap interacts with your Sun sign element — the triple' +
+        ' elemental picture that shows whether the Sun sign confirms the face, the' +
+        ' palm, or creates a third layer, with the implications of each three-way' +
+        ' combination',
+      'The integration path — what it looks like when both elements are expressed as' +
+        ' a coherent whole rather than in alternation or conflict, and the specific' +
+        ' practice that most directly develops the less-expressed element toward' +
+        ' that integration',
+    ],
+    guidanceType:'spiritual-remedy',
+    guidanceText:'An elemental integration practice — the specific daily practice' +
+      ' most effective for developing the qualities of your less-expressed element,' +
+      ' reducing the gap between projected self and experienced self, with guidance' +
+      ' on the timeline for integration and the early signal that both elements are' +
+      ' beginning to express more coherently together.',
+    upsell:{id:'complete-character-portrait',name:'Complete Character Portrait',price:57},
+  },
+  {
+    id:'peak-decade-map',
+    name:'The Peak Decade Map',
+    tagline:'When face and palm both identify the same life period as the peak —' +
+      ' that convergence is the map you need',
+    emoji:'🏔️',
+    price:57,
+    domain:'oracle-temple',
+    isNew:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:432,
+    deliveryMinutes:20,
+    hook:'Classical face reading maps specific life decades to specific facial' +
+      ' features — the forehead governs the teens and twenties, the nose and eyes' +
+      ' the thirties and forties, the cheeks and mouth the fifties, the chin and jaw' +
+      ' the sixties and beyond. Classical palm reading maps peak periods' +
+      ' independently through the life line trajectory, Apollo line presence, and' +
+      ' mount development over time. When both systems independently identify the' +
+      ' same decade as the period of highest power, the confidence is unlike' +
+      ' anything a single-system timing assessment can produce. This reading' +
+      ' identifies your physical peak period from both systems, confirms how it' +
+      ' aligns with your numerical Pinnacle, and maps the preparation that' +
+      ' determines whether you enter the peak window ready or arrive at it from' +
+      ' behind.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'The classical face decade map from your specific facial features — which' +
+        ' period each feature governs, what the current age decade indicates about' +
+        ' what is most structurally supported right now, and what the face says' +
+        ' about when the highest-power period arrives',
+      'The classical palm peak period map — which decade the life line trajectory,' +
+        ' Apollo line, and mount development indicate as the period of highest' +
+        ' expression, and how the hand reading arrives at that conclusion' +
+        ' independently from the face',
+      'The agreement reading — where both systems identify the same decade as the' +
+        ' peak, creating a cross-system confirmation that carries maximum confidence' +
+        ' about the timing of highest-power expression',
+      'How the physical peak period aligns with or diverges from your numerical' +
+        ' Pinnacle — the assessment of whether the physical timing systems and the' +
+        ' numerological timing system are all pointing to the same period or' +
+        ' describing different layers of a more complex timing picture',
+      'Your current decade assessment — whether you are currently in the physical' +
+        ' peak period or approaching it, and what the current decade is most' +
+        ' structurally designed to build toward',
+      'If not yet in the peak: how long until it opens and the specific preparation' +
+        ' that most determines whether you arrive at the peak window positioned to' +
+        ' use it fully or positioned to spend the first years of it catching up',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A peak decade preparation guide — the three specific actions your' +
+      ' combined physical and numerical timing indicators say must be in place' +
+      ' before the peak window opens, each with the reasoning from the systems that' +
+      ' confirm it and the specific timing for when each action is most supported.',
+    upsell:{id:'elder-years-synthesis',name:'Elder Years Synthesis',price:77},
+  },
+  {
+    id:'full-physical-reading',
+    name:'The Full Physical Reading',
+    tagline:'Face, palm, numerology, and astrology — four independent systems, one' +
+      ' person, the most complete portrait available from physical and birth' +
+      ' indicators',
+    emoji:'🔮',
+    price:97,
+    domain:'oracle-temple',
+    isNew:true,
+    isBestSeller:true,
+    isFlagship:true,
+    rating:4.9,
+    reviewCount:654,
+    deliveryMinutes:20,
+    hook:'Four independent reading systems developed in different centuries on' +
+      ' different continents — classical face reading, classical palm reading,' +
+      ' numerology, and astrology — each arrived at remarkably consistent frameworks' +
+      ' for reading character, purpose, timing, and health from different sets of' +
+      ' indicators. When all four are applied to the same person simultaneously and' +
+      ' only what they all confirm is included in the portrait, the result carries a' +
+      ' confidence that no single-system reading can approach. This is the complete' +
+      ' physical and birth-data reading: every readable feature of the face and hand' +
+      ' decoded, every major system of numerology and chart reading applied, and the' +
+      ' convergence between all four systems surfaced as the highest-confidence' +
+      ' truths about this specific person.',
+    requiresImage:{type:'both'},
+    whatYouGet:[
+      'A complete facial analysis — every readable feature addressed: face shape,' +
+        ' symmetry, all major features individually, skin vitality, habitual' +
+        ' expression signal, and aging markers — with each reading confirmed against' +
+        ' at least one other system',
+      'A complete hand analysis — hand shape, all major lines including the life,' +
+        ' heart, head, fate, and intuition lines, all major mounts, thumb' +
+        ' configuration, and skin quality — assembled into a unified palm portrait' +
+        ' rather than isolated feature readings',
+      'A complete numerology reading — Life Path, Destiny, Soul Urge, Personality,' +
+        ' Birthday Gift and Challenge, current Pinnacle, current Personal Year —' +
+        ' confirmed where possible against the face and palm indicators',
+      'A complete astrology reading — Sun, Moon, Ascendant, Midheaven, all planets' +
+        ' in their signs and houses — cross-referenced with the physical readings to' +
+        ' identify the highest-confidence character and timing insights',
+      'A convergence map — every domain where all four systems agree, flagged as the' +
+        ' highest-confidence insights in the reading, the portrait elements most' +
+        ' worth acting on',
+      'A divergence map — every domain where the four systems describe different' +
+        ' things, revealed as active growth edges, integration points, or the' +
+        ' specific character complexity that makes this person who they are',
+      'A five-domain synthesis across love, career, wealth, health, and spiritual' +
+        ' life — drawing from all four systems for each domain to produce the most' +
+        ' complete domain portrait available',
+      'A personalised reading priority guide — based on all four systems and current' +
+        ' timing, the three most important insights to engage with now',
+    ],
+    guidanceType:'practical-solution',
+    guidanceText:'A reading priority guide specific to your four-system portrait —' +
+      ' the three insights from the combined reading that your current Pinnacle,' +
+      ' Personal Year, and physical peak period all indicate are most important to' +
+      ' act on now, presented in sequence with the specific first action for each,' +
+      ' and the complete order for engaging the rest of the portrait as each life' +
+      ' chapter opens.',
+    upsell:{id:'full-soul-portrait',name:'Full Soul Portrait',price:197},
+  },
 ]
+
 
 // ─────────────────────────────────────────────────────────────
 // EXPORTS
