@@ -9,6 +9,7 @@ import {
   Star, Shield, ChevronDown, ChevronUp, CheckCircle,
   Clock, Users, Sparkles, ArrowRight, Heart, Eye, Zap,
   User, Camera, Compass, Moon, Feather, Infinity, Loader2,
+  Volume2, VolumeX,
 } from 'lucide-react'
 import styles from './toolPage.module.css'
 
@@ -26,11 +27,13 @@ const ALL_TOOLS = [
   ...omniTools, ...sacredScriptTools, ...timeKeeperTools, ...voiceTools,
 ]
 
+// FIX 1: em-dash replacement removed — hooks use em-dashes deliberately
 const clean = (s?: string) =>
-  s ? s.replace(/\u2014|\u2013/g, ',').trim() : ''
+  s ? s.trim() : ''
 
 // ─── sanitize: replace forbidden methodology words ────────────────────────────
 const SANITIZE_MAP: [RegExp, string][] = [
+  // ── Methodology names ──────────────────────────────────────
   [/\bnumerolog(?:y|ical|ist)\b/gi,     'pattern analysis'],
   [/\bastrol(?:ogy|ogical|oger)\b/gi,   'timing intelligence'],
   [/\bpalmist(?:ry)?\b/gi,              'physical markers reading'],
@@ -49,6 +52,19 @@ const SANITIZE_MAP: [RegExp, string][] = [
   [/\bi ching\b/gi,                     'ancient wisdom system'],
   [/\bfeng shui\b/gi,                   'environmental intelligence'],
   [/\bhuman design\b/gi,                'blueprint system'],
+  // ── System number labels — never shown to visitors ─────────
+  [/\bLife Path\s+\d+\b/gi,             'your core pattern'],
+  [/\bPersonal Year\s+\d+\b/gi,         'this current chapter'],
+  [/\bPinnacle\s+\d+\b/gi,              'this life chapter'],
+  [/\bDestiny [Nn]umber\s+\d+\b/gi,     'your life direction'],
+  [/\bSoul Urge\s+\d+\b/gi,             'your inner drive'],
+  [/\bMaster [Nn]umber\s+\d+\b/gi,      'this elevated calling'],
+  [/\bPersonality [Nn]umber\s+\d+\b/gi, 'how others experience you'],
+  [/\bBirthday [Nn]umber\s+\d+\b/gi,    'your natural gift'],
+  [/\b(Sun|Moon|Mars|Venus|Jupiter|Saturn|Mercury)\s+in\s+[A-Z][a-z]+\b/g, 'this placement'],
+  [/\bSaturn [Rr]eturn\b/gi,            'this structural cycle'],
+  [/\bJupiter [Rr]eturn\b/gi,           'this expansion cycle'],
+  [/\b(Rahu|Ketu|Atmakaraka)\b/gi,      'the soul indicator'],
 ]
 function sanitize(text?: string): string {
   if (!text) return ''
@@ -124,16 +140,18 @@ const ICON_MAP: Record<string, any> = {
   Star, Heart, Compass, Moon, Feather, Infinity, Sparkles,
 }
 
+// FIX 2: testimonial texts rewritten to remove methodology words at source;
+//        sanitize() is also applied at render time as a second safety net
 const TESTIMONIALS: Record<string, { name: string; age: number; city: string; text: string }[]> = {
   love: [
-    { name: 'Rachel',  age: 34, city: 'Austin, TX',      text: 'The reading named a specific relationship pattern I had never seen described anywhere. The way it pinpointed the exact Personal Year when that pattern first started was something no astrologer had ever done for me.' },
-    { name: 'Priya',   age: 29, city: 'London, UK',      text: 'I have had astrology readings before. Nothing has ever been this specific. The love timing window section was accurate to within two weeks of a major shift in my relationship.' },
+    { name: 'Rachel',  age: 34, city: 'Austin, TX',      text: 'The reading named a specific relationship pattern I had never seen described anywhere. The way it pinpointed the exact personal timing cycle when that pattern first started was something no practitioner had ever done for me.' },
+    { name: 'Priya',   age: 29, city: 'London, UK',      text: 'I have had readings before. Nothing has ever been this specific. The love timing window section was accurate to within two weeks of a major shift in my relationship.' },
     { name: 'Amara',   age: 38, city: 'Toronto, CA',     text: 'What struck me was how precisely it described my emotional capacity. I had known this about myself for years and never been able to name it until I read this.' },
   ],
   wealth: [
     { name: 'James',   age: 41, city: 'New York, NY',    text: 'The income ceiling section was uncomfortable to read because it was accurate. It named the exact pattern that has kept me at the same income level for five years.' },
-    { name: 'Sasha',   age: 33, city: 'Sydney, AU',      text: 'I was expecting generic advice. Instead I received a specific breakdown of why my current career path is misaligned with my wiring and what my chart shows about the timing for a transition.' },
-    { name: 'David',   age: 45, city: 'Manchester, UK',  text: 'The synthesis of multiple disciplines was what made it different. A numerologist gave me one picture. An astrologer gave me another. This showed me how they connect.' },
+    { name: 'Sasha',   age: 33, city: 'Sydney, AU',      text: 'I was expecting generic advice. Instead I received a specific breakdown of why my current career path is misaligned with my wiring and what my blueprint shows about the timing for a transition.' },
+    { name: 'David',   age: 45, city: 'Manchester, UK',  text: 'The synthesis of multiple disciplines was what made it different. A pattern analyst gave me one picture. A timing intelligence reader gave me another. This showed me how they connect.' },
   ],
   wellness: [
     { name: 'Lena',    age: 31, city: 'Berlin, DE',      text: 'The shadow reading named something I had been circling for years in therapy. One reading, twenty minutes, and the thing I could not articulate was right there in plain language.' },
@@ -182,27 +200,28 @@ const HOOKS: Record<string, string> = {
 const getHook = (tool: any) =>
   clean(tool.hook) || HOOKS[getDomain(tool)] || HOOKS['oracle-temple']
 
+// FIX 3: WHO_FOR bullet 1 rewritten per domain so it does not echo the hook
 const WHO_FOR: Record<string, string[]> = {
   love: [
-    'You keep ending up in the same relationship dynamic with a different person and you cannot figure out why.',
+    'You have tried to communicate your needs clearly and still end up in the same impasse with every significant partner.',
     'You are single and doing the inner work but the right connection still has not arrived.',
     'You are in a relationship that feels good but not quite right and you want clarity.',
     'You have had readings before that felt generic. You want something that names the actual pattern.',
   ],
   wealth: [
-    'You have worked hard for years and still feel like something invisible is keeping you below the level you know you are capable of.',
-    'You have changed jobs, industries, or strategies and the same ceiling keeps appearing.',
+    'You have changed tactics, studied the right things, and worked harder than most — and the same ceiling keeps appearing.',
+    'You have changed jobs, industries, or strategies and the same pattern keeps following you.',
     'You feel called to something specific but cannot get clarity on whether it is realistic.',
     'You want to understand the timing, not just what to do but when your chart opens for the move.',
   ],
   wellness: [
-    'You have tried multiple frameworks for self-understanding and still feel like something essential is missing.',
+    'You can see your patterns clearly and still find yourself living them.',
     'You go through periods of clarity followed by periods of complete disconnection from yourself.',
     'The external markers of your life look fine. The internal experience is more complicated.',
     'You want a map of your actual inner wiring, not a generalised personality type.',
   ],
   'life-path': [
-    'The path you are on feels like it belongs to someone else and you do not know how to name that clearly.',
+    'You make decisions that look correct from the outside and feel wrong from the inside, consistently enough that it is no longer random.',
     'You have a sense of what you are meant for but cannot reconcile it with the practical reality of your life.',
     'You keep making decisions that look correct from the outside but feel wrong from the inside.',
     'You want to understand the arc of your life, not just where you are now but the larger pattern it is part of.',
@@ -214,8 +233,9 @@ const WHO_FOR: Record<string, string[]> = {
     'You want a synthesis, not one perspective but the intersection of what multiple disciplines confirm about the same question.',
   ],
 }
+// FIX 4: getWhoFor checks tool.whoFor first before falling back to domain default
 const getWhoFor = (tool: any) =>
-  WHO_FOR[getDomain(tool)] ?? WHO_FOR.default
+  (tool.whoFor && tool.whoFor.length > 0) ? tool.whoFor : (WHO_FOR[getDomain(tool)] ?? WHO_FOR.default)
 
 const BASE_FAQ = [
   {
@@ -340,7 +360,7 @@ function FocusInput({ type = 'text', value, onChange, placeholder, accentColor, 
   )
 }
 
-// ─── FAQItem — EXACT from original ───────────────────────────────────────────
+// ─── FAQItem ─────────────────────────────────────────────────────────────────
 function FAQItem({ q, a, color }: { q: string; a: string; color: string }) {
   const [open, setOpen] = useState(false)
   return (
@@ -372,7 +392,7 @@ function FAQItem({ q, a, color }: { q: string; a: string; color: string }) {
   )
 }
 
-// ─── TeaserCard — EXACT from original ────────────────────────────────────────
+// ─── TeaserCard ───────────────────────────────────────────────────────────────
 function TeaserCard({ para }: { para: any }) {
   const Icon = ICON_MAP[para.icon] || Sparkles
   return (
@@ -395,16 +415,13 @@ function TeaserCard({ para }: { para: any }) {
 // ─── VideoEmbed — resolves YouTube or Vimeo URL to embed src ─────────────────
 function VideoEmbed({ url, color }: { url: string; color: string }) {
   const getEmbedSrc = (raw: string): string => {
-    // YouTube — handle youtu.be, watch?v=, embed/ variants
     const ytShort   = raw.match(/youtu\.be\/([^?&]+)/)
     const ytWatch   = raw.match(/[?&]v=([^&]+)/)
     const ytEmbed   = raw.match(/youtube\.com\/embed\/([^?&]+)/)
     const ytId      = (ytShort || ytWatch || ytEmbed)?.[1]
     if (ytId) return `https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&color=white`
-    // Vimeo
-    const vimeo = raw.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+    const vimeo = raw.match(/vimeo\.com\/(?:video\/)?(\ d+)/)
     if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}?byline=0&portrait=0&title=0`
-    // Already an embed URL — use as-is
     return raw
   }
 
@@ -419,7 +436,7 @@ function VideoEmbed({ url, color }: { url: string; color: string }) {
       style={{
         position: 'relative',
         width: '100%',
-        paddingBottom: '56.25%', // 16:9
+        paddingBottom: '56.25%',
         borderRadius: 18,
         overflow: 'hidden',
         background: '#1c1917',
@@ -485,6 +502,9 @@ export default function ToolSalesPage() {
   const [teaserCtaText,    setTeaserCtaText]    = useState('')
   const [teaserError,      setTeaserError]      = useState('')
   const [teaserShown,      setTeaserShown]      = useState(false)
+  // AUDIO: Web Speech API state for teaser audio output
+  const [audioPlaying,  setAudioPlaying]  = useState(false)
+  const utteranceRef    = useRef<SpeechSynthesisUtterance | null>(null)
   const teaserResultRef = useRef<HTMLDivElement>(null)
 
   const [founderImgError, setFounderImgError] = useState(false)
@@ -498,15 +518,12 @@ export default function ToolSalesPage() {
   useEffect(() => {
     if (!refCode) return
 
-    // Store ref in sessionStorage so purchase page can attribute conversion
     sessionStorage.setItem('kayal_affiliate_ref', refCode)
 
-    // Also store in cookie for 60-day window
     const expires = new Date()
     expires.setDate(expires.getDate() + 60)
     document.cookie = `kayal_ref=${refCode}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
 
-    // Track the click — increment clicks on the affiliate_links row
     const trackClick = async () => {
       try {
         await fetch('/api/affiliate/track-click', {
@@ -525,7 +542,7 @@ export default function ToolSalesPage() {
     trackClick()
   }, [refCode, toolId])
 
-  // Reset teaser state whenever the tool changes (client-side navigation guard)
+  // Reset teaser state whenever the tool changes
   useEffect(() => {
     setTeaserName('')
     setTeaserDob('')
@@ -538,7 +555,22 @@ export default function ToolSalesPage() {
     setTeaserCtaText('')
     setTeaserError('')
     setTeaserShown(false)
+    // Stop any running audio when tool changes
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    setAudioPlaying(false)
   }, [toolId])
+
+  // Stop audio when teaser result is hidden
+  useEffect(() => {
+    if (!teaserShown) {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
+      setAudioPlaying(false)
+    }
+  }, [teaserShown])
 
   useEffect(() => {
     if (teaserShown && teaserResultRef.current) {
@@ -555,6 +587,37 @@ export default function ToolSalesPage() {
     obs.observe(el)
     return () => obs.disconnect()
   }, [])
+
+  // AUDIO: speak all teaser paragraphs using Web Speech API
+  const speakTeaser = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    window.speechSynthesis.cancel()
+    const text = teaserParagraphs
+      .map(p => `${p.title}. ${p.content}`)
+      .join('. ')
+    const utterance  = new SpeechSynthesisUtterance(text)
+    utterance.rate   = 0.88
+    utterance.pitch  = 1
+    utterance.lang   = 'en-US'
+    // Prefer a natural female voice if available
+    const voices     = window.speechSynthesis.getVoices()
+    const preferred  = voices.find(v =>
+      v.lang.startsWith('en') && /female|samantha|karen|moira|tessa|victoria/i.test(v.name)
+    )
+    if (preferred) utterance.voice = preferred
+    utterance.onend   = () => setAudioPlaying(false)
+    utterance.onerror = () => setAudioPlaying(false)
+    utteranceRef.current = utterance
+    window.speechSynthesis.speak(utterance)
+    setAudioPlaying(true)
+  }
+
+  const stopAudio = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    setAudioPlaying(false)
+  }
 
   const handleCTA = () => {
     if (!tool) return
@@ -661,6 +724,9 @@ export default function ToolSalesPage() {
   const SP  = '3.5rem 0'
   const SPB: React.CSSProperties = { padding: SP, borderBottom: '1px solid #e8e3dc' }
 
+  // FIX 6: mid-page nudge uses first sentence of the tool's own hook
+  const hookFirstSentence = hook.split(/(?<=[.!?])\s/)[0] || hook
+
   return (
     <div className={styles.page}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -674,28 +740,26 @@ export default function ToolSalesPage() {
           50%     { transform: translateY(-9px); }
         }
 
-        /* Floating orb — large soft blur blob */
+        /* Floating orb */
         @keyframes kayalOrb {
           0%   { transform: translate(0px, 0px)   scale(1);    opacity: 0.18; }
           33%  { transform: translate(40px,-30px)  scale(1.08); opacity: 0.28; }
           66%  { transform: translate(-25px, 20px) scale(0.94); opacity: 0.2;  }
           100% { transform: translate(0px, 0px)   scale(1);    opacity: 0.18; }
         }
-        /* Second orb — offset phase */
         @keyframes kayalOrb2 {
           0%   { transform: translate(0px, 0px)    scale(1);    opacity: 0.14; }
           33%  { transform: translate(-35px, 25px) scale(1.06); opacity: 0.24; }
           66%  { transform: translate(30px,-20px)  scale(0.96); opacity: 0.16; }
           100% { transform: translate(0px, 0px)    scale(1);    opacity: 0.14; }
         }
-        /* Third orb — slow drift */
         @keyframes kayalOrb3 {
           0%   { transform: translate(0px, 0px)    scale(1);    opacity: 0.10; }
           50%  { transform: translate(20px, 35px)  scale(1.12); opacity: 0.18; }
           100% { transform: translate(0px, 0px)    scale(1);    opacity: 0.10; }
         }
 
-        /* SVG arc slow rotation */
+        /* SVG arc rotations */
         @keyframes kayalRotateSlow {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
@@ -711,36 +775,39 @@ export default function ToolSalesPage() {
           100% { background-position: 26px 26px; }
         }
 
-        /* Gold shimmer sweep across rule */
+        /* Gold shimmer sweep */
         @keyframes kayalGoldShimmer {
           0%   { background-position: -200% center; }
           100% { background-position: 300% center; }
         }
 
-        /* Particle float — each particle gets its own delay via nth-child */
-        @keyframes kayalParticle {
-          0%   { transform: translateY(0px)   opacity: 0;   }
-          10%  { opacity: 1; }
-          90%  { opacity: 0.6; }
-          100% { transform: translateY(-120px); opacity: 0; }
-        }
-
-        /* Section background slow scroll */
-        @keyframes kayalBgScroll {
-          0%   { background-position: 0% 0%; }
-          100% { background-position: 100% 100%; }
-        }
-
-        /* Gentle pulse ring on hero emoji */
+        /* Pulse ring behind emoji */
         @keyframes kayalRingPulse {
           0%,100% { transform: scale(1);    opacity: 0; }
           50%     { transform: scale(1.7);  opacity: 0.2; }
         }
 
+        /* Audio button pulse — active state */
+        @keyframes kayalAudioPulse {
+          0%,100% { box-shadow: 0 0 0 0 rgba(0,0,0,0.10); }
+          50%     { box-shadow: 0 0 0 6px rgba(0,0,0,0.04); }
+        }
+
+        /* ── CTA shimmer sweep ───────────────────────── */
+        @keyframes kayalBtnShimmer {
+          0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+          8%   { opacity: 1; }
+          60%  { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+          100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+        }
+        @keyframes kayalBtnGlow {
+          0%,100% { box-shadow: 0 6px 24px rgba(0,0,0,0.16); }
+          50%     { box-shadow: 0 8px 32px rgba(0,0,0,0.26), 0 0 0 3px rgba(255,255,255,0.12); }
+        }
+
         .kayal-ambient-pulse { animation: kayalAmbientPulse 7s ease-in-out infinite; }
         .kayal-float         { animation: kayalFloat 3.2s ease-in-out infinite; }
 
-        /* Orb blobs */
         .kayal-orb {
           position: absolute; border-radius: 50%;
           filter: blur(60px); pointer-events: none;
@@ -749,18 +816,15 @@ export default function ToolSalesPage() {
         .kayal-orb-2 { animation: kayalOrb2 18s ease-in-out infinite; }
         .kayal-orb-3 { animation: kayalOrb3 22s ease-in-out infinite; }
 
-        /* Rotating SVG rings */
         .kayal-ring-rotate-cw  { transform-origin: center; animation: kayalRotateSlow 60s linear infinite; }
         .kayal-ring-rotate-ccw { transform-origin: center; animation: kayalRotateRev  45s linear infinite; }
 
-        /* Animated dot grid */
         .kayal-dots-anim {
           background-image: radial-gradient(circle, rgba(0,0,0,0.044) 1px, transparent 1px);
           background-size: 26px 26px;
           animation: kayalDotPan 8s linear infinite;
         }
 
-        /* Animated gold rule */
         .kayal-gold-rule-anim {
           width: 100%; height: 1px; border: none; margin: 0;
           background: linear-gradient(
@@ -772,19 +836,16 @@ export default function ToolSalesPage() {
           animation: kayalGoldShimmer 4s ease-in-out infinite;
         }
 
-        /* Pulse ring behind emoji */
         .kayal-emoji-ring {
           position: absolute; border-radius: 50%;
           pointer-events: none;
           animation: kayalRingPulse 3s ease-out infinite;
         }
 
-        /* Subtle dot grid */
         .kayal-dots {
           background-image: radial-gradient(circle, rgba(0,0,0,0.048) 1px, transparent 1px);
           background-size: 26px 26px;
         }
-        /* Diagonal hairlines */
         .kayal-lines {
           background-image: repeating-linear-gradient(
             -52deg,
@@ -792,7 +853,6 @@ export default function ToolSalesPage() {
             rgba(0,0,0,0.018) 22px, rgba(0,0,0,0.018) 23px
           );
         }
-        /* Gold shimmer rule */
         .kayal-gold-rule {
           width: 100%; height: 1px; border: none; margin: 0;
           background: linear-gradient(
@@ -801,7 +861,6 @@ export default function ToolSalesPage() {
             #E2C88A 50%, #B8975A 65%, #D4AF7A44 85%, transparent 100%
           );
         }
-        /* Hero corner bracket ornaments */
         .kayal-corner-ornament { position: relative; }
         .kayal-corner-ornament::before,
         .kayal-corner-ornament::after {
@@ -819,96 +878,44 @@ export default function ToolSalesPage() {
           border-bottom: 1.5px solid #B8975A;
           border-right: 1.5px solid #B8975A;
         }
-        /* Eyebrow pill badge */
         .kayal-eyebrow-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 14px;
-          border-radius: 100px;
-          font-size: 0.65rem;
-          font-weight: 800;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          margin-bottom: 0.85rem;
-          border: 1px solid transparent;
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 14px; border-radius: 100px;
+          font-size: 0.65rem; font-weight: 800;
+          letter-spacing: 0.16em; text-transform: uppercase;
+          margin-bottom: 0.85rem; border: 1px solid transparent;
         }
-        /* Section symbol above headings */
         .kayal-section-symbol {
-          font-size: 1.75rem;
-          display: block;
-          text-align: center;
-          margin-bottom: 0.5rem;
-          line-height: 1;
+          font-size: 1.75rem; display: block;
+          text-align: center; margin-bottom: 0.5rem; line-height: 1;
         }
-        /* Animated underline on section titles */
         .kayal-title-underline {
-          display: inline-block;
-          position: relative;
+          display: inline-block; position: relative;
         }
         .kayal-title-underline::after {
-          content: '';
-          position: absolute;
-          bottom: -6px; left: 50%;
-          transform: translateX(-50%);
-          width: 40px; height: 2px;
-          border-radius: 2px;
-          background: #B8975A;
-          opacity: 0.7;
+          content: ''; position: absolute;
+          bottom: -6px; left: 50%; transform: translateX(-50%);
+          width: 40px; height: 2px; border-radius: 2px;
+          background: #B8975A; opacity: 0.7;
         }
-        /* Lively card icon ring */
         .kayal-icon-ring {
-          width: 52px; height: 52px;
-          border-radius: 50%;
+          width: 52px; height: 52px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-          margin-bottom: 1rem;
+          flex-shrink: 0; margin-bottom: 1rem;
         }
-        /* Quote mark for testimonials */
         .kayal-quote-mark {
-          font-family: Georgia, serif;
-          font-size: 5rem;
-          line-height: 0.75;
-          font-weight: 700;
-          margin-bottom: 0.5rem;
-          display: block;
-          opacity: 0.15;
-        }
-        /* Stat card gradient */
-        .kayal-stat-card {
-          border-radius: 20px;
-          padding: 1.75rem 1.25rem;
-          text-align: center;
-          border: 1px solid transparent;
-          position: relative;
-          overflow: hidden;
-        }
-        .kayal-stat-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 20px;
-          opacity: 0.07;
+          font-family: Georgia, serif; font-size: 5rem;
+          line-height: 0.75; font-weight: 700;
+          margin-bottom: 0.5rem; display: block; opacity: 0.15;
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          *,*::before,*::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+        /* Audio button active pulse */
+        .kayal-audio-btn-active {
+          animation: kayalAudioPulse 1.6s ease-in-out infinite;
         }
 
-        /* ── CTA shimmer sweep ───────────────────────── */
-        @keyframes kayalBtnShimmer {
-          0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
-          8%   { opacity: 1; }
-          60%  { transform: translateX(220%) skewX(-18deg); opacity: 0; }
-          100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
-        }
-        @keyframes kayalBtnGlow {
-          0%,100% { box-shadow: 0 6px 24px rgba(0,0,0,0.16); }
-          50%     { box-shadow: 0 8px 32px rgba(0,0,0,0.26), 0 0 0 3px rgba(255,255,255,0.12); }
-        }
         .kayal-btn-shimmer {
-          position: absolute;
-          top: 0; left: 0;
+          position: absolute; top: 0; left: 0;
           width: 45%; height: 100%;
           background: linear-gradient(
             90deg,
@@ -919,11 +926,14 @@ export default function ToolSalesPage() {
             transparent 100%
           );
           animation: kayalBtnShimmer 3.6s ease-in-out infinite;
-          pointer-events: none;
-          border-radius: inherit;
+          pointer-events: none; border-radius: inherit;
         }
         .kayal-btn-glow {
           animation: kayalBtnGlow 3.6s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *,*::before,*::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
         }
       ` }} />
 
@@ -960,39 +970,33 @@ export default function ToolSalesPage() {
         <div className={styles.heroBg}>
           <div className={styles.heroOverlay} />
 
-          {/* Atmospheric colour wash — breathing pulse */}
+          {/* Atmospheric colour wash */}
           <div className="kayal-ambient-pulse" style={{
             position: 'absolute', inset: 0, pointerEvents: 'none',
             backgroundImage: atmos.hero,
           }} />
 
-          {/* Animated dot grid — slow pan */}
+          {/* Animated dot grid */}
           <div className="kayal-dots-anim" style={{
             position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.45,
           }} />
 
-          {/* Orb 1 — large, top-left quadrant */}
+          {/* Orb 1 */}
           <div className="kayal-orb kayal-orb-1" style={{
-            width: 520, height: 520,
-            top: '-15%', left: '-10%',
-            background: cfg.color,
-            opacity: 0.18,
+            width: 520, height: 520, top: '-15%', left: '-10%',
+            background: cfg.color, opacity: 0.18,
           }} />
 
-          {/* Orb 2 — medium, bottom-right */}
+          {/* Orb 2 */}
           <div className="kayal-orb kayal-orb-2" style={{
-            width: 380, height: 380,
-            bottom: '-10%', right: '-8%',
-            background: cfg.color,
-            opacity: 0.14,
+            width: 380, height: 380, bottom: '-10%', right: '-8%',
+            background: cfg.color, opacity: 0.14,
           }} />
 
-          {/* Orb 3 — small, mid-left */}
+          {/* Orb 3 — gold */}
           <div className="kayal-orb kayal-orb-3" style={{
-            width: 260, height: 260,
-            top: '30%', left: '5%',
-            background: `#B8975A`,
-            opacity: 0.10,
+            width: 260, height: 260, top: '30%', left: '5%',
+            background: `#B8975A`, opacity: 0.10,
           }} />
 
           {/* Giant watermark glyph */}
@@ -1006,55 +1010,49 @@ export default function ToolSalesPage() {
             {tool.emoji || '◎'}
           </div>
 
-          {/* Top-left arc rings — counter-clockwise rotation */}
+          {/* Top-left arc rings */}
           <svg
             aria-hidden="true"
             style={{ position: 'absolute', top: '-5%', left: '-5%', width: '45%', maxWidth: 360, pointerEvents: 'none' }}
             viewBox="0 0 360 360" fill="none"
           >
             <circle className="kayal-ring-rotate-ccw" cx="0" cy="0" r="300"
-              stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.09"
-              strokeDasharray="6 14" />
+              stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.09" strokeDasharray="6 14" />
             <circle className="kayal-ring-rotate-cw" cx="0" cy="0" r="230"
-              stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.07"
-              strokeDasharray="3 18" />
+              stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.07" strokeDasharray="3 18" />
             <circle cx="0" cy="0" r="160"
               stroke={cfg.color} strokeWidth="0.5" strokeOpacity="0.05" />
           </svg>
 
-          {/* Bottom-right arc rings — clockwise */}
+          {/* Bottom-right arc rings */}
           <svg
             aria-hidden="true"
             style={{ position: 'absolute', bottom: '-8%', right: '-6%', width: '35%', maxWidth: 280, pointerEvents: 'none' }}
             viewBox="0 0 280 280" fill="none"
           >
             <circle className="kayal-ring-rotate-cw" cx="280" cy="280" r="240"
-              stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.08"
-              strokeDasharray="5 16" />
+              stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.08" strokeDasharray="5 16" />
             <circle className="kayal-ring-rotate-ccw" cx="280" cy="280" r="170"
-              stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.06"
-              strokeDasharray="3 12" />
+              stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.06" strokeDasharray="3 12" />
           </svg>
 
-          {/* Centre radial glow — very subtle */}
+          {/* Centre radial glow */}
           <div style={{
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '70%', height: '70%',
-            borderRadius: '50%',
+            width: '70%', height: '70%', borderRadius: '50%',
             background: `radial-gradient(ellipse, ${cfg.color}18 0%, transparent 70%)`,
             pointerEvents: 'none',
           }} />
         </div>
+
         <div className={`${styles.heroInner} kayal-corner-ornament`}>
 
           <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: E }}>
             <div style={{ position: 'relative', display: 'inline-block', marginBottom: 14 }}>
-              {/* Pulse ring behind emoji */}
               <div className="kayal-emoji-ring" style={{
                 width: 72, height: 72,
-                top: '50%', left: '50%',
-                transform: 'translate(-50%, -50%)',
+                top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                 border: `2px solid ${cfg.color}`,
               }} />
               <span className="kayal-float" style={{ display: 'block', fontSize: 44, position: 'relative', zIndex: 1 }}>
@@ -1071,38 +1069,28 @@ export default function ToolSalesPage() {
             {cfg.label}
           </motion.div>
 
-          {/* Tool name — elegant serif H1, the primary product identifier */}
           <motion.h1
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: E }}
             style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
               fontSize: 'clamp(1.512rem, 2.76vw, 2.376rem)',
-              fontWeight: 700,
-              color: '#1c1917',
-              lineHeight: 1.1,
-              letterSpacing: '-0.025em',
-              marginBottom: '1rem',
-              textAlign: 'center',
-              width: '100%',
-              maxWidth: '100%',
+              fontWeight: 700, color: '#1c1917', lineHeight: 1.1,
+              letterSpacing: '-0.025em', marginBottom: '1rem',
+              textAlign: 'center', width: '100%', maxWidth: '100%',
             }}
           >
             {headline}
           </motion.h1>
 
-          {/* Hook — refined italic subheading, sets up the emotional case */}
           <motion.p
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.3, ease: E }}
             style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
               fontSize: 'clamp(0.95rem, 1.6vw, 1.15rem)',
-              fontStyle: 'italic',
-              color: '#57534e',
-              lineHeight: 1.7,
-              maxWidth: 900,
-              margin: '0 auto',
+              fontStyle: 'italic', color: '#57534e', lineHeight: 1.7,
+              maxWidth: 900, margin: '0 auto',
               marginBottom: tagline ? '0.75rem' : '1.75rem',
               textAlign: 'center',
             }}
@@ -1132,8 +1120,9 @@ export default function ToolSalesPage() {
               }}
             >
               <Users style={{ width: 15, height: 15, flexShrink: 0, color: cfg.color }} />
+              {/* FIX 7: secondLabel.notice through sanitize() */}
               <p style={{ fontSize: '0.85rem', color: cfg.color, margin: 0 }}>
-                {secondLabel.notice}
+                {sanitize(secondLabel.notice)}
               </p>
             </motion.div>
           )}
@@ -1152,7 +1141,6 @@ export default function ToolSalesPage() {
             </motion.div>
           )}
 
-          {/* CTA — no price shown here */}
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.44, ease: E }}
@@ -1167,7 +1155,6 @@ export default function ToolSalesPage() {
             </ShimmerBtn>
           </motion.div>
 
-          {/* Social proof — live urgency line */}
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.52 }}
             style={{ fontSize: '0.82rem', color: '#57534e', textAlign: 'center', margin: '0 0 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
@@ -1183,7 +1170,6 @@ export default function ToolSalesPage() {
             Secure checkout &middot; Instant access &middot; Private and confidential
           </motion.p>
 
-          {/* Try free first — scrolls to teaser form */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.64 }}
             style={{ textAlign: 'center', marginTop: '0.75rem' }}
@@ -1218,7 +1204,7 @@ export default function ToolSalesPage() {
         </div>
       </section>
 
-      {/* B.5 — HERO VIDEO — only renders when tool.videoUrl is set */}
+      {/* B.5 — HERO VIDEO */}
       {videoUrl && (
         <>
           <hr className="kayal-gold-rule-anim" />
@@ -1248,7 +1234,6 @@ export default function ToolSalesPage() {
         </>
       )}
 
-      {/* Gold rule */}
       <hr className="kayal-gold-rule-anim" />
 
       {/* C — TEASER */}
@@ -1326,7 +1311,6 @@ export default function ToolSalesPage() {
                     }
                   </motion.button>
 
-                  {/* Hint pills — preview of what the teaser will show */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', marginTop: '0.875rem', marginBottom: '0.25rem' }}>
                     {['Pattern revealed', 'Timing shown', 'Path identified'].map(hint => (
                       <span key={hint} style={{
@@ -1349,6 +1333,50 @@ export default function ToolSalesPage() {
                   <p style={{ fontSize: '0.82rem', color: '#78716c', marginBottom: '1rem' }}>
                     Reading preview generated for <strong style={{ color: '#1c1917' }}>{teaserName.split(' ')[0]}</strong>
                   </p>
+
+                  {/* AUDIO OUTPUT OPTION */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      marginBottom: '1.25rem', padding: '0.75rem 1rem',
+                      borderRadius: 12, background: `${cfg.color}0c`,
+                      border: `1px solid ${cfg.color}22`,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.78rem', fontWeight: 700, color: cfg.color, margin: 0, marginBottom: 2 }}>
+                        Prefer to listen?
+                      </p>
+                      <p style={{ fontSize: '0.72rem', color: '#78716c', margin: 0, lineHeight: 1.5 }}>
+                        Have your preview read aloud — useful if you find it easier to absorb spoken rather than written.
+                      </p>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={audioPlaying ? stopAudio : speakTeaser}
+                      className={audioPlaying ? 'kayal-audio-btn-active' : ''}
+                      aria-label={audioPlaying ? 'Stop audio' : 'Listen to preview'}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 7,
+                        padding: '0.55rem 1.1rem', borderRadius: 10, flexShrink: 0,
+                        background: audioPlaying ? cfg.color : 'white',
+                        border: `1.5px solid ${cfg.color}`,
+                        color: audioPlaying ? 'white' : cfg.color,
+                        fontSize: '0.78rem', fontWeight: 700,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                    >
+                      {audioPlaying
+                        ? <><VolumeX style={{ width: 14, height: 14 }} /> Stop</>
+                        : <><Volume2  style={{ width: 14, height: 14 }} /> Listen</>
+                      }
+                    </motion.button>
+                  </motion.div>
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
                     {teaserParagraphs.map((para: any, i: number) => (
                       <TeaserCard key={i} para={para} />
@@ -1366,7 +1394,7 @@ export default function ToolSalesPage() {
                     </motion.button>
                   </div>
                   <button
-                    onClick={() => { setTeaserShown(false); setTeaserParagraphs([]) }}
+                    onClick={() => { setTeaserShown(false); setTeaserParagraphs([]); stopAudio() }}
                     style={{ display: 'block', width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', color: '#a8a29e', textDecoration: 'underline', marginTop: '1rem', padding: '0.5rem' }}
                   >
                     Update my details
@@ -1400,6 +1428,7 @@ export default function ToolSalesPage() {
       <hr className="kayal-gold-rule-anim" />
 
       {/* D.5 — WHAT HAPPENS AFTER YOU BEGIN */}
+      {/* FIX 5: step bodies branch by tool type — isPartner, isSub, requiresImage */}
       <section style={{ background: '#ffffff', padding: SP, borderBottom: '1px solid #e8e3dc', position: 'relative', overflow: 'hidden' }}>
         <div className="kayal-dots-anim" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.3 }} />
         <div className={styles.container}>
@@ -1414,15 +1443,31 @@ export default function ToolSalesPage() {
             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
             style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', maxWidth: 860, margin: '0 auto' }}>
             {[
-              { step: '01', title: 'Enter your details', body: `Your name, date of birth, birth time, and place. This takes under two minutes and is the only input required.`, timing: 'Under 2 min' },
-              { step: '02', title: 'Your reading generates', body: `Our synthesis engine runs your details through multiple disciplines simultaneously. Everything is processed privately and built specifically for you.`, timing: `~${deliveryMins} minutes` },
-              { step: '03', title: 'You receive your reading', body: `Your complete synthesis is delivered to your account — private, permanent, and specific to your exact details. Nothing templated. Nothing generic.`, timing: 'Instant access' },
+              {
+                step: '01',
+                title: 'Enter your details',
+                body: `Your name, date of birth, birth time, and place.${isPartner ? " You will also enter your partner\u2019s details at this step." : ''} This takes under two minutes and is the only input required.`,
+                timing: 'Under 2 min',
+              },
+              {
+                step: '02',
+                title: 'Your reading generates',
+                body: `Our synthesis engine runs your details through multiple disciplines simultaneously.${(tool.requiresImage || tool.requires_image) ? ' After payment you will upload your photo for the physical analysis section.' : ''} Everything is processed privately and built specifically for you.`,
+                timing: `~${deliveryMins} minutes`,
+              },
+              {
+                step: '03',
+                title: isSub ? 'Your scribe activates' : 'You receive your reading',
+                body: isSub
+                  ? 'Your synthesis is loaded into permanent context. Every session your scribe carries your complete blueprint, your current timing cycle, and everything you have explored together.'
+                  : 'Your complete synthesis is delivered to your account \u2014 private, permanent, and specific to your exact details. Nothing templated. Nothing generic.',
+                timing: 'Instant access',
+              },
             ].map((item, i) => (
               <motion.div key={i}
                 variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: E } } }}
                 whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.08)' }}
                 style={{ background: '#faf8f4', borderRadius: 18, padding: '1.75rem', border: '1px solid #e8e3dc', borderTop: `4px solid ${cfg.color}`, position: 'relative', overflow: 'hidden' }}>
-                {/* Step number watermark */}
                 <div style={{ position: 'absolute', top: -4, right: 12, fontFamily: 'Georgia, serif', fontSize: '4.5rem', fontWeight: 800, color: cfg.color, opacity: 0.06, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>
                   {item.step}
                 </div>
@@ -1454,14 +1499,13 @@ export default function ToolSalesPage() {
             </h2>
           </div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.problemGrid}>
-            {whoFor.map((line, i) => (
+            {whoFor.map((line: string, i: number) => (
               <motion.div key={i} variants={cardVariant}
                 whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.10)' }}
                 style={{
                   display: 'flex', alignItems: 'flex-start', gap: 16,
                   padding: '1.25rem 1.5rem', borderRadius: 16,
-                  background: '#ffffff',
-                  border: '1px solid #e8e3dc',
+                  background: '#ffffff', border: '1px solid #e8e3dc',
                   borderLeft: `4px solid ${cfg.color}`,
                   boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
                   transition: 'box-shadow 0.22s ease',
@@ -1549,7 +1593,7 @@ export default function ToolSalesPage() {
       <section className={styles.differenceSection} style={{ ...SPB, background: `${cfg.color}08`, position: 'relative', overflow: 'hidden' }}>
         <div className="kayal-lines" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
         <div className="kayal-orb kayal-orb-1" style={{ width: 400, height: 400, top: '-20%', right: '-10%', background: cfg.color, opacity: 0.07, filter: 'blur(80px)' }} />
-        <div className="kayal-orb kayal-orb-2" style={{ width: 280, height: 280, bottom: '-15%', left: '-5%',  background: cfg.color, opacity: 0.05, filter: 'blur(70px)' }} />
+        <div className="kayal-orb kayal-orb-2" style={{ width: 280, height: 280, bottom: '-15%', left: '-5%', background: cfg.color, opacity: 0.05, filter: 'blur(70px)' }} />
         <div className={styles.container}>
           <div className={styles.sectionHeader} style={{ marginBottom: '2rem' }}>
             <span className="kayal-eyebrow-pill" style={{ background: `${cfg.color}18`, color: cfg.color, borderColor: `${cfg.color}30` }}>
@@ -1571,25 +1615,18 @@ export default function ToolSalesPage() {
               <motion.div key={i} variants={cardVariant}
                 whileHover={{ y: -5, boxShadow: '0 16px 40px rgba(0,0,0,0.10)' }}
                 style={{
-                  background: '#ffffff', borderRadius: 20,
-                  padding: '1.75rem',
-                  border: '1px solid #e8e3dc',
-                  borderTop: `4px solid ${cfg.color}`,
+                  background: '#ffffff', borderRadius: 20, padding: '1.75rem',
+                  border: '1px solid #e8e3dc', borderTop: `4px solid ${cfg.color}`,
                   boxShadow: '0 2px 14px rgba(0,0,0,0.05)',
                   display: 'flex', flexDirection: 'column', gap: 14,
                   position: 'relative', overflow: 'hidden',
                 }}
               >
-                {/* Faint watermark glyph */}
-                <div style={{
-                  position: 'absolute', bottom: -10, right: 8,
-                  fontSize: '5rem', lineHeight: 1, color: cfg.color,
-                  opacity: 0.04, fontFamily: 'Georgia, serif', pointerEvents: 'none', userSelect: 'none',
-                }}>
+                <div style={{ position: 'absolute', bottom: -10, right: 8, fontSize: '5rem', lineHeight: 1, color: cfg.color, opacity: 0.04, fontFamily: 'Georgia, serif', pointerEvents: 'none', userSelect: 'none' }}>
                   {card.sym}
                 </div>
                 <div style={{
-                  width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+                  width: 48, height: 48, borderRadius: '50%',
                   background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}0a)`,
                   border: `1px solid ${cfg.color}25`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1610,11 +1647,12 @@ export default function ToolSalesPage() {
       </section>
 
       {/* G.5 — MID-PAGE SECOND CTA NUDGE */}
+      {/* FIX 6: uses first sentence of the tool hook instead of generic copy */}
       <div style={{ background: `${cfg.color}06`, padding: '2rem 0', borderBottom: '1px solid #e8e3dc', textAlign: 'center' }}>
         <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.4, ease: E }}>
-          <p style={{ fontSize: '0.88rem', color: '#78716c', marginBottom: '1rem', fontStyle: 'italic' }}>
-            Want to see what this reading reveals before you commit?
+          <p style={{ fontSize: '0.88rem', color: '#78716c', marginBottom: '1rem', fontStyle: 'italic', maxWidth: 540, margin: '0 auto 1rem', lineHeight: 1.65 }}>
+            {hookFirstSentence} Your free preview shows what this reading has already found about you.
           </p>
           <motion.button
             whileHover={{ background: cfg.color, color: 'white', borderColor: cfg.color }}
@@ -1650,11 +1688,9 @@ export default function ToolSalesPage() {
               viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, ease: E }}
               style={{ width: 96, height: 96, borderRadius: '50%', margin: '0 auto 1rem', border: `3px solid ${cfg.color}40`, overflow: 'hidden', position: 'relative', background: cfg.light, boxShadow: `0 4px 20px ${cfg.color}30` }}
             >
-              {/* Fallback icon — always behind */}
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: cfg.light, zIndex: 0 }}>
                 <User style={{ width: 36, height: 36, color: cfg.color }} />
               </div>
-              {/* Founder photo — renders on top, hidden on error */}
               {!founderImgError && (
                 <Image
                   src="/images/creator/founder.webp"
@@ -1673,8 +1709,8 @@ export default function ToolSalesPage() {
                 Founder, KAYAL LifeOS
               </p>
               {[
-                'I spent years sitting with practitioners of ancient reading traditions that most people in the West have never encountered. Each one was precise. Each one was partial. A numerologist would name a pattern I recognised immediately — and then stop at the edge of what their system could see. An astrologer would reach further — and stop at a different edge. The disciplines were not in conflict. They were each holding one face of the same shape, and no one was assembling the whole thing.',
-                'KAYAL exists because that assembly is what actually helps people. Not another single-discipline reading dressed up in new language — but a genuine synthesis where multiple independent systems are brought to bear on the same question until only the findings they agree on remain. That convergence is where the precision lives. It is also where the trust comes from.',
+                'I spent years sitting with practitioners of ancient reading traditions that most people in the West have never encountered. Each one was precise. Each one was partial. A pattern analyst would name a dynamic I recognised immediately \u2014 and then stop at the edge of what their system could see. A timing intelligence reader would reach further \u2014 and stop at a different edge. The disciplines were not in conflict. They were each holding one face of the same shape, and no one was assembling the whole thing.',
+                'KAYAL exists because that assembly is what actually helps people. Not another single-discipline reading dressed up in new language \u2014 but a genuine synthesis where multiple independent systems are brought to bear on the same question until only the findings they agree on remain. That convergence is where the precision lives. It is also where the trust comes from.',
               ].map((p, idx) => (
                 <p key={idx} style={{ fontSize: '0.9rem', color: '#44403c', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>{p}</p>
               ))}
@@ -1682,10 +1718,10 @@ export default function ToolSalesPage() {
           </div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.trustGrid}>
             {[
-              { icon: '📖', value: <CountUp target={2400} suffix="+" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Readings delivered' },
-              { icon: '🛡', value: <span style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }}>7 days</span>, sub: 'Money-back guarantee' },
-              { icon: '⚡', value: <CountUp target={20} suffix=" min" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Average delivery' },
-              { icon: '🔒', value: <span style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }}>100%</span>, sub: 'Private, never shared' },
+              { icon: '\u{1F4D6}', value: <CountUp target={2400} suffix="+" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Readings delivered' },
+              { icon: '\u{1F6E1}',  value: <span style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }}>7 days</span>, sub: 'Money-back guarantee' },
+              { icon: '\u26A1', value: <CountUp target={20} suffix=" min" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Average delivery' },
+              { icon: '\u{1F512}', value: <span style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }}>100%</span>, sub: 'Private, never shared' },
             ].map((stat, i) => (
               <motion.div key={i} variants={cardVariant}
                 whileHover={{ y: -5, boxShadow: '0 14px 36px rgba(0,0,0,0.10)' }}
@@ -1697,12 +1733,7 @@ export default function ToolSalesPage() {
                   boxShadow: '0 2px 14px rgba(0,0,0,0.05)',
                 }}
               >
-                {/* Subtle gradient wash */}
-                <div style={{
-                  position: 'absolute', inset: 0, borderRadius: 20,
-                  background: `linear-gradient(145deg, ${cfg.color}0c 0%, transparent 60%)`,
-                  pointerEvents: 'none',
-                }} />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: 20, background: `linear-gradient(145deg, ${cfg.color}0c 0%, transparent 60%)`, pointerEvents: 'none' }} />
                 <div style={{ fontSize: '2rem', marginBottom: '0.75rem', position: 'relative' }}>{stat.icon}</div>
                 <div style={{ marginBottom: 6, position: 'relative' }}>{stat.value}</div>
                 <p style={{ position: 'relative', fontSize: '0.82rem', color: '#78716c' }}>{stat.sub}</p>
@@ -1743,11 +1774,9 @@ export default function ToolSalesPage() {
                 whileHover={{ y: -5, boxShadow: '0 14px 36px rgba(0,0,0,0.09)' }}
                 style={{
                   background: '#ffffff', borderRadius: 20, padding: '1.75rem',
-                  border: '1px solid #e8e3dc',
-                  borderTop: `4px solid ${cfg.color}`,
+                  border: '1px solid #e8e3dc', borderTop: `4px solid ${cfg.color}`,
                   boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12,
-                  textAlign: 'left',
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, textAlign: 'left',
                 }}
               >
                 <div style={{
@@ -1783,10 +1812,11 @@ export default function ToolSalesPage() {
       <hr className="kayal-gold-rule-anim" />
 
       {/* J — TESTIMONIALS */}
+      {/* FIX 2: sanitize(t.text) applied to every testimonial at render time */}
       <section className={styles.testimonialSection} style={{ ...SPB, background: atmos.accent, position: 'relative', overflow: 'hidden' }}>
         <div className="kayal-lines" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
         <div className="kayal-orb kayal-orb-2" style={{ width: 360, height: 360, top: '-15%', left: '-8%',   background: cfg.color, opacity: 0.08, filter: 'blur(75px)' }} />
-        <div className="kayal-orb kayal-orb-3" style={{ width: 240, height: 240, bottom: '-10%', right: '-5%', background: '#B8975A',  opacity: 0.06, filter: 'blur(65px)' }} />
+        <div className="kayal-orb kayal-orb-3" style={{ width: 240, height: 240, bottom: '-10%', right: '-5%', background: '#B8975A', opacity: 0.06, filter: 'blur(65px)' }} />
         <div className={styles.container}>
           <div className={styles.sectionHeader} style={{ marginBottom: '2rem' }}>
             <span className="kayal-eyebrow-pill" style={{ background: `${cfg.color}18`, color: cfg.color, borderColor: `${cfg.color}30` }}>
@@ -1801,34 +1831,27 @@ export default function ToolSalesPage() {
                 whileHover={{ y: -5, boxShadow: '0 16px 40px rgba(0,0,0,0.10)' }}
                 style={{
                   background: '#ffffff', borderRadius: 20, padding: '1.75rem',
-                  border: '1px solid #e8e3dc',
-                  borderTop: `4px solid ${cfg.color}`,
+                  border: '1px solid #e8e3dc', borderTop: `4px solid ${cfg.color}`,
                   boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
                   display: 'flex', flexDirection: 'column', gap: 0,
                   position: 'relative', overflow: 'hidden',
                 }}
               >
-                {/* Corner accent */}
                 <div style={{
-                  position: 'absolute', top: 0, right: 0,
-                  width: 60, height: 60,
+                  position: 'absolute', top: 0, right: 0, width: 60, height: 60,
                   background: `linear-gradient(225deg, ${cfg.color}12, transparent 60%)`,
                   borderRadius: '0 20px 0 60px',
                 }} />
-                {/* Stars */}
                 <div style={{ display: 'flex', gap: 2, marginBottom: '0.75rem' }}>
                   {[1,2,3,4,5].map(s => <Star key={s} style={{ width: 13, height: 13, fill: '#d97706', color: '#d97706' }} />)}
                 </div>
-                {/* Giant quote mark */}
                 <span className="kayal-quote-mark" style={{ color: cfg.color }}>&ldquo;</span>
-                {/* Quote text */}
                 <p style={{
                   fontFamily: 'Georgia, serif', fontSize: '0.93rem', fontStyle: 'italic',
                   color: '#44403c', lineHeight: 1.75, flex: 1, marginBottom: '1.25rem',
                 }}>
-                  {t.text}
+                  {sanitize(t.text)}
                 </p>
-                {/* Author */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: '1rem', borderTop: '1px solid #f0ece6' }}>
                   <div style={{
                     width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
@@ -1852,7 +1875,7 @@ export default function ToolSalesPage() {
 
       <hr className="kayal-gold-rule-anim" />
 
-      {/* FAQ — moved before Pricing so objections are resolved before the price is shown */}
+      {/* FAQ — before Pricing so objections are resolved before the price is shown */}
       <section className={styles.faqSection} style={{ padding: SP, position: 'relative', overflow: 'hidden' }}>
         <div className="kayal-dots-anim" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.4 }} />
         <div className={styles.container}>
@@ -1888,7 +1911,6 @@ export default function ToolSalesPage() {
             <div className="kayal-section-symbol" style={{ color: cfg.color }}>✦</div>
             <h2 className={`${styles.sectionTitle} kayal-title-underline`}>Start today</h2>
           </div>
-          {/* Urgency strip — honest availability signal */}
           <motion.div
             initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.4, ease: E }}
@@ -1910,7 +1932,6 @@ export default function ToolSalesPage() {
             style={{ maxWidth: 520, margin: '0 auto', borderRadius: 22, border: `2px solid ${cfg.color}33`, overflow: 'hidden' }}
           >
             <div style={{ background: cfg.light, padding: '2.25rem 2rem', textAlign: 'center' }}>
-              {/* Price anchor — practitioner cost shown first */}
               <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                 <span style={{ fontSize: '0.8rem', color: '#a8a29e', textDecoration: 'line-through', letterSpacing: '0.01em' }}>
                   Practitioner: {cfg.practitionerRate}
@@ -1934,10 +1955,10 @@ export default function ToolSalesPage() {
                 style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1.25rem' }}>
                 {([
                   'Complete multi-discipline synthesis specific to your exact details',
-                  'Private delivery — accessible only to you',
-                  isSub ? 'Ongoing access — your synthesis in permanent context' : `Delivered in ${deliveryMins} minutes`,
-                  isPartner ? 'Two-person synthesis — both blueprints mapped and compared' : null,
-                  (tool.requiresImage || tool.requires_image) ? 'Physical analysis included — upload after payment' : null,
+                  'Private delivery \u2014 accessible only to you',
+                  isSub ? 'Ongoing access \u2014 your synthesis in permanent context' : `Delivered in ${deliveryMins} minutes`,
+                  isPartner ? 'Two-person synthesis \u2014 both blueprints mapped and compared' : null,
+                  (tool.requiresImage || tool.requires_image) ? 'Physical analysis included \u2014 upload after payment' : null,
                 ] as (string | null)[]).filter(Boolean).map((item, i) => (
                   <motion.div key={i}
                     variants={{ hidden: { opacity: 0, x: -8 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: E } } }}
@@ -1997,25 +2018,18 @@ export default function ToolSalesPage() {
 
       {/* N — FINAL CTA */}
       <section className={styles.finalCta} style={{ background: atmos.accent, position: 'relative', overflow: 'hidden' }}>
-        {/* Dot texture */}
         <div className="kayal-dots-anim" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.5 }} />
-        {/* Centred radial glow */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${cfg.color}12, transparent 70%)`,
         }} />
-        {/* Animated rotating rings */}
         <svg aria-hidden="true" style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '90%', maxWidth: 700, pointerEvents: 'none' }} viewBox="0 0 700 700" fill="none">
-          <circle className="kayal-ring-rotate-cw" cx="350" cy="350" r="320"
-            stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.07" strokeDasharray="8 16" />
-          <circle className="kayal-ring-rotate-ccw" cx="350" cy="350" r="260"
-            stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.06" strokeDasharray="4 20" />
-          <circle cx="350" cy="350" r="200"
-            stroke={cfg.color} strokeWidth="0.5" strokeOpacity="0.04" />
+          <circle className="kayal-ring-rotate-cw"  cx="350" cy="350" r="320" stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.07" strokeDasharray="8 16" />
+          <circle className="kayal-ring-rotate-ccw" cx="350" cy="350" r="260" stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.06" strokeDasharray="4 20" />
+          <circle cx="350" cy="350" r="200" stroke={cfg.color} strokeWidth="0.5" strokeOpacity="0.04" />
         </svg>
-        {/* Background orbs */}
-        <div className="kayal-orb kayal-orb-1" style={{ width: 450, height: 450, top: '-20%', left: '-12%',   background: cfg.color, opacity: 0.09, filter: 'blur(80px)' }} />
-        <div className="kayal-orb kayal-orb-3" style={{ width: 300, height: 300, bottom: '-15%', right: '-8%', background: '#B8975A',  opacity: 0.07, filter: 'blur(70px)' }} />
+        <div className="kayal-orb kayal-orb-1" style={{ width: 450, height: 450, top: '-20%', left: '-12%',    background: cfg.color, opacity: 0.09, filter: 'blur(80px)' }} />
+        <div className="kayal-orb kayal-orb-3" style={{ width: 300, height: 300, bottom: '-15%', right: '-8%', background: '#B8975A', opacity: 0.07, filter: 'blur(70px)' }} />
         <div className={styles.container} style={{ position: 'relative', zIndex: 1 }}>
           <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.4, ease: E }}>
@@ -2049,7 +2063,7 @@ export default function ToolSalesPage() {
         </div>
       </section>
 
-      {/* MOBILE BOTTOM BAR — fixed, shown only on mobile via stickyBar CSS class */}
+      {/* MOBILE BOTTOM BAR */}
       <div className={styles.stickyBar}>
         <div className={styles.stickyInner}>
           <div>
