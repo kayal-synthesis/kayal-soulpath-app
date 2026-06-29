@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // OMNI-SEER SANCTUM — 78 Tools
 // Domain: Grand Revelation / oracle-temple
 // Route: /domain/omni-seer-sanctum
