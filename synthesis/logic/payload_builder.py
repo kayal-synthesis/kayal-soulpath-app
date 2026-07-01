@@ -11,7 +11,7 @@ Version: 2.0.0
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .models import (
     SynthesisPayload,
@@ -29,7 +29,6 @@ from .models import (
     CulturalOrigin,
     ALL_DOMAINS,
 )
-from .tier_detector import TierAssessment, suggest_upgrade
 from .esoteric.paths import derive_journey_path
 
 logger = logging.getLogger(__name__)
@@ -400,12 +399,17 @@ def _pinnacle_summary(synthesis: SynthesisPayload) -> Optional[str]:
 
 # ---------------------------------------------------------------------------
 # Main payload builder
+# tier_assessment is now Any (tier_detector deprecated)
 # ---------------------------------------------------------------------------
 
 def build_llm_payload(
     synthesis:       SynthesisPayload,
     user_first_name: str,
-    tier_assessment: TierAssessment,
+    tier_assessment: Any,
+    # v2.0.0 Union Blueprint optional params
+    partner_name:    Optional[str] = None,
+    tool_type:       Optional[str] = None,
+    pct_output_mode: bool          = False,
 ) -> LLMPayload:
     """
     Build the complete LLMPayload from SynthesisPayload.
@@ -440,11 +444,8 @@ def build_llm_payload(
     else:
         narration_tone = "balanced, direct, and empowering — give equal weight to strengths and growth edges"
 
-    # Tier description
-    tier_desc = tier_assessment.tier_description
-    upgrade   = suggest_upgrade(tier_assessment)
-    if upgrade:
-        tier_desc = tier_desc + " " + upgrade
+    # Tier description (tier_detector deprecated — use safe fallback)
+    tier_desc = getattr(tier_assessment, "tier_description", "Complete Reading")
 
     # Cultural context
     cultural_ctx = _cultural_context_note(synthesis.cultural_profile)
