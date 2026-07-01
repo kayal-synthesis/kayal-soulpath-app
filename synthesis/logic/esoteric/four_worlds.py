@@ -32,9 +32,8 @@ Version: 1.0.0
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional
 from ..models import FourWorldsMap
-from ..tier_detector import TierAssessment
 
 
 # ---------------------------------------------------------------------------
@@ -65,18 +64,18 @@ _WORLD_DESCRIPTIONS = {
 # Main function
 # ---------------------------------------------------------------------------
 
-def map_four_worlds(tier_assessment: TierAssessment) -> FourWorldsMap:
+def map_four_worlds(tier_assessment: Any) -> FourWorldsMap:
     """
     Map available systems to Kabbalistic four worlds.
 
     Args:
-        tier_assessment: From tier_detector.detect_tier()
+        tier_assessment: SimpleNamespace with .tier (tier_detector deprecated)
 
     Returns:
         FourWorldsMap indicating which worlds are active
     """
-    active_worlds = tier_assessment.worlds_active
-    count         = tier_assessment.worlds_count
+    active_worlds = getattr(tier_assessment, "worlds_active", ["atziluth", "beriah"])
+    count         = getattr(tier_assessment, "worlds_count", len(active_worlds))
 
     return FourWorldsMap(
         atziluth_active = "atziluth" in active_worlds,
