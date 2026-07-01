@@ -41,12 +41,13 @@ v2.0.0 additions:
       synastry_profile, remedy_bundle passed to collector and synthesiser
     - run_union_engine(): Union Blueprint ($397) full pipeline
         Uses select_union_systems() for two-person system selection
-        Routes synastry_profile through collector → weigher → resolver → synthesiser
+        Routes synastry_profile through collector -> weigher -> resolver -> synthesiser
         pct_output_mode=True enforced: all compatibility output is %
         "Love compatibility: 74%" — always; "compatible/not compatible" — never
     - New imports: select_union_systems, UnionSystemConfig, SpiritProfile,
       HealthProfile, SynastryProfile, RemedyBundle and compute_* wrappers
     - __all__ updated with all new public exports
+    - tier_detector removed (tier system deprecated)
 
 Author: KAYAL Engineering
 Version: 2.0.0
@@ -56,6 +57,7 @@ from __future__ import annotations
 
 import logging
 import time
+import types
 from typing import Any, Dict, Optional, Union
 
 from .models import (
@@ -68,7 +70,6 @@ from .models import (
     Domain,
     ALL_DOMAINS,
 )
-from .tier_detector import detect_tier, TierAssessment
 from .astrology_selector import (
     select_systems,
     apply_present_location_modifier,
@@ -176,12 +177,12 @@ def run_logic_engine(
 
     Pipeline:
         1.  Validate input
-        2.  Detect tier
+        2.  Tier detection (deprecated — defaults to STANDARD)
         3.  Select astrology / numerology systems
         4.  Collect all signals (incl. spirit, health, synastry, remedy)
         5.  Weigh all signals
         6.  Build esoteric synthesis
-        7.  Resolve conflicts (synastry conflicts → % blend)
+        7.  Resolve conflicts (synastry conflicts -> % blend)
         8.  Assess convergence
         9.  Synthesise domain readings (spirit/health/synastry passed through)
         10. Build LLM payload
@@ -214,8 +215,8 @@ def run_logic_engine(
             missing_data = errors,
         )
 
-    # --- Step 2: Tier detection ---
-    tier_assessment = detect_tier(user_input)
+    # --- Step 2: Tier detection (tier system deprecated — defaults to STANDARD) ---
+    tier_assessment = types.SimpleNamespace(tier=ReadingTier.STANDARD)
 
     # --- Step 3: System selection ---
     cultural_profile, astro_weighting = select_systems(user_input.birth_data)
@@ -368,10 +369,10 @@ def run_union_engine(
         All compatibility verdicts in the Union Blueprint are expressed
         as percentages. This is enforced through:
         1. select_union_systems() sets pct_output_mode=True on UnionSystemConfig
-        2. synastry_profile is passed to collect_signals() → collector adds
+        2. synastry_profile is passed to collect_signals() -> collector adds
            synastry signals with system_key="synastry"
-        3. synastry_profile is passed to synthesise() → triggers
-           _build_compatibility_block() → generates Dict[domain→%]
+        3. synastry_profile is passed to synthesise() -> triggers
+           _build_compatibility_block() -> generates Dict[domain->%]
         4. The LLM narrator receives compatibility_percentages and uses them:
            "Love compatibility: 74%" — ALWAYS
            "This couple is compatible" — NEVER
@@ -387,7 +388,6 @@ def run_union_engine(
         numerology_timing_a:  Person A's numerology timing dict
         vedic_chart_a:        Person A's Vedic chart data
         synastry_profile:     SynastryProfile from synastry_engine.compute_synastry_profile()
-                              This is the primary Union Blueprint signal source.
         spirit_profile_a:     Person A's SpiritProfile (optional)
         health_profile_a:     Person A's HealthProfile (optional)
         remedy_bundle:        RemedyBundle for the couple (optional)
@@ -399,14 +399,14 @@ def run_union_engine(
 
     Pipeline:
         1.  Validate both UserInput objects
-        2.  Detect tier from Person A
-        3.  select_union_systems() → UnionSystemConfig (pct_output_mode=True)
+        2.  Tier detection (deprecated — defaults to STANDARD)
+        3.  select_union_systems() -> UnionSystemConfig (pct_output_mode=True)
         4.  collect_signals() with synastry_profile (triggers synastry signal layer)
         5.  weigh_signals()
         6.  Esoteric synthesis (Person A's chart as foundation)
-        7.  resolve_conflicts() — synastry conflicts → % blend via _resolve_synastry_conflict()
+        7.  resolve_conflicts() — synastry conflicts -> % blend
         8.  assess_convergence()
-        9.  synthesise() with synastry_profile → _build_compatibility_block() → % scores
+        9.  synthesise() with synastry_profile -> _build_compatibility_block() -> % scores
         10. build_llm_payload() with Union Blueprint context + compatibility %
     """
     t0 = time.monotonic()
@@ -442,8 +442,8 @@ def run_union_engine(
             missing_data = all_errors,
         )
 
-    # --- Step 2: Tier detection (Person A drives tier) ---
-    tier_assessment = detect_tier(user_input_a)
+    # --- Step 2: Tier detection (tier system deprecated — defaults to STANDARD) ---
+    tier_assessment = types.SimpleNamespace(tier=ReadingTier.STANDARD)
 
     # --- Step 3: Union system selection ---
     # select_union_systems() automatically sets pct_output_mode=True
@@ -526,8 +526,6 @@ def run_union_engine(
     )
 
     # --- Step 7: Resolve conflicts ---
-    # Synastry conflicts → _resolve_synastry_conflict() → % blend readings
-    # (resolver.py v2.0.0 handles this automatically)
     resolutions = resolve_conflicts(weighted_map)
 
     # --- Step 8: Convergence ---
@@ -548,11 +546,10 @@ def run_union_engine(
         # v2.0.0 profiles — synastry triggers _build_compatibility_block()
         spirit_profile    = spirit_profile_a,
         health_profile    = health_profile_a,
-        synastry_profile  = synastry_profile,   # → % scores computed here
+        synastry_profile  = synastry_profile,   # -> % scores computed here
     )
 
     # --- Step 10: Build LLM payload ---
-    # Pass Union Blueprint context so narrator knows to use % output
     llm_payload = build_llm_payload(
         synthesis        = synthesis,
         user_first_name  = name_a,
@@ -612,7 +609,6 @@ __all__ = [
     "ALL_DOMAINS",
 
     # System selection (v1.0.0)
-    "detect_tier",
     "select_systems",
 
     # System selection (v2.0.0)
