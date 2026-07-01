@@ -18,16 +18,17 @@ Responsibilities:
     6. Flag low-confidence signals for the weigher
 
 v2.0.0 additions:
-    - _extract_spirit_signals()   — SpiritProfile.spirit_signals → RawSignal
-    - _extract_health_signals()   — HealthProfile.health_signals → RawSignal
-    - _extract_synastry_signals() — SynastryProfile.synastry_signals → RawSignal
-    - _extract_remedy_signals()   — RemedyBundle.remedy_signals → RawSignal
+    - _extract_spirit_signals()   — SpiritProfile.spirit_signals -> RawSignal
+    - _extract_health_signals()   — HealthProfile.health_signals -> RawSignal
+    - _extract_synastry_signals() — SynastryProfile.synastry_signals -> RawSignal
+    - _extract_remedy_signals()   — RemedyBundle.remedy_signals -> RawSignal
     - collect_signals() extended with four new optional profile parameters
     - _SYSTEM_BASE_WEIGHTS extended: spirit_world (0.85), health_engine (0.85),
       synastry (0.90), remedies (0.75)
     - New available_systems tokens: "spirit_world", "health_engine",
       "synastry", "remedies"
     - _extract_engine_profile_signals() — shared helper for all Dict-list profiles
+    - tier_detector removed (tier system deprecated)
 
 What the collector does NOT do:
     - Interpret signals (that is the reader's job)
@@ -56,7 +57,6 @@ from .models import (
     ReadingTier,
     ALL_DOMAINS,
 )
-from .tier_detector import TierAssessment
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ def _extract_engine_profile_signals(
     Args:
         signals_list:  The engine's pre-formatted signals list
         system_key:    Key into _SYSTEM_BASE_WEIGHTS (e.g. "spirit_world")
-        tier_modifier: From TierAssessment.base_confidence_modifier
+        tier_modifier: Base confidence modifier
 
     Returns:
         List[RawSignal] ready for domain_map insertion
@@ -172,7 +172,7 @@ def _extract_engine_profile_signals(
 # ---------------------------------------------------------------------------
 
 def _extract_spirit_signals(
-    spirit_profile: Any,      # SpiritProfile from spirit_engine.py
+    spirit_profile: Any,
     tier_modifier:  float,
 ) -> List[RawSignal]:
     """
@@ -199,7 +199,7 @@ def _extract_spirit_signals(
 # ---------------------------------------------------------------------------
 
 def _extract_health_signals(
-    health_profile: Any,      # HealthProfile from health_engine.py
+    health_profile: Any,
     tier_modifier:  float,
 ) -> List[RawSignal]:
     """
@@ -210,10 +210,6 @@ def _extract_health_signals(
 
     Domains covered: "health"
     System key: "health_engine"
-
-    Note: The health_engine has a strict non-diagnostic disclaimer.
-    The signals it produces are structural tendency indicators only.
-    The Logic Layer must ensure this framing is preserved in narration.
     """
     if health_profile is None:
         return []
@@ -230,7 +226,7 @@ def _extract_health_signals(
 # ---------------------------------------------------------------------------
 
 def _extract_synastry_signals(
-    synastry_profile: Any,    # SynastryProfile from synastry_engine.py
+    synastry_profile: Any,
     tier_modifier:    float,
 ) -> List[RawSignal]:
     """
@@ -263,7 +259,7 @@ def _extract_synastry_signals(
 # ---------------------------------------------------------------------------
 
 def _extract_remedy_signals(
-    remedy_bundle: Any,       # RemedyBundle from remedies_engine.py
+    remedy_bundle: Any,
     tier_modifier: float,
 ) -> List[RawSignal]:
     """
@@ -274,7 +270,6 @@ def _extract_remedy_signals(
 
     These signals carry lower base weight (0.75) than analytical signals —
     they are prescriptive/supportive rather than descriptive/diagnostic.
-    The weigher should maintain this lower weight tier for remedy signals.
 
     Domains covered: "spiritual", "health", "wealth", "character"
     System key: "remedies"
@@ -294,8 +289,8 @@ def _extract_remedy_signals(
 # ---------------------------------------------------------------------------
 
 def _extract_palm_signals(
-    palm_reading: Any,         # PalmReading from palm_reader.py
-    hand_label: str,           # "dominant" or "non_dominant"
+    palm_reading: Any,
+    hand_label: str,
     confidence: float,
     tier_modifier: float,
 ) -> List[RawSignal]:
@@ -379,7 +374,7 @@ def _extract_palm_signals(
 # ---------------------------------------------------------------------------
 
 def _extract_face_signals(
-    face_reading: Any,         # FaceReading from face_reader.py
+    face_reading: Any,
     confidence: float,
     tier_modifier: float,
 ) -> List[RawSignal]:
@@ -404,7 +399,7 @@ def _extract_face_signals(
     if shape_reading is not None:
         for dr in getattr(shape_reading, "domains", []):
             tone     = _normalise_tone(str(getattr(dr, "tone", "neutral")))
-            strength = 0.90   # face shape is reliably detected
+            strength = 0.90
             signals.append(RawSignal(
                 system         = "physiognomy",
                 feature        = "face_shape",
@@ -550,7 +545,6 @@ def _extract_astrology_signals(
 
     system_str = str(astrology_data.get("system", "western")).lower()
 
-    # Apply system weight based on primary/secondary
     if system_str == weighting.primary_system.value:
         system_weight = (
             _SYSTEM_BASE_WEIGHTS["astrology"] *
@@ -564,7 +558,6 @@ def _extract_astrology_signals(
             tier_modifier
         )
 
-    # Hour uncertainty reduces house-dependent signal weight
     hour_modifier = 0.75 if weighting.hour_uncertain else 1.0
 
     hour_dependent_features = {
@@ -668,7 +661,7 @@ def _extract_numerology_signals(
 # ---------------------------------------------------------------------------
 
 def _extract_cross_hand_signals(
-    cross_hand: Any,     # CrossHandReading from palm_reader.py
+    cross_hand: Any,
     confidence: float,
     tier_modifier: float,
 ) -> List[RawSignal]:
@@ -683,7 +676,6 @@ def _extract_cross_hand_signals(
 
     base_weight = _SYSTEM_BASE_WEIGHTS["palmistry"] * tier_modifier
 
-    # Growth indicators → positive signals for relevant domains
     for line_name in getattr(cross_hand, "growth_indicators", []):
         domain = _line_to_domain(line_name)
         signals.append(RawSignal(
@@ -704,7 +696,6 @@ def _extract_cross_hand_signals(
             weight         = round(base_weight * confidence * 0.80, 3),
         ))
 
-    # Suppressed indicators → growth edge signals
     for line_name in getattr(cross_hand, "suppressed", []):
         domain = _line_to_domain(line_name)
         signals.append(RawSignal(
@@ -725,7 +716,6 @@ def _extract_cross_hand_signals(
             weight         = round(base_weight * confidence * 0.75, 3),
         ))
 
-    # Fulfilled — both hands aligned
     for line_name in getattr(cross_hand, "fulfilled", []):
         domain = _line_to_domain(line_name)
         signals.append(RawSignal(
@@ -751,11 +741,12 @@ def _extract_cross_hand_signals(
 
 # ---------------------------------------------------------------------------
 # Main collector (v2.0.0 — extended with four new profile parameters)
+# tier_assessment is now Any (tier system deprecated)
 # ---------------------------------------------------------------------------
 
 def collect_signals(
     user_input:       UserInput,
-    tier_assessment:  TierAssessment,
+    tier_assessment:  Any,
     cultural_profile: CulturalProfile,
     astro_weighting:  AstrologyWeighting,
     # Astrology and numerology pre-computed signals (v1.0.0)
@@ -763,7 +754,7 @@ def collect_signals(
     astrology_secondary:  Optional[Dict] = None,
     numerology_primary:   Optional[Dict] = None,
     numerology_secondary: Optional[Dict] = None,
-    # v2.0.0 — new engine profiles (all optional; Union Blueprint only for synastry)
+    # v2.0.0 — new engine profiles (all optional)
     spirit_profile:   Optional[Any] = None,
     health_profile:   Optional[Any] = None,
     synastry_profile: Optional[Any] = None,
@@ -774,7 +765,7 @@ def collect_signals(
 
     Args:
         user_input:           Complete UserInput
-        tier_assessment:      From tier_detector.detect_tier()
+        tier_assessment:      SimpleNamespace with .tier and .base_confidence_modifier
         cultural_profile:     From astrology_selector.select_systems()
         astro_weighting:      From astrology_selector.select_systems()
         astrology_primary:    Pre-computed primary astrology signals dict
@@ -786,13 +777,13 @@ def collect_signals(
         synastry_profile:     SynastryProfile from synastry_engine
                               (v2.0.0, Union Blueprint only, optional)
         remedy_bundle:        RemedyBundle from remedies_engine
-                              (v2.0.0, optional; lower weight than analytical signals)
+                              (v2.0.0, optional)
 
     Returns:
         SignalMap with all signals organised by domain
     """
     t0 = time.monotonic()
-    tier_mod = tier_assessment.base_confidence_modifier
+    tier_mod = getattr(tier_assessment, "base_confidence_modifier", 1.0)
     all_signals: List[RawSignal] = []
     available_systems: List[str] = []
 
@@ -888,7 +879,7 @@ def collect_signals(
             )
             all_signals.extend(cross_sigs)
 
-    # ── v2.0.0 new engine profiles ─────────────────────────────────────────
+    # v2.0.0 new engine profiles
 
     # --- Spirit profile signals ---
     if spirit_profile is not None:
@@ -918,14 +909,13 @@ def collect_signals(
         if rem_sigs:
             available_systems.append("remedies")
 
-    # ── Organise by domain ─────────────────────────────────────────────────
+    # Organise by domain
     domain_map: Dict[str, List[RawSignal]] = {d.value: [] for d in ALL_DOMAINS}
     for sig in all_signals:
         domain_key = sig.domain.value if hasattr(sig.domain, "value") else str(sig.domain)
         if domain_key in domain_map:
             domain_map[domain_key].append(sig)
         else:
-            # New domain from v3.0.0 models not yet in domain_map — add gracefully
             domain_map[domain_key] = [sig]
 
     signal_map = SignalMap(
@@ -933,7 +923,7 @@ def collect_signals(
         tier              = tier_assessment.tier,
         cultural_profile  = cultural_profile,
         domains           = domain_map,
-        available_systems = list(dict.fromkeys(available_systems)),  # deduplicate, preserve order
+        available_systems = list(dict.fromkeys(available_systems)),
         total_signals     = len(all_signals),
     )
 
@@ -949,7 +939,6 @@ def collect_signals(
             "domains_populated": [
                 d for d, sigs in domain_map.items() if sigs
             ],
-            # v2.0.0 source summary
             "spirit_signals":    len([s for s in all_signals if s.system == "spirit_world"]),
             "health_signals":    len([s for s in all_signals if s.system == "health_engine"]),
             "synastry_signals":  len([s for s in all_signals if s.system == "synastry"]),
@@ -980,7 +969,6 @@ def _normalise_domain(domain_obj: Any) -> Domain:
     if isinstance(domain_obj, Domain):
         return domain_obj
     domain_str = str(domain_obj).lower().strip()
-    # Handle "Domain.LOVE" style strings
     if "." in domain_str:
         domain_str = domain_str.split(".")[-1].lower()
     try:
