@@ -96,12 +96,13 @@ export default function PurchasePage() {
 
   const [partnerName, setPartnerName] = useState('')
   const [partnerDob,  setPartnerDob]  = useState('')
+  const [dominantHand, setDominantHand] = useState<'right' | 'left'>('right')
 
-  const [couponCode,       setCouponCode]       = useState('')
+  const [couponCode,       setCouponCode]       = useState('WELCOME20')
   const [appliedCoupon,    setAppliedCoupon]    = useState<any>(null)
   const [couponError,      setCouponError]      = useState('')
   const [validatingCoupon, setValidatingCoupon] = useState(false)
-  const [showCoupon,       setShowCoupon]       = useState(false)
+  const [showCoupon,       setShowCoupon]       = useState(true)
   const [finalPrice,       setFinalPrice]       = useState(tool?.price || 0)
   const [originalPrice]                         = useState(tool?.price || 0)
 
@@ -127,6 +128,7 @@ export default function PurchasePage() {
         const d = JSON.parse(saved)
         if (d.partnerName) setPartnerName(d.partnerName)
         if (d.partnerDob)  setPartnerDob(d.partnerDob)
+        if (d.dominantHand === 'left' || d.dominantHand === 'right') setDominantHand(d.dominantHand)
       } catch {}
     }
     const requiresImg = !!(tool?.requiresImage || tool?.requires_image)
@@ -221,6 +223,7 @@ export default function PurchasePage() {
     if (uploadedImages.face)           form.append('facial_image',     uploadedImages.face)
     if (uploadedImages['palm-left'])   form.append('palm_image_left',  uploadedImages['palm-left'])
     if (uploadedImages['palm-right'])  form.append('palm_image_right', uploadedImages['palm-right'])
+    if (uploadedImages['palm-left'] || uploadedImages['palm-right']) form.append('dominant_hand', dominantHand)
 
     const res = await fetch('/api/reading/submit', { method: 'POST', body: form })
     if (!res.ok) throw new Error(`Submission failed: ${res.status}`)
@@ -429,6 +432,42 @@ export default function PurchasePage() {
                     </p>
                   </div>
                 </div>
+
+                {(requiresImage?.type === 'palm' || requiresImage?.type === 'both') && (
+                  <div className="mb-5">
+                    <p className="text-sm font-medium text-neutral-700 mb-2">Which hand is your dominant hand?</p>
+                    <p className="text-xs text-neutral-400 mb-3">
+                      This determines which palm is read as your dominant hand (present life, future direction)
+                      and which as your passive hand (the blueprint you were born with).
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setDominantHand('right')}
+                        className={`p-4 rounded-xl border-2 text-center transition ${
+                          dominantHand === 'right'
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-neutral-800">Right-handed</p>
+                        <p className="text-xs text-neutral-400 mt-1">Right palm is dominant</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDominantHand('left')}
+                        className={`p-4 rounded-xl border-2 text-center transition ${
+                          dominantHand === 'left'
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-neutral-800">Left-handed</p>
+                        <p className="text-xs text-neutral-400 mt-1">Left palm is dominant</p>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <ImageUploader
                   type={requiresImage?.type || 'face'}

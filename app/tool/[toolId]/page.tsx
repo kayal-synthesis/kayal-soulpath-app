@@ -42,6 +42,7 @@ const SANITIZE_MAP: [RegExp, string][] = [
   [/\btarot\b/gi,                       'ancient wisdom reading'],
   [/\bhoroscope[s]?\b/gi,               'blueprint reading'],
   [/\bbirth charts?\b/gi,               'your blueprint'],
+  [/\bnatal charts?\b/gi,               'your blueprint'],
   [/\bvedic\b/gi,                       'classical'],
   [/\bchakra[s]?\b/gi,                  'energy centre'],
   [/\btransit[s]?\b/gi,                 'timing cycle'],
@@ -53,18 +54,21 @@ const SANITIZE_MAP: [RegExp, string][] = [
   [/\bfeng shui\b/gi,                   'environmental intelligence'],
   [/\bhuman design\b/gi,                'blueprint system'],
   // ── System number labels — never shown to visitors ─────────
-  [/\bLife Path\s+\d+\b/gi,             'your core pattern'],
-  [/\bPersonal Year\s+\d+\b/gi,         'this current chapter'],
-  [/\bPinnacle\s+\d+\b/gi,              'this life chapter'],
-  [/\bDestiny [Nn]umber\s+\d+\b/gi,     'your life direction'],
-  [/\bSoul Urge\s+\d+\b/gi,             'your inner drive'],
-  [/\bMaster [Nn]umber\s+\d+\b/gi,      'this elevated calling'],
-  [/\bPersonality [Nn]umber\s+\d+\b/gi, 'how others experience you'],
-  [/\bBirthday [Nn]umber\s+\d+\b/gi,    'your natural gift'],
+  [/\bLife Path(?:\s+\d+)?\b/gi,             'your core pattern'],
+  [/\bPersonal Year(?:\s+\d+)?\b/gi,         'this current chapter'],
+  [/\bPinnacle(?:\s+\d+)?\b/gi,              'this life chapter'],
+  [/\bDestiny [Nn]umber(?:\s+\d+)?\b/gi,     'your life direction'],
+  [/\bSoul Urge(?:\s+\d+)?\b/gi,             'your inner drive'],
+  [/\bMaster [Nn]umber(?:\s+\d+)?\b/gi,      'this elevated calling'],
+  [/\bPersonality [Nn]umber(?:\s+\d+)?\b/gi, 'how others experience you'],
+  [/\bBirthday [Nn]umber(?:\s+\d+)?\b/gi,    'your natural gift'],
   [/\b(Sun|Moon|Mars|Venus|Jupiter|Saturn|Mercury)\s+in\s+[A-Z][a-z]+\b/g, 'this placement'],
   [/\bSaturn [Rr]eturn\b/gi,            'this structural cycle'],
   [/\bJupiter [Rr]eturn\b/gi,           'this expansion cycle'],
   [/\b(Rahu|Ketu|Atmakaraka)\b/gi,      'the soul indicator'],
+  [/\bhouse placements?\b/gi,           'life areas'],
+  // catch-all — must stay last so it only mops up whatever survived above
+  [/\bcharts?\b/gi,                     'blueprint'],
 ]
 function sanitize(text?: string): string {
   if (!text) return ''
@@ -145,42 +149,34 @@ const ICON_MAP: Record<string, any> = {
 const TESTIMONIALS: Record<string, { name: string; age: number; city: string; text: string }[]> = {
   love: [
     { name: 'Rachel',  age: 34, city: 'Austin, TX',      text: 'The reading named a specific relationship pattern I had never seen described anywhere. The way it pinpointed the exact personal timing cycle when that pattern first started was something no practitioner had ever done for me.' },
-    { name: 'Priya',   age: 29, city: 'London, UK',      text: 'I have had readings before. Nothing has ever been this specific. The love timing window section was accurate to within two weeks of a major shift in my relationship.' },
     { name: 'Amara',   age: 38, city: 'Toronto, CA',     text: 'What struck me was how precisely it described my emotional capacity. I had known this about myself for years and never been able to name it until I read this.' },
   ],
   wealth: [
     { name: 'James',   age: 41, city: 'New York, NY',    text: 'The income ceiling section was uncomfortable to read because it was accurate. It named the exact pattern that has kept me at the same income level for five years.' },
     { name: 'Sasha',   age: 33, city: 'Sydney, AU',      text: 'I was expecting generic advice. Instead I received a specific breakdown of why my current career path is misaligned with my wiring and what my blueprint shows about the timing for a transition.' },
-    { name: 'David',   age: 45, city: 'Manchester, UK',  text: 'The synthesis of multiple disciplines was what made it different. A pattern analyst gave me one picture. A timing intelligence reader gave me another. This showed me how they connect.' },
   ],
   wellness: [
     { name: 'Lena',    age: 31, city: 'Berlin, DE',      text: 'The shadow reading named something I had been circling for years in therapy. One reading, twenty minutes, and the thing I could not articulate was right there in plain language.' },
-    { name: 'Sofia',   age: 36, city: 'Los Angeles, CA', text: 'The ancestral wound section was the most accurate thing anyone has ever said to me about my family pattern. I sent it to my sister. She cried.' },
     { name: 'Yemi',    age: 28, city: 'Atlanta, GA',     text: 'I was skeptical about the vitality section. I am no longer skeptical. It described my energy pattern so precisely I had to re-read it twice.' },
   ],
   'life-path': [
     { name: 'Marcus',  age: 39, city: 'Dublin, IE',      text: 'The pinnacle reading put language to a transition I had been feeling but could not name. It told me exactly what this chapter of my life is asking for and how long I am in it.' },
-    { name: 'Chioma',  age: 44, city: 'Houston, TX',     text: 'The nine-year cycle section was the most useful thing I have ever read about my own life. I could see every past cycle clearly once they were named.' },
     { name: 'Evan',    age: 32, city: 'Vancouver, CA',   text: 'The soul urge reading described the thing underneath everything I thought I wanted. I have been chasing the wrong version of my own desires for a decade.' },
   ],
   'oracle-temple': [
     { name: 'Aisha',   age: 35, city: 'Dubai, UAE',      text: 'The complete synthesis was worth every penny. It was the first reading that felt like it was about the whole of me, not just one dimension.' },
-    { name: 'Tom',     age: 42, city: 'Edinburgh, UK',   text: 'I was not expecting the physical reading section to be accurate. It was the most accurate part of the entire report.' },
     { name: 'Mei',     age: 29, city: 'Singapore',       text: 'The synthesis of everything into one coherent picture is what no other platform does. I have tried four others. None of them came close.' },
   ],
   'sacred-script': [
     { name: 'Joelle',  age: 33, city: 'Paris, FR',       text: 'Having my full synthesis loaded as a permanent dialogue partner changed how I navigate every decision. It is like having a guide who already knows the full picture.' },
-    { name: 'Kwame',   age: 38, city: 'Accra, GH',       text: 'The wealth scribe answered a question I had been sitting with for six months in about three minutes. The depth of context it carries is remarkable.' },
     { name: 'Nina',    age: 27, city: 'Stockholm, SE',   text: 'I use the love scribe more than I expected to. It holds context that no other tool does and the guidance it gives feels genuinely calibrated to me.' },
   ],
   'time-keeper': [
     { name: 'Omar',    age: 36, city: 'Toronto, CA',     text: 'The daily oracle is the first thing I check every morning. It consistently names the specific quality of energy I am moving through before I have had time to feel it myself.' },
     { name: 'Clara',   age: 41, city: 'Amsterdam, NL',   text: 'The monthly forecast was accurate for three months running before I stopped being surprised by it. The timing windows it identifies are genuinely useful.' },
-    { name: 'Ryo',     age: 30, city: 'Tokyo, JP',       text: 'The annual arc gave me a framework for the year that I actually use. Every month I go back and check where I am meant to be. It has not been wrong once.' },
   ],
   voice: [
     { name: 'Grace',   age: 37, city: 'Lagos, NG',       text: 'The voice session felt like speaking to someone who had already read every relevant thing about my life. The depth of context it carried was unlike any consultation I have had.' },
-    { name: 'Ben',     age: 43, city: 'Melbourne, AU',   text: 'I used the crisis session during a genuinely difficult moment. The guidance was grounded, specific, and did not feel generic. It knew my situation.' },
     { name: 'Zara',    age: 26, city: 'London, UK',      text: 'The purpose oracle session named the tension between what I am doing and what I am built for so precisely that I stopped the session to write it all down.' },
   ],
 }
@@ -243,12 +239,12 @@ const BASE_FAQ = [
     a: 'Most readings use a single input such as your sun sign or birth date and produce a templated result that could apply to millions of people. Every KAYAL reading is generated from multiple disciplines working together. The specificity comes from the intersection of what all of them confirm about the same question.',
   },
   {
-    q: 'Do I need to know anything about astrology or numerology?',
-    a: 'No. The reading is written in plain language. It tells you what the synthesis found, not how the methodology works. No prior knowledge is needed.',
+    q: 'Do I need any prior knowledge to understand my reading?',
+    a: 'No. The reading is written in plain language throughout. It tells you what the synthesis found, not how it works. No prior knowledge is needed.',
   },
   {
     q: 'Why do you collect birth time and place?',
-    a: 'Birth time enables full chart analysis including house placements specific to your domain of focus. Birth place calibrates the chart to your exact location. Both significantly increase precision. An approximate time is still useful if you do not know the exact time.',
+    a: 'They let the synthesis engine build your complete, specific blueprint rather than a generic one based on date alone, which significantly increases precision. An approximate time is still useful if you do not know the exact time.',
   },
   {
     q: 'Is my personal information private?',
@@ -405,8 +401,8 @@ function TeaserCard({ para }: { para: any }) {
         <Icon className="w-4 h-4 text-neutral-600" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-neutral-800 mb-1">{para.title}</p>
-        <p className="text-sm text-neutral-600 leading-relaxed">{para.content}</p>
+        <p className="text-sm font-semibold text-neutral-800 mb-1">{sanitize(para.title)}</p>
+        <p className="text-sm text-neutral-600 leading-relaxed">{sanitize(para.content)}</p>
       </div>
     </motion.div>
   )
@@ -506,8 +502,6 @@ export default function ToolSalesPage() {
   const [audioPlaying,  setAudioPlaying]  = useState(false)
   const utteranceRef    = useRef<SpeechSynthesisUtterance | null>(null)
   const teaserResultRef = useRef<HTMLDivElement>(null)
-
-  const [founderImgError, setFounderImgError] = useState(false)
 
   const heroRef                           = useRef<HTMLElement>(null)
   const [stickyVisible, setStickyVisible] = useState(false)
@@ -634,6 +628,11 @@ export default function ToolSalesPage() {
     router.push(`/start/${tool.id}`)
   }
 
+  // NOTE: endpoint path assumes a Next.js API route or rewrite that proxies
+  // to the FastAPI backend's generate_tool_teaser (docstring says POST
+  // /tool-teaser). Adjust the URL below to match your actual API base
+  // (e.g. `${process.env.NEXT_PUBLIC_API_URL}/tool-teaser` if calling
+  // api.kayalsoulpath.com directly instead of through a Next.js proxy).
   const handleTeaserSubmit = async () => {
     if (!teaserName.trim() || !teaserDob) {
       setTeaserError('Please enter your name and date of birth to see your preview.')
@@ -645,30 +644,35 @@ export default function ToolSalesPage() {
     }
     setTeaserError('')
     setTeaserLoading(true)
+
     try {
       const res = await fetch('/api/tool-teaser', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name:           teaserName.trim(),
           dob:            teaserDob,
           tool_id:        tool.id,
           birth_time:     teaserTime  || null,
           birth_location: teaserPlace || null,
-          partner_name:   partnerName || null,
+          partner_name:   needsPartner(tool) ? partnerName.trim() : null,
           session_id:     sessionStorage.getItem('kayal_session_id') || '0',
         }),
       })
       const data = await res.json()
-      if (data.error) {
+
+      if (!res.ok || data.error || !data.paragraphs?.length) {
         setTeaserError('We could not generate your preview right now. Please try again.')
+        setTeaserLoading(false)
         return
       }
-      setTeaserParagraphs(data.paragraphs || [])
+
+      setTeaserParagraphs(data.paragraphs)
       setTeaserCtaText(
         data.cta_text ||
         (isSubscription(tool)
-          ? `Begin ${teaserName.split(' ')[0]}'s Subscription`
-          : `Get ${teaserName.split(' ')[0]}'s Full Reading`)
+          ? `Begin ${teaserName.trim().split(' ')[0]}'s Subscription`
+          : `Get ${teaserName.trim().split(' ')[0]}'s Full Reading`)
       )
       setTeaserShown(true)
       sessionStorage.setItem('kayal_teaser_data', JSON.stringify({
@@ -679,12 +683,13 @@ export default function ToolSalesPage() {
         partnerName:   partnerName || '',
         partnerDob:    partnerDob  || '',
       }))
-    } catch (err) {
+    } catch {
       setTeaserError('Something went wrong. Please try again.')
     } finally {
       setTeaserLoading(false)
     }
   }
+
 
   if (!tool) {
     return (
@@ -708,13 +713,18 @@ export default function ToolSalesPage() {
   const isSub        = isSubscription(tool)
   const price        = tool.price ?? 29
   const headline     = clean(tool.name)
-  const tagline      = sanitize(tool.tagline || tool.description || '')
   const whatYouGet: string[] = tool.whatYouGet || tool.what_you_get || []
   const deliveryMins = tool.deliveryMinutes || tool.delivery_minutes || 20
   const videoUrl     = tool.videoUrl || tool.video_url || null
 
   const domain = getDomain(tool)
   const atmos  = getAtmos(domain)
+  // tool.heroImageStyle: 'bottom-scrim' (default, image + Option B scrim),
+  // 'contained' (image composition can't take a scrim — falls back to the
+  // orb/gradient treatment below), or 'none' (no hero image asset at all).
+  const hasHeroImage  = tool.heroImageStyle !== 'none'
+  const heroContained = tool.heroImageStyle === 'contained'
+  const useHeroImage  = hasHeroImage && !heroContained
 
   const ctaLabel     = needsPartner(tool) ? 'Begin Our Reading'  : 'Begin My Reading'
   const ctaLabelFull = needsPartner(tool)
@@ -723,9 +733,6 @@ export default function ToolSalesPage() {
 
   const SP  = '3.5rem 0'
   const SPB: React.CSSProperties = { padding: SP, borderBottom: '1px solid #e8e3dc' }
-
-  // FIX 6: mid-page nudge uses first sentence of the tool's own hook
-  const hookFirstSentence = hook.split(/(?<=[.!?])\s/)[0] || hook
 
   return (
     <div className={styles.page}>
@@ -966,84 +973,109 @@ export default function ToolSalesPage() {
       <div style={{ height: 4, width: '100%', background: cfg.color }} />
 
       {/* B — HERO */}
-      <section ref={heroRef} className={styles.hero}>
+      <section ref={heroRef} className={styles.hero} style={useHeroImage ? { alignItems: 'flex-end' } : undefined}>
         <div className={styles.heroBg}>
-          <div className={styles.heroOverlay} />
+          {useHeroImage ? (
+            <>
+              {/* Option B: real image, untouched through the top ~55%, scrim
+                  builds in only where the headline/CTA sit near the bottom */}
+              <Image
+                src={`/images/tools/${tool.id}.webp`}
+                alt=""
+                fill
+                priority
+                style={{ objectFit: 'cover' }}
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 1,
+                background: 'linear-gradient(to top, rgba(20,15,8,0.86) 0%, rgba(20,15,8,0.5) 28%, rgba(20,15,8,0.06) 52%, rgba(20,15,8,0) 66%)',
+              }} />
+            </>
+          ) : (
+            <>
+              <div className={styles.heroOverlay} />
 
-          {/* Atmospheric colour wash */}
-          <div className="kayal-ambient-pulse" style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none',
-            backgroundImage: atmos.hero,
-          }} />
+              {/* Atmospheric colour wash */}
+              <div className="kayal-ambient-pulse" style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                backgroundImage: atmos.hero,
+              }} />
 
-          {/* Animated dot grid */}
-          <div className="kayal-dots-anim" style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.45,
-          }} />
+              {/* Animated dot grid */}
+              <div className="kayal-dots-anim" style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.45,
+              }} />
 
-          {/* Orb 1 */}
-          <div className="kayal-orb kayal-orb-1" style={{
-            width: 520, height: 520, top: '-15%', left: '-10%',
-            background: cfg.color, opacity: 0.18,
-          }} />
+              {/* Orb 1 */}
+              <div className="kayal-orb kayal-orb-1" style={{
+                width: 520, height: 520, top: '-15%', left: '-10%',
+                background: cfg.color, opacity: 0.18,
+              }} />
 
-          {/* Orb 2 */}
-          <div className="kayal-orb kayal-orb-2" style={{
-            width: 380, height: 380, bottom: '-10%', right: '-8%',
-            background: cfg.color, opacity: 0.14,
-          }} />
+              {/* Orb 2 */}
+              <div className="kayal-orb kayal-orb-2" style={{
+                width: 380, height: 380, bottom: '-10%', right: '-8%',
+                background: cfg.color, opacity: 0.14,
+              }} />
+            </>
+          )}
 
-          {/* Orb 3 — gold */}
-          <div className="kayal-orb kayal-orb-3" style={{
-            width: 260, height: 260, top: '30%', left: '5%',
-            background: `#B8975A`, opacity: 0.10,
-          }} />
+          {!useHeroImage && (
+            <>
+              {/* Orb 3 — gold */}
+              <div className="kayal-orb kayal-orb-3" style={{
+                width: 260, height: 260, top: '30%', left: '5%',
+                background: `#B8975A`, opacity: 0.10,
+              }} />
 
-          {/* Giant watermark glyph */}
-          <div style={{
-            position: 'absolute', right: '-4%', bottom: '-8%',
-            fontSize: 'clamp(280px, 38vw, 520px)',
-            lineHeight: 1, pointerEvents: 'none', userSelect: 'none',
-            color: cfg.color, opacity: 0.03,
-            fontFamily: 'Georgia, serif', fontWeight: 700,
-          }}>
-            {tool.emoji || '◎'}
-          </div>
+              {/* Giant watermark glyph */}
+              <div style={{
+                position: 'absolute', right: '-4%', bottom: '-8%',
+                fontSize: 'clamp(280px, 38vw, 520px)',
+                lineHeight: 1, pointerEvents: 'none', userSelect: 'none',
+                color: cfg.color, opacity: 0.03,
+                fontFamily: 'Georgia, serif', fontWeight: 700,
+              }}>
+                {tool.emoji || '◎'}
+              </div>
 
-          {/* Top-left arc rings */}
-          <svg
-            aria-hidden="true"
-            style={{ position: 'absolute', top: '-5%', left: '-5%', width: '45%', maxWidth: 360, pointerEvents: 'none' }}
-            viewBox="0 0 360 360" fill="none"
-          >
-            <circle className="kayal-ring-rotate-ccw" cx="0" cy="0" r="300"
-              stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.09" strokeDasharray="6 14" />
-            <circle className="kayal-ring-rotate-cw" cx="0" cy="0" r="230"
-              stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.07" strokeDasharray="3 18" />
-            <circle cx="0" cy="0" r="160"
-              stroke={cfg.color} strokeWidth="0.5" strokeOpacity="0.05" />
-          </svg>
+              {/* Top-left arc rings */}
+              <svg
+                aria-hidden="true"
+                style={{ position: 'absolute', top: '-5%', left: '-5%', width: '45%', maxWidth: 360, pointerEvents: 'none' }}
+                viewBox="0 0 360 360" fill="none"
+              >
+                <circle className="kayal-ring-rotate-ccw" cx="0" cy="0" r="300"
+                  stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.09" strokeDasharray="6 14" />
+                <circle className="kayal-ring-rotate-cw" cx="0" cy="0" r="230"
+                  stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.07" strokeDasharray="3 18" />
+                <circle cx="0" cy="0" r="160"
+                  stroke={cfg.color} strokeWidth="0.5" strokeOpacity="0.05" />
+              </svg>
 
-          {/* Bottom-right arc rings */}
-          <svg
-            aria-hidden="true"
-            style={{ position: 'absolute', bottom: '-8%', right: '-6%', width: '35%', maxWidth: 280, pointerEvents: 'none' }}
-            viewBox="0 0 280 280" fill="none"
-          >
-            <circle className="kayal-ring-rotate-cw" cx="280" cy="280" r="240"
-              stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.08" strokeDasharray="5 16" />
-            <circle className="kayal-ring-rotate-ccw" cx="280" cy="280" r="170"
-              stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.06" strokeDasharray="3 12" />
-          </svg>
+              {/* Bottom-right arc rings */}
+              <svg
+                aria-hidden="true"
+                style={{ position: 'absolute', bottom: '-8%', right: '-6%', width: '35%', maxWidth: 280, pointerEvents: 'none' }}
+                viewBox="0 0 280 280" fill="none"
+              >
+                <circle className="kayal-ring-rotate-cw" cx="280" cy="280" r="240"
+                  stroke={cfg.color} strokeWidth="0.8" strokeOpacity="0.08" strokeDasharray="5 16" />
+                <circle className="kayal-ring-rotate-ccw" cx="280" cy="280" r="170"
+                  stroke={cfg.color} strokeWidth="0.6" strokeOpacity="0.06" strokeDasharray="3 12" />
+              </svg>
 
-          {/* Centre radial glow */}
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '70%', height: '70%', borderRadius: '50%',
-            background: `radial-gradient(ellipse, ${cfg.color}18 0%, transparent 70%)`,
-            pointerEvents: 'none',
-          }} />
+              {/* Centre radial glow */}
+              <div style={{
+                position: 'absolute', top: '50%', left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '70%', height: '70%', borderRadius: '50%',
+                background: `radial-gradient(ellipse, ${cfg.color}18 0%, transparent 70%)`,
+                pointerEvents: 'none',
+              }} />
+            </>
+          )}
         </div>
 
         <div className={`${styles.heroInner} kayal-corner-ornament`}>
@@ -1064,7 +1096,7 @@ export default function ToolSalesPage() {
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1, ease: E }}
-            className={styles.domainCrumb} style={{ color: cfg.color, marginBottom: '0.5rem' }}
+            className={styles.domainCrumb} style={{ color: useHeroImage ? '#f0d9ae' : cfg.color, marginBottom: '0.5rem' }}
           >
             {cfg.label}
           </motion.div>
@@ -1073,10 +1105,10 @@ export default function ToolSalesPage() {
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: E }}
             style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(1.512rem, 2.76vw, 2.376rem)',
-              fontWeight: 700, color: '#1c1917', lineHeight: 1.1,
-              letterSpacing: '-0.025em', marginBottom: '1rem',
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 'clamp(2rem, 4.4vw, 3.2rem)',
+              fontWeight: 700, color: useHeroImage ? '#ffffff' : '#1c1917', lineHeight: 1.12,
+              letterSpacing: '-0.02em', marginBottom: '1rem',
               textAlign: 'center', width: '100%', maxWidth: '100%',
             }}
           >
@@ -1089,24 +1121,13 @@ export default function ToolSalesPage() {
             style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
               fontSize: 'clamp(0.95rem, 1.6vw, 1.15rem)',
-              fontStyle: 'italic', color: '#57534e', lineHeight: 1.7,
-              maxWidth: 900, margin: '0 auto',
-              marginBottom: tagline ? '0.75rem' : '1.75rem',
+              fontStyle: 'italic', color: useHeroImage ? '#ede8de' : '#57534e', lineHeight: 1.7,
+              maxWidth: 560, margin: '0 auto', marginBottom: '1.75rem',
               textAlign: 'center',
             }}
           >
             {hook}
           </motion.p>
-
-          {tagline && (
-            <motion.p
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.38, ease: E }}
-              className={styles.heroTagline} style={{ marginBottom: '1.75rem' }}
-            >
-              {tagline}
-            </motion.p>
-          )}
 
           {isPartner && (
             <motion.div
@@ -1149,7 +1170,8 @@ export default function ToolSalesPage() {
             <ShimmerBtn
               whileHover={{ scale: 1.025, boxShadow: `0 10px 32px ${cfg.color}40` }}
               whileTap={{ scale: 0.97 }}
-              onClick={handleCTA} className={styles.ctaBtn} style={{ background: cfg.color }}
+              onClick={handleCTA} className={styles.ctaBtn}
+              style={useHeroImage ? { background: '#ffffff', color: '#1c1917' } : { background: cfg.color }}
             >
               {ctaLabel}
             </ShimmerBtn>
@@ -1165,7 +1187,7 @@ export default function ToolSalesPage() {
 
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.54 }}
-            className={styles.trustStrip}
+            className={styles.trustStrip} style={useHeroImage ? { color: '#e9e2d4' } : undefined}
           >
             Secure checkout &middot; Instant access &middot; Private and confidential
           </motion.p>
@@ -1176,7 +1198,7 @@ export default function ToolSalesPage() {
           >
             <button
               onClick={() => document.querySelector('.' + styles.teaserSection)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: cfg.color, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: 3, padding: 0, fontWeight: 600 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: useHeroImage ? '#ffffff' : cfg.color, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: 3, padding: 0, fontWeight: 600 }}
             >
               Not sure yet? Try it free first ↓
             </button>
@@ -1407,25 +1429,29 @@ export default function ToolSalesPage() {
         </div>
       </section>
 
-      {/* D — HERO IMAGE */}
-      <div className={styles.container} style={{ padding: '0 1.5rem 3rem' }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 1.04 }} whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7, ease: E }}
-          style={{ borderRadius: 18, overflow: 'hidden', background: atmos.accent, maxHeight: 'clamp(216px, 42vw, 504px)' }}
-        >
-          <Image
-            src={`/images/tools/${tool.id}.webp`}
-            alt={tool.name}
-            width={1100}
-            height={600}
-            style={{ width: '100%', height: 'clamp(216px, 42vw, 504px)', objectFit: 'contain', display: 'block', background: atmos.accent }}
-            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-          />
-        </motion.div>
-      </div>
+      {/* D — HERO IMAGE (only shown when the hero itself didn't use it) */}
+      {!useHeroImage && (
+        <>
+          <div className={styles.container} style={{ padding: '0 1.5rem 3rem' }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 1.04 }} whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.7, ease: E }}
+              style={{ borderRadius: 18, overflow: 'hidden', background: atmos.accent, maxHeight: 'clamp(216px, 42vw, 504px)' }}
+            >
+              <Image
+                src={`/images/tools/${tool.id}.webp`}
+                alt={tool.name}
+                width={1100}
+                height={600}
+                style={{ width: '100%', height: 'clamp(216px, 42vw, 504px)', objectFit: 'contain', display: 'block', background: atmos.accent }}
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+            </motion.div>
+          </div>
 
-      <hr className="kayal-gold-rule-anim" />
+          <hr className="kayal-gold-rule-anim" />
+        </>
+      )}
 
       {/* D.5 — WHAT HAPPENS AFTER YOU BEGIN */}
       {/* FIX 5: step bodies branch by tool type — isPartner, isSub, requiresImage */}
@@ -1485,47 +1511,7 @@ export default function ToolSalesPage() {
         </div>
       </section>
 
-      {/* E — WHO THIS READING IS FOR */}
-      <section className={styles.problemSection} style={{ ...SPB, position: 'relative', overflow: 'hidden' }}>
-        <div className="kayal-dots-anim" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.45 }} />
-        <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: '2rem' }}>
-            <span className="kayal-eyebrow-pill" style={{ background: `${cfg.color}18`, color: cfg.color, borderColor: `${cfg.color}30` }}>
-              Is This For You
-            </span>
-            <div className="kayal-section-symbol" style={{ color: cfg.color }}>✦</div>
-            <h2 className={`${styles.sectionTitle} kayal-title-underline`}>
-              This reading is for you if&hellip;
-            </h2>
-          </div>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.problemGrid}>
-            {whoFor.map((line: string, i: number) => (
-              <motion.div key={i} variants={cardVariant}
-                whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.10)' }}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 16,
-                  padding: '1.25rem 1.5rem', borderRadius: 16,
-                  background: '#ffffff', border: '1px solid #e8e3dc',
-                  borderLeft: `4px solid ${cfg.color}`,
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                  transition: 'box-shadow 0.22s ease',
-                }}
-              >
-                <div style={{
-                  width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                  background: `${cfg.color}18`, display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', marginTop: 1,
-                }}>
-                  <CheckCircle style={{ width: 14, height: 14, color: cfg.color }} />
-                </div>
-                <p style={{ fontSize: '0.9rem', color: '#44403c', lineHeight: 1.6, margin: 0 }}>{line}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* F — WHAT YOU RECEIVE */}
+      {/* E — WHAT YOU GET (merged: what's included + who it's for) */}
       <section className={styles.whatSection} style={{ ...SPB, background: atmos.accent, position: 'relative', overflow: 'hidden' }}>
         <div className="kayal-dots-anim" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.4 }} />
         <div className={styles.container}>
@@ -1536,276 +1522,72 @@ export default function ToolSalesPage() {
             <div className="kayal-section-symbol" style={{ color: cfg.color }}>◎</div>
             <h2 className={`${styles.sectionTitle} kayal-title-underline`}>What you receive</h2>
             <p className={styles.sectionSub} style={{ marginTop: '0.875rem' }}>
-              Every section is specific to your exact birth details &mdash; not a templated output.
+              Every section is specific to your exact birth details &mdash; not a templated output, and no methodology jargon, just what is true about you, named clearly.
             </p>
           </div>
-          {whatYouGet.length > 0 ? (
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.whatGrid}>
-              {whatYouGet.map((item: string, i: number) => (
-                <motion.div key={i} variants={cardVariant}
-                  whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.09)' }}
-                  style={{
-                    background: '#ffffff', borderRadius: 16,
-                    border: '1px solid #e8e3dc',
-                    borderTop: `4px solid ${cfg.color}`,
-                    padding: '1.5rem', display: 'flex',
-                    flexDirection: 'column', gap: 12,
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                  }}
-                >
-                  <div className="kayal-icon-ring" style={{ background: `${cfg.color}15`, width: 44, height: 44, marginBottom: 0 }}>
-                    <CheckCircle style={{ width: 18, height: 18, color: cfg.color }} />
-                  </div>
-                  <p style={{ fontSize: '0.88rem', color: '#44403c', lineHeight: 1.65, margin: 0 }}>{sanitize(item)}</p>
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <div className={styles.whatCard} style={{ maxWidth: 560, margin: '0 auto' }}>
-              <p>A complete personalised synthesis covering every relevant dimension of your question, delivered privately.</p>
-            </div>
-          )}
-          {(tool.guidanceText || tool.guidance_text) && (
-            <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, ease: E }}
-              style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: 12, padding: '1.25rem 1.5rem', borderRadius: 14, background: 'white', border: `1px solid ${cfg.color}20` }}>
-              <Sparkles style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2, color: cfg.color }} />
-              <div>
-                {(tool.guidanceType || tool.guidance_type) && (
-                  <p style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: cfg.color, marginBottom: 4 }}>
-                    {(tool.guidanceType || tool.guidance_type) === 'spiritual-remedy'   && 'Spiritual remedy included'}
-                    {(tool.guidanceType || tool.guidance_type) === 'practical-solution' && 'Practical guidance included'}
-                    {(tool.guidanceType || tool.guidance_type) === 'daily-guidance'     && 'Ongoing guidance included'}
-                  </p>
-                )}
-                <p style={{ fontSize: '0.88rem', color: '#44403c', lineHeight: 1.65, margin: 0 }}>
-                  {sanitize(tool.guidanceText || tool.guidance_text)}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </section>
 
-      <hr className="kayal-gold-rule-anim" />
-
-      {/* G — WHY KAYAL IS DIFFERENT */}
-      <section className={styles.differenceSection} style={{ ...SPB, background: `${cfg.color}08`, position: 'relative', overflow: 'hidden' }}>
-        <div className="kayal-lines" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
-        <div className="kayal-orb kayal-orb-1" style={{ width: 400, height: 400, top: '-20%', right: '-10%', background: cfg.color, opacity: 0.07, filter: 'blur(80px)' }} />
-        <div className="kayal-orb kayal-orb-2" style={{ width: 280, height: 280, bottom: '-15%', left: '-5%', background: cfg.color, opacity: 0.05, filter: 'blur(70px)' }} />
-        <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: '2rem' }}>
-            <span className="kayal-eyebrow-pill" style={{ background: `${cfg.color}18`, color: cfg.color, borderColor: `${cfg.color}30` }}>
-              Why This Is Different
-            </span>
-            <div className="kayal-section-symbol" style={{ color: cfg.color }}>◈</div>
-            <h2 className={`${styles.sectionTitle} kayal-title-underline`}>What makes this different</h2>
-            <p className={styles.sectionSub} style={{ marginTop: '0.875rem' }}>
-              There is no shortage of readings available online. Here is why this one is not like the others.
-            </p>
-          </div>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.differenceGrid}>
-            {[
-              { sym: '◎', title: 'We give you a truth, not a type.',          body: 'A type tells you what category you belong to. A truth tells you what is actually happening in your specific life, at this specific moment, with the specific pattern you are living through.' },
-              { sym: '✦', title: 'We name what it reveals, not the system.',   body: 'You will never see methodology jargon in your reading. What you will see is what is true about you, named clearly, in plain language.' },
-              { sym: '◈', title: 'We synthesise the complete picture.',        body: 'Every discipline sees something real. The problem is each one sees only part of the whole. KAYAL shows you the full shape, not a fragment of it.' },
-              { sym: '⟡', title: 'A reading built entirely around you.',       body: 'No generic archetypes. No templated forecasts. The output is a synthesis that could only exist for your exact details, at your exact timing.' },
-            ].map((card, i) => (
-              <motion.div key={i} variants={cardVariant}
-                whileHover={{ y: -5, boxShadow: '0 16px 40px rgba(0,0,0,0.10)' }}
-                style={{
-                  background: '#ffffff', borderRadius: 20, padding: '1.75rem',
-                  border: '1px solid #e8e3dc', borderTop: `4px solid ${cfg.color}`,
-                  boxShadow: '0 2px 14px rgba(0,0,0,0.05)',
-                  display: 'flex', flexDirection: 'column', gap: 14,
-                  position: 'relative', overflow: 'hidden',
-                }}
-              >
-                <div style={{ position: 'absolute', bottom: -10, right: 8, fontSize: '5rem', lineHeight: 1, color: cfg.color, opacity: 0.04, fontFamily: 'Georgia, serif', pointerEvents: 'none', userSelect: 'none' }}>
-                  {card.sym}
-                </div>
-                <div style={{
-                  width: 48, height: 48, borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${cfg.color}22, ${cfg.color}0a)`,
-                  border: `1px solid ${cfg.color}25`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.3rem', color: cfg.color,
-                }}>
-                  {card.sym}
-                </div>
-                <div>
-                  <p style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, color: '#1c1917', marginBottom: 8, lineHeight: 1.35 }}>
-                    {card.title}
-                  </p>
-                  <p style={{ fontSize: '0.88rem', color: '#78716c', lineHeight: 1.65, margin: 0 }}>{card.body}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* G.5 — MID-PAGE SECOND CTA NUDGE */}
-      {/* FIX 6: uses first sentence of the tool hook instead of generic copy */}
-      <div style={{ background: `${cfg.color}06`, padding: '2rem 0', borderBottom: '1px solid #e8e3dc', textAlign: 'center' }}>
-        <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.4, ease: E }}>
-          <p style={{ fontSize: '0.88rem', color: '#78716c', marginBottom: '1rem', fontStyle: 'italic', maxWidth: 540, margin: '0 auto 1rem', lineHeight: 1.65 }}>
-            {hookFirstSentence} Your free preview shows what this reading has already found about you.
-          </p>
-          <motion.button
-            whileHover={{ background: cfg.color, color: 'white', borderColor: cfg.color }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => { document.querySelector('.' + styles.teaserSection)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '0.75rem 2rem', borderRadius: '3rem',
-              background: 'transparent', border: `2px solid ${cfg.color}`,
-              color: cfg.color, fontSize: '0.9rem', fontWeight: 700,
-              cursor: 'pointer', transition: 'all 0.22s', letterSpacing: '0.01em',
-            }}
-          >
-            Get your free preview ↓
-          </motion.button>
-        </motion.div>
-      </div>
-
-      {/* H — WHY TRUST US */}
-      <section className={styles.trustSection} style={{ ...SPB, background: atmos.accent, borderTop: 'none', position: 'relative', overflow: 'hidden' }}>
-        <div className="kayal-dots-anim" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.35 }} />
-        <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: '2rem' }}>
-            <span className="kayal-eyebrow-pill" style={{ background: `${cfg.color}18`, color: cfg.color, borderColor: `${cfg.color}30` }}>
-              About This Platform
-            </span>
-            <div className="kayal-section-symbol" style={{ color: cfg.color }}>⟡</div>
-            <h2 className={`${styles.sectionTitle} kayal-title-underline`}>Built from a gap no one was filling</h2>
-          </div>
-          <div style={{ maxWidth: 820, margin: '0 auto 3rem', textAlign: 'center' }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, ease: E }}
-              style={{ width: 96, height: 96, borderRadius: '50%', margin: '0 auto 1rem', border: `3px solid ${cfg.color}40`, overflow: 'hidden', position: 'relative', background: cfg.light, boxShadow: `0 4px 20px ${cfg.color}30` }}
-            >
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: cfg.light, zIndex: 0 }}>
-                <User style={{ width: 36, height: 36, color: cfg.color }} />
-              </div>
-              {!founderImgError && (
-                <Image
-                  src="/images/creator/founder.webp"
-                  alt="Victor Hayford Samson"
-                  width={96} height={96}
-                  className="object-cover w-full h-full"
-                  style={{ position: 'relative', zIndex: 1, borderRadius: '50%' }}
-                  onError={() => setFounderImgError(true)}
-                />
-              )}
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.4, delay: 0.15, ease: E }}>
-              <p style={{ fontFamily: 'Georgia, serif', fontSize: '1rem', fontWeight: 700, color: '#1c1917', marginBottom: 4 }}>Victor Hayford Samson</p>
-              <p style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: cfg.color, marginBottom: '1.25rem' }}>
-                Founder, KAYAL LifeOS
-              </p>
-              {[
-                'I spent years sitting with practitioners of ancient reading traditions that most people in the West have never encountered. Each one was precise. Each one was partial. A pattern analyst would name a dynamic I recognised immediately \u2014 and then stop at the edge of what their system could see. A timing intelligence reader would reach further \u2014 and stop at a different edge. The disciplines were not in conflict. They were each holding one face of the same shape, and no one was assembling the whole thing.',
-                'KAYAL exists because that assembly is what actually helps people. Not another single-discipline reading dressed up in new language \u2014 but a genuine synthesis where multiple independent systems are brought to bear on the same question until only the findings they agree on remain. That convergence is where the precision lives. It is also where the trust comes from.',
-              ].map((p, idx) => (
-                <p key={idx} style={{ fontSize: '0.9rem', color: '#44403c', lineHeight: 1.8, marginBottom: '1rem', textAlign: 'center' }}>{p}</p>
-              ))}
-            </motion.div>
-          </div>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.trustGrid}>
-            {[
-              { icon: '\u{1F4D6}', value: <CountUp target={2400} suffix="+" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Readings delivered' },
-              { icon: '\u{1F6E1}',  value: <span style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }}>7 days</span>, sub: 'Money-back guarantee' },
-              { icon: '\u26A1', value: <CountUp target={20} suffix=" min" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Average delivery' },
-              { icon: '\u{1F512}', value: <span style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }}>100%</span>, sub: 'Private, never shared' },
-            ].map((stat, i) => (
-              <motion.div key={i} variants={cardVariant}
-                whileHover={{ y: -5, boxShadow: '0 14px 36px rgba(0,0,0,0.10)' }}
-                style={{
-                  borderRadius: 20, padding: '1.75rem 1.25rem',
-                  textAlign: 'center', position: 'relative', overflow: 'hidden',
-                  background: '#ffffff',
-                  border: `1.5px solid ${cfg.color}22`,
-                  boxShadow: '0 2px 14px rgba(0,0,0,0.05)',
-                }}
-              >
-                <div style={{ position: 'absolute', inset: 0, borderRadius: 20, background: `linear-gradient(145deg, ${cfg.color}0c 0%, transparent 60%)`, pointerEvents: 'none' }} />
-                <div style={{ fontSize: '2rem', marginBottom: '0.75rem', position: 'relative' }}>{stat.icon}</div>
-                <div style={{ marginBottom: 6, position: 'relative' }}>{stat.value}</div>
-                <p style={{ position: 'relative', fontSize: '0.82rem', color: '#78716c' }}>{stat.sub}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      <hr className="kayal-gold-rule-anim" />
-
-      {/* I — HOW THE SYNTHESIS WORKS */}
-      <section className={styles.howSection} style={{ ...SPB, background: `${cfg.color}06`, position: 'relative', overflow: 'hidden' }}>
-        <div className="kayal-dots-anim" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.5 }} />
-        <div className="kayal-orb kayal-orb-2" style={{ width: 500, height: 500, top: '-25%', left: '-15%',    background: cfg.color, opacity: 0.06, filter: 'blur(90px)' }} />
-        <div className="kayal-orb kayal-orb-3" style={{ width: 320, height: 320, bottom: '-18%', right: '-10%', background: cfg.color, opacity: 0.05, filter: 'blur(80px)' }} />
-        <div className={styles.container}>
-          <div className={styles.sectionHeader} style={{ marginBottom: '2rem' }}>
-            <span className="kayal-eyebrow-pill" style={{ background: `${cfg.color}18`, color: cfg.color, borderColor: `${cfg.color}30` }}>
-              The Method
-            </span>
-            <div className="kayal-section-symbol" style={{ color: cfg.color }}>☽</div>
-            <h2 className={`${styles.sectionTitle} kayal-title-underline`}>How the synthesis works</h2>
-            <p className={styles.sectionSub} style={{ marginTop: '0.875rem' }}>
-              KAYAL runs every reading through multiple private intelligence processes.
-              The result is a convergence of every relevant intelligence, synthesised into one coherent picture.
-            </p>
-          </div>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer}
-            className={styles.howGrid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', maxWidth: '100%' }}>
-            {[
-              { glyph: '◎', title: 'Pattern Analysis',    body: 'The recurring structures in your blueprint that single-discipline readings never surface, named precisely so you can finally see the full shape of what keeps appearing in your life.' },
-              { glyph: '☽', title: 'Timing Intelligence', body: 'Your current cycle, your active pinnacle, and the specific windows ahead when movement is most supported, and when stillness is what your blueprint actually requires.' },
-              { glyph: '◇', title: 'Physical Markers',    body: 'What your physical design confirms about your tendencies, your capacity, and the patterns already visible in how you are built, adding a dimension no purely numerical system can provide.' },
-              { glyph: '✦', title: 'Path Forward',        body: 'Not just what the synthesis finds, but what to do about it. A specific remedy, practice, or guidance drawn from the full picture, tailored to where you actually are right now.' },
-            ].map((card, i) => (
-              <motion.div key={i} variants={cardVariant}
-                whileHover={{ y: -5, boxShadow: '0 14px 36px rgba(0,0,0,0.09)' }}
-                style={{
-                  background: '#ffffff', borderRadius: 20, padding: '1.75rem',
-                  border: '1px solid #e8e3dc', borderTop: `4px solid ${cfg.color}`,
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, textAlign: 'left',
-                }}
-              >
-                <div style={{
-                  width: 52, height: 52, borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${cfg.color}20, ${cfg.color}08)`,
-                  border: `1px solid ${cfg.color}28`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.5rem', color: cfg.color, flexShrink: 0,
-                }}>
-                  {card.glyph}
-                </div>
-                <p style={{ fontFamily: 'Georgia, serif', fontSize: '0.95rem', fontWeight: 700, color: '#1c1917', margin: 0 }}>{card.title}</p>
-                <p style={{ fontSize: '0.85rem', color: '#78716c', lineHeight: 1.65, margin: 0 }}>{card.body}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, ease: E }}
-            className={styles.whyNowInner} style={{ margin: '2rem auto 0', borderLeftColor: cfg.color }}>
-            <Clock style={{ width: 22, height: 22, flexShrink: 0, color: cfg.color }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(0,0.85fr)', gap: '2rem', alignItems: 'start' }}>
             <div>
-              <p className={styles.whyNowTitle}>The same depth. A fraction of the cost.</p>
-              <p className={styles.whyNowText}>
-                A private session covering this domain with a qualified practitioner costs{' '}
-                <strong>{cfg.practitionerRate}</strong>. This reading delivers equivalent depth, privately,
-                in {deliveryMins} minutes, at <strong style={{ color: cfg.color }}>${price}{isSub ? '/mo' : ''}</strong>.
-              </p>
+              {whatYouGet.length > 0 ? (
+                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.whatGrid}>
+                  {whatYouGet.map((item: string, i: number) => (
+                    <motion.div key={i} variants={cardVariant}
+                      whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.09)' }}
+                      style={{
+                        background: '#ffffff', borderRadius: 16,
+                        border: '1px solid #e8e3dc',
+                        borderTop: `4px solid ${cfg.color}`,
+                        padding: '1.5rem', display: 'flex',
+                        flexDirection: 'column', gap: 12,
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <div className="kayal-icon-ring" style={{ background: `${cfg.color}15`, width: 44, height: 44, marginBottom: 0 }}>
+                        <CheckCircle style={{ width: 18, height: 18, color: cfg.color }} />
+                      </div>
+                      <p style={{ fontSize: '0.88rem', color: '#44403c', lineHeight: 1.65, margin: 0 }}>{sanitize(item)}</p>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <div className={styles.whatCard}>
+                  <p>A complete personalised synthesis covering every relevant dimension of your question, delivered privately.</p>
+                </div>
+              )}
+              {(tool.guidanceText || tool.guidance_text) && (
+                <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, ease: E }}
+                  style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: 12, padding: '1.25rem 1.5rem', borderRadius: 14, background: 'white', border: `1px solid ${cfg.color}20` }}>
+                  <Sparkles style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2, color: cfg.color }} />
+                  <div>
+                    {(tool.guidanceType || tool.guidance_type) && (
+                      <p style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: cfg.color, marginBottom: 4 }}>
+                        {(tool.guidanceType || tool.guidance_type) === 'spiritual-remedy'   && 'Spiritual remedy included'}
+                        {(tool.guidanceType || tool.guidance_type) === 'practical-solution' && 'Practical guidance included'}
+                        {(tool.guidanceType || tool.guidance_type) === 'daily-guidance'     && 'Ongoing guidance included'}
+                      </p>
+                    )}
+                    <p style={{ fontSize: '0.88rem', color: '#44403c', lineHeight: 1.65, margin: 0 }}>
+                      {sanitize(tool.guidanceText || tool.guidance_text)}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
             </div>
-          </motion.div>
+
+            <div style={{ background: '#ffffff', borderRadius: 18, padding: '1.75rem', border: '1px solid #e8e3dc' }}>
+              <p style={{ fontFamily: 'Georgia, serif', fontSize: '1.02rem', fontWeight: 700, color: '#1c1917', marginBottom: '1.1rem' }}>This is for you if&hellip;</p>
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer}
+                style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                {whoFor.slice(0, 3).map((line: string, i: number) => (
+                  <motion.div key={i} variants={cardVariant} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <CheckCircle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 3, color: cfg.color }} />
+                    <p style={{ fontSize: '0.87rem', color: '#44403c', lineHeight: 1.55, margin: 0 }}>{line}</p>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1870,6 +1652,19 @@ export default function ToolSalesPage() {
               </motion.div>
             ))}
           </motion.div>
+
+          {(tool.sampleExcerpt || tool.sample_excerpt) && (
+            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, ease: E }}
+              style={{ maxWidth: 640, margin: '2rem auto 0', background: '#ffffff', border: `1px solid ${cfg.color}30`, borderRadius: 20, padding: '1.75rem 2rem' }}>
+              <p style={{ fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: cfg.color, marginBottom: '0.75rem' }}>
+                From a real reading
+              </p>
+              <p style={{ fontFamily: 'Georgia, serif', fontSize: '0.98rem', fontStyle: 'italic', color: '#44403c', lineHeight: 1.8, margin: 0 }}>
+                &ldquo;{sanitize(tool.sampleExcerpt || tool.sample_excerpt)}&rdquo;
+              </p>
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -1892,7 +1687,7 @@ export default function ToolSalesPage() {
               <motion.div key={i}
                 variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: E } } }}
                 className={styles.faqItem}>
-                <FAQItem q={item.q} a={item.a} color={cfg.color} />
+                <FAQItem q={sanitize(item.q)} a={sanitize(item.a)} color={cfg.color} />
               </motion.div>
             ))}
           </motion.div>
@@ -1901,7 +1696,7 @@ export default function ToolSalesPage() {
 
       <hr className="kayal-gold-rule-anim" />
 
-      {/* K — PRICING */}
+      {/* K — PRICING + GUARANTEE + TRUST (merged) */}
       <section style={{ background: '#ffffff', ...SPB }}>
         <div className={styles.container}>
           <div className={styles.sectionHeader} style={{ marginBottom: '2rem' }}>
@@ -1989,15 +1784,11 @@ export default function ToolSalesPage() {
               </div>
             </div>
           </motion.div>
-        </div>
-      </section>
 
-      {/* L — GUARANTEE */}
-      <section style={{ background: atmos.accent, padding: '3rem 0', borderBottom: '1px solid #e8e3dc' }}>
-        <div className={styles.container}>
+          {/* Guarantee — the fuller explanation, folded in from the old standalone section */}
           <motion.div initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5, ease: E }}
-            className={styles.whyNowInner} style={{ margin: '0 auto', borderLeftColor: cfg.color }}>
+            className={styles.whyNowInner} style={{ margin: '2rem auto 0', maxWidth: 520, borderLeftColor: cfg.color }}>
             <motion.div initial={{ opacity: 0, scale: 0.7, rotate: -30 }} whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
               viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6, ease: E }} className={styles.whyNowIcon}>
               <Shield style={{ width: 26, height: 26, color: cfg.color }} />
@@ -2010,6 +1801,36 @@ export default function ToolSalesPage() {
                 yet needed to honour it.
               </p>
             </div>
+          </motion.div>
+
+          {/* Trust stats + credential — folded in from the old standalone 'why trust us' section */}
+          <motion.p initial={{ opacity: 0, y: 6 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.4, ease: E }}
+            style={{ textAlign: 'center', fontSize: '0.82rem', color: '#78716c', maxWidth: 520, margin: '2.5rem auto 1.5rem' }}>
+            Synthesis method developed by <a href="/about" style={{ color: cfg.color, fontWeight: 700, textDecoration: 'none', borderBottom: `1px solid ${cfg.color}50` }}>Victor Hayford Samson</a>, credentialed through Ajdur Ruwhaaniy International.
+          </motion.p>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={staggerContainer} className={styles.trustGrid}>
+            {[
+              { icon: '\u{1F4D6}', value: <CountUp target={2400} suffix="+" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Readings delivered' },
+              { icon: '\u26A1', value: <CountUp target={20} suffix=" min" style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }} />, sub: 'Average delivery' },
+              { icon: '\u{1F512}', value: <span style={{ fontFamily: 'Georgia,serif', fontSize: '1.6rem', fontWeight: 700, color: cfg.color }}>100%</span>, sub: 'Private, never shared' },
+            ].map((stat, i) => (
+              <motion.div key={i} variants={cardVariant}
+                whileHover={{ y: -5, boxShadow: '0 14px 36px rgba(0,0,0,0.10)' }}
+                style={{
+                  borderRadius: 20, padding: '1.75rem 1.25rem',
+                  textAlign: 'center', position: 'relative', overflow: 'hidden',
+                  background: '#faf8f4',
+                  border: `1.5px solid ${cfg.color}22`,
+                  boxShadow: '0 2px 14px rgba(0,0,0,0.05)',
+                }}
+              >
+                <div style={{ position: 'absolute', inset: 0, borderRadius: 20, background: `linear-gradient(145deg, ${cfg.color}0c 0%, transparent 60%)`, pointerEvents: 'none' }} />
+                <div style={{ fontSize: '2rem', marginBottom: '0.75rem', position: 'relative' }}>{stat.icon}</div>
+                <div style={{ marginBottom: 6, position: 'relative' }}>{stat.value}</div>
+                <p style={{ position: 'relative', fontSize: '0.82rem', color: '#78716c' }}>{stat.sub}</p>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>

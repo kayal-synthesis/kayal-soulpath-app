@@ -19,8 +19,9 @@ function ReferralLoginPageInner() {
   const searchParams = useSearchParams()
   const supabase = createClient()
   
-  // Check for success message from registration
+  // Check for success message from registration or password reset
   const registered = searchParams.get('registered')
+  const resetSuccess = searchParams.get('reset')
   const redirectTo = searchParams.get('redirect') || '/member/referral/dashboard'
   
   const [email, setEmail] = useState('')
@@ -30,12 +31,15 @@ function ReferralLoginPageInner() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
-  // Show success message if coming from registration
+  // Show success messages
   useEffect(() => {
     if (registered === 'true') {
       setSuccessMessage('Account created successfully! Please sign in.')
     }
-  }, [registered])
+    if (resetSuccess === 'success') {
+      setSuccessMessage('Password reset successfully! Please sign in with your new password.')
+    }
+  }, [registered, resetSuccess])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,6 +90,7 @@ function ReferralLoginPageInner() {
 
     setLoading(true)
     setError('')
+    setSuccessMessage('')
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -94,7 +99,9 @@ function ReferralLoginPageInner() {
 
       if (error) throw error
 
-      setSuccessMessage('Password reset link sent to your email!')
+      setSuccessMessage('Password reset link sent to your email! Please check your inbox.')
+      // Clear the email field after successful send
+      // setEmail('') // Optional: uncomment if you want to clear the email field
     } catch (error: any) {
       setError(error.message || 'Failed to send reset link')
     } finally {
@@ -242,6 +249,7 @@ function ReferralLoginPageInner() {
     </div>
   )
 }
+
 export default function ReferralLoginPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
