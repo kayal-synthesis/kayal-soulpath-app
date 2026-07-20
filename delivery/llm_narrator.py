@@ -2,36 +2,15 @@
 LLM Narrator — KAYAL Synthesis Platform
 =========================================
 Converts LLMPayload or PromptPackage into the final user-facing reading
-using the Anthropic Claude API.
+using the DeepSeek-V4 API.
 
 Model routing by tier:
-    Tier 4 (Full)          → claude-sonnet-4-6  (best quality)
-    Tier 3 (Face + Palm)   → claude-sonnet-4-6
-    Tier 2 (Face or Palm)  → claude-sonnet-4-6
-    Tier 1 (Core only)     → claude-haiku-4-5   (fast, cost-effective)
-    Premium deep reading   → claude-opus-4-6    (optional, explicit flag)
-    Union Blueprint        → claude-sonnet-4-6  (always — complexity requires it)
-
-v2.0.0 additions:
-    - PromptPackage integration: narrate_from_package() is the new primary entry point
-    - Section-by-section narration: each SectionPrompt is a separate LLM call
-    - % compliance validation: _validate_pct_output() / _inject_pct_if_missing()
-        For every pct_section, validates output contains a % figure
-        If LLM omitted it, injects "[Label]: [X]%" as the first line
-        pct_validated flag tracks whether all % sections passed
-    - NarrationResult extended: tool_type, section_texts, compatibility_percentages,
-        pct_validated
-    - narrate_from_package_async(): async version
-    - narrate() and narrate_async(): preserved unchanged for backward compatibility
-
-Architecture:
-    - Domain-by-domain narration for Haiku (small context window)
-    - Single-pass narration for Sonnet/Opus (full payload) — legacy path
-    - Section-by-section narration for PromptPackage — v2.0.0 path
-    - Streaming support for perceived speed
-    - Automatic fallback: Sonnet → Haiku if primary fails
-    - Temporal arc woven into domain narrative (past → present → future)
-    - Remedy section included when triggered
+    Tier 4 (Full)          → deepseek-v4
+    Tier 3 (Face + Palm)   → deepseek-v4
+    Tier 2 (Face or Palm)  → deepseek-v4
+    Tier 1 (Core only)     → deepseek-v4
+    Premium deep reading   → deepseek-v4
+    Union Blueprint        → deepseek-v4
 
 v3.0.0 — Narrative arc enforcement (publishing principles applied):
     - NarrationResult: opening_paragraph and closing_paragraph fields added
@@ -49,8 +28,11 @@ v3.0.0 — Narrative arc enforcement (publishing principles applied):
     - _system_prompt() (legacy): narrative arc directive added — Problem→Gap→Solution→
       Impact mandate now applies to the legacy narrate() path as well
 
+v3.1.0: Switched from Claude (Sonnet/Haiku/Opus) to DeepSeek-V4
+v3.1.1: Added em-dash (—) removal to _strip_methodology_labels() and _clean_output_text()
+
 Author: KAYAL Engineering
-Version: 3.0.0
+Version: 3.1.1
 """
 
 from __future__ import annotations
@@ -76,24 +58,25 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# Model constants (v1.0.0, preserved)
+# Model constants (v3.1.0 — switched to DeepSeek)
 # ---------------------------------------------------------------------------
 
-MODEL_SONNET  = "claude-sonnet-4-6"
-MODEL_HAIKU   = "claude-haiku-4-5-20251001"
-MODEL_OPUS    = "claude-opus-4-6"
+_MODEL_DEEPSEEK = "deepseek-v4"
+_DEEPSEEK_ENDPOINT = "https://api.deepseek.com/v1/chat/completions"
+
+# Legacy model constants preserved for backward compatibility
+MODEL_SONNET  = _MODEL_DEEPSEEK
+MODEL_HAIKU   = _MODEL_DEEPSEEK
+MODEL_OPUS    = _MODEL_DEEPSEEK
 
 _TIER_MODELS = {
-    "tier_4_full":        MODEL_SONNET,
-    "tier_3b_face_palm":  MODEL_SONNET,
-    "tier_3_palm":        MODEL_SONNET,
-    "tier_2_face":        MODEL_SONNET,
-    "tier_2b_palm_only":  MODEL_SONNET,
-    "tier_1_core":        MODEL_HAIKU,
+    "tier_4_full":        _MODEL_DEEPSEEK,
+    "tier_3b_face_palm":  _MODEL_DEEPSEEK,
+    "tier_3_palm":        _MODEL_DEEPSEEK,
+    "tier_2_face":        _MODEL_DEEPSEEK,
+    "tier_2b_palm_only":  _MODEL_DEEPSEEK,
+    "tier_1_core":        _MODEL_DEEPSEEK,
 }
-
-_ANTHROPIC_ENDPOINT = "https://api.anthropic.com/v1/messages"
-_API_VERSION        = "2023-06-01"
 
 
 # ---------------------------------------------------------------------------
@@ -168,6 +151,7 @@ RULES — follow these precisely:
 7. Write with warmth and respect — you are speaking to a whole human being, not analysing a data set
 8. Do not pad or repeat. Every sentence should add something new
 9. Honour the word count target — not a strict limit but a guide for depth
+10. Never use em-dashes (—) in your writing. Use commas (,) or periods (.) instead.
 
 FORMAT:
 - Start with a brief overall opening paragraph (2-3 sentences) that establishes significance
@@ -243,48 +227,192 @@ def _domain_prompt_haiku(domain, name):
 
 
 # ---------------------------------------------------------------------------
-# API callers (v1.0.0, preserved intact)
+# Output text cleaner — removes em-dashes and cleans punctuation
 # ---------------------------------------------------------------------------
 
-async def _call_anthropic_async(messages, system, model, max_tokens, stream=False):
+def _clean_output_text(text: str) -> str:
+    """
+    Clean output text by removing em-dashes and fixing punctuation artifacts.
+    This is the final safety net before text is returned to the caller.
+    """
+    if not text:
+        return text
+
+    # ── Remove em-dashes and en-dashes ──────────────────────
+    # Replace em-dash with comma + space
+    text = text.replace("—", ", ")
+    text = text.replace("–", ", ")
+
+    # ── Clean up punctuation artifacts ──────────────────────
+    # Remove double commas
+    text = re.sub(r',\s*,', ',', text)
+    # Remove comma before period
+    text = re.sub(r',\s*\.', '.', text)
+    # Remove period before comma
+    text = re.sub(r'\.\s*,', '.', text)
+    # Remove comma at end of sentence
+    text = re.sub(r',\s*\.', '.', text)
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text)
+    # Clean up spaces before punctuation
+    text = re.sub(r'\s+([,\.;:!?])', r'\1', text)
+    # Clean up spaces after opening quotes
+    text = re.sub(r'"\s+', '"', text)
+    # Clean up spaces before closing quotes
+    text = re.sub(r'\s+"', '"', text)
+
+    # ── Remove double spaces ────────────────────────────────
+    text = re.sub(r'\s+', ' ', text)
+    # Remove any remaining double commas
+    text = re.sub(r',\s*,', ',', text)
+
+    # ── Strip leading/trailing whitespace ────────────────────
+    text = text.strip()
+
+    return text
+
+
+# ---------------------------------------------------------------------------
+# DeepSeek API callers (v3.1.0 — replaced Anthropic)
+# ---------------------------------------------------------------------------
+
+def _call_deepseek(
+    messages: List[Dict],
+    system: str,
+    max_tokens: int,
+    temperature: float = 0.7,
+) -> Dict:
+    """Call DeepSeek-V4 synchronously."""
     try:
         import httpx
     except ImportError:
         raise ImportError("httpx required. Install with: pip install httpx")
-    _api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    headers = {"Content-Type": "application/json", "anthropic-version": _API_VERSION, "x-api-key": _api_key}
-    body = {"model": model, "max_tokens": max_tokens, "system": system, "messages": messages, "stream": stream}
-    async with __import__("httpx").AsyncClient(timeout=120.0) as client:
-        response = await client.post(_ANTHROPIC_ENDPOINT, headers=headers, json=body)
+
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+    if not api_key:
+        raise RuntimeError("DEEPSEEK_API_KEY not set in environment")
+
+    # DeepSeek uses OpenAI-compatible format — system prompt as first message
+    openai_messages = [{"role": "system", "content": system}] + messages
+
+    with httpx.Client(timeout=120.0) as client:
+        response = client.post(
+            _DEEPSEEK_ENDPOINT,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+            json={
+                "model": _MODEL_DEEPSEEK,
+                "messages": openai_messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            }
+        )
+
+        if response.status_code == 401:
+            raise RuntimeError("DeepSeek API key invalid or missing. Check DEEPSEEK_API_KEY in .env")
+
         if not response.is_success:
-            try: err_msg = response.json().get("error", {}).get("message", response.text[:300])
-            except Exception: err_msg = response.text[:300]
-            raise RuntimeError(f"Anthropic API {response.status_code}: {err_msg}")
-        return response.json()
+            try:
+                err_msg = response.json().get("error", {}).get("message", response.text[:300])
+            except Exception:
+                err_msg = response.text[:300]
+            raise RuntimeError(f"DeepSeek API {response.status_code}: {err_msg}")
+
+        data = response.json()
+        choices = data.get("choices", [])
+        if not choices:
+            raise RuntimeError("DeepSeek API returned no choices")
+
+        content = choices[0].get("message", {}).get("content", "")
+
+        # Convert to Anthropic-compatible format for downstream compatibility
+        return {
+            "content": [{"type": "text", "text": content}],
+            "usage": {
+                "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
+                "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
+            },
+            "model": _MODEL_DEEPSEEK,
+        }
+
+
+async def _call_deepseek_async(
+    messages: List[Dict],
+    system: str,
+    max_tokens: int,
+    temperature: float = 0.7,
+    stream: bool = False,
+) -> Dict:
+    """Call DeepSeek-V4 asynchronously."""
+    try:
+        import httpx
+    except ImportError:
+        raise ImportError("httpx required. Install with: pip install httpx")
+
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+    if not api_key:
+        raise RuntimeError("DEEPSEEK_API_KEY not set in environment")
+
+    openai_messages = [{"role": "system", "content": system}] + messages
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(
+            _DEEPSEEK_ENDPOINT,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+            json={
+                "model": _MODEL_DEEPSEEK,
+                "messages": openai_messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "stream": stream,
+            }
+        )
+
+        if not response.is_success:
+            try:
+                err_msg = response.json().get("error", {}).get("message", response.text[:300])
+            except Exception:
+                err_msg = response.text[:300]
+            raise RuntimeError(f"DeepSeek API {response.status_code}: {err_msg}")
+
+        data = response.json()
+        choices = data.get("choices", [])
+        if not choices:
+            raise RuntimeError("DeepSeek API returned no choices")
+
+        content = choices[0].get("message", {}).get("content", "")
+
+        return {
+            "content": [{"type": "text", "text": content}],
+            "usage": {
+                "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
+                "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
+            },
+            "model": _MODEL_DEEPSEEK,
+        }
+
+
+# Legacy function names — preserved for backward compatibility
+async def _call_anthropic_async(messages, system, model, max_tokens, stream=False):
+    """Legacy wrapper — now calls DeepSeek."""
+    return await _call_deepseek_async(messages, system, max_tokens, stream=stream)
 
 
 def _call_anthropic_sync(messages, system, model, max_tokens):
-    try:
-        import httpx
-    except ImportError:
-        raise ImportError("httpx required. Install with: pip install httpx")
-    _api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    headers = {"Content-Type": "application/json", "anthropic-version": _API_VERSION, "x-api-key": _api_key}
-    body = {"model": model, "max_tokens": max_tokens, "system": system, "messages": messages}
-    with httpx.Client(timeout=120.0) as client:
-        response = client.post(_ANTHROPIC_ENDPOINT, headers=headers, json=body)
-        if response.status_code == 401:
-            raise RuntimeError("Anthropic API key invalid or missing. Check ANTHROPIC_API_KEY in .env")
-        if not response.is_success:
-            try: err_msg = response.json().get("error", {}).get("message", response.text[:300])
-            except Exception: err_msg = response.text[:300]
-            raise RuntimeError(f"Anthropic API {response.status_code}: {err_msg}")
-        return response.json()
+    """Legacy wrapper — now calls DeepSeek."""
+    return _call_deepseek(messages, system, max_tokens)
 
 
 def _extract_text(response: Dict) -> str:
     content = response.get("content", [])
-    return " ".join(block.get("text", "") for block in content if block.get("type") == "text").strip()
+    text = " ".join(block.get("text", "") for block in content if block.get("type") == "text").strip()
+    # Clean em-dashes from extracted text immediately
+    return _clean_output_text(text)
 
 
 def _token_count(response: Dict) -> int:
@@ -298,7 +426,7 @@ def _word_to_tokens(word_count: int) -> int:
 
 
 # ---------------------------------------------------------------------------
-# v2.0.0 — % compliance validation
+# v2.0.0 — % compliance validation (preserved)
 # ---------------------------------------------------------------------------
 
 _PCT_PATTERN = re.compile('[0-9]{1,3}\\s*%|[0-9]{1,3}\\s+percent', re.IGNORECASE)
@@ -313,27 +441,17 @@ _BINARY_VERDICTS = [
 
 
 def _validate_pct_output(text: str, pct_label: str) -> Tuple[bool, Optional[str]]:
-    """
-    Validate that a % section output contains a percentage figure.
-
-    Returns (is_valid: bool, found_pct_str: Optional[str]).
-    is_valid = True if % found AND no binary compatibility verdicts.
-    """
+    """Validate that a % section output contains a percentage figure."""
     has_pct = bool(_PCT_PATTERN.search(text))
-
-    # Check for binary verdicts (case-insensitive)
     text_lower = text.lower()
     has_binary = any(v in text_lower for v in _BINARY_VERDICTS)
-
     if has_binary:
         logger.warning(
             "% section contains binary compatibility verdict",
             extra={"pct_label": pct_label, "text_snippet": text[:120]},
         )
-
     m = _PCT_PATTERN.search(text)
     found_pct = m.group(0) if m else None
-
     return has_pct and not has_binary, found_pct
 
 
@@ -342,25 +460,13 @@ def _inject_pct_if_missing(
     pct_label: str,
     pct_value: float,
 ) -> Tuple[str, bool]:
-    """
-    If the text is missing the required % score, inject it as the first line.
-    Also removes any binary compatibility verdicts found.
-
-    Returns (corrected_text, was_injected: bool).
-    """
+    """If the text is missing the required % score, inject it as the first line."""
     was_injected = False
-
-    # Remove binary verdicts
     text_lower = text.lower()
     for verdict in _BINARY_VERDICTS:
         if verdict in text_lower:
-            # Replace with neutral language
-            idx = text_lower.find(verdict)
-            # Find the sentence containing this verdict and soften it
-            # Simple approach: log and continue (narrator will improve over time)
             logger.warning(f"Binary verdict detected in % section: {verdict!r}")
 
-    # Inject % if missing
     if not _PCT_PATTERN.search(text):
         pct_line = f"{pct_label}: {round(pct_value):.0f}%"
         text = pct_line + "\n\n" + text
@@ -374,11 +480,7 @@ def _inject_pct_if_missing(
 # v3.0.0 — Methodology label stripper (final safety net)
 # ---------------------------------------------------------------------------
 
-# These patterns match explicit system labels that should never appear in output.
-# Each tuple is (regex_pattern, replacement_text).
-# Applied after every section narration as a final pass before the text reaches the visitor.
 _METHODOLOGY_STRIP_PATTERNS: List[Tuple[re.Pattern, str]] = [
-    # Numbered system labels — Life Path N, Personal Year N, Pinnacle N, etc.
     (re.compile(r'\bLife Path\s+\d+\b',          re.IGNORECASE), "your core pattern"),
     (re.compile(r'\bLife Path\s+number\s+\d+\b', re.IGNORECASE), "your core pattern"),
     (re.compile(r'\bPersonal Year\s+\d+\b',       re.IGNORECASE), "this current chapter"),
@@ -388,14 +490,12 @@ _METHODOLOGY_STRIP_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\bPersonality [Nn]umber\s+\d+\b', re.IGNORECASE), "how others experience you"),
     (re.compile(r'\bBirthday [Nn]umber\s+\d+\b',  re.IGNORECASE), "your natural gift"),
     (re.compile(r'\bMaster [Nn]umber\s+\d+\b',    re.IGNORECASE), "this heightened calling"),
-    # Astrological placement labels
     (re.compile(r'\b(Sun|Moon|Mars|Venus|Jupiter|Saturn|Mercury|Uranus|Neptune|Pluto)\s+in\s+[A-Z][a-z]+\b'), "this placement"),
     (re.compile(r'\b(your|the)\s+(Sun|Moon|Ascendant|Midheaven|North Node|South Node)\b', re.IGNORECASE), "this indicator"),
     (re.compile(r'\b(Saturn|Jupiter)\s+[Rr]eturn\b'), "this structural cycle"),
     (re.compile(r'\bVedic [Dd]asha\b'),            "the active cycle"),
     (re.compile(r'\b[A-Z][a-z]+ [Dd]asha\b'),     "the active cycle"),
     (re.compile(r'\b(Rahu|Ketu|Atmakaraka)\b',    re.IGNORECASE), "the soul indicator"),
-    # System name openers
     (re.compile(r'\b[Nn]umerology\s+(shows|reveals|indicates|suggests|points to)\b'), "the pattern reveals"),
     (re.compile(r'\b[Aa]strology\s+(shows|reveals|indicates|suggests|points to)\b'),  "the indicators reveal"),
     (re.compile(r'\b(your|the)\s+[Nn]umerology\b'), "the patterns"),
@@ -409,16 +509,35 @@ _METHODOLOGY_STRIP_PATTERNS: List[Tuple[re.Pattern, str]] = [
 def _strip_methodology_labels(text: str) -> str:
     """
     Final safety net — strip any system labels or numbers that survived the prompt constraints.
-
-    Applied to every section output before it is assembled into the final reading.
-    The replacements are intentionally conservative — they remove the label but
-    preserve the surrounding sentence so the meaning is not lost.
-
-    This function does NOT rewrite prose — it only removes explicit methodology
-    markers that should never reach the visitor.
+    Also removes em-dashes and cleans up punctuation.
     """
     if not text:
         return text
+
+    # ── Remove em-dashes and en-dashes ──────────────────────
+    # Replace em-dash with comma + space
+    text = text.replace("—", ", ")
+    text = text.replace("–", ", ")
+
+    # ── Clean up punctuation artifacts ──────────────────────
+    # Remove double commas
+    text = re.sub(r',\s*,', ',', text)
+    # Remove comma before period
+    text = re.sub(r',\s*\.', '.', text)
+    # Remove period before comma
+    text = re.sub(r'\.\s*,', '.', text)
+    # Remove comma at end of sentence
+    text = re.sub(r',\s*\.', '.', text)
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text)
+    # Clean up spaces before punctuation
+    text = re.sub(r'\s+([,\.;:!?])', r'\1', text)
+    # Clean up spaces after opening quotes
+    text = re.sub(r'"\s+', '"', text)
+    # Clean up spaces before closing quotes
+    text = re.sub(r'\s+"', '"', text)
+
+    # ── Strip methodology labels ─────────────────────────────
     for pattern, replacement in _METHODOLOGY_STRIP_PATTERNS:
         original = text
         text = pattern.sub(replacement, text)
@@ -427,14 +546,25 @@ def _strip_methodology_labels(text: str) -> str:
                 "Methodology label stripped from output",
                 extra={"pattern": str(pattern.pattern)[:60], "replacement": replacement},
             )
-    return text
 
-# Sections narrated in this order regardless of how they appear in pkg.sections.
-# Lower number = earlier in the narrative. Sections not listed get order 50.
-# Rationale: context-setters (character, identity) must land before domain detail;
-# remedies_activation / union_remedies are always last — they are the impact landing.
+    # ── Final cleanup ────────────────────────────────────────
+    # Remove any remaining double spaces
+    text = re.sub(r'\s+', ' ', text)
+    # Remove any remaining double commas
+    text = re.sub(r',\s*,', ',', text)
+
+    # ── Clean up any remaining em-dashes that might have been missed ──
+    text = text.replace("—", ", ")
+    text = text.replace("–", ", ")
+
+    return text.strip()
+
+
+# ---------------------------------------------------------------------------
+# v3.0.0 — Narrative order and opening sentence enforcement (preserved)
+# ---------------------------------------------------------------------------
+
 _NARRATIVE_ORDER: Dict[str, int] = {
-    # Individual Blueprint
     "character_overview":  1,
     "identity_purpose":    2,
     "spiritual_path":      3,
@@ -447,7 +577,6 @@ _NARRATIVE_ORDER: Dict[str, int] = {
     "spirit_world":       10,
     "legacy_mission":     11,
     "remedies_activation":12,
-    # Union Blueprint
     "union_overview":         1,
     "person_a_character":     2,
     "person_b_character":     3,
@@ -466,9 +595,7 @@ _NARRATIVE_ORDER: Dict[str, int] = {
     "union_remedies":        16,
 }
 
-# Patterns that indicate a weak opening sentence — triggers a one-shot retry
 _WEAK_OPENING_PATTERNS = [
-    # System name openers — already present
     r"^your life path \d",
     r"^[a-z]+'s life path",
     r"^as a life path",
@@ -481,7 +608,6 @@ _WEAK_OPENING_PATTERNS = [
     r"^based on",
     r"^this section",
     r"^in this reading",
-    # Additional methodology/number openers — v3.0.0 extension
     r"^life path \d",
     r"^personal year \d",
     r"^your personal year",
@@ -503,19 +629,11 @@ _WEAK_OPENING_PATTERNS = [
     r"^the synthesis (shows|reveals|indicates)",
     r"^this reading (shows|reveals|tells|indicates)",
 ]
-_WEAK_OPENING_RE = re.compile(
-    "|".join(_WEAK_OPENING_PATTERNS), re.IGNORECASE
-)
+_WEAK_OPENING_RE = re.compile("|".join(_WEAK_OPENING_PATTERNS), re.IGNORECASE)
 
 
 def _check_opening_sentence(text: str) -> bool:
-    """
-    Return True if the opening sentence is strong (significance-first).
-    Return False if it starts with a weak framing pattern.
-
-    A weak opening is the narrative equivalent of a desk rejection:
-    the reader encounters a number or a system name before a reason to care.
-    """
+    """Return True if the opening sentence is strong (significance-first)."""
     first_sentence = text.split(".")[0].strip()
     return not bool(_WEAK_OPENING_RE.match(first_sentence))
 
@@ -528,21 +646,8 @@ def _build_document_frame(
     model:         str,
     global_context:str,
 ) -> Tuple[str, str, int]:
-    """
-    Generate a document-level opening paragraph and closing paragraph.
-
-    The opening establishes why this reading matters — the significance of
-    having a complete synthesis rather than any single domain insight.
-    The closing lands the impact: what the person now carries forward.
-
-    Both are separate LLM calls that receive a brief summary of what the
-    reading covers, so they can reference the actual content.
-
-    Returns (opening_paragraph, closing_paragraph, tokens_used).
-    """
+    """Generate a document-level opening paragraph and closing paragraph."""
     tokens_total = 0
-
-    # Build a brief content summary for context (100 words max)
     section_summary = "; ".join(
         f"{k.replace('_', ' ')}" for k in list(section_texts.keys())[:8] if section_texts.get(k)
     )
@@ -554,7 +659,6 @@ def _build_document_frame(
         subjects = person_name
         reading_type = "Individual Life Blueprint"
 
-    # Opening paragraph prompt
     opening_prompt = (
         f"Write a single opening paragraph (3–4 sentences) for {subjects}'s KAYAL {reading_type}.\n\n"
         f"This paragraph precedes all domain sections. Its purpose is SIGNIFICANCE:\n"
@@ -566,15 +670,15 @@ def _build_document_frame(
         f"- Establish WHY this reading exists — the problem it solves.\n"
         f"- Address {person_name} directly. Warm, grounded, specific.\n"
         f"- The last sentence should create forward pull into the reading.\n"
+        f"Never use em-dashes (—). Use commas (,) instead.\n"
         f"Write the opening paragraph now. Nothing else."
     )
 
     try:
-        open_resp = _call_anthropic_sync(
-            messages   = [{"role": "user", "content": opening_prompt}],
-            system     = global_context,
-            model      = model,
-            max_tokens = 200,
+        open_resp = _call_deepseek(
+            messages=[{"role": "user", "content": opening_prompt}],
+            system=global_context,
+            max_tokens=200,
         )
         opening_paragraph = _extract_text(open_resp).strip()
         tokens_total += _token_count(open_resp)
@@ -582,7 +686,6 @@ def _build_document_frame(
         logger.warning(f"Document opening paragraph failed: {e}")
         opening_paragraph = ""
 
-    # Closing paragraph prompt — references the reading's content
     closing_prompt = (
         f"Write a single closing paragraph (3–4 sentences) for {subjects}'s KAYAL {reading_type}.\n\n"
         f"This paragraph follows all domain sections. Its purpose is IMPACT:\n"
@@ -593,15 +696,15 @@ def _build_document_frame(
         f"- Address what {person_name} now carries that they didn't have before.\n"
         f"- The question the reading answers is: 'What do I do with this?'\n"
         f"- End with a single sentence that feels like a door opening, not a door closing.\n"
+        f"Never use em-dashes (—). Use commas (,) instead.\n"
         f"Write the closing paragraph now. Nothing else."
     )
 
     try:
-        close_resp = _call_anthropic_sync(
-            messages   = [{"role": "user", "content": closing_prompt}],
-            system     = global_context,
-            model      = model,
-            max_tokens = 200,
+        close_resp = _call_deepseek(
+            messages=[{"role": "user", "content": closing_prompt}],
+            system=global_context,
+            max_tokens=200,
         )
         closing_paragraph = _extract_text(close_resp).strip()
         tokens_total += _token_count(close_resp)
@@ -610,6 +713,7 @@ def _build_document_frame(
         closing_paragraph = ""
 
     return opening_paragraph, closing_paragraph, tokens_total
+
 
 # ---------------------------------------------------------------------------
 # v2.0.0 — Section-level LLM caller (enhanced in v3.0.0)
@@ -621,29 +725,18 @@ def _narrate_section(
     model:          str,
     compat_pcts:    Optional[Dict[str, float]] = None,
 ) -> Tuple[str, int, bool]:
-    """
-    Call the LLM for a single SectionPrompt.
-
-    v3.0.0: After the first call, _check_opening_sentence() validates that
-    the output opens with significance rather than a weak framing pattern.
-    If weak, a single retry is made with an explicit instruction to open
-    with the problem/significance before any names or numbers.
-
-    Returns (narrated_text, tokens_used, pct_was_injected).
-    """
+    """Call DeepSeek for a single SectionPrompt."""
     full_system = global_context + "\n\n" + section.system_prompt
     messages    = [{"role": "user", "content": section.user_prompt}]
 
-    response = _call_anthropic_sync(
-        messages   = messages,
-        system     = full_system,
-        model      = model,
-        max_tokens = section.max_tokens,
+    response = _call_deepseek(
+        messages=messages,
+        system=full_system,
+        max_tokens=section.max_tokens,
     )
     text   = _extract_text(response)
     tokens = _token_count(response)
 
-    # v3.0.0 — Opening sentence enforcement (one retry if weak)
     if not _check_opening_sentence(text):
         logger.info(
             "Weak opening sentence detected — retrying with framing instruction",
@@ -661,24 +754,22 @@ def _narrate_section(
             "Sun sign, Pinnacle, Destiny number, Saturn return), any number, or any phrase "
             "that names the method rather than what it reveals. "
             "Open with the lived reality — the thing the person recognises before you explain "
-            "anything about how you know it."
+            "anything about how you know it. "
+            "Never use em-dashes (—). Use commas (,) instead."
         )
         try:
-            retry_resp  = _call_anthropic_sync(
-                messages   = [{"role": "user", "content": retry_user_prompt}],
-                system     = full_system,
-                model      = model,
-                max_tokens = section.max_tokens,
+            retry_resp = _call_deepseek(
+                messages=[{"role": "user", "content": retry_user_prompt}],
+                system=full_system,
+                max_tokens=section.max_tokens,
             )
             retry_text = _extract_text(retry_resp)
-            tokens    += _token_count(retry_resp)
-            # Only use retry if it's genuinely different and longer than 50 chars
+            tokens += _token_count(retry_resp)
             if retry_text and len(retry_text) > 50:
                 text = retry_text
         except Exception as e:
             logger.warning(f"Opening sentence retry failed [{section.section_id}]: {e}")
 
-    # % compliance enforcement (v2.0.0, preserved)
     pct_injected = False
     if section.is_pct_section and section.pct_label:
         pct_value = 50.0
@@ -690,7 +781,7 @@ def _narrate_section(
         if not is_valid:
             text, pct_injected = _inject_pct_if_missing(text, section.pct_label, pct_value)
 
-    # Final safety net — strip any methodology labels that survived the prompt constraints
+    # Final safety net — strip methodology labels and clean em-dashes
     text = _strip_methodology_labels(text)
 
     return text, tokens, pct_injected
@@ -705,9 +796,46 @@ async def _narrate_section_async(
     """Async version of _narrate_section()."""
     full_system = global_context + "\n\n" + section.system_prompt
     messages = [{"role": "user", "content": section.user_prompt}]
-    response = await _call_anthropic_async(messages, full_system, model, section.max_tokens)
+    response = await _call_deepseek_async(
+        messages=messages,
+        system=full_system,
+        max_tokens=section.max_tokens,
+    )
     text   = _extract_text(response)
     tokens = _token_count(response)
+
+    if not _check_opening_sentence(text):
+        logger.info(
+            "Weak opening sentence detected — retrying with framing instruction",
+            extra={"section_id": section.section_id, "opening": text[:80]},
+        )
+        retry_user_prompt = (
+            section.user_prompt
+            + "\n\nCRITICAL: Your previous opening was too weak — it led with a system name, "
+            "a number label, or a methodology reference before establishing why this dimension "
+            "of life matters to this specific person. "
+            "Rewrite. Open with the SIGNIFICANCE: the cost, the problem, or the question "
+            "that makes this section urgent. The reader must feel 'this is about me' "
+            "before they encounter any specific data. "
+            "Do not begin with the person's name, any system label (Life Path, Personal Year, "
+            "Sun sign, Pinnacle, Destiny number, Saturn return), any number, or any phrase "
+            "that names the method rather than what it reveals. "
+            "Open with the lived reality — the thing the person recognises before you explain "
+            "anything about how you know it. "
+            "Never use em-dashes (—). Use commas (,) instead."
+        )
+        try:
+            retry_resp = await _call_deepseek_async(
+                messages=[{"role": "user", "content": retry_user_prompt}],
+                system=full_system,
+                max_tokens=section.max_tokens,
+            )
+            retry_text = _extract_text(retry_resp)
+            tokens += _token_count(retry_resp)
+            if retry_text and len(retry_text) > 50:
+                text = retry_text
+        except Exception as e:
+            logger.warning(f"Opening sentence retry failed [{section.section_id}]: {e}")
 
     pct_injected = False
     if section.is_pct_section and section.pct_label:
@@ -720,7 +848,7 @@ async def _narrate_section_async(
         if not is_valid:
             text, pct_injected = _inject_pct_if_missing(text, section.pct_label, pct_value)
 
-    # Final safety net — strip any methodology labels that survived the prompt constraints
+    # Final safety net — strip methodology labels and clean em-dashes
     text = _strip_methodology_labels(text)
 
     return text, tokens, pct_injected
@@ -733,21 +861,7 @@ def _assemble_full_text(
     opening_paragraph: str = "",
     closing_paragraph: str = "",
 ) -> str:
-    """
-    Assemble all section texts into the final reading document.
-
-    v3.0.0 changes:
-    - Sections are ordered by _NARRATIVE_ORDER (story-momentum sequence),
-      not by their position in pkg.sections
-    - Individual Blueprint: flowing prose wrapped in the document frame
-      (opening_paragraph → sections in narrative order → closing_paragraph)
-    - Union Blueprint: titled sections (###) wrapped in the document frame
-
-    The document frame (opening + closing) is the difference between a report
-    and a reading. The opening establishes significance before any domain detail.
-    The closing lands impact rather than summarising what was already said.
-    """
-    # Sort sections by narrative order (unlisted sections sort to middle)
+    """Assemble all section texts into the final reading document."""
     ordered_sections = sorted(
         sections,
         key=lambda s: _NARRATIVE_ORDER.get(s.section_id, 50),
@@ -755,7 +869,6 @@ def _assemble_full_text(
 
     parts = []
 
-    # Document opening (significance statement)
     if opening_paragraph:
         parts.append(opening_paragraph)
 
@@ -766,14 +879,12 @@ def _assemble_full_text(
         if tool_type == "union_blueprint":
             parts.append(f"### {section.section_title}\n\n{text}")
         else:
-            # Individual Blueprint: flowing prose — no headers, no markers
             parts.append(text)
 
-    # Document closing (impact landing — not a summary)
     if closing_paragraph:
         parts.append(closing_paragraph)
 
-    return "\n\n".join(parts)
+    return _clean_output_text("\n\n".join(parts))
 
 
 # ---------------------------------------------------------------------------
@@ -785,36 +896,10 @@ def narrate_from_package(
     use_opus: bool = False,
     fallback: bool = True,
 ) -> NarrationResult:
-    """
-    Narrate a complete Blueprint from a PromptPackage (v2.0.0 primary path).
-
-    v3.0.0 enhancements:
-    - Sections are processed in _NARRATIVE_ORDER sequence (story momentum),
-      not in the order they appear in pkg.sections
-    - _check_opening_sentence() is called inside _narrate_section() — weak
-      openings trigger one automatic retry
-    - _build_document_frame() generates an opening paragraph (significance)
-      and closing paragraph (impact) that wrap the assembled sections
-    - NarrationResult.opening_paragraph and .closing_paragraph populated
-
-    Args:
-        pkg:      PromptPackage from prompt_builder.build_prompt_package()
-        use_opus: Force Opus for premium reading
-        fallback: Fall back to Haiku if primary fails
-
-    Returns:
-        NarrationResult with full_text, section_texts, opening_paragraph,
-        closing_paragraph, compatibility_percentages, pct_validated
-    """
+    """Narrate a complete Blueprint from a PromptPackage."""
     t0 = time.monotonic()
 
-    if use_opus:
-        model = MODEL_OPUS
-    elif pkg.tool_type == "union_blueprint":
-        model = MODEL_SONNET
-    else:
-        tier_key = pkg.tier.lower().replace(" ", "_").replace("-", "_")
-        model = _TIER_MODELS.get(tier_key, MODEL_SONNET)
+    model = _MODEL_DEEPSEEK  # Always use DeepSeek-V4
 
     compat_pcts    = pkg.compatibility_percentages
     global_context = pkg.system_context
@@ -825,7 +910,6 @@ def narrate_from_package(
     error:         Optional[str] = None
     fallback_used: bool = False
 
-    # v3.0.0 — process sections in narrative order (story momentum)
     sorted_sections = sorted(
         pkg.sections,
         key=lambda s: _NARRATIVE_ORDER.get(s.section_id, 50),
@@ -846,11 +930,12 @@ def narrate_from_package(
 
         except Exception as e:
             logger.error(f"Section narration failed [{section.section_id}]: {e}")
-            if section.required and fallback and model != MODEL_HAIKU:
+            if section.required and fallback:
+                # Fallback to same model with retry
                 fallback_used = True
                 try:
                     text, tokens, injected = _narrate_section(
-                        section, global_context, MODEL_HAIKU, compat_pcts
+                        section, global_context, model, compat_pcts
                     )
                     section_texts[section.section_id] = text
                     tokens_total += tokens
@@ -869,7 +954,6 @@ def narrate_from_package(
                 )
                 error = str(e)
 
-    # v3.0.0 — build document frame (opening significance + closing impact)
     opening_paragraph = ""
     closing_paragraph = ""
     try:
@@ -885,7 +969,6 @@ def narrate_from_package(
     except Exception as e:
         logger.warning(f"Document frame generation failed: {e}")
 
-    # Assemble full text with document frame and narrative ordering
     full_text  = _assemble_full_text(
         pkg.sections, section_texts, pkg.tool_type,
         opening_paragraph, closing_paragraph,
@@ -915,7 +998,7 @@ def narrate_from_package(
 
     return NarrationResult(
         session_id                = pkg.session_id,
-        model_used                = MODEL_HAIKU if fallback_used else model,
+        model_used                = model,
         tier                      = pkg.tier,
         full_text                 = full_text,
         domain_sections           = {k: v for k, v in section_texts.items()},
@@ -928,7 +1011,6 @@ def narrate_from_package(
         section_texts             = section_texts,
         compatibility_percentages = compat_pcts,
         pct_validated             = pct_validated,
-        # v3.0.0
         opening_paragraph         = opening_paragraph,
         closing_paragraph         = closing_paragraph,
     )
@@ -939,20 +1021,11 @@ async def narrate_from_package_async(
     use_opus: bool = False,
     fallback: bool = True,
 ) -> NarrationResult:
-    """
-    Async version of narrate_from_package().
-    Processes sections concurrently for speed (required sections first, then optional).
-    """
+    """Async version of narrate_from_package()."""
     import asyncio
     t0 = time.monotonic()
 
-    if use_opus:
-        model = MODEL_OPUS
-    elif pkg.tool_type == "union_blueprint":
-        model = MODEL_SONNET
-    else:
-        tier_key = pkg.tier.lower().replace(" ", "_").replace("-", "_")
-        model = _TIER_MODELS.get(tier_key, MODEL_SONNET)
+    model = _MODEL_DEEPSEEK  # Always use DeepSeek-V4
 
     compat_pcts = pkg.compatibility_percentages
     global_context = pkg.system_context
@@ -962,11 +1035,9 @@ async def narrate_from_package_async(
     any_injected  = False
     error: Optional[str] = None
 
-    # Process sections — required ones first, then concurrent optional
     required_sections = [s for s in pkg.sections if s.required]
     optional_sections = [s for s in pkg.sections if not s.required]
 
-    # Required sections: sequential to preserve context order
     for section in required_sections:
         try:
             text, tokens, injected = await _narrate_section_async(
@@ -980,7 +1051,6 @@ async def narrate_from_package_async(
             section_texts[section.section_id] = f"[Section unavailable: {section.section_title}]"
             error = str(e)
 
-    # Optional sections: concurrent
     async def _opt_section(section):
         try:
             return section.section_id, await _narrate_section_async(
@@ -996,7 +1066,25 @@ async def narrate_from_package_async(
             tokens_total += tokens
             if injected: any_injected = True
 
-    full_text  = _assemble_full_text(pkg.sections, section_texts, pkg.tool_type)
+    opening_paragraph = ""
+    closing_paragraph = ""
+    try:
+        opening_paragraph, closing_paragraph, frame_tokens = _build_document_frame(
+            person_name    = pkg.person_name,
+            tool_type      = pkg.tool_type,
+            partner_name   = pkg.partner_name,
+            section_texts  = section_texts,
+            model          = model,
+            global_context = global_context,
+        )
+        tokens_total += frame_tokens
+    except Exception as e:
+        logger.warning(f"Document frame generation failed: {e}")
+
+    full_text  = _assemble_full_text(
+        pkg.sections, section_texts, pkg.tool_type,
+        opening_paragraph, closing_paragraph,
+    )
     word_count = len(full_text.split())
     pct_validated = not any_injected
     processing_ms = int((time.monotonic() - t0) * 1000)
@@ -1014,12 +1102,13 @@ async def narrate_from_package_async(
         fallback_used=False, error=error,
         tool_type=pkg.tool_type, section_texts=section_texts,
         compatibility_percentages=compat_pcts, pct_validated=pct_validated,
+        opening_paragraph=opening_paragraph,
+        closing_paragraph=closing_paragraph,
     )
 
 
-
 # ---------------------------------------------------------------------------
-# Legacy narrate() — v1.0.0, preserved unchanged for backward compatibility
+# Legacy narrate() — v1.0.0, preserved for backward compatibility
 # ---------------------------------------------------------------------------
 
 def narrate(
@@ -1027,11 +1116,12 @@ def narrate(
     use_opus:      bool = False,
     fallback:      bool = True,
 ) -> NarrationResult:
+    """Legacy narrate() — now uses DeepSeek."""
     t0         = time.monotonic()
     session_id = llm_payload.get("session_id", "unknown")
     tier       = llm_payload.get("tier_description", "")
     tier_key   = _extract_tier_key(llm_payload)
-    primary_model = MODEL_OPUS if use_opus else _TIER_MODELS.get(tier_key, MODEL_SONNET)
+    primary_model = _MODEL_DEEPSEEK
 
     name           = llm_payload.get("user_name", "you")
     cultural_ctx   = llm_payload.get("cultural_context", "")
@@ -1054,47 +1144,36 @@ def narrate(
 
     fallback_used = False; full_text = ""; domain_sections: Dict[str, str] = {}
     tokens_used = 0; error = None
-    is_haiku = (primary_model == MODEL_HAIKU)
 
     try:
-        if is_haiku:
-            domain_texts = []
-            for domain in domains:
-                prompt = _domain_prompt_haiku(domain, name)
-                response = _call_anthropic_sync([{"role": "user", "content": prompt}], system, primary_model, 400)
-                section = _extract_text(response)
-                tokens_used += _token_count(response)
-                domain_sections[domain["domain"]] = section
-                domain_texts.append(f"**{domain['domain'].replace('_', ' ').title()}**\n{section}")
-            closing_prompt = (
-                f"Write a closing paragraph for {name}'s reading. "
-                f"Timing context: {timing_summary} Journey: {journey} Overall theme: {overall_theme} "
-                f"Karmic context: {karmic_preamble} Pinnacle context: {pinnacle_preamble} "
-                "60-80 words. Warm, forward-looking, empowering."
-            )
-            cr = _call_anthropic_sync([{"role": "user", "content": closing_prompt}], system, primary_model, 200)
-            closing = _extract_text(cr)
-            tokens_used += _token_count(cr)
-            full_text = "\n\n".join(domain_texts) + "\n\n" + closing
-        else:
-            user_prompt = (
-                karmic_preamble + pinnacle_preamble +
-                _domain_prompt_sonnet(domains, timing_summary, journey, overall_theme, name, word_target)
-            )
-            response = _call_anthropic_sync([{"role": "user", "content": user_prompt}], system, primary_model, max_tokens)
-            full_text = _extract_text(response)
-            tokens_used = _token_count(response)
-            domain_sections = _split_into_sections(full_text, domains)
+        user_prompt = (
+            karmic_preamble + pinnacle_preamble +
+            _domain_prompt_sonnet(domains, timing_summary, journey, overall_theme, name, word_target)
+        )
+        response = _call_deepseek(
+            messages=[{"role": "user", "content": user_prompt}],
+            system=system,
+            max_tokens=max_tokens,
+        )
+        full_text = _extract_text(response)
+        tokens_used = _token_count(response)
+        domain_sections = _split_into_sections(full_text, domains)
 
     except Exception as e:
         error = str(e)
         logger.error(f"NarrationError primary model ({primary_model}): {e}")
-        if fallback and primary_model != MODEL_HAIKU:
+        if fallback:
             fallback_used = True
             try:
                 fp = _condensed_fallback_prompt(llm_payload)
-                r  = _call_anthropic_sync([{"role": "user", "content": fp}], system, MODEL_HAIKU, 1200)
-                full_text = _extract_text(r); tokens_used = _token_count(r); error = None
+                r = _call_deepseek(
+                    messages=[{"role": "user", "content": fp}],
+                    system=system,
+                    max_tokens=1200,
+                )
+                full_text = _extract_text(r)
+                tokens_used = _token_count(r)
+                error = None
             except Exception as e2:
                 error = f"Primary: {error} | Fallback: {str(e2)}"
                 full_text = _emergency_fallback(llm_payload)
@@ -1105,7 +1184,7 @@ def narrate(
         "words": word_count, "tokens": tokens_used, "fallback": fallback_used, "ms": processing_ms,
     })
     return NarrationResult(
-        session_id=session_id, model_used=MODEL_HAIKU if fallback_used else primary_model,
+        session_id=session_id, model_used=primary_model,
         tier=tier_key, full_text=full_text, domain_sections=domain_sections,
         word_count=word_count, tokens_used=tokens_used, processing_ms=processing_ms,
         fallback_used=fallback_used, error=error, tool_type="individual_blueprint",
@@ -1117,10 +1196,11 @@ async def narrate_async(
     use_opus:    bool = False,
     fallback:    bool = True,
 ) -> NarrationResult:
+    """Async legacy narrate() — now uses DeepSeek."""
     t0            = time.monotonic()
     session_id    = llm_payload.get("session_id", "unknown")
     tier_key      = _extract_tier_key(llm_payload)
-    primary_model = MODEL_OPUS if use_opus else _TIER_MODELS.get(tier_key, MODEL_SONNET)
+    primary_model = _MODEL_DEEPSEEK
 
     name           = llm_payload.get("user_name", "you")
     cultural_ctx   = llm_payload.get("cultural_context", "")
@@ -1133,7 +1213,6 @@ async def narrate_async(
 
     system    = _system_prompt(cultural_ctx, narration_tone)
     max_tokens = _word_to_tokens(word_target)
-    is_haiku  = (primary_model == MODEL_HAIKU)
     karmic_preamble   = f"\nKARMIC CONTEXT:\n{llm_payload['karmic_debt_summary']}\n" if llm_payload.get("has_karmic_debts") else ""
     pinnacle_preamble = f"\nLIFE CYCLE:\n{llm_payload['pinnacle_summary']}\n"         if llm_payload.get("pinnacle_summary") else ""
 
@@ -1141,36 +1220,35 @@ async def narrate_async(
     tokens_used = 0; error = None
 
     try:
-        if is_haiku:
-            domain_texts = []
-            for domain in domains:
-                prompt   = _domain_prompt_haiku(domain, name)
-                response = await _call_anthropic_async([{"role": "user", "content": prompt}], system, primary_model, 400)
-                section  = _extract_text(response); tokens_used += _token_count(response)
-                domain_sections[domain["domain"]] = section
-                domain_texts.append(f"**{domain['domain'].replace('_', ' ').title()}**\n{section}")
-            cp = (f"Write a closing paragraph for {name}'s reading. Timing: {timing_summary} "
-                  f"Journey: {journey} Theme: {overall_theme} {karmic_preamble} 60-80 words. Warm and empowering.")
-            cr = await _call_anthropic_async([{"role": "user", "content": cp}], system, primary_model, 200)
-            closing = _extract_text(cr); tokens_used += _token_count(cr)
-            full_text = "\n\n".join(domain_texts) + "\n\n" + closing
-        else:
-            up = karmic_preamble + pinnacle_preamble + _domain_prompt_sonnet(domains, timing_summary, journey, overall_theme, name, word_target)
-            response = await _call_anthropic_async([{"role": "user", "content": up}], system, primary_model, max_tokens)
-            full_text = _extract_text(response); tokens_used = _token_count(response)
-            domain_sections = _split_into_sections(full_text, domains)
+        user_prompt = karmic_preamble + pinnacle_preamble + _domain_prompt_sonnet(domains, timing_summary, journey, overall_theme, name, word_target)
+        response = await _call_deepseek_async(
+            messages=[{"role": "user", "content": user_prompt}],
+            system=system,
+            max_tokens=max_tokens,
+        )
+        full_text = _extract_text(response)
+        tokens_used = _token_count(response)
+        domain_sections = _split_into_sections(full_text, domains)
+
     except Exception as e:
         error = str(e); logger.error(f"Async narration error ({primary_model}): {e}")
-        if fallback and primary_model != MODEL_HAIKU:
+        if fallback:
             fallback_used = True
             try:
-                r = await _call_anthropic_async([{"role": "user", "content": _condensed_fallback_prompt(llm_payload)}], system, MODEL_HAIKU, 1200)
-                full_text = _extract_text(r); tokens_used = _token_count(r); error = None
+                r = await _call_deepseek_async(
+                    messages=[{"role": "user", "content": _condensed_fallback_prompt(llm_payload)}],
+                    system=system,
+                    max_tokens=1200,
+                )
+                full_text = _extract_text(r)
+                tokens_used = _token_count(r)
+                error = None
             except Exception as e2:
-                full_text = _emergency_fallback(llm_payload); error = f"Primary: {error} | Fallback: {str(e2)}"
+                full_text = _emergency_fallback(llm_payload)
+                error = f"Primary: {error} | Fallback: {str(e2)}"
 
     return NarrationResult(
-        session_id=session_id, model_used=MODEL_HAIKU if fallback_used else primary_model,
+        session_id=session_id, model_used=primary_model,
         tier=tier_key, full_text=full_text, domain_sections=domain_sections,
         word_count=len(full_text.split()), tokens_used=tokens_used,
         processing_ms=int((time.monotonic() - t0) * 1000), fallback_used=fallback_used, error=error,
@@ -1207,7 +1285,8 @@ def _condensed_fallback_prompt(payload: Dict) -> str:
     return (
         f"Write a warm, brief personal reading for {name} covering: " + " | ".join(summaries) +
         f"\nTiming: {payload.get('timing_summary', '')} \nOverall: {payload.get('overall_theme', '')} "
-        "\n300-400 words. Second person. No system names. Warm and empowering."
+        "\n300-400 words. Second person. No system names. Warm and empowering. "
+        "Never use em-dashes (—). Use commas (,) instead."
     )
 
 

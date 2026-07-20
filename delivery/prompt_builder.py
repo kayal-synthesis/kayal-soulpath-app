@@ -29,6 +29,12 @@ Responsibility:
     INFIDEL  — Risk factors and stabilisers always presented together.
     TIMING   — Never predict specific events. "Pattern", "tendency", "indicator".
 
+v3.0.0 — Em-dash removal:
+    - Added "Never use em-dashes (—) or en-dashes (–)" to _KAYAL_BRAND_VOICE
+    - Added same instruction to _GLOBAL_CONSTRAINTS
+    - Updated all section system prompts with "Never use em-dashes (—)" instruction
+    - This ensures the LLM is instructed at every level not to output em-dashes
+
 Individual Blueprint (12 sections):
     character_overview, career_vocation, love_relationships,
     financial_life, health_constitution, spiritual_path,
@@ -52,7 +58,7 @@ v2.0.0 — Narrative arc enhancement (publishing principles applied):
     instructing it to write. Avoids the "technically correct but uncompelling" failure mode.
 
 Author: KAYAL Engineering
-Version: 2.0.0
+Version: 3.0.0
 """
 
 from __future__ import annotations
@@ -173,6 +179,8 @@ Your voice is:
   • Compassionate — you hold both the gift and the growth edge without hierarchy
   • Free of clichés and generic self-help language
   • Present-tense and personal — you address the person directly as "you" or by name
+  • Clean of all punctuation artifacts — you NEVER use em-dashes (—) or en-dashes (–)
+    Use commas (,) or periods (.) instead. This is a strict requirement.
 
 Writing style:
   • Paragraphs only — no bullet points, no numbered lists in the main narrative
@@ -180,6 +188,7 @@ Writing style:
   • Each section stands alone as a complete piece of writing
   • Begin immediately with substance — no preambles or "I will now discuss..."
   • End with an insight or forward-leaning note — never with a summary
+  • Never use em-dashes (—) in your writing. Use commas (,) or periods (.) instead.
 
 Narrative arc — every section follows this structure:
   1. SIGNIFICANCE  — Open by establishing why this dimension of life matters,
@@ -246,6 +255,8 @@ ABSOLUTE OUTPUT CONSTRAINTS (apply to every section without exception):
        RIGHT: "You carry a particular quality of expression — a way of
                articulating things that others feel but cannot name."
 
+  7. PUNCTUATION: NEVER use em-dashes (—) or en-dashes (–). Use commas (,) or periods (.) instead.
+
      The data driving this reading stays inside the engine.
      What reaches the visitor is only what it means for their life.
 """.strip()
@@ -271,6 +282,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "edge. Every sentence must feel written for this person specifically.\n"
         "  IMPACT: End with what becomes possible when this person operates from their actual "
         "nature rather than their performed one. Name the specific change.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 4–6 paragraphs of rich, specific prose. No lists."
     ),
     "career_vocation": (
@@ -287,6 +300,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "authority expression, and the timing of career development. Be specific.\n"
         "  IMPACT: What changes when they align work with design? What is the cost of "
         "continued misalignment? End with the forward-facing implication.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 4–5 paragraphs. No generic career advice."
     ),
     "love_relationships": (
@@ -303,6 +318,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "the relationship pattern carries. Address both the gift and the challenge.\n"
         "  IMPACT: What shifts when the pattern is named? What kind of relationship becomes "
         "available? End with what this person can now do with this information.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 4–5 paragraphs."
     ),
     "financial_life": (
@@ -319,6 +336,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "This is not financial advice — frame all insights as structural indicators.\n"
         "  IMPACT: What becomes available when the financial design is aligned? What pattern "
         "ends when the misalignment is corrected?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs. End with the mandatory note: "
         "'This is not financial advice. These are structural indicators only.'"
     ),
@@ -337,6 +356,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "(b) Every statement is a 'structural indicator' or 'constitutional tendency'. "
         "(c) Frame all insights as invitations for lifestyle alignment, not warnings.\n"
         "  IMPACT: What becomes available when lifestyle aligns with constitutional design?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs. End with the mandatory sentence: "
         "'This reading identifies structural indicators only and is not a substitute "
         "for qualified medical advice.'"
@@ -355,6 +376,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "spiritual life extends. Write from a place of genuine reverence. Be specific.\n"
         "  IMPACT: What opens when the spiritual path aligns with design? "
         "What is the invitation this particular configuration extends?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 4–5 paragraphs. This is the most sacred section — honour it."
     ),
     "wealth_potential": (
@@ -371,6 +394,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "and the actions most aligned with it. "
         "This is not financial advice. All indicators are structural tendencies.\n"
         "  IMPACT: What becomes available when action aligns with wealth design?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "life_timing": (
@@ -393,6 +418,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "not be taught about the system that named it.\n"
         "  IMPACT: What becomes possible when this person moves with their current cycle "
         "rather than against it? What should they be doing right now?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "spirit_world": (
@@ -411,6 +438,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "(c) End each challenging indicator with its corresponding remedy.\n"
         "  IMPACT: What healing becomes available when the ancestral pattern is seen "
         "and consciously addressed?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Approach with epistemic humility and genuine reverence. Write 4–5 paragraphs."
     ),
     "identity_purpose": (
@@ -427,6 +456,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "orientation. What is the central question this life is asking them to answer? "
         "What is the specific quality of contribution they are moving toward?\n"
         "  IMPACT: What changes in daily decisions when this direction is clear?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "legacy_mission": (
@@ -444,6 +475,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "Name the specific domain of legacy without naming the systems that produced the reading.\n"
         "  IMPACT: What does this person need to begin, protect, or commit to now "
         "in order to arrive at that legacy?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs with a forward-facing, inspiring tone. "
         "This is the closing vision of the blueprint."
     ),
@@ -467,6 +500,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "Do not label these by system name. Present each as a concrete practice with a clear purpose.\n"
         "  IMPACT: End with a single forward-facing sentence that closes the blueprint. "
         "Not a summary. A send-off. The last thing they read should land.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 1 paragraph per remedy (5 paragraphs), preceded by the gap statement "
         "and followed by the closing sentence."
     ),
@@ -490,6 +525,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "Be specific. Name what kind of union this is at a structural level.\n"
         "  IMPACT: What becomes available to both people when they understand the purpose "
         "of this specific union rather than measuring it against an ideal?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write the % summary first, then 3–4 narrative paragraphs."
     ),
     "person_a_character": (
@@ -502,6 +539,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "style, what they bring to a partnership, and the specific pattern they carry "
         "into relationships.\n"
         "  IMPACT: End with what understanding this person's design unlocks about the dynamic.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 2–3 paragraphs. Every sentence serves the union reading."
     ),
     "person_b_character": (
@@ -514,6 +553,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "style, what they bring to a partnership, and the specific pattern they carry "
         "into relationships.\n"
         "  IMPACT: End with what understanding this person's design unlocks about the dynamic.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 2–3 paragraphs. Every sentence serves the union reading."
     ),
     "marriage_longevity": (
@@ -534,6 +575,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "the tension aspects and how they serve the bond, and what sustains this union over decades.\n"
         "  IMPACT: What does this couple need to know and do in order to make their "
         "longevity score their floor, not their ceiling?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "intimacy_compatibility": (
@@ -551,6 +594,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "desire compatibility, and how intimacy evolves over time in this union. "
         "Language must be mature but not explicit. Warm, honest, and grounded.\n"
         "  IMPACT: What conscious practice deepens the intimacy this union is capable of?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "children_potential": (
@@ -568,6 +613,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "  REVELATION: Cover the structural fertility and children indicators, the karmic "
         "agreements around parenthood, and what kind of parents this couple would be.\n"
         "  IMPACT: What does understanding this dimension prepare them for?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "career_synergy": (
@@ -584,6 +631,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "of potential professional collaboration or healthy independence.\n"
         "  IMPACT: What professional boundary or collaboration does this couple need "
         "to establish in order to protect both the union and their individual work?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "wealth_compatibility": (
@@ -600,6 +649,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "whether joint or separate financial structures are indicated, and the Jupiter "
         "channel for this union's shared abundance.\n"
         "  IMPACT: What financial structure or agreement would most protect this union?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "health_cross_impact": (
@@ -618,6 +669,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "for this couple.\n"
         "  IMPACT: What individual health practice does each person need to protect "
         "in order to sustain the union long-term?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs. End with: 'These are structural indicators, not medical guidance.'"
     ),
     "spiritual_compatibility": (
@@ -632,6 +685,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "spiritual practice is indicated, karmic/past-life connection indicators, and the "
         "spiritual growth this union provides for both people.\n"
         "  IMPACT: What shared spiritual practice or orientation would most deepen this union?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 4 paragraphs with genuine reverence."
     ),
     "death_order": (
@@ -643,6 +698,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "not predictions. Lifestyle, environment, and conscious choices are far stronger "
         "determinants of longevity than any structural indicator.'\n"
         "(d) Frame the entire section around conscious preparation and mutual support.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Cover: the structural longevity comparison, what both charts indicate about "
         "their relationship with impermanence, and how to prepare for eventual separation "
         "with wisdom and grace.\n\n"
@@ -664,6 +721,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "The structural resources this bond carries must follow every risk factor named.\n"
         "  IMPACT: Close with 3 specific, practical agreements this couple can make now "
         "to activate the stabilising indicators and consciously manage the risk factors.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs with psychological sophistication and zero sensationalism."
     ),
     "dominance_dynamics": (
@@ -680,6 +739,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "(who leads in finance, social life, major decisions).\n"
         "  IMPACT: Frame dominance patterns without blame — they are structural, not "
         "character flaws. What agreement would bring this dynamic into conscious design?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs."
     ),
     "parental_patterns": (
@@ -695,6 +756,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "this union provides for both ancestral lines.\n"
         "  IMPACT: What pattern ends in this generation if this couple does the work "
         "this union is specifically designed to offer?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs with psychological depth and genuine healing intention."
     ),
     "union_legacy": (
@@ -713,6 +776,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "makes beyond itself. Name the specific domain of legacy without naming the "
         "systems or placements that produced the reading.\n"
         "  IMPACT: What would this couple need to commit to in order to arrive at that legacy?\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write 3–4 paragraphs with a visionary, inspiring tone."
     ),
     "union_remedies": (
@@ -735,6 +800,8 @@ _SECTION_SYSTEM_PROMPTS: Dict[str, str] = {
         "  (7) Wealth — the financial structure most aligned with this union's design.\n"
         "  IMPACT: End with a single sentence that closes the Union Blueprint. "
         "Not a summary. A send-off for this specific couple.\n\n"
+        "WRITING CONSTRAINTS:\n"
+        "- Never use em-dashes (—). Use commas (,) or periods (.) instead.\n"
         "Write the gap statement first, then 1 paragraph per category (7 paragraphs), "
         "then the closing sentence."
     ),
@@ -1074,7 +1141,8 @@ def _build_section_system_prompt(section_id: str, person_name: str, partner_name
     """Combine KAYAL brand voice + global constraints + section-specific prompt."""
     section_specific = _SECTION_SYSTEM_PROMPTS.get(
         section_id,
-        f"Write the {section_id.replace('_',' ').title()} section of a KAYAL Blueprint. Write 3–4 paragraphs."
+        f"Write the {section_id.replace('_',' ').title()} section of a KAYAL Blueprint. "
+        "Never use em-dashes (—). Use commas (,) or periods (.) instead. Write 3–4 paragraphs."
     )
     # Replace name placeholders
     if person_name:
@@ -1135,6 +1203,10 @@ def _build_system_context(
         "The visitor should feel that you know their life intimately — not that",
         "you ran a calculation and are reporting the result.",
         "Prophecy, not report. Revelation, not methodology.",
+        "",
+        "PUNCTUATION DIRECTIVE (ABSOLUTE — no exceptions):",
+        "Never use em-dashes (—) or en-dashes (–) in any output text.",
+        "Use commas (,) or periods (.) instead. This is a strict requirement.",
     ])
 
     if pct_output_mode:

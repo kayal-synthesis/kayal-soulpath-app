@@ -112,6 +112,14 @@ except ImportError as _pe_err:
     print(f"⚠️  palm_engine / palm_reader not importable: {_pe_err}")
 
 try:
+    from synthesis.synastry_engine import compute_synastry_profile
+    from synthesis.synastry_reader import read_synastry
+    _SYNASTRY_AVAILABLE = True
+except ImportError as _se_err:
+    _SYNASTRY_AVAILABLE = False
+    print(f"⚠️  synastry_engine / synastry_reader not importable: {_se_err}")
+
+try:
     from synthesis.numerology_engine import compute_numerology_profile
     from synthesis.numerology_reader import read_numerology
     _NUMEROLOGY_AVAILABLE = True
@@ -1087,6 +1095,125 @@ def _get_sun_sign(day: int, month: int) -> str:
     return "Capricorn"
 
 
+_MIDPOINT_PAIRS = [("Sun", "Moon"), ("Sun", "Venus"), ("Moon", "Venus"), ("Venus", "Mars"), ("Sun", "Mars")]
+
+
+def _calculate_midpoints_and_antiscia(day: int, month: int, year: int, hour: float, utc_offset: float) -> Dict:
+    """
+    NEW — not present anywhere in astrology_engine.py, but the midpoint formula itself is
+    copied verbatim from compute_composite_chart() ("mid = (lon_a + lon_b) / 2; if
+    abs(lon_a - lon_b) > 180: mid = (mid + 180) % 360"), not invented — already proven
+    correct in the live composite-chart code, just applied to planet pairs within one
+    person's chart instead of the same planet across two people. Antiscia is the standard
+    mirror-point formula (antiscion = (180 - longitude) % 360).
+
+    Requires raw natal positions, which compute_western()/compute_astrology() compute
+    internally but never return — so this calls _calculate_positions()/_julian_day()
+    directly (both "private" by convention, still importable) rather than modifying
+    astrology_engine.py's existing public API.
+    """
+    from synthesis.astrology_engine import _julian_day, _calculate_positions, _degree_to_sign
+
+    try:
+        birth_jd = _julian_day(year, month, day, hour, utc_offset)
+        positions = _calculate_positions(birth_jd, use_sidereal=False)
+    except Exception as e:
+        print(f"⚠️ Midpoint/antiscia calculation failed: {e}")
+        return {"midpoints": {}, "antiscia": {}}
+
+    midpoints = {}
+    for a, b in _MIDPOINT_PAIRS:
+        if a not in positions or b not in positions:
+            continue
+        lon_a = positions[a]["longitude"]
+        lon_b = positions[b]["longitude"]
+        mid = (lon_a + lon_b) / 2
+        if abs(lon_a - lon_b) > 180:
+            mid = (mid + 180) % 360
+        sign, deg, _ = _degree_to_sign(mid)
+        midpoints[f"{a}/{b}"] = {"sign": sign, "degree": round(deg, 2)}
+
+    antiscia = {}
+    for planet, pos in positions.items():
+        lon = pos.get("longitude")
+        if lon is None:
+            continue
+        antiscion_lon = (180 - lon) % 360
+        sign, deg, _ = _degree_to_sign(antiscion_lon)
+        antiscia[planet] = {"sign": sign, "degree": round(deg, 2)}
+
+    return {"midpoints": midpoints, "antiscia": antiscia}
+
+
+# ---------------------------------------------------------------------------
+# System selection — GENUINELY NEW. Nothing in astrology_engine.py, geo_service.py, or
+# anywhere else picks Western vs. Vedic based on where someone is from or currently is —
+# confirmed by reading every file available. compute_western()/compute_vedic()/
+# compute_both() all already exist and work; this is the missing piece that decides which
+# one to call, using country_code (already populated by geo_service.py's real Nominatim
+# geocoding — geo_service.py itself never uses this field for anything).
+#
+# Rule: birth country in the Vedic/Jyotish tradition → compute_both() (richest reading —
+# ancestral system plus Western for broader context). Currently living in one, but not born
+# there → same. Neither → Western only, matching what's actually live today. This list is a
+# reasonable starting point (South Asia plus places with large, sustained Vedic-tradition
+# diaspora), not an authoritative or exhaustive cultural claim — easy to adjust the set of
+# country codes below without touching anything else.
+# ---------------------------------------------------------------------------
+
+_VEDIC_TRADITION_COUNTRIES = {
+    "IN", "NP", "LK", "BD", "BT",  # South Asia
+    "MU", "FJ", "TT", "GY", "SR",  # large, sustained Vedic-tradition diaspora
+}
+
+
+def select_astrology_system(birth_country_code: str, present_country_code: str = "") -> str:
+    """Returns 'western' or 'both' — never 'vedic' alone, since Western stays the baseline
+    everyone gets today; Vedic is additive for the people it's actually relevant to."""
+    birth_is_vedic = (birth_country_code or "").upper() in _VEDIC_TRADITION_COUNTRIES
+    present_is_vedic = (present_country_code or "").upper() in _VEDIC_TRADITION_COUNTRIES
+    return "both" if (birth_is_vedic or present_is_vedic) else "western"
+
+
+# ---------------------------------------------------------------------------
+# Asteroids — GENUINELY NEW, not present anywhere in astrology_engine.py's _PLANETS dict
+# (confirmed: only the 10 classical bodies + Rahu). Requires seas_18.se1 in the ephemeris
+# directory, which was tested directly against real Swiss Ephemeris calls before writing
+# this — swe.calc_ut() for Chiron/Ceres/Pallas/Juno/Vesta all returned real, distinct,
+# plausible longitudes for both a 2000 and a 2026 test date. If seas_18.se1 isn't actually
+# present in EPHE_PATH on the server this runs on, each asteroid fails independently
+# (caught below) rather than taking down the whole reading — same defensive pattern as
+# every other addition in this file.
+# ---------------------------------------------------------------------------
+
+_ASTEROID_IDS = {"Chiron": 15, "Ceres": 17, "Pallas": 18, "Juno": 19, "Vesta": 20}
+
+
+def _calculate_asteroids(day: int, month: int, year: int, hour: float, utc_offset: float) -> Dict:
+    if not _ASTROLOGY_AVAILABLE:
+        return {}
+    import swisseph as swe
+    from synthesis.astrology_engine import _julian_day, _degree_to_sign
+
+    try:
+        jd = _julian_day(year, month, day, hour, utc_offset)
+    except Exception as e:
+        print(f"⚠️ Asteroid calculation failed at Julian Day step: {e}")
+        return {}
+
+    asteroids = {}
+    for name, body_id in _ASTEROID_IDS.items():
+        try:
+            result, flags = swe.calc_ut(jd, body_id)
+            lon = result[0]
+            sign, deg, _ = _degree_to_sign(lon)
+            asteroids[name] = {"sign": sign, "degree": round(deg, 2), "retrograde": result[3] < 0}
+        except Exception as e:
+            print(f"⚠️ {name} calculation failed (likely missing seas_18.se1 on this server): {e}")
+
+    return asteroids
+
+
 def _build_geo_location(raw) -> "GeoLocation":
     if not _LOGIC_AVAILABLE:
         return None
@@ -2014,6 +2141,11 @@ def process_reading_job(
     user_question:    Optional[str],
     current_location: Optional[Dict],
     gender:           Optional[str],
+    partner_name:      Optional[str] = None,
+    partner_dob:       Optional[str] = None,
+    palm_bytes_left:   Optional[bytes] = None,
+    palm_bytes_right:  Optional[bytes] = None,
+    dominant_hand:     Optional[str] = None,
 ):
     print(f"🚀 Starting job {job_id} for tool '{tool_id}'")
     conn = get_db_connection(); cur = conn.cursor()
@@ -2075,36 +2207,156 @@ def process_reading_job(
             except Exception as e:
                 print(f"⚠️ Job {job_id}: face analysis failed: {e}")
 
-        palm_reading = None
-        if palm_bytes and _PALM_ENGINE_AVAILABLE:
+        # Dual-palm path (palm_image_left / palm_image_right from the frontend) takes priority
+        # over the older single palm_bytes param, which is kept only for any other caller still
+        # sending just one palm. Which palm is "dominant" now comes from dominant_hand — matching
+        # the handedness question tool-hand-map.html already asks before its own dual-palm
+        # upload (selectHand('right'|'left')) — rather than assuming right-handedness, which the
+        # purchase page doesn't currently ask about at all. Defaults to "right" only when
+        # dominant_hand isn't supplied, for backward compatibility with any caller that doesn't
+        # send it yet.
+        dominant_hand_norm = (dominant_hand or "right").strip().lower()
+        dominant_palm     = None
+        non_dominant_palm = None
+        if (palm_bytes_left or palm_bytes_right) and _PALM_ENGINE_AVAILABLE:
+            try:
+                pe = PalmEngine()
+                dom_bytes = palm_bytes_right if dominant_hand_norm == "right" else palm_bytes_left
+                pas_bytes = palm_bytes_left  if dominant_hand_norm == "right" else palm_bytes_right
+                if dom_bytes:
+                    dfeats = pe.extract(dom_bytes, hand_label=dominant_hand_norm)
+                    if not dfeats.error:
+                        dominant_palm = PalmReader().read(dfeats)
+                if pas_bytes:
+                    pas_hand = "left" if dominant_hand_norm == "right" else "right"
+                    pfeats = pe.extract(pas_bytes, hand_label=pas_hand)
+                    if not pfeats.error:
+                        non_dominant_palm = PalmReader().read(pfeats)
+            except Exception as e:
+                print(f"⚠️ Job {job_id}: dual palm analysis failed: {e}")
+        elif palm_bytes and _PALM_ENGINE_AVAILABLE:
             try:
                 pe     = PalmEngine()
-                pfeats = pe.extract(palm_bytes, hand_label="right")
+                pfeats = pe.extract(palm_bytes, hand_label=dominant_hand_norm)
                 if not pfeats.error:
-                    palm_reading = PalmReader().read(pfeats)
+                    dominant_palm = PalmReader().read(pfeats)
             except Exception as e:
                 print(f"⚠️ Job {job_id}: palm analysis failed: {e}")
-
-        user_input = UserInput(
-            birth_data         = birth_data,
-            face_reading       = face_reading,
-            dominant_palm      = palm_reading,
-            non_dominant_palm  = None,
-            dual_palm          = None,
-            requested_domains  = list(ALL_DOMAINS),
-            include_remedies   = True,
-            session_id         = job_id,
-        )
 
         num_profile  = compute_numerology_profile(birth_data, date_cls.today())
         num_reading  = read_numerology(num_profile, bd.day)
         num_signals  = {"system": "pythagorean", "signals": num_reading.to_signal_list()}
 
         hour = birth_data.birth_datetime.hour + birth_data.birth_datetime.minute / 60.0
-        astro_primary, astro_timing, _ = compute_western(
-            bd.day, bd.month, bd.year, hour,
-            birth_geo.latitude, birth_geo.longitude, birth_geo.utc_offset,
-            current_year=datetime.now().year,
+
+        # NEW: pick Western-only vs. Western+Vedic based on birth/present country —
+        # see select_astrology_system()'s docstring for the rule and why this was missing.
+        astrology_system = select_astrology_system(
+            getattr(birth_geo, "country_code", ""), getattr(present_geo, "country_code", "")
+        )
+
+        if astrology_system == "both" and _ASTROLOGY_AVAILABLE:
+            try:
+                from synthesis.astrology_engine import compute_both
+                western_signals, vedic_signals, astro_timing, vedic_chart = compute_both(
+                    bd.day, bd.month, bd.year, hour,
+                    birth_geo.latitude, birth_geo.longitude, birth_geo.utc_offset,
+                    current_year=datetime.now().year,
+                )
+                astro_primary = {
+                    "system": "both",
+                    "signals": western_signals["signals"] + vedic_signals["signals"],
+                }
+            except Exception as e:
+                print(f"⚠️ Job {job_id}: compute_both failed, falling back to Western only: {e}")
+                astro_primary, astro_timing, vedic_chart = compute_western(
+                    bd.day, bd.month, bd.year, hour,
+                    birth_geo.latitude, birth_geo.longitude, birth_geo.utc_offset,
+                    current_year=datetime.now().year,
+                )
+        else:
+            astro_primary, astro_timing, vedic_chart = compute_western(
+                bd.day, bd.month, bd.year, hour,
+                birth_geo.latitude, birth_geo.longitude, birth_geo.utc_offset,
+                current_year=datetime.now().year,
+            )
+
+        # ── Union Blueprint / partner path ──────────────────────────────────────────
+        # partner_name + partner_dob present (sent by the frontend for requires_partner
+        # tools, e.g. complete-union-blueprint) → run two-person synastry instead of the
+        # single-person synthesis below. NOTE: the frontend only collects partner name +
+        # DOB today, not partner birth time/location — so the partner's astrology runs on
+        # an "Unknown" fallback location (0,0 coordinates), which is a real accuracy limit
+        # worth fixing on the frontend later (add partner birth time/location fields),
+        # not something this patch can improve on its own.
+        if partner_name and partner_dob and _SYNASTRY_AVAILABLE:
+            try:
+                pbd = dparser.parse(partner_dob)
+                partner_geo = _build_geo_location(_fallback_geo("Unknown") if _GEO_AVAILABLE else None)
+                partner_birth_data = BirthData(
+                    full_name=partner_name, day=pbd.day, month=pbd.month, year=pbd.year,
+                    hour=None, minute=None, hour_known=False,
+                    birth_place=partner_geo, present_location=partner_geo,
+                )
+                partner_num_profile = compute_numerology_profile(partner_birth_data, date_cls.today())
+
+                partner_hour = partner_birth_data.birth_datetime.hour + partner_birth_data.birth_datetime.minute / 60.0
+
+                synastry_profile = compute_synastry_profile(
+                    day_a=bd.day, month_a=bd.month, year_a=bd.year, hour_a=hour,
+                    lat_a=birth_geo.latitude, lon_a=birth_geo.longitude, utc_a=birth_geo.utc_offset,
+                    day_b=pbd.day, month_b=pbd.month, year_b=pbd.year, hour_b=partner_hour,
+                    lat_b=partner_geo.latitude, lon_b=partner_geo.longitude, utc_b=partner_geo.utc_offset,
+                    system="western",
+                    person_a_label=full_name, person_b_label=partner_name,
+                    numerology_lp_a=num_profile.life_path, numerology_lp_b=partner_num_profile.life_path,
+                )
+                synastry_reading = read_synastry(synastry_profile)
+                narration = narrate(synastry_reading.to_dict(), use_opus=False)
+
+                result = {
+                    "reading":         narration.full_text,
+                    "domain_sections": narration.domain_sections,
+                    "life_path":       num_profile.life_path,
+                    "personal_year":   num_profile.personal_year,
+                    "sun_sign":        _get_sun_sign(bd.day, bd.month),
+                    "compatibility_percentages": {
+                        "overall":            synastry_profile.compatibility.overall,
+                        "love":               synastry_profile.compatibility.love,
+                        "career":             synastry_profile.compatibility.career,
+                        "wealth":             synastry_profile.compatibility.wealth,
+                        "health":             synastry_profile.compatibility.health,
+                        "spiritual":          synastry_profile.compatibility.spiritual,
+                        "children_forecast":  synastry_profile.compatibility.children_forecast,
+                        "character":          synastry_profile.compatibility.character,
+                    },
+                    "union_remedies":  synastry_profile.union_remedies,
+                    "generated_at":    datetime.utcnow().isoformat(),
+                    "pipeline":        "kayal_v8_production_union",
+                }
+
+                cur.execute(
+                    "UPDATE jobs SET status='completed', result=%s, completed_at=NOW() WHERE id=%s",
+                    (json.dumps(result), job_id)
+                )
+                conn.commit()
+                print(f"✅ Job {job_id} completed (union)")
+                return
+            except Exception as e:
+                print(f"⚠️ Job {job_id}: synastry path failed, falling back to individual reading: {e}")
+                # Falls through to the individual-reading path below rather than failing the
+                # whole job — a degraded single-person reading beats no reading at all.
+
+        # ── Individual reading path (unchanged) ─────────────────────────────────────
+        user_input = UserInput(
+            birth_data         = birth_data,
+            face_reading       = face_reading,
+            dominant_palm      = dominant_palm,
+            non_dominant_palm  = non_dominant_palm,
+            dual_palm          = None,
+            requested_domains  = list(ALL_DOMAINS),
+            include_remedies   = True,
+            session_id         = job_id,
         )
 
         logic_result = run_logic_engine(
@@ -2122,7 +2374,7 @@ def process_reading_job(
                 "personal_day":         num_profile.personal_day,
                 "personal_day_theme":   _day_theme(num_profile.personal_day),
             },
-            vedic_chart        = None,
+            vedic_chart        = vedic_chart,
             current_year       = datetime.now().year,
         )
 
@@ -2130,6 +2382,13 @@ def process_reading_job(
             raise RuntimeError(f"Logic engine error: {logic_result.error}")
 
         narration = narrate(logic_result.to_dict(), use_opus=False)
+
+        # astro_timing already contains transits/arabic_parts/progressions/stelliums —
+        # compute_western() computes all four on every call, but until now nothing ever
+        # stored them past this point. Surfacing what's already correctly computed here,
+        # not adding new astronomical calculations.
+        midpoint_data = _calculate_midpoints_and_antiscia(bd.day, bd.month, bd.year, hour, birth_geo.utc_offset)
+        asteroids = _calculate_asteroids(bd.day, bd.month, bd.year, hour, birth_geo.utc_offset)
 
         result = {
             "reading":          narration.full_text,
@@ -2139,6 +2398,21 @@ def process_reading_job(
             "sun_sign":         _get_sun_sign(bd.day, bd.month),
             "generated_at":     datetime.utcnow().isoformat(),
             "pipeline":         "kayal_v8_production",
+            # Already computed inside compute_western() every time — previously discarded
+            # after being fed to the narrator. Now actually stored.
+            "current_transits": astro_timing.get("current_transits", []),
+            "arabic_parts":     astro_timing.get("arabic_parts", {}),
+            "progressions":     astro_timing.get("progressions", {}),
+            "stelliums":        astro_timing.get("stelliums", []),
+            # Genuinely new calculations — see _calculate_midpoints_and_antiscia's docstring.
+            "midpoints":        midpoint_data["midpoints"],
+            "antiscia":         midpoint_data["antiscia"],
+            # NEW: which system(s) actually ran — see select_astrology_system()'s docstring.
+            "astrology_system_used": astrology_system,
+            "vedic_chart":      vedic_chart,
+            # Genuinely new — requires seas_18.se1 in the ephemeris directory. Empty dict
+            # if that file isn't present on this server, not an error.
+            "asteroids":        asteroids,
         }
 
         cur.execute(
@@ -2169,13 +2443,20 @@ async def submit_reading(
     birth_location:   Optional[str]        = Form(None),
     facial_image:     Optional[UploadFile] = File(None),
     palm_image:       Optional[UploadFile] = File(None),
+    palm_image_left:  Optional[UploadFile] = File(None),
+    palm_image_right: Optional[UploadFile] = File(None),
+    partner_name:     Optional[str]        = Form(None),
+    partner_dob:      Optional[str]        = Form(None),
+    dominant_hand:    Optional[str]        = Form(None),
     user_question:    Optional[str]        = Form(None),
     gender:           Optional[str]        = Form(None),
 ):
     client_ip        = get_client_ip(request)
     current_location = geolocate_ip(client_ip)
-    face_bytes       = await facial_image.read() if facial_image else None
-    palm_bytes       = await palm_image.read()   if palm_image   else None
+    face_bytes       = await facial_image.read()     if facial_image     else None
+    palm_bytes       = await palm_image.read()       if palm_image       else None
+    palm_bytes_left  = await palm_image_left.read()  if palm_image_left  else None
+    palm_bytes_right = await palm_image_right.read() if palm_image_right else None
 
     job_id = hashlib.md5(
         f"{full_name}{date_of_birth}{tool_id}{datetime.now().isoformat()}".encode()
@@ -2190,17 +2471,22 @@ async def submit_reading(
 
     background_tasks.add_task(
         process_reading_job,
-        job_id           = job_id,
-        full_name        = full_name,
-        dob              = date_of_birth,
-        birth_time       = birth_time,
-        birth_location   = birth_location,
-        face_bytes       = face_bytes,
-        palm_bytes       = palm_bytes,
-        tool_id          = tool_id,
-        user_question    = user_question,
-        current_location = current_location,
-        gender           = gender,
+        job_id            = job_id,
+        full_name         = full_name,
+        dob               = date_of_birth,
+        birth_time        = birth_time,
+        birth_location    = birth_location,
+        face_bytes        = face_bytes,
+        palm_bytes        = palm_bytes,
+        tool_id           = tool_id,
+        user_question     = user_question,
+        current_location  = current_location,
+        gender            = gender,
+        partner_name      = partner_name,
+        partner_dob       = partner_dob,
+        palm_bytes_left   = palm_bytes_left,
+        palm_bytes_right  = palm_bytes_right,
+        dominant_hand     = dominant_hand,
     )
     return {"job_id": job_id, "status": "pending"}
 
@@ -2431,21 +2717,28 @@ async def get_subscription_tier(user_id: str, tool_id: str):
 
 @app.post("/api/reading")
 async def create_reading(
-    request:        Request,
-    full_name:      str  = Form(...),
-    date_of_birth:  str  = Form(...),
-    tool_id:        str  = Form(...),
-    birth_time:     Optional[str]        = Form(None),
-    birth_location: Optional[str]        = Form(None),
-    facial_image:   Optional[UploadFile] = File(None),
-    palm_image:     Optional[UploadFile] = File(None),
-    user_question:  Optional[str]        = Form(None),
-    gender:         Optional[str]        = Form(None),
+    request:          Request,
+    full_name:        str  = Form(...),
+    date_of_birth:    str  = Form(...),
+    tool_id:          str  = Form(...),
+    birth_time:       Optional[str]        = Form(None),
+    birth_location:   Optional[str]        = Form(None),
+    facial_image:     Optional[UploadFile] = File(None),
+    palm_image:       Optional[UploadFile] = File(None),
+    palm_image_left:  Optional[UploadFile] = File(None),
+    palm_image_right: Optional[UploadFile] = File(None),
+    partner_name:     Optional[str]        = Form(None),
+    partner_dob:      Optional[str]        = Form(None),
+    dominant_hand:    Optional[str]        = Form(None),
+    user_question:    Optional[str]        = Form(None),
+    gender:           Optional[str]        = Form(None),
 ):
     client_ip        = get_client_ip(request)
     current_location = geolocate_ip(client_ip)
-    face_bytes       = await facial_image.read() if facial_image else None
-    palm_bytes       = await palm_image.read()   if palm_image   else None
+    face_bytes       = await facial_image.read()     if facial_image     else None
+    palm_bytes       = await palm_image.read()       if palm_image       else None
+    palm_bytes_left  = await palm_image_left.read()  if palm_image_left  else None
+    palm_bytes_right = await palm_image_right.read() if palm_image_right else None
 
     job_id = hashlib.md5(
         f"{full_name}{date_of_birth}{tool_id}{datetime.now().isoformat()}".encode()
@@ -2464,6 +2757,9 @@ async def create_reading(
         face_bytes=face_bytes, palm_bytes=palm_bytes,
         tool_id=tool_id, user_question=user_question,
         current_location=current_location, gender=gender,
+        partner_name=partner_name, partner_dob=partner_dob,
+        palm_bytes_left=palm_bytes_left, palm_bytes_right=palm_bytes_right,
+        dominant_hand=dominant_hand,
     )
 
     conn2 = get_db_connection(); cur2 = conn2.cursor()

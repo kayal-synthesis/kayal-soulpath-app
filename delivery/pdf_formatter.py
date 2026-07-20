@@ -30,6 +30,12 @@ v3.0.0 — Narrative arc integration:
       so backward compatibility with any caller not yet passing these fields
       is fully preserved.
 
+v3.1.0 — Em-dash removal:
+    - _clean_text(): new helper function that removes em-dashes (—) and en-dashes (–)
+      and cleans up resulting punctuation artifacts
+    - _split_paragraphs() now calls _clean_text() on every paragraph before escaping
+    - All text rendered in the PDF is now cleaned of em-dashes
+
 v2.0.0 additions:
     - generate_pdf() extended with 4 new optional parameters:
         tool_type, partner_name, compatibility_percentages, section_texts
@@ -50,7 +56,7 @@ v2.0.0 additions:
 Output: bytes (PDF binary) suitable for StreamingResponse
 
 Author: KAYAL Engineering
-Version: 3.0.0
+Version: 3.1.0
 """
 
 from __future__ import annotations
@@ -183,6 +189,52 @@ def _pct_colour(pct: float, as_rgb: bool = False):
 
 
 # ─────────────────────────────────────────────
+# Text cleaner — removes em-dashes and cleans punctuation
+# ─────────────────────────────────────────────
+
+def _clean_text(text: str) -> str:
+    """
+    Clean text by removing em-dashes and fixing punctuation artifacts.
+    This is the final safety net for text rendered in the PDF.
+    """
+    if not text:
+        return text
+
+    # ── Remove em-dashes and en-dashes ──────────────────────
+    # Replace em-dash with comma + space
+    text = text.replace("—", ", ")
+    text = text.replace("–", ", ")
+
+    # ── Clean up punctuation artifacts ──────────────────────
+    # Remove double commas
+    text = re.sub(r',\s*,', ',', text)
+    # Remove comma before period
+    text = re.sub(r',\s*\.', '.', text)
+    # Remove period before comma
+    text = re.sub(r'\.\s*,', '.', text)
+    # Remove comma at end of sentence
+    text = re.sub(r',\s*\.', '.', text)
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text)
+    # Clean up spaces before punctuation
+    text = re.sub(r'\s+([,\.;:!?])', r'\1', text)
+    # Clean up spaces after opening quotes
+    text = re.sub(r'"\s+', '"', text)
+    # Clean up spaces before closing quotes
+    text = re.sub(r'\s+"', '"', text)
+
+    # ── Remove double spaces ────────────────────────────────
+    text = re.sub(r'\s+', ' ', text)
+    # Remove any remaining double commas
+    text = re.sub(r',\s*,', ',', text)
+
+    # ── Strip leading/trailing whitespace ────────────────────
+    text = text.strip()
+
+    return text
+
+
+# ─────────────────────────────────────────────
 # Main PDF generation functions
 # ─────────────────────────────────────────────
 
@@ -249,27 +301,27 @@ async def generate_pdf(
                 life_path         = life_path,
                 sun_sign          = sun_sign,
                 generated         = generated,
-                opening_paragraph = opening_paragraph,
-                closing_paragraph = closing_paragraph,
+                opening_paragraph = _clean_text(opening_paragraph),
+                closing_paragraph = _clean_text(closing_paragraph),
             )
         return _generate_with_reportlab(
             job_id            = job_id,
             tool_name         = tool_name,
-            reading           = reading,
-            sections          = sections or {},
+            reading           = _clean_text(reading),
+            sections          = {k: _clean_text(v) for k, v in (sections or {}).items()},
             life_path         = life_path,
             sun_sign          = sun_sign,
             generated         = generated,
-            user_name         = user_name,
-            opening_paragraph = opening_paragraph,
-            closing_paragraph = closing_paragraph,
+            user_name         = _clean_text(user_name) if user_name else None,
+            opening_paragraph = _clean_text(opening_paragraph),
+            closing_paragraph = _clean_text(closing_paragraph),
         )
     except ImportError:
         logger.warning("reportlab not installed — generating plain text PDF fallback")
-        return _generate_plain_text_fallback(tool_name, reading)
+        return _generate_plain_text_fallback(tool_name, _clean_text(reading))
     except Exception as e:
         logger.error(f"PDF generation error: {e}", exc_info=True)
-        return _generate_plain_text_fallback(tool_name, reading)
+        return _generate_plain_text_fallback(tool_name, _clean_text(reading))
 
 
 async def generate_union_pdf(
@@ -313,24 +365,24 @@ async def generate_union_pdf(
             tool_name         = tool_name,
             name_a            = name_a,
             name_b            = name_b,
-            section_texts     = section_texts,
+            section_texts     = {k: _clean_text(v) for k, v in section_texts.items() if v},
             compat_pcts       = compat_pcts,
             life_path         = life_path_a,
             sun_sign          = sun_sign_a,
             generated         = generated,
-            opening_paragraph = opening_paragraph,
-            closing_paragraph = closing_paragraph,
+            opening_paragraph = _clean_text(opening_paragraph),
+            closing_paragraph = _clean_text(closing_paragraph),
         )
     except ImportError:
         logger.warning("reportlab not installed — generating plain text PDF fallback")
         full_text = "\n\n".join(
-            f"### {_UNION_SECTION_NAMES.get(sid, sid.title())}\n{text}"
+            f"### {_UNION_SECTION_NAMES.get(sid, sid.title())}\n{_clean_text(text)}"
             for sid, text in section_texts.items() if text
         )
         return _generate_plain_text_fallback(tool_name, full_text)
     except Exception as e:
         logger.error(f"Union PDF generation error: {e}", exc_info=True)
-        full_text = "\n\n".join(v for v in section_texts.values() if v)
+        full_text = "\n\n".join(_clean_text(v) for v in section_texts.values() if v)
         return _generate_plain_text_fallback(tool_name, full_text)
 
 
@@ -933,7 +985,7 @@ def _generate_with_reportlab(
 
 
 # ─────────────────────────────────────────────
-# Text utilities (v1.0.0, preserved intact)
+# Text utilities (v3.1.0 — includes em-dash removal)
 # ─────────────────────────────────────────────
 
 def _split_paragraphs(text: str) -> List[str]:
@@ -941,12 +993,22 @@ def _split_paragraphs(text: str) -> List[str]:
     Split reading text into paragraphs for rendering.
     Handles both double-newline and single-newline formatted text.
     Escapes reportlab special characters.
+
+    v3.1.0: Calls _clean_text() on every paragraph before escaping,
+    removing em-dashes and cleaning punctuation artifacts.
     """
+    # First, clean the entire text of em-dashes
+    text = _clean_text(text)
+
     raw_paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
     if len(raw_paragraphs) <= 2 and "\n" in text:
         raw_paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
+
     safe = []
     for p in raw_paragraphs:
+        # Clean each paragraph again to catch any remaining dashes
+        p = _clean_text(p)
+
         p = p.replace("&", "&amp;")
         p = p.replace("<", "&lt;")
         p = p.replace(">", "&gt;")
@@ -960,14 +1022,20 @@ def _split_paragraphs(text: str) -> List[str]:
 
 
 # ─────────────────────────────────────────────
-# Plain text fallback (v1.0.0, preserved intact)
+# Plain text fallback (v3.1.0 — includes em-dash removal)
 # ─────────────────────────────────────────────
 
 def _generate_plain_text_fallback(tool_name: str, reading: str) -> bytes:
     """
     Minimal PDF using only Python stdlib.
     Creates a valid but unstyled PDF with the reading text.
+
+    v3.1.0: Cleans em-dashes from the text before generating.
     """
+    # Clean em-dashes from the reading text
+    reading = _clean_text(reading)
+    tool_name = _clean_text(tool_name)
+
     content = f"{tool_name}\n{'=' * len(tool_name)}\n\nKAYAL Synthesis Platform\n\n{reading}"
     pdf_content = f"""%PDF-1.4
 1 0 obj
