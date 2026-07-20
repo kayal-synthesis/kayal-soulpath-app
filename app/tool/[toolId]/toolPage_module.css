@@ -100,29 +100,10 @@
   opacity:        0.9;
 }
 
-.problemHook {
-  font-family:   'Georgia', 'Times New Roman', serif;
-  font-size:     clamp(1rem, 2.2vw, 1.25rem);
-  font-style:    italic;
-  color:         #57534e;
-  margin-bottom: 0.75rem;
-  line-height:   1.55;
-}
-
-/* THE HERO TITLE */
-.heroTitle {
-  font-family:    'Georgia', 'Times New Roman', serif;
-  font-size:      clamp(1.3rem, 3.2vw, 2.2rem);
-  font-weight:    700;
-  line-height:    1.1;
-  color:          #1c1917;
-  margin-bottom:  1.25rem;
-  letter-spacing: -0.03em;
-  text-shadow:    0 2px 20px rgba(0,0,0,0.04);
-  word-spacing:   0.02em;
-  width:          100%;
-  display:        block;
-}
+/* NOTE: the hero H1 is styled inline in page.tsx (Playfair Display,
+   clamp(2rem, 4.4vw, 3.2rem)) so it can switch color for the image vs
+   fallback background cases. No .heroTitle class exists here anymore —
+   it was dead CSS, since the H1 never referenced it. */
 
 .heroTagline {
   font-size:      clamp(1rem, 2vw, 1.2rem);
@@ -135,26 +116,6 @@
 
 .heroRating   { margin-bottom: 1.5rem; }
 
-.badgeRow {
-  display:         flex;
-  flex-wrap:       wrap;
-  gap:             0.5rem;
-  justify-content: center;
-  margin-bottom:   2rem;
-}
-.badgeBs, .badgePop, .badgeNew, .badgeFlagship, .badgeSub {
-  padding:        0.3rem 0.9rem;
-  border-radius:  2rem;
-  font-size:      0.72rem;
-  font-weight:    700;
-  letter-spacing: 0.04em;
-}
-.badgeBs       { background: #fef3c7; color: #92400e; }
-.badgePop      { background: #ede9fe; color: #5b21b6; }
-.badgeNew      { background: #d1fae5; color: #065f46; }
-.badgeFlagship { background: #fef9c3; color: #713f12; }
-.badgeSub      { background: #e0f2fe; color: #0369a1; }
-
 .heroCta {
   display:         flex;
   align-items:     center;
@@ -163,8 +124,6 @@
   flex-wrap:       wrap;
   margin-bottom:   1.5rem;
 }
-.priceBlock  { display: flex; align-items: baseline; gap: 0.35rem; }
-.price       { font-family: 'Georgia', serif; font-size: 2.4rem; font-weight: 800; color: #1c1917; }
 .pricePeriod { font-size: 0.9rem; color: #78716c; }
 .ctaBtn {
   display:         inline-block;
@@ -221,39 +180,6 @@
 .sectionSub { font-size: 1rem; color: #78716c; max-width: 680px; margin: 0 auto; line-height: 1.65; }
 
 /* ── Problem section ──────────────────────────────────────── */
-.problemSection { background: #ffffff; padding: 2rem 0; border-bottom: 1px solid #e8e3dc; }
-.problemGrid    { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
-.problemCard {
-  display:       flex;
-  align-items:   flex-start;
-  gap:           0.875rem;
-  padding:       1.25rem 1.5rem;
-  background:    #faf8f4;
-  border-radius: 1rem;
-  border:        1px solid #e8e3dc;
-}
-.problemCheck   { font-size: 0.85rem; font-weight: 800; color: #d97706; margin-top: 0.15rem; flex-shrink: 0; }
-.problemCard p  { font-size: 0.9rem; color: #44403c; line-height: 1.6; margin: 0; }
-.problemCta     { text-align: center; }
-.problemCtaText { font-size: 1rem; color: #57534e; font-style: italic; }
-
-/* ── Hook ─────────────────────────────────────────────────── */
-.hookSection { background: #faf8f4; padding: 2rem 0; border-bottom: 1px solid #e8e3dc; }
-.hookInner   { max-width: 720px; margin: 0 auto; text-align: center; }
-.hookEmoji   { font-size: 3rem; margin-bottom: 1.5rem; }
-.hookText    { font-family: 'Georgia', serif; font-size: clamp(1rem, 2vw, 1.15rem); color: #44403c; line-height: 1.8; font-style: italic; }
-
-/* ── Audience section ─────────────────────────────────────── */
-.audienceSection { background: #ffffff; padding: 2rem 0; border-bottom: 1px solid #e8e3dc; }
-.audienceGrid    { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 900px; margin: 0 auto; }
-.audienceCard    { background: #faf8f4; border-radius: 1.5rem; padding: 2rem; border: 1px solid #e8e3dc; }
-.audienceCardNo  { background: #faf8f4; border-radius: 1.5rem; padding: 2rem; border: 1px solid #e8e3dc; opacity: 0.75; }
-.audienceTitle   { font-family: 'Georgia', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; }
-.audienceList    { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.875rem; }
-.audienceYes, .audienceNo { display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.9rem; color: #44403c; line-height: 1.55; }
-.audienceIcon    { width: 20px; height: 20px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; flex-shrink: 0; margin-top: 0.1rem; }
-.audienceIconNo  { width: 20px; height: 20px; border-radius: 50%; background: #e5e7eb; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; flex-shrink: 0; margin-top: 0.1rem; }
-
 /* ── Teaser ───────────────────────────────────────────────── */
 .teaserSection {
   background:    #fffbf7;
@@ -281,22 +207,6 @@
 .teaserGetBtn:hover { opacity: 0.88; transform: translateY(-1px); }
 
 /* ── Why Different ────────────────────────────────────────── */
-.differenceSection { background: #ffffff; padding: 2rem 0; border-bottom: 1px solid #e8e3dc; }
-.differenceGrid    { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-.differenceCard    { display: flex; align-items: flex-start; gap: 1.25rem; padding: 1.75rem; background: #faf8f4; border-radius: 1.25rem; border: 1px solid #e8e3dc; transition: all 0.2s; }
-.differenceCard:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.06); }
-.differenceNum     { width: 32px; height: 32px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; margin-top: 0.1rem; }
-.differenceText    { font-size: 0.9rem; color: #44403c; line-height: 1.65; margin: 0; }
-
-/* ── Transformation ───────────────────────────────────────── */
-.transformSection { background: #faf8f4; padding: 2rem 0; border-bottom: 1px solid #e8e3dc; }
-.transformGrid    { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; max-width: 900px; margin: 0 auto; }
-.transformBefore  { background: #ffffff; border-radius: 1.25rem; padding: 2rem; border: 1.5px solid #e8e3dc; }
-.transformAfter   { background: #ffffff; border-radius: 1.25rem; padding: 2rem; border-width: 2px; border-style: solid; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
-.transformLabel   { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: #a8a29e; margin-bottom: 0.75rem; }
-.transformBefore p, .transformAfter p { font-size: 0.9rem; color: #44403c; line-height: 1.65; margin: 0; }
-.transformArrow   { font-size: 2.5rem; font-weight: 300; opacity: 0.6; text-align: center; }
-
 /* ── What You Get ─────────────────────────────────────────── */
 .whatSection { background: #ffffff; padding: 2rem 0; border-bottom: 1px solid #e8e3dc; }
 .whatGrid    { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
@@ -306,21 +216,8 @@
 .whatCard p  { font-size: 0.9rem; color: #44403c; line-height: 1.6; margin: 0; }
 
 /* ── How It Works ─────────────────────────────────────────── */
-.howSection { background: #faf8f4; padding: 2rem 0; border-bottom: 1px solid #e8e3dc; }
-.howGrid    { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 900px; margin: 0 auto; }
-.howCard    { text-align: center; padding: 2rem 1.5rem; }
-.howStep    { font-family: 'Georgia', serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; opacity: 0.85; }
-.howTitle   { font-size: 1rem; font-weight: 700; color: #1c1917; margin-bottom: 0.75rem; }
-.howBody    { font-size: 0.88rem; color: #78716c; line-height: 1.65; margin: 0; }
-
 /* ── Trust ────────────────────────────────────────────────── */
-.trustSection { background: #ffffff; padding: 2rem 0; border-top: 1px solid #e8e3dc; border-bottom: 1px solid #e8e3dc; }
 .trustGrid    { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
-.trustCard    { text-align: center; padding: 2rem 1.25rem; border-radius: 1.25rem; background: #faf8f4; border: 1px solid #e8e3dc; transition: all 0.2s; }
-.trustCard:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.05); }
-.trustIcon    { font-size: 2rem; margin-bottom: 0.875rem; }
-.trustCard h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
-.trustCard p  { font-size: 0.84rem; color: #78716c; line-height: 1.6; margin: 0; }
 
 /* ── Testimonials ─────────────────────────────────────────── */
 .testimonialSection { background: #fffbf7; padding: 2rem 0; border-top: 1px solid #e8e3dc; border-bottom: 1px solid #e8e3dc; }
@@ -330,7 +227,6 @@
 .testimonialAuthor  { font-size: 0.78rem; color: #a8a29e; font-weight: 600; margin: 0; }
 
 /* ── Why Now ──────────────────────────────────────────────── */
-.whyNowSection { background: #ffffff; padding: 1.75rem 0; border-bottom: 1px solid #e8e3dc; }
 .whyNowInner   { display: flex; align-items: flex-start; gap: 1.5rem; max-width: 780px; margin: 0 auto; padding: 2rem 2.25rem; border-radius: 1.5rem; border-left-width: 4px; border-left-style: solid; background: #faf8f4; border-top: 1px solid #e8e3dc; border-right: 1px solid #e8e3dc; border-bottom: 1px solid #e8e3dc; }
 .whyNowIcon    { font-size: 1.75rem; flex-shrink: 0; margin-top: 0.1rem; }
 .whyNowTitle   { font-family: 'Georgia', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
@@ -359,17 +255,6 @@
 details[open] .faqQ::after { content: '−'; }
 .faqA { padding: 0 0 1.25rem 0.5rem; font-size: 0.9rem; color: #57534e; line-height: 1.75; margin: 0; }
 
-/* ── Upsell ───────────────────────────────────────────────── */
-.upsellSection { background: #ffffff; padding: 1.75rem 0; border-top: 1px solid #e8e3dc; }
-.upsellCard    { display: flex; align-items: center; gap: 1.5rem; background: #fffbf7; border: 1px solid #e8e3dc; border-radius: 1.5rem; padding: 2rem; max-width: 760px; margin: 0 auto; flex-wrap: wrap; }
-.upsellEmoji   { font-size: 2.5rem; flex-shrink: 0; }
-.upsellContent { flex: 1; min-width: 200px; }
-.upsellLabel   { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: #a8a29e; margin-bottom: 0.25rem; }
-.upsellTitle   { font-family: 'Georgia', serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.3rem; }
-.upsellTagline { font-size: 0.85rem; color: #78716c; font-style: italic; margin: 0; }
-.upsellBtn     { padding: 0.75rem 1.75rem; border-radius: 2rem; border: 2px solid #1c1917; background: transparent; color: #1c1917; font-weight: 700; font-size: 0.85rem; text-decoration: none; white-space: nowrap; transition: all 0.2s; cursor: pointer; }
-.upsellBtn:hover { background: #1c1917; color: white; }
-
 /* ── Final CTA ────────────────────────────────────────────── */
 .finalCta    { background: #faf8f4; padding: 2.25rem 0; text-align: center; border-top: 1px solid #e8e3dc; }
 .finalTitle  { font-family: 'Georgia', serif; font-size: clamp(1.7rem, 3.5vw, 2.6rem); font-weight: 700; color: #1c1917; margin-bottom: 1rem; line-height: 1.25; }
@@ -388,26 +273,20 @@ details[open] .faqQ::after { content: '−'; }
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .audienceGrid   { grid-template-columns: 1fr; }
-  .transformGrid  { grid-template-columns: 1fr; }
-  .transformArrow { display: none; }
-  .howGrid        { grid-template-columns: 1fr; }
   .heroInner      { max-width: 100%; }
 }
 @media (max-width: 768px) {
   .heroInner      { padding: 2.5rem 1.25rem; }
   .heroCta        { flex-direction: column; gap: 1rem; }
   .container      { padding: 0 1.25rem; }
-  .whatGrid, .trustGrid, .testimonialGrid, .differenceGrid { grid-template-columns: 1fr; }
+  .whatGrid, .trustGrid, .testimonialGrid { grid-template-columns: 1fr; }
   .upsellCard     { flex-direction: column; text-align: center; }
   .stickyBar      { display: block; }
   .page           { padding-bottom: 80px; }
   .teaserBox      { border-radius: 0; border-left: none; border-right: none; }
-  .problemGrid    { grid-template-columns: 1fr; }
   .whyNowInner    { flex-direction: column; }
 }
 @media (max-width: 480px) {
-  .heroTitle      { font-size: clamp(1.1rem, 4vw, 1.4rem); }
   .sectionTitle   { font-size: clamp(1.6rem, 6vw, 2rem); }
   .container      { padding: 0 1rem; }
   .heroInner      { padding: 2rem 1rem; }
