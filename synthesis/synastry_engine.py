@@ -66,6 +66,7 @@ from .astrology_engine import (
     _calculate_positions,
     _calculate_houses,
     _detect_aspects,
+    _aspect_phase,
     _degree_to_sign,
     _find_planet_house,
     _determine_tone_and_strength,
@@ -177,6 +178,8 @@ class SynastryCrossAspect:
     weight:        float          # importance score 0.0–1.0 (tighter orb = higher weight)
     reading:       str
     keywords:      List[str]
+    phase:         Optional[str] = None  # "applying" or "separating" — optional/defaulted
+                                          # so existing callers that don't pass it still work
 
 
 @dataclass
@@ -370,10 +373,15 @@ def _synastry_cross_aspects(
             result = _cross_aspect_type(diff)
             if result is None: continue
             asp_name, tone, max_orb = result
-            orb = abs(diff - {
+            target_angle = {
                 "conjunction":0,"sextile":60,"square":90,
                 "trine":120,"quincunx":150,"opposition":180
-            }[asp_name])
+            }[asp_name]
+            orb = abs(diff - target_angle)
+
+            spd_a = pos_a[pa].get("speed", 0.0)
+            spd_b = pos_b[pb].get("speed", 0.0)
+            phase = _aspect_phase(lon_a, spd_a, lon_b, spd_b, target_angle)
 
             # Domain: shared domains between the two planets
             da = _PLANET_DOMAIN_MAP.get(pa, ["character"])
@@ -382,10 +390,15 @@ def _synastry_cross_aspects(
             domain = shared[0] if shared else da[0]
 
             quality = "harmonious" if "positive" in tone else "challenging"
+            phase_note = (
+                " This contact is still tightening, actively intensifying."
+                if phase == "applying" else
+                " This contact has passed exact and is settling into the relationship."
+            )
             reading = (
                 f"Person A's {pa} in {sign_a} {asp_name} Person B's {pb} in {sign_b} "
                 f"(orb {round(orb,1)}°) — {quality} cross-chart contact in the "
-                f"{domain} domain."
+                f"{domain} domain.{phase_note}"
             )
 
             weight = _orb_weight(orb, max_orb) * (
@@ -398,7 +411,8 @@ def _synastry_cross_aspects(
                 planet_a=pa, planet_b=pb, aspect=asp_name, orb=round(orb,2),
                 tone=tone, domain=domain, weight=round(min(1.0,weight),3),
                 reading=reading,
-                keywords=[pa.lower(), pb.lower(), asp_name, domain],
+                keywords=[pa.lower(), pb.lower(), asp_name, domain, phase],
+                phase=phase,
             ))
 
     aspects.sort(key=lambda a: -a.weight)
