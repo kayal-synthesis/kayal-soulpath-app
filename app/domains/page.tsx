@@ -8,7 +8,9 @@ import {
   Clock, DollarSign, ArrowRight, Camera, Hand, Scan
 } from 'lucide-react'
 
-import { omniTools }         from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { voiceTools }        from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
@@ -16,6 +18,8 @@ import { loveTools }         from '@/lib/constants/love-tools'
 import { wealthTools }       from '@/lib/constants/wealth-tools'
 import { wellnessTools }     from '@/lib/constants/wellness-spiritual'
 import { lifePathTools }     from '@/lib/constants/life-path-tools'
+
+const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
 
 const allTools: any[] = [
   ...omniTools, ...voiceTools, ...sacredScriptTools, ...timeKeeperTools,
@@ -108,9 +112,9 @@ const domains = [
 const priceRanges = [
   { label: 'All Prices', value: 'all'      },
   { label: 'Under $39',  value: 'under-39' },
-  { label: '$39 – $99',  value: '39-99'    },
-  { label: '$99 – $149', value: '99-149'   },
-  { label: '$149+',      value: 'over-149' },
+  { label: '$39 – $59',  value: '39-59'    },
+  { label: '$60 – $79',  value: '60-79'    },
+  { label: '$80+',       value: 'over-80'  },
 ]
 
 const sortOptions = [
@@ -123,9 +127,9 @@ const sortOptions = [
 function filterByPrice(tools: any[], range: string) {
   if (range === 'all')      return tools
   if (range === 'under-39') return tools.filter(t => (t.price ?? 0) < 39)
-  if (range === '39-99')    return tools.filter(t => (t.price ?? 0) >= 39  && (t.price ?? 0) <= 99)
-  if (range === '99-149')   return tools.filter(t => (t.price ?? 0) >= 99  && (t.price ?? 0) <= 149)
-  if (range === 'over-149') return tools.filter(t => (t.price ?? 0) > 149)
+  if (range === '39-59')    return tools.filter(t => (t.price ?? 0) >= 39 && (t.price ?? 0) <= 59)
+  if (range === '60-79')    return tools.filter(t => (t.price ?? 0) >= 60 && (t.price ?? 0) <= 79)
+  if (range === 'over-80')  return tools.filter(t => (t.price ?? 0) >= 80)
   return tools
 }
 
@@ -349,7 +353,7 @@ export default function DomainsPage() {
           )}
         </div>
 
-        {/* ── Filter Panel — includes domain selector ── */}
+        {/* Filter Panel, includes domain selector */}
         <AnimatePresence>
           {showFilters && (
             <motion.div

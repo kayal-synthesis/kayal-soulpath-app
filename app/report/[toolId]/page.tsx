@@ -18,7 +18,9 @@ import {
   Bookmark, BookmarkCheck, DownloadCloud, AlertCircle,
 } from 'lucide-react'
 
-import { omniTools }         from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { loveTools }         from '@/lib/constants/love-tools'
 import { wealthTools }       from '@/lib/constants/wealth-tools'
 import { wellnessTools }     from '@/lib/constants/wellness-spiritual'
@@ -26,6 +28,8 @@ import { lifePathTools }     from '@/lib/constants/life-path-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
 import { voiceTools }        from '@/lib/constants/voice-tools'
+
+const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -144,11 +148,11 @@ export default function ReportPage() {
       if (!jobId) {
         setContent({
           title:    tool.name,
-          sections: (tool.features || []).map((f: any) => {
+          sections: (tool.whatYouGet || []).map((f: any) => {
             const { title, description } = getFeatureText(f)
             return { title, content: description }
           }),
-          summary: tool.shortDescription || 'Thank you for your purchase.',
+          summary: tool.tagline || 'Thank you for your purchase.',
         })
         setLoading(false)
         return
@@ -171,7 +175,7 @@ export default function ReportPage() {
           setError(data.error || 'Reading generation failed. Please contact support.')
           setLoading(false)
         } else {
-          // Still processing — poll again in 2 seconds
+          // Still processing, poll again in 2 seconds
           setTimeout(() => loadContent(), 2000)
         }
       } catch (err) {
@@ -400,7 +404,7 @@ export default function ReportPage() {
               </div>
             )}
 
-            {/* Fallback sections (from tool.features) */}
+            {/* Fallback sections (from tool.whatYouGet) */}
             {!readingText && sectionsList.length === 0 && displayContent.sections?.length > 0 && (
               <div className="mb-10">
                 <div className="space-y-6">
@@ -430,7 +434,7 @@ export default function ReportPage() {
 
             {/* Footer */}
             <div className="mt-12 pt-6 border-t text-center text-xs text-neutral-400">
-              <p>© {new Date().getFullYear()} Kayal LifeOS — {config.name}</p>
+              <p>© {new Date().getFullYear()} Kayal LifeOS, {config.name}</p>
             </div>
           </div>
         </Card>

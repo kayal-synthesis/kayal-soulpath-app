@@ -15,28 +15,32 @@ import {
 } from 'lucide-react'
 
 // Import all your tool constants
-import { omniTools } from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { voiceTools } from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools } from '@/lib/constants/time-keeper-tools'
 import { loveTools } from '@/lib/constants/love-tools'
-import { wealthTools as careerTools } from '@/lib/constants/wealth-tools'
 import { wealthTools } from '@/lib/constants/wealth-tools'
-import { wellnessTools as spiritualTools } from '@/lib/constants/wellness-spiritual'
-import { wellnessTools as healthTools } from '@/lib/constants/wellness-spiritual'
+import { wellnessTools } from '@/lib/constants/wellness-spiritual'
 import { lifePathTools } from '@/lib/constants/life-path-tools'
 
-// Combine all tools
+const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
+
+// Combine all tools. Previously imported wealthTools and wellnessTools
+// twice each under different aliases (careerTools/spiritualTools,
+// healthTools), then spread both aliases into this array, meaning every
+// wealth and wellness tool rendered twice with colliding React keys.
+// Each source array is now only ever spread once.
 const allTools = [
   ...omniTools,
   ...voiceTools,
   ...sacredScriptTools,
   ...timeKeeperTools,
   ...loveTools,
-  ...careerTools,
   ...wealthTools,
-  ...spiritualTools,
-  ...healthTools,
+  ...wellnessTools,
   ...lifePathTools
 ]
 
@@ -66,8 +70,8 @@ export default function MarketplacePage() {
     { id: 'sacred-script', name: 'Sacred Script', count: sacredScriptTools.length },
     { id: 'time-keeper', name: 'Time Keeper', count: timeKeeperTools.length },
     { id: 'love', name: 'Love', count: loveTools.length },
-    { id: 'wealth', name: 'Wealth', count: wealthTools.length + careerTools.length },
-    { id: 'spiritual', name: 'Spiritual', count: spiritualTools.length + healthTools.length },
+    { id: 'wealth', name: 'Wealth', count: wealthTools.length },
+    { id: 'spiritual', name: 'Spiritual', count: wellnessTools.length },
     { id: 'life-path', name: 'Life Path', count: lifePathTools.length }
   ]
 
@@ -77,7 +81,7 @@ export default function MarketplacePage() {
       if (searchQuery && !tool.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false
       }
-      if (selectedCategory !== 'all' && tool.category !== selectedCategory) {
+      if (selectedCategory !== 'all' && tool.domain !== selectedCategory) {
         return false
       }
       return true
@@ -187,10 +191,10 @@ export default function MarketplacePage() {
         {/* Tools Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTools.map((tool, index) => {
-            const typeColor = getToolTypeColor(tool.category)
-            const TypeIcon = getToolTypeIcon(tool.category)
-            const typeLabel = getToolTypeLabel(tool.category)
-            const domainUrl = domainUrls[tool.category] || '/domains'
+            const typeColor = getToolTypeColor(tool.domain)
+            const TypeIcon = getToolTypeIcon(tool.domain)
+            const typeLabel = getToolTypeLabel(tool.domain)
+            const domainUrl = domainUrls[tool.domain] || '/domain'
 
             return (
               <motion.div
@@ -212,7 +216,7 @@ export default function MarketplacePage() {
                           onClick={() => router.push(domainUrl)}
                           className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1 mt-0.5"
                         >
-                          {tool.category}
+                          {tool.domain}
                           <ChevronRight className="w-3 h-3" />
                         </button>
                       </div>
@@ -235,13 +239,13 @@ export default function MarketplacePage() {
 
                   {/* Description */}
                   <p className="text-sm text-neutral-600 mb-3 line-clamp-2">
-                    {tool.description || tool.subtitle}
+                    {tool.hook}
                   </p>
 
                   {/* Features Preview */}
-                  {tool.features && tool.features.length > 0 && (
+                  {tool.whatYouGet && tool.whatYouGet.length > 0 && (
                     <div className="space-y-1 mb-3">
-                      {tool.features.slice(0, 2).map((feature: string, i: number) => (
+                      {tool.whatYouGet.slice(0, 2).map((feature: string, i: number) => (
                         <div key={i} className="flex items-start gap-1 text-xs">
                           <Sparkles className="w-3 h-3 text-primary-500 mt-0.5 flex-shrink-0" />
                           <span className="text-neutral-600 line-clamp-1">{feature}</span>
@@ -252,12 +256,6 @@ export default function MarketplacePage() {
 
                   {/* Tool Details */}
                   <div className="flex items-center gap-3 text-xs text-neutral-500 mb-3">
-                    {tool.estimatedReadTime && (
-                      <>
-                        <span>{tool.estimatedReadTime} min</span>
-                        <span>•</span>
-                      </>
-                    )}
                     <span className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-amber-500" />
                       {tool.isPopular ? '4.9' : '4.7'} (120)
@@ -268,8 +266,8 @@ export default function MarketplacePage() {
                   {tool.requiresImage && (
                     <div className="mb-3 text-xs flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 rounded-lg">
                       <Camera className="w-3 h-3" />
-                      Requires: {tool.requiresImageType === 'both' ? 'Face + Palm' : 
-                                tool.requiresImageType === 'face' ? 'Face' : 'Palm'}
+                      Requires: {tool.requiresImage?.type === 'both' ? 'Face + Palm' : 
+                                tool.requiresImage?.type === 'face' ? 'Face' : 'Palm'}
                     </div>
                   )}
 

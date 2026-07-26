@@ -17,13 +17,17 @@ import {
 } from 'lucide-react'
 
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
-import { omniTools }         from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { voiceTools }        from '@/lib/constants/voice-tools'
 import { loveTools }         from '@/lib/constants/love-tools'
 import { wealthTools }       from '@/lib/constants/wealth-tools'
 import { wellnessTools }     from '@/lib/constants/wellness-spiritual'
 import { lifePathTools }     from '@/lib/constants/life-path-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
+
+const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
 
 const allReadingTools = [
   ...timeKeeperTools, ...omniTools, ...voiceTools, ...loveTools,
@@ -52,22 +56,22 @@ const PEAK_HOURS = [
 
 // ── Plain-language helpers ───────────────────────────────
 const yearMeaning = (y: number): string => ({
-  1: 'This is your year of fresh starts. New beginnings are supported — plant seeds, start projects, trust your instincts.',
+  1: 'This is your year of fresh starts. New beginnings are supported, plant seeds, start projects, trust your instincts.',
   2: 'This is your year of patience and connection. Relationships and cooperation are your greatest teachers.',
   3: 'This is your year to express yourself. Share your gifts, socialise, and let creativity lead.',
   4: 'This is your year to build. Focus and practical effort will lay the groundwork for years to come.',
-  5: 'This is your year of change and freedom. Be flexible — unexpected shifts are bringing you closer to your true path.',
+  5: 'This is your year of change and freedom. Be flexible, unexpected shifts are bringing you closer to your true path.',
   6: 'This is your year of love and responsibility. Home, family, and service to others are your priorities.',
   7: 'This is your year of reflection and inner growth. Quiet contemplation and deeper study will serve you well.',
   8: 'This is your year of power and achievement. Step into leadership and pursue your ambitions with confidence.',
   9: 'This is your year of completion and release. Let go of what no longer serves you to make room for what is coming.',
-}[y] || 'Your year carries a unique energy — trust the process unfolding around you.')
+}[y] || 'Your year carries a unique energy, trust the process unfolding around you.')
 
 const monthMeaning = (m: number): string => ({
   1: 'taking initiative and starting fresh',
   2: 'patience, listening, and nurturing your closest relationships',
   3: 'expressing yourself and bringing more joy into your daily life',
-  4: 'practical matters — organising, planning, and getting things done',
+  4: 'practical matters, organising, planning, and getting things done',
   5: 'embracing change and staying open to unexpected opportunities',
   6: 'home, family, and acts of care and service',
   7: 'quiet reflection, inner listening, and deeper understanding',
@@ -80,19 +84,19 @@ const dayMeaning = (d: number): string => ({
   2: 'Today is a day for connection and patience. Listen more than you speak. Partnerships and diplomacy are favoured.',
   3: 'Today is a day for expression. Communicate, create, socialise. Your words and ideas carry extra power today.',
   4: 'Today is a day for work and structure. Get practical. Organise, plan, focus. Effort made today compounds.',
-  5: 'Today is a day of movement and change. Stay flexible. Something unexpected may shift your direction — welcome it.',
+  5: 'Today is a day of movement and change. Stay flexible. Something unexpected may shift your direction, welcome it.',
   6: 'Today is a day of care and responsibility. Home, family, and service to others are highlighted.',
   7: 'Today is a day for inner reflection. Slow down. Think deeply. The answers you need are found in stillness today.',
   8: 'Today is a day of power and momentum. Lead. Take decisive action. Material matters are favoured.',
   9: 'Today is a day of completion. Finish what needs ending. Release what no longer serves. Clear the path for what is coming.',
-}[d] || 'Today carries a unique energy — trust your instincts.')
+}[d] || 'Today carries a unique energy, trust your instincts.')
 
 const pinnacleTheme = (n: number): string => ({
   1:  'You are in a chapter of new beginnings and personal identity. This is a time to trust yourself and step forward independently.',
   2:  'You are in a chapter of partnership and patience. Relationships and cooperation are your greatest teachers right now.',
   3:  'You are in a chapter of creative expression and joy. Your voice, ideas, and personality are meant to shine.',
   4:  'You are in a chapter of building foundations. Hard work and discipline define this period.',
-  5:  'You are in a chapter of change, freedom, and adventure. Expect the unexpected — your life is expanding.',
+  5:  'You are in a chapter of change, freedom, and adventure. Expect the unexpected, your life is expanding.',
   6:  'You are in a chapter of responsibility, home, and heart. Family and service are your central themes.',
   7:  'You are in a chapter of deep inner work and wisdom. Solitude and spiritual development are your path.',
   8:  'You are in a chapter of achievement and authority. The harvest of previous effort is available to you.',
@@ -185,12 +189,12 @@ export default function ReadingPage() {
 
   useEffect(() => { return () => { window.speechSynthesis?.cancel() } }, [])
 
-  // ── Build sections — scoped strictly to each tool ────────
+  // ── Build sections, scoped strictly to each tool ────────
   const buildSections = () => {
     const firstName = user?.name?.split(' ')[0] || 'Seeker'
 
     if (!readingContent) return [
-      { title: 'Your Reading',  icon: Eye,     content: tool?.description || 'Your personalised reading is being prepared...' },
+      { title: 'Your Reading',  icon: Eye,     content: tool?.hook || 'Your personalised reading is being prepared...' },
       { title: 'Your Guidance', icon: Compass, content: 'Personalised guidance will appear here once your reading is ready...' },
     ]
 
@@ -207,7 +211,7 @@ export default function ReadingPage() {
 
       let todayContent = `${firstName}, here is what today is asking of you.\n\n`
       if (cycles.personal_day) todayContent += `Today's Energy\n\n${dayMeaning(cycles.personal_day)}\n\n`
-      todayContent += `What to Do Today\n\nFocus on what feels most aligned and act on it before midday when energy is highest.\n\nWhat to Avoid\n\nForcing outcomes that resist movement today — if something isn't flowing, leave it for another day.`
+      todayContent += `What to Do Today\n\nFocus on what feels most aligned and act on it before midday when energy is highest.\n\nWhat to Avoid\n\nForcing outcomes that resist movement today, if something isn't flowing, leave it for another day.`
       sections.push({ title: "Today's Energy", icon: Sun, content: todayContent })
 
       sections.push({
@@ -225,13 +229,13 @@ export default function ReadingPage() {
 
       let monthContent = `${firstName}, here is your complete map for the month ahead.\n\n`
       if (cycles.personal_month) monthContent += `This Month's Theme\n\nYou are in a month focused on ${monthMeaning(cycles.personal_month)}.\n\n`
-      monthContent += `Peak Windows\n\nThe first 10 days carry the freshest energy — ideal for initiating. The middle 10 days are for sustaining and adjusting. The final 10 days are best for completing and releasing.\n\nMonthly Practice\n\nChoose one intention for this month — something specific you want to move forward — and revisit it every morning for 30 days. Consistency this month compounds into momentum next month.`
+      monthContent += `Peak Windows\n\nThe first 10 days carry the freshest energy, ideal for initiating. The middle 10 days are for sustaining and adjusting. The final 10 days are best for completing and releasing.\n\nMonthly Practice\n\nChoose one intention for this month, something specific you want to move forward, and revisit it every morning for 30 days. Consistency this month compounds into momentum next month.`
       sections.push({ title: 'Your Month Mapped', icon: Calendar, content: monthContent })
 
       sections.push({
         title: 'Monthly Guidance',
         icon: Compass,
-        content: `${firstName}, the most powerful thing you can do this month is choose one domain — love, wealth, health, or purpose — and give it your focused attention.\n\nDivided attention dissipates the month's energy. Focused attention harvests it.\n\nYour monthly navigator refreshes on the 1st of next month.`,
+        content: `${firstName}, the most powerful thing you can do this month is choose one domain, love, wealth, health, or purpose, and give it your focused attention.\n\nDivided attention dissipates the month's energy. Focused attention harvests it.\n\nYour monthly navigator refreshes on the 1st of next month.`,
       })
     }
 
@@ -243,19 +247,19 @@ export default function ReadingPage() {
 
       let quarterContent = `${firstName}, here is your 90-day map.\n\n`
       if (cycles.personal_month) quarterContent += `This Month (Month 1 of 3)\n\nYou are currently in a month of ${monthMeaning(cycles.personal_month)}. Use this month to establish the rhythm that will carry you through the quarter.\n\n`
-      quarterContent += `The Quarter's Arc\n\nEvery quarter follows an arc: Month 1 is for planting, Month 2 is for tending, Month 3 is for harvesting. The mistake most people make is trying to harvest in Month 1 or plant in Month 3.\n\nYour 90-Day Practice\n\nIdentify the single most important thing you want to change or build in the next 90 days. Write it down. Return to it every Sunday. Adjust your approach weekly — but never the destination.`
+      quarterContent += `The Quarter's Arc\n\nEvery quarter follows an arc: Month 1 is for planting, Month 2 is for tending, Month 3 is for harvesting. The mistake most people make is trying to harvest in Month 1 or plant in Month 3.\n\nYour 90-Day Practice\n\nIdentify the single most important thing you want to change or build in the next 90 days. Write it down. Return to it every Sunday. Adjust your approach weekly, but never the destination.`
       sections.push({ title: 'Your 90-Day Map', icon: Compass, content: quarterContent })
 
       sections.push({
         title: 'Peaks & Pivots',
         icon: Star,
-        content: `${firstName}, within your 90-day window there are specific moments where the timing is most powerful.\n\nPeak Window\n\nThe middle month of the quarter typically carries the highest convergence of positive timing. This is when to make your most important move.\n\nCaution Period\n\nThe transition between Month 2 and Month 3 often carries a moment of doubt or plateau. This is not a signal to stop — it is a signal to stay steady.\n\nSeasonal Theme\n\nYour blueprint assigns each season a theme. This quarter asks you to focus on building consistency and compounding small daily actions into visible results.`,
+        content: `${firstName}, within your 90-day window there are specific moments where the timing is most powerful.\n\nPeak Window\n\nThe middle month of the quarter typically carries the highest convergence of positive timing. This is when to make your most important move.\n\nCaution Period\n\nThe transition between Month 2 and Month 3 often carries a moment of doubt or plateau. This is not a signal to stop, it is a signal to stay steady.\n\nSeasonal Theme\n\nYour blueprint assigns each season a theme. This quarter asks you to focus on building consistency and compounding small daily actions into visible results.`,
       })
 
       sections.push({
         title: 'Quarter Guidance',
         icon: Moon,
-        content: `${firstName}, 90 days is exactly long enough to build a habit and exactly long enough to transform a situation — if you are intentional from day one.\n\nYour quarterly pulse refreshes in 90 days.`,
+        content: `${firstName}, 90 days is exactly long enough to build a habit and exactly long enough to transform a situation, if you are intentional from day one.\n\nYour quarterly pulse refreshes in 90 days.`,
       })
     }
 
@@ -267,27 +271,27 @@ export default function ReadingPage() {
 
       let yearContent = `${firstName}, here is your complete year mapped.\n\n`
       if (cycles.personal_year) yearContent += `Your Year's Theme\n\n${yearMeaning(cycles.personal_year)}\n\n`
-      yearContent += `The Year's Arc\n\nEvery year has three phases:\n\n• Months 1–4: Establishment. The year's theme takes root. Focus on foundation.\n\n• Months 5–8: Activation. The year's energy peaks. This is when to make your most significant moves.\n\n• Months 9–12: Harvest and completion. Gather what the year produced. Release what didn't work. Prepare for what is next.\n\nYour Most Important Month\n\nThe month where timing most favours decisive action is in the activation phase — watch for the month where multiple things converge at once. That is your signal.`
+      yearContent += `The Year's Arc\n\nEvery year has three phases:\n\n• Months 1–4: Establishment. The year's theme takes root. Focus on foundation.\n\n• Months 5–8: Activation. The year's energy peaks. This is when to make your most significant moves.\n\n• Months 9–12: Harvest and completion. Gather what the year produced. Release what didn't work. Prepare for what is next.\n\nYour Most Important Month\n\nThe month where timing most favours decisive action is in the activation phase, watch for the month where multiple things converge at once. That is your signal.`
       sections.push({ title: 'Your Year Mapped', icon: Calendar, content: yearContent })
 
       sections.push({
         title: 'Peaks & Cautions',
         icon: Star,
-        content: `${firstName}, within your year there are three windows of peak opportunity and two periods requiring extra care.\n\nPeak Windows\n\n• Early in the year when the year's new energy is freshest\n• Mid-year during the activation phase\n• Autumn when harvest energy supports completion\n\nCaution Periods\n\n• The year's transition month when the old year's energy fades but the new hasn't fully arrived\n• The completion month when you are tempted to push when the cycle asks you to rest\n\nAnnual Theme\n\nYour blueprint assigns each year a soul curriculum — a specific lesson the year is structured to teach. Navigate it consciously and you exit the year transformed.`,
+        content: `${firstName}, within your year there are three windows of peak opportunity and two periods requiring extra care.\n\nPeak Windows\n\n• Early in the year when the year's new energy is freshest\n• Mid-year during the activation phase\n• Autumn when harvest energy supports completion\n\nCaution Periods\n\n• The year's transition month when the old year's energy fades but the new hasn't fully arrived\n• The completion month when you are tempted to push when the cycle asks you to rest\n\nAnnual Theme\n\nYour blueprint assigns each year a soul curriculum, a specific lesson the year is structured to teach. Navigate it consciously and you exit the year transformed.`,
       })
 
       if (pinnacle.number) {
         sections.push({
           title: 'Your Life Chapter',
           icon: Infinity,
-          content: `${firstName}, beyond this year you are in a longer chapter of your life that shapes everything within it.\n\nYour Life Chapter Right Now\n\n${pinnacleTheme(pinnacle.number)}${pinnacle.end_age ? `\n\nThis chapter runs until you are ${pinnacle.end_age}. The year ahead sits inside this larger arc — let the chapter's theme guide your annual intention.` : ''}\n\nHow This Shapes Your Year\n\nYour annual goals will feel most aligned when they serve the chapter's theme. Work against the chapter and the year will feel like friction. Work with it and the year compounds.`,
+          content: `${firstName}, beyond this year you are in a longer chapter of your life that shapes everything within it.\n\nYour Life Chapter Right Now\n\n${pinnacleTheme(pinnacle.number)}${pinnacle.end_age ? `\n\nThis chapter runs until you are ${pinnacle.end_age}. The year ahead sits inside this larger arc, let the chapter's theme guide your annual intention.` : ''}\n\nHow This Shapes Your Year\n\nYour annual goals will feel most aligned when they serve the chapter's theme. Work against the chapter and the year will feel like friction. Work with it and the year compounds.`,
         })
       }
 
       sections.push({
         title: 'Annual Guidance',
         icon: Compass,
-        content: `${firstName}, the most powerful annual practice is a single intention chosen in January and revisited at the start of every month.\n\nNot a list of goals. One intention.\n\nAt year-end, that single thread — followed consistently — will have woven something real.\n\nYour annual arc refreshes each January.`,
+        content: `${firstName}, the most powerful annual practice is a single intention chosen in January and revisited at the start of every month.\n\nNot a list of goals. One intention.\n\nAt year-end, that single thread, followed consistently, will have woven something real.\n\nYour annual arc refreshes each January.`,
       })
     }
 
@@ -297,14 +301,14 @@ export default function ReadingPage() {
     else if (toolId === 'nine-year-arc-compass') {
       if (readingContent.reading) sections.push({ title: 'Your Decade Reading', icon: Eye, content: readingContent.reading })
 
-      let decadeContent = `${firstName}, you are not navigating a year — you are navigating a decade. Here is the full arc.\n\nHow the Nine-Year Arc Works\n\nYour life moves in nine-year cycles. Each year within the cycle carries a specific energy and purpose. The arc has a beginning (Years 1–3), a middle (Years 4–6), and an end (Years 7–9). Understanding where you are in the arc changes everything about how you move.\n\n`
+      let decadeContent = `${firstName}, you are not navigating a year, you are navigating a decade. Here is the full arc.\n\nHow the Nine-Year Arc Works\n\nYour life moves in nine-year cycles. Each year within the cycle carries a specific energy and purpose. The arc has a beginning (Years 1–3), a middle (Years 4–6), and an end (Years 7–9). Understanding where you are in the arc changes everything about how you move.\n\n`
       if (cycles.personal_year) {
         decadeContent += `Where You Are Right Now\n\nYou are currently in Year ${cycles.personal_year} of your nine-year arc.\n\n`
-        if (cycles.personal_year <= 3)      decadeContent += `You are in the establishing phase. These are the years of planting — foundations, new directions, and identity. What you build now will define the arc's middle and end.\n\n`
-        else if (cycles.personal_year <= 6) decadeContent += `You are in the activating phase. These are the years of momentum — expansion, relationships, and material progress. The seeds planted in Years 1–3 are growing.\n\n`
+        if (cycles.personal_year <= 3)      decadeContent += `You are in the establishing phase. These are the years of planting, foundations, new directions, and identity. What you build now will define the arc's middle and end.\n\n`
+        else if (cycles.personal_year <= 6) decadeContent += `You are in the activating phase. These are the years of momentum, expansion, relationships, and material progress. The seeds planted in Years 1–3 are growing.\n\n`
         else                                decadeContent += `You are in the completing phase. These are the years of harvest, mastery, and release. What no longer serves the arc must be released to make room for the next cycle.\n\n`
       }
-      decadeContent += `The Arc's Peak Window\n\nEvery nine-year arc has one year of peak convergence where multiple timing systems align most powerfully. Your blueprint identifies this year and everything you do between now and then is preparation.\n\nThe Arc's Hardest Year\n\nEvery arc also has one year of maximum challenge — not to be feared, but to be prepared for. Knowing it is coming transforms it from a crisis into a rite of passage.`
+      decadeContent += `The Arc's Peak Window\n\nEvery nine-year arc has one year of peak convergence where multiple timing systems align most powerfully. Your blueprint identifies this year and everything you do between now and then is preparation.\n\nThe Arc's Hardest Year\n\nEvery arc also has one year of maximum challenge, not to be feared, but to be prepared for. Knowing it is coming transforms it from a crisis into a rite of passage.`
       sections.push({ title: 'Your Nine-Year Arc', icon: Infinity, content: decadeContent })
 
       if (pinnacle.number) {
@@ -315,14 +319,14 @@ export default function ReadingPage() {
         sections.push({ title: 'Your Life Chapters', icon: Star, content: pinnContent })
       }
 
-      let strategyContent = `${firstName}, the nine-year arc compass is most powerful when used as a strategy tool — not just a forecast.\n\nThree-Phase Decade Strategy\n\n`
+      let strategyContent = `${firstName}, the nine-year arc compass is most powerful when used as a strategy tool, not just a forecast.\n\nThree-Phase Decade Strategy\n\n`
       if (cycles.personal_year) {
         if (cycles.personal_year <= 3) {
-          strategyContent += `Phase 1 — You Are Here (Years 1–3)\nThis is your establishment phase. Your primary task: build the infrastructure the arc will need. Skills, relationships, foundations, identity. Everything you invest in now compounds exponentially by Year 6.\n\nPhase 2 — Activation (Years 4–6)\nThis is where momentum builds. You will feel the arc accelerate. Stay directional. Do not scatter your energy. The peak window lives somewhere in this phase.\n\nPhase 3 — Mastery & Completion (Years 7–9)\nThis is where the arc delivers its harvest — and asks you to release what the cycle was never meant to carry forward. What you complete here determines what the next arc inherits.`
+          strategyContent += `Phase 1, You Are Here (Years 1–3)\nThis is your establishment phase. Your primary task: build the infrastructure the arc will need. Skills, relationships, foundations, identity. Everything you invest in now compounds exponentially by Year 6.\n\nPhase 2, Activation (Years 4–6)\nThis is where momentum builds. You will feel the arc accelerate. Stay directional. Do not scatter your energy. The peak window lives somewhere in this phase.\n\nPhase 3, Mastery & Completion (Years 7–9)\nThis is where the arc delivers its harvest, and asks you to release what the cycle was never meant to carry forward. What you complete here determines what the next arc inherits.`
         } else if (cycles.personal_year <= 6) {
-          strategyContent += `Phase 1 — Establishment (Years 1–3)\nYou have already moved through the arc's establishment phase. The foundations are laid.\n\nPhase 2 — You Are Here (Years 4–6)\nThis is your activation phase. Momentum is building. Stay focused — this is when your peak window is closest. Do not scatter your energy.\n\nPhase 3 — Mastery & Completion (Years 7–9)\nPrepare for the arc's final phase now. Begin identifying what you want to complete and what you want to release before the cycle ends.`
+          strategyContent += `Phase 1, Establishment (Years 1–3)\nYou have already moved through the arc's establishment phase. The foundations are laid.\n\nPhase 2, You Are Here (Years 4–6)\nThis is your activation phase. Momentum is building. Stay focused, this is when your peak window is closest. Do not scatter your energy.\n\nPhase 3, Mastery & Completion (Years 7–9)\nPrepare for the arc's final phase now. Begin identifying what you want to complete and what you want to release before the cycle ends.`
         } else {
-          strategyContent += `Phase 1 — Establishment (Years 1–3)\nThe arc's foundation phase is behind you.\n\nPhase 2 — Activation (Years 4–6)\nThe arc's momentum phase is behind you. The harvest was planted.\n\nPhase 3 — You Are Here (Years 7–9)\nYou are in the arc's completion and mastery phase. Your task: harvest consciously, release deliberately, and begin preparing the intentions that will seed the next arc when it opens.`
+          strategyContent += `Phase 1, Establishment (Years 1–3)\nThe arc's foundation phase is behind you.\n\nPhase 2, Activation (Years 4–6)\nThe arc's momentum phase is behind you. The harvest was planted.\n\nPhase 3, You Are Here (Years 7–9)\nYou are in the arc's completion and mastery phase. Your task: harvest consciously, release deliberately, and begin preparing the intentions that will seed the next arc when it opens.`
         }
       }
       sections.push({ title: 'Your Decade Strategy', icon: Compass, content: strategyContent })
@@ -330,12 +334,12 @@ export default function ReadingPage() {
       sections.push({
         title: 'Arc Guidance',
         icon: Moon,
-        content: `${firstName}, most people navigate their lives one year at a time and wonder why they feel unprepared for the decade.\n\nThe nine-year arc compass changes that. You now know the shape of the arc you are inside. You know where you are within it. You know what each phase demands.\n\nUse this knowledge to make decisions that serve not just this year — but the whole arc.\n\nYour nine-year compass refreshes at the start of each new arc cycle.`,
+        content: `${firstName}, most people navigate their lives one year at a time and wonder why they feel unprepared for the decade.\n\nThe nine-year arc compass changes that. You now know the shape of the arc you are inside. You know where you are within it. You know what each phase demands.\n\nUse this knowledge to make decisions that serve not just this year, but the whole arc.\n\nYour nine-year compass refreshes at the start of each new arc cycle.`,
       })
     }
 
     // ════════════════════════════════════════════════════
-    // FALLBACK — all other tools
+    // FALLBACK, all other tools
     // ════════════════════════════════════════════════════
     else {
       if (readingContent.reading) sections.push({ title: 'Your Reading', icon: Eye, content: readingContent.reading })
@@ -353,7 +357,7 @@ export default function ReadingPage() {
   const getFullText = () => {
     if (!readingContent) return ''
     return [
-      `KAYAL LifeOS — ${tool?.name || 'Reading'}`,
+      `KAYAL LifeOS, ${tool?.name || 'Reading'}`,
       `For: ${user?.name || 'Seeker'}`,
       `Date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
       '',
