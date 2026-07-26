@@ -144,7 +144,7 @@ except ImportError as _le_err:
     print(f"⚠️  logic layer not importable: {_le_err}")
 
 try:
-    from delivery.llm_narrator import narrate
+    from delivery.llm_narrator import narrate, narrate_tool
     _NARRATOR_AVAILABLE = True
 except ImportError as _ln_err:
     _NARRATOR_AVAILABLE = False
@@ -202,10 +202,21 @@ except ImportError:
     _SUBSCRIPTION_AVAILABLE = False
 
 try:
-    from delivery.pdf_formatter import generate_pdf
+    from delivery.pdf_formatter import generate_pdf, generate_tool_pdf, generate_tool_pdf_async
     _PDF_AVAILABLE = True
 except ImportError:
     _PDF_AVAILABLE = False
+
+try:
+    # Real catalog lookup — closes the gap where process_reading_job had
+    # tool_id but no way to get the tool's real name/price/what_you_get
+    # that narrate_tool() needs to build a genuinely tool-specific reading
+    # instead of the old one-size-fits-all narrate() call.
+    from synthesis import tool_registry
+    _TOOL_REGISTRY_AVAILABLE = True
+except ImportError as _tr_err:
+    _TOOL_REGISTRY_AVAILABLE = False
+    print(f"⚠️  tool_registry not importable: {_tr_err}")
 
 try:
     from free_reading_endpoint import router as _free_reading_router
@@ -1999,10 +2010,10 @@ async def predict(
             f"You are currently in a Personal Year {py_label} — "
             f"{'a rare master builder year when grand work becomes genuinely possible' if py==22 else 'a year with its own specific momentum and meaning'}. "
             f"Your current Pinnacle {pin_label} defines the life chapter you are in right now.\n\n"
-            f"Your complete synthesis — numerology, astrology"
+            f"Your complete synthesis, numerology, astrology"
             f"{', physiognomy' if face_summary else ''}"
             f"{', and palmistry' if palm_summary else ''}"
-            f" — has been prepared. Add API credits at console.anthropic.com to receive the full narrated reading."
+            f", has been prepared. Add API credits at console.anthropic.com to receive the full narrated reading."
         )
         warnings.append("Narration used local fallback — add Anthropic credits for full Claude reading")
 
@@ -2127,6 +2138,33 @@ async def predict(
         ),
     }
 
+
+
+def _get_tool_catalog_data(tool_id: str) -> Dict[str, Any]:
+    """
+    Look up a tool's real name/price/what_you_get from tool_registry.py.
+    narrate_tool() needs these to build a genuinely tool-specific reading
+    instead of a generic one, and generate_tool_pdf() needs the same data
+    to render real section titles instead of "Section 1", "Section 2".
+
+    Falls back to a minimal, honest default (empty what_you_get) if the
+    registry isn't available or the tool_id isn't found, rather than
+    failing the whole job. Callers check for empty what_you_get and fall
+    back to the plain narrate() path in that case, same as narrate_tool()
+    already does internally when handed no whatYouGet items.
+    """
+    if not _TOOL_REGISTRY_AVAILABLE:
+        return {"name": tool_id, "tagline": "", "price": 29, "what_you_get": []}
+    tool = tool_registry.get_tool_by_id(tool_id)
+    if not tool:
+        print(f"⚠️  tool_id '{tool_id}' not found in tool_registry — falling back to generic narration")
+        return {"name": tool_id, "tagline": "", "price": 29, "what_you_get": []}
+    return {
+        "name":         tool.get("name", tool_id),
+        "tagline":      tool.get("tagline", ""),
+        "price":        tool.get("price", 29),
+        "what_you_get": tool.get("what_you_get", []),
+    }
 
 
 def process_reading_job(
@@ -2312,11 +2350,24 @@ def process_reading_job(
                     numerology_lp_a=num_profile.life_path, numerology_lp_b=partner_num_profile.life_path,
                 )
                 synastry_reading = read_synastry(synastry_profile)
-                narration = narrate(synastry_reading.to_dict(), use_opus=False)
+                tool_catalog_data = _get_tool_catalog_data(tool_id)
+                tool_payload = {
+                    **synastry_reading.to_dict(),
+                    "tool_id":      tool_id,
+                    "tool_name":    tool_catalog_data["name"],
+                    "tool_price":   tool_catalog_data["price"],
+                    "what_you_get": tool_catalog_data["what_you_get"],
+                }
+                narration = narrate_tool(tool_payload, use_opus=False)
 
                 result = {
                     "reading":         narration.full_text,
                     "domain_sections": narration.domain_sections,
+                    "section_texts":   narration.section_texts,
+                    "tool_name":       tool_catalog_data["name"],
+                    "tagline":         tool_catalog_data["tagline"],
+                    "what_you_get":    tool_catalog_data["what_you_get"],
+                    "estimated_pages": narration.estimated_pages,
                     "life_path":       num_profile.life_path,
                     "personal_year":   num_profile.personal_year,
                     "sun_sign":        _get_sun_sign(bd.day, bd.month),
@@ -2332,7 +2383,9 @@ def process_reading_job(
                     },
                     "union_remedies":  synastry_profile.union_remedies,
                     "generated_at":    datetime.utcnow().isoformat(),
-                    "pipeline":        "kayal_v8_production_union",
+                    "pipeline":        "kayal_v9_production_union",
+                    "user_name":       full_name,
+                    "partner_name":    partner_name,
                 }
 
                 cur.execute(
@@ -2381,7 +2434,15 @@ def process_reading_job(
         if hasattr(logic_result, "error"):
             raise RuntimeError(f"Logic engine error: {logic_result.error}")
 
-        narration = narrate(logic_result.to_dict(), use_opus=False)
+        tool_catalog_data = _get_tool_catalog_data(tool_id)
+        tool_payload = {
+            **logic_result.to_dict(),
+            "tool_id":      tool_id,
+            "tool_name":    tool_catalog_data["name"],
+            "tool_price":   tool_catalog_data["price"],
+            "what_you_get": tool_catalog_data["what_you_get"],
+        }
+        narration = narrate_tool(tool_payload, use_opus=False)
 
         # astro_timing already contains transits/arabic_parts/progressions/stelliums —
         # compute_western() computes all four on every call, but until now nothing ever
@@ -2393,11 +2454,17 @@ def process_reading_job(
         result = {
             "reading":          narration.full_text,
             "domain_sections":  narration.domain_sections,
+            "section_texts":    narration.section_texts,
+            "tool_name":        tool_catalog_data["name"],
+            "tagline":          tool_catalog_data["tagline"],
+            "what_you_get":     tool_catalog_data["what_you_get"],
+            "estimated_pages":  narration.estimated_pages,
             "life_path":        num_profile.life_path,
             "personal_year":    num_profile.personal_year,
             "sun_sign":         _get_sun_sign(bd.day, bd.month),
             "generated_at":     datetime.utcnow().isoformat(),
-            "pipeline":         "kayal_v8_production",
+            "pipeline":         "kayal_v9_production",
+            "user_name":        full_name,
             # Already computed inside compute_western() every time — previously discarded
             # after being fed to the narrator. Now actually stored.
             "current_transits": astro_timing.get("current_transits", []),
@@ -2794,15 +2861,32 @@ async def reading_pdf(job_id: str):
         raise HTTPException(status_code=500, detail="Could not parse reading result")
 
     try:
-        pdf_bytes = await generate_pdf(
-            job_id    = job_id,
-            tool_name = result.get("tool_name", "Your Reading"),
-            reading   = result.get("reading", ""),
-            sections  = result.get("domain_sections", {}),
-            life_path = result.get("life_path"),
-            sun_sign  = result.get("sun_sign"),
-            generated = result.get("generated_at", ""),
-        )
+        # New-format jobs (post-narrate_tool()) have real section_texts and
+        # what_you_get, built specifically for this reading. Older jobs
+        # processed before this change won't have them, so fall back to the
+        # previous renderer rather than fail on records that already exist.
+        if result.get("section_texts") and result.get("what_you_get"):
+            pdf_bytes = await generate_tool_pdf_async(
+                job_id        = job_id,
+                tool_name     = result.get("tool_name", "Your Reading"),
+                tagline       = result.get("tagline", ""),
+                what_you_get  = result.get("what_you_get", []),
+                section_texts = result.get("section_texts", {}),
+                user_name     = result.get("user_name"),
+                partner_name  = result.get("partner_name"),
+                generated     = result.get("generated_at", ""),
+                estimated_pages = result.get("estimated_pages"),
+            )
+        else:
+            pdf_bytes = await generate_pdf(
+                job_id    = job_id,
+                tool_name = result.get("tool_name", "Your Reading"),
+                reading   = result.get("reading", ""),
+                sections  = result.get("domain_sections", {}),
+                life_path = result.get("life_path"),
+                sun_sign  = result.get("sun_sign"),
+                generated = result.get("generated_at", ""),
+            )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
 

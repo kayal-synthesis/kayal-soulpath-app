@@ -485,6 +485,11 @@ class NumerologyProfile:
     chaldean_life_path:   Optional[int]
     chaldean_destiny:     Optional[int]
     chaldean_note:        Optional[str]
+    # Added to close a gap flagged when numerology_engine.py's missing_numbers()
+    # function was first built: this file wasn't available at the time, so the
+    # computed value had nowhere to go. Defaults to empty list for backward
+    # compatibility with any existing caller not yet passing it.
+    missing_numbers:      List[int] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

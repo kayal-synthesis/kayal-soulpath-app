@@ -1,7 +1,7 @@
 """
 LLM Narrator — KAYAL Synthesis Platform
 =========================================
-Converts LLMPayload or PromptPackage into the final user-facing reading
+Converts a synthesis payload into the final user-facing reading
 using the DeepSeek-V4 API.
 
 Model routing by tier:
@@ -9,34 +9,51 @@ Model routing by tier:
     Tier 3 (Face + Palm)   → deepseek-v4
     Tier 2 (Face or Palm)  → deepseek-v4
     Tier 1 (Core only)     → deepseek-v4
-    Premium deep reading   → deepseek-v4
-    Union Blueprint        → deepseek-v4
 
-v3.0.0 — Narrative arc enforcement (publishing principles applied):
-    - NarrationResult: opening_paragraph and closing_paragraph fields added
-      so pdf_formatter and chat.py can access the document frame separately
-    - _NARRATIVE_ORDER: section ordering map — sections narrated in story-momentum
-      sequence (context-setters first, bridge/impact last)
-    - _check_opening_sentence(): post-process validator — if a section opens with
-      weak framing (name + number, generic statement), retries once with a stronger
-      instruction. This is the "desk rejection" check: the opening sentence is the
-      abstract. It either creates urgency or loses the reader.
-    - _build_document_frame(): generates document-level opening and closing paragraphs
-      as separate LLM calls that reference the assembled sections
-    - _assemble_full_text(): Individual Blueprint now opens with the document frame,
-      flows through sections in narrative order, and closes with the closing paragraph
-    - _system_prompt() (legacy): narrative arc directive added — Problem→Gap→Solution→
-      Impact mandate now applies to the legacy narrate() path as well
+v4.0.0 — Removed the Individual/Union Blueprint pipeline (both products
+retired). This file previously supported two parallel narration paths:
+the generic narrate()/narrate_async() used by every real tool purchase,
+and a separate narrate_from_package()/narrate_from_package_async() path
+built around prompt_builder.py's PromptPackage, used only by the two
+retired Blueprint products. The Blueprint-only path is now removed
+entirely: narrate_from_package(), narrate_from_package_async(),
+_narrate_section(), _narrate_section_async(), _build_document_frame(),
+_assemble_full_text(), _NARRATIVE_ORDER, and the % compliance machinery
+(_validate_pct_output(), _inject_pct_if_missing(), _PCT_PATTERN,
+_BINARY_VERDICTS), all specific to the retired products, are gone.
+NarrationResult dropped the Blueprint-only fields it never needed for
+the generic path (section_texts, compatibility_percentages,
+pct_validated, opening_paragraph, closing_paragraph).
+
+Two real safety mechanisms were found living only inside the now-removed
+Blueprint-only functions, meaning the actual live purchase path never
+used them. Both are now ported into narrate() and narrate_async()
+directly, where every real tool purchase actually goes:
+    - Weak-opening retry: if a reading opens with a system label or
+      number instead of establishing why the section matters, one retry
+      is attempted with a reinforced instruction before the text is
+      accepted.
+    - _strip_methodology_labels(): the code-level safety net that
+      catches methodology terms (Life Path 5, your birth chart, Sun in
+      Scorpio, Chaldean, etc.) if they survive the prompt constraints.
+      This was previously dead code as far as the real purchase flow
+      was concerned; it is now called on every real narration.
+
+The hardcoded tool_type="individual_blueprint" that every prior
+NarrationResult carried regardless of what was actually purchased is
+also gone, replaced with the real tool_type/tool_id passed in the
+payload.
 
 v3.1.0: Switched from Claude (Sonnet/Haiku/Opus) to DeepSeek-V4
 v3.1.1: Added em-dash (—) removal to _strip_methodology_labels() and _clean_output_text()
 
 Author: KAYAL Engineering
-Version: 3.1.1
+Version: 4.0.0
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -46,15 +63,6 @@ from dataclasses import dataclass, field
 from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
-
-# v2.0.0 — Import PromptPackage types (graceful fallback if not yet deployed)
-try:
-    from .prompt_builder import SectionPrompt, PromptPackage
-    _PROMPT_BUILDER_AVAILABLE = True
-except ImportError:
-    SectionPrompt = None   # type: ignore
-    PromptPackage = None   # type: ignore
-    _PROMPT_BUILDER_AVAILABLE = False
 
 
 # ---------------------------------------------------------------------------
@@ -90,20 +98,381 @@ class NarrationResult:
     model_used:      str
     tier:            str
     full_text:       str
-    domain_sections: Dict[str, str]   # domain → narrated text (legacy path)
+    domain_sections: Dict[str, str]   # domain → narrated text
     word_count:      int
     tokens_used:     int
     processing_ms:   int
     fallback_used:   bool
     error:           Optional[str]
-    # v2.0.0 new fields
-    tool_type:       str              = "individual_blueprint"
+    tool_type:       str              = ""
+    weak_opening_retried: bool        = False
     section_texts:   Dict[str, str]   = field(default_factory=dict)
-    compatibility_percentages: Optional[Dict[str, float]] = None
-    pct_validated:   bool             = True
-    # v3.0.0 new fields — document frame, accessible separately by pdf_formatter and chat.py
-    opening_paragraph:  str           = ""   # Document-level significance statement
-    closing_paragraph:  str           = ""   # Document-level send-off / impact landing
+    section_retry_count: int          = 0
+    estimated_pages: int              = 0
+
+
+# ---------------------------------------------------------------------------
+# Tool-aware multi-section narration
+# ---------------------------------------------------------------------------
+# Real depth requires real structure: one focused LLM call per real content
+# promise (each item in the tool's actual whatYouGet list), not one massive
+# call asked to cover everything at once. A single long generation degrades
+# toward repetition and vagueness well before it reaches genuine length;
+# narrower, separately-called sections stay specific because each one only
+# has to do one job. This mirrors the retired Blueprint system's real
+# strength (one call per section), but is driven by each tool's own real
+# content promises instead of two fixed 12/16-section templates.
+#
+# Depth scales with what was actually paid for, calibrated against the
+# item-count tiers already established in the catalog: 8 items ($29-49),
+# 9 items ($59), 10 items ($69-79), 12 items ($99). Word target per section
+# rises with price too, so the $99 tier reaches a genuine 32-40 pages while
+# the $29 tier still delivers a substantial 16-20, not something thin.
+# ---------------------------------------------------------------------------
+
+_WORDS_PER_PAGE = 300   # matches standard PDF body formatting
+
+_SECTION_WORD_TIERS = [
+    # (price_ceiling, word_lo, word_hi)
+    (49,  600, 750),
+    (59,  650, 800),
+    (79,  700, 900),
+    (999, 800, 1000),
+]
+
+
+def _words_per_section_for_price(price: float) -> Tuple[int, int]:
+    """Return (low, high) word target per section for a given tool price."""
+    for ceiling, lo, hi in _SECTION_WORD_TIERS:
+        if price <= ceiling:
+            return lo, hi
+    return _SECTION_WORD_TIERS[-1][1], _SECTION_WORD_TIERS[-1][2]
+
+
+def _build_item_section_prompt(
+    item_text:      str,
+    item_index:     int,
+    item_total:     int,
+    tool_name:      str,
+    name:           str,
+    shared_context: str,
+    word_target:    int,
+) -> str:
+    """Build the prompt for narrating a single whatYouGet promise as its own section."""
+    return (
+        f"You are writing one section of {name}'s personal reading for the tool "
+        f"\"{tool_name}\". This is section {item_index} of {item_total}.\n\n"
+        f"THIS SECTION'S SPECIFIC JOB — deliver exactly this promise, in full, "
+        f"using the real signal data below:\n\"{item_text}\"\n\n"
+        f"SIGNAL DATA AVAILABLE FOR THIS READING:\n{shared_context}\n\n"
+        f"Use whatever signals above are genuinely relevant to this specific promise. "
+        f"Do not force in signals that do not actually serve this section's job.\n\n"
+        f"Write approximately {word_target} words. Open with why this specific "
+        f"question matters to {name}, not with a system name or a restatement of "
+        f"the promise itself. Be concrete and specific to what the signals actually "
+        f"show, not generic. End with what this means for {name} going forward, "
+        f"not a summary.\n\n"
+        f"Never use em-dashes (—). Use commas (,) or periods (.) instead. "
+        f"Never mention system names, numbers, or methodology labels."
+    )
+
+
+def _narrate_tool_section(
+    item_text:      str,
+    item_index:     int,
+    item_total:     int,
+    tool_name:      str,
+    name:           str,
+    shared_context: str,
+    system:         str,
+    word_target:    int,
+) -> Tuple[str, int, bool]:
+    """Narrate one whatYouGet item as its own section. Sync."""
+    prompt = _build_item_section_prompt(
+        item_text, item_index, item_total, tool_name, name, shared_context, word_target
+    )
+    max_tokens = _word_to_tokens(word_target)
+    response = _call_deepseek(
+        messages=[{"role": "user", "content": prompt}],
+        system=system,
+        max_tokens=max_tokens,
+    )
+    text = _extract_text(response)
+    tokens = _token_count(response)
+    retried = False
+
+    if not _check_opening_sentence(text):
+        retried = True
+        retry_prompt = (
+            prompt
+            + "\n\nCRITICAL: Your previous opening was too weak, it led with a system "
+            "name, a number, or a restatement of the promise instead of establishing "
+            "why this specific question matters to this person right now. Rewrite the "
+            "opening. Never use em-dashes (—)."
+        )
+        try:
+            retry_resp = _call_deepseek(
+                messages=[{"role": "user", "content": retry_prompt}],
+                system=system,
+                max_tokens=max_tokens,
+            )
+            retry_text = _extract_text(retry_resp)
+            tokens += _token_count(retry_resp)
+            if retry_text and len(retry_text) > 50:
+                text = retry_text
+        except Exception as e:
+            logger.warning(f"Section retry failed [item {item_index}]: {e}")
+
+    text = _strip_methodology_labels(text)
+    return text, tokens, retried
+
+
+async def _narrate_tool_section_async(
+    item_text:      str,
+    item_index:     int,
+    item_total:     int,
+    tool_name:      str,
+    name:           str,
+    shared_context: str,
+    system:         str,
+    word_target:    int,
+) -> Tuple[str, int, bool]:
+    """Narrate one whatYouGet item as its own section. Async."""
+    prompt = _build_item_section_prompt(
+        item_text, item_index, item_total, tool_name, name, shared_context, word_target
+    )
+    max_tokens = _word_to_tokens(word_target)
+    response = await _call_deepseek_async(
+        messages=[{"role": "user", "content": prompt}],
+        system=system,
+        max_tokens=max_tokens,
+    )
+    text = _extract_text(response)
+    tokens = _token_count(response)
+    retried = False
+
+    if not _check_opening_sentence(text):
+        retried = True
+        retry_prompt = (
+            prompt
+            + "\n\nCRITICAL: Your previous opening was too weak, it led with a system "
+            "name, a number, or a restatement of the promise instead of establishing "
+            "why this specific question matters to this person right now. Rewrite the "
+            "opening. Never use em-dashes (—)."
+        )
+        try:
+            retry_resp = await _call_deepseek_async(
+                messages=[{"role": "user", "content": retry_prompt}],
+                system=system,
+                max_tokens=max_tokens,
+            )
+            retry_text = _extract_text(retry_resp)
+            tokens += _token_count(retry_resp)
+            if retry_text and len(retry_text) > 50:
+                text = retry_text
+        except Exception as e:
+            logger.warning(f"Async section retry failed [item {item_index}]: {e}")
+
+    text = _strip_methodology_labels(text)
+    return text, tokens, retried
+
+
+def _build_shared_context(payload: Dict) -> str:
+    """Assemble the shared signal context every section can draw from."""
+    domains        = payload.get("domains", [])
+    timing_summary = payload.get("timing_summary", "")
+    journey        = payload.get("journey_narrative", "")
+    overall_theme  = payload.get("overall_theme", "")
+
+    parts = []
+    for dp in domains:
+        domain_name = dp.get("domain", "").replace("_", " ").title()
+        block = [f"[{domain_name}]"]
+        if dp.get("convergence_level"):    block.append(f"Convergence: {dp['convergence_level']}")
+        if dp.get("primary_reading"):      block.append(f"Primary: {dp['primary_reading']}")
+        if dp.get("supporting_points"):    block.append(f"Supporting: {' | '.join(dp['supporting_points'][:2])}")
+        if dp.get("temporal"):
+            t = dp["temporal"]
+            block.append(f"Past: {t.get('past','')} Present: {t.get('present','')} Future: {t.get('future','')}")
+        if dp.get("tension"):              block.append(f"Tension: {dp['tension']}")
+        if dp.get("resolution"):           block.append(f"Resolution: {dp['resolution']}")
+        if dp.get("problem"):              block.append(f"Challenge: {dp['problem']}")
+        if dp.get("practical_solution"):   block.append(f"Practical path: {dp['practical_solution']}")
+        if dp.get("remedy") and dp["remedy"].get("has_remedy"):
+            r = dp["remedy"]
+            block.append(f"Remedy: {r.get('title','')}, {r.get('description','')[:200]}")
+        if dp.get("timing"):               block.append(f"Timing: {dp['timing']}")
+        if dp.get("growth_edge"):          block.append(f"Growth edge: {dp['growth_edge']}")
+        parts.append("\n".join(block))
+
+    if timing_summary: parts.append(f"[Timing Summary]\n{timing_summary}")
+    if journey:         parts.append(f"[Journey]\n{journey}")
+    if overall_theme:   parts.append(f"[Overall Theme]\n{overall_theme}")
+
+    return "\n\n".join(parts)
+
+
+def narrate_tool(
+    tool_payload: Dict,
+    use_opus:     bool = False,
+    fallback:     bool = True,
+) -> NarrationResult:
+    """
+    Tool-aware narrator — one real LLM call per whatYouGet promise, assembled
+    into a genuinely deep, tool-specific reading. This is the real replacement
+    for asking a single call to cover everything at once.
+
+    tool_payload requires, in addition to the standard narrate() fields:
+        tool_id:      str
+        tool_name:    str
+        tool_price:   float
+        what_you_get: List[str]   — the tool's real, catalog-grounded promises
+    """
+    t0         = time.monotonic()
+    session_id = tool_payload.get("session_id", "unknown")
+    tier_key   = _extract_tier_key(tool_payload)
+    tool_id    = tool_payload.get("tool_id", "")
+    tool_name  = tool_payload.get("tool_name", "this reading")
+    tool_price = float(tool_payload.get("tool_price", 29))
+    what_you_get: List[str] = tool_payload.get("what_you_get", [])
+    name           = tool_payload.get("user_name", "you")
+    cultural_ctx   = tool_payload.get("cultural_context", "")
+    narration_tone = tool_payload.get("narration_tone", "warm and direct")
+
+    if not what_you_get:
+        logger.warning(f"narrate_tool called with no what_you_get items [{tool_id}]")
+        return narrate(tool_payload, use_opus=use_opus, fallback=fallback)
+
+    word_lo, word_hi = _words_per_section_for_price(tool_price)
+    word_target = (word_lo + word_hi) // 2
+
+    system = _system_prompt(cultural_ctx, narration_tone)
+    shared_context = _build_shared_context(tool_payload)
+
+    section_texts: Dict[str, str] = {}
+    tokens_used = 0
+    retry_count = 0
+    error = None
+    fallback_used = False
+
+    try:
+        for i, item in enumerate(what_you_get, start=1):
+            text, tokens, retried = _narrate_tool_section(
+                item, i, len(what_you_get), tool_name, name,
+                shared_context, system, word_target,
+            )
+            section_texts[f"section_{i}"] = text
+            tokens_used += tokens
+            if retried:
+                retry_count += 1
+    except Exception as e:
+        error = str(e)
+        logger.error(f"Tool narration error [{tool_id}]: {e}")
+        if fallback:
+            fallback_used = True
+            payload_for_fallback = dict(tool_payload)
+            payload_for_fallback.setdefault("word_count_target", word_target * len(what_you_get))
+            fb = narrate(payload_for_fallback, use_opus=use_opus, fallback=True)
+            return fb
+
+    full_text = "\n\n".join(section_texts.values())
+    word_count = len(full_text.split())
+    estimated_pages = max(1, round(word_count / _WORDS_PER_PAGE))
+    processing_ms = int((time.monotonic() - t0) * 1000)
+
+    logger.info("Narrator.narrate_tool completed", extra={
+        "session_id": session_id, "tool_id": tool_id, "tool_price": tool_price,
+        "sections": len(what_you_get), "words": word_count, "pages": estimated_pages,
+        "tokens": tokens_used, "section_retries": retry_count, "ms": processing_ms,
+    })
+
+    return NarrationResult(
+        session_id=session_id, model_used=_MODEL_DEEPSEEK, tier=tier_key,
+        full_text=full_text, domain_sections={}, word_count=word_count,
+        tokens_used=tokens_used, processing_ms=processing_ms,
+        fallback_used=fallback_used, error=error, tool_type=tool_id,
+        section_texts=section_texts, section_retry_count=retry_count,
+        estimated_pages=estimated_pages,
+    )
+
+
+async def narrate_tool_async(
+    tool_payload: Dict,
+    use_opus:     bool = False,
+    fallback:     bool = True,
+) -> NarrationResult:
+    """Async version of narrate_tool(). Sections narrate concurrently."""
+
+    t0         = time.monotonic()
+    session_id = tool_payload.get("session_id", "unknown")
+    tier_key   = _extract_tier_key(tool_payload)
+    tool_id    = tool_payload.get("tool_id", "")
+    tool_name  = tool_payload.get("tool_name", "this reading")
+    tool_price = float(tool_payload.get("tool_price", 29))
+    what_you_get: List[str] = tool_payload.get("what_you_get", [])
+    name           = tool_payload.get("user_name", "you")
+    cultural_ctx   = tool_payload.get("cultural_context", "")
+    narration_tone = tool_payload.get("narration_tone", "warm and direct")
+
+    if not what_you_get:
+        logger.warning(f"narrate_tool_async called with no what_you_get items [{tool_id}]")
+        return await narrate_async(tool_payload, use_opus=use_opus, fallback=fallback)
+
+    word_lo, word_hi = _words_per_section_for_price(tool_price)
+    word_target = (word_lo + word_hi) // 2
+
+    system = _system_prompt(cultural_ctx, narration_tone)
+    shared_context = _build_shared_context(tool_payload)
+
+    error = None
+    fallback_used = False
+
+    try:
+        results = await asyncio.gather(*[
+            _narrate_tool_section_async(
+                item, i, len(what_you_get), tool_name, name,
+                shared_context, system, word_target,
+            )
+            for i, item in enumerate(what_you_get, start=1)
+        ])
+    except Exception as e:
+        error = str(e)
+        logger.error(f"Async tool narration error [{tool_id}]: {e}")
+        if fallback:
+            fallback_used = True
+            payload_for_fallback = dict(tool_payload)
+            payload_for_fallback.setdefault("word_count_target", word_target * len(what_you_get))
+            return await narrate_async(payload_for_fallback, use_opus=use_opus, fallback=True)
+        results = []
+
+    section_texts: Dict[str, str] = {}
+    tokens_used = 0
+    retry_count = 0
+    for i, (text, tokens, retried) in enumerate(results, start=1):
+        section_texts[f"section_{i}"] = text
+        tokens_used += tokens
+        if retried:
+            retry_count += 1
+
+    full_text = "\n\n".join(section_texts.values())
+    word_count = len(full_text.split())
+    estimated_pages = max(1, round(word_count / _WORDS_PER_PAGE))
+    processing_ms = int((time.monotonic() - t0) * 1000)
+
+    logger.info("Narrator.narrate_tool_async completed", extra={
+        "session_id": session_id, "tool_id": tool_id, "tool_price": tool_price,
+        "sections": len(what_you_get), "words": word_count, "pages": estimated_pages,
+        "tokens": tokens_used, "section_retries": retry_count, "ms": processing_ms,
+    })
+
+    return NarrationResult(
+        session_id=session_id, model_used=_MODEL_DEEPSEEK, tier=tier_key,
+        full_text=full_text, domain_sections={}, word_count=word_count,
+        tokens_used=tokens_used, processing_ms=processing_ms,
+        fallback_used=fallback_used, error=error, tool_type=tool_id,
+        section_texts=section_texts, section_retry_count=retry_count,
+        estimated_pages=estimated_pages,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -178,7 +547,7 @@ def _domain_prompt_sonnet(domain_payloads, timing, journey, overall, name, word_
         if dp.get("practical_solution"): domains_text += f"Practical path: {dp['practical_solution']}\n"
         if dp.get("remedy") and dp["remedy"].get("has_remedy"):
             r = dp["remedy"]
-            domains_text += f"Spiritual practice: {r['title']} — {r['description'][:200]}\n"
+            domains_text += f"Spiritual practice: {r['title']}, {r['description'][:200]}\n"
             domains_text += f"How: {r['timing']} for {r['duration']}\n"
             if r.get("mantra_or_prayer"):
                 domains_text += f"Practice: {r['mantra_or_prayer']}\n"
@@ -426,56 +795,6 @@ def _word_to_tokens(word_count: int) -> int:
 
 
 # ---------------------------------------------------------------------------
-# v2.0.0 — % compliance validation (preserved)
-# ---------------------------------------------------------------------------
-
-_PCT_PATTERN = re.compile('[0-9]{1,3}\\s*%|[0-9]{1,3}\\s+percent', re.IGNORECASE)
-
-_BINARY_VERDICTS = [
-    "is compatible", "are compatible", "not compatible", "incompatible",
-    "is a good match", "are a good match", "is a bad match", "are a bad match",
-    "will work", "won't work", "will last", "won't last",
-    "are meant for each other", "are not meant",
-    "children are indicated", "will not have children", "cannot have children",
-]
-
-
-def _validate_pct_output(text: str, pct_label: str) -> Tuple[bool, Optional[str]]:
-    """Validate that a % section output contains a percentage figure."""
-    has_pct = bool(_PCT_PATTERN.search(text))
-    text_lower = text.lower()
-    has_binary = any(v in text_lower for v in _BINARY_VERDICTS)
-    if has_binary:
-        logger.warning(
-            "% section contains binary compatibility verdict",
-            extra={"pct_label": pct_label, "text_snippet": text[:120]},
-        )
-    m = _PCT_PATTERN.search(text)
-    found_pct = m.group(0) if m else None
-    return has_pct and not has_binary, found_pct
-
-
-def _inject_pct_if_missing(
-    text:      str,
-    pct_label: str,
-    pct_value: float,
-) -> Tuple[str, bool]:
-    """If the text is missing the required % score, inject it as the first line."""
-    was_injected = False
-    text_lower = text.lower()
-    for verdict in _BINARY_VERDICTS:
-        if verdict in text_lower:
-            logger.warning(f"Binary verdict detected in % section: {verdict!r}")
-
-    if not _PCT_PATTERN.search(text):
-        pct_line = f"{pct_label}: {round(pct_value):.0f}%"
-        text = pct_line + "\n\n" + text
-        was_injected = True
-        logger.info(f"% score injected into section: {pct_line}")
-
-    return text, was_injected
-
-
 # ---------------------------------------------------------------------------
 # v3.0.0 — Methodology label stripper (final safety net)
 # ---------------------------------------------------------------------------
@@ -499,10 +818,13 @@ _METHODOLOGY_STRIP_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\b[Nn]umerology\s+(shows|reveals|indicates|suggests|points to)\b'), "the pattern reveals"),
     (re.compile(r'\b[Aa]strology\s+(shows|reveals|indicates|suggests|points to)\b'),  "the indicators reveal"),
     (re.compile(r'\b(your|the)\s+[Nn]umerology\b'), "the patterns"),
-    (re.compile(r'\b(your|the)\s+[Cc]hart\b'),      "the synthesis"),
+    (re.compile(r'\b(your|the)\s+(birth\s+|natal\s+|numerology\s+|composite\s+)?[Cc]hart\b', re.IGNORECASE), "the synthesis"),
     (re.compile(r'\baccording to (numerology|astrology|the chart|the reading|palmistry)\b', re.IGNORECASE), "the synthesis shows"),
     (re.compile(r'\bnumerologically speaking\b',  re.IGNORECASE), "structurally"),
     (re.compile(r'\bastrologically speaking\b',   re.IGNORECASE), "structurally"),
+    (re.compile(r'\b(as an?|typical of|being an?)\s+(Aries|Taurus|Gemini|Cancer|Leo|Virgo|Libra|Scorpio|Sagittarius|Capricorn|Aquarius|Pisces)s?\b', re.IGNORECASE), "with this specific placement"),
+    (re.compile(r'\b[Cc]haldean\b'), "this cross-check"),
+    (re.compile(r'\b[Kk]armic\s+[Dd]ebt\s+[Nn]umber\s+\d+\b'), "this karmic pattern"),
 ]
 
 
@@ -561,39 +883,9 @@ def _strip_methodology_labels(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# v3.0.0 — Narrative order and opening sentence enforcement (preserved)
 # ---------------------------------------------------------------------------
-
-_NARRATIVE_ORDER: Dict[str, int] = {
-    "character_overview":  1,
-    "identity_purpose":    2,
-    "spiritual_path":      3,
-    "life_timing":         4,
-    "career_vocation":     5,
-    "financial_life":      6,
-    "wealth_potential":    7,
-    "love_relationships":  8,
-    "health_constitution": 9,
-    "spirit_world":       10,
-    "legacy_mission":     11,
-    "remedies_activation":12,
-    "union_overview":         1,
-    "person_a_character":     2,
-    "person_b_character":     3,
-    "spiritual_compatibility":4,
-    "marriage_longevity":     5,
-    "intimacy_compatibility": 6,
-    "dominance_dynamics":     7,
-    "children_potential":     8,
-    "career_synergy":         9,
-    "wealth_compatibility":  10,
-    "health_cross_impact":   11,
-    "parental_patterns":     12,
-    "death_order":           13,
-    "infidelity_profile":    14,
-    "union_legacy":          15,
-    "union_remedies":        16,
-}
+# Opening sentence enforcement — used by narrate() and narrate_async()
+# ---------------------------------------------------------------------------
 
 _WEAK_OPENING_PATTERNS = [
     r"^your life path \d",
@@ -638,477 +930,8 @@ def _check_opening_sentence(text: str) -> bool:
     return not bool(_WEAK_OPENING_RE.match(first_sentence))
 
 
-def _build_document_frame(
-    person_name:   str,
-    tool_type:     str,
-    partner_name:  Optional[str],
-    section_texts: Dict[str, str],
-    model:         str,
-    global_context:str,
-) -> Tuple[str, str, int]:
-    """Generate a document-level opening paragraph and closing paragraph."""
-    tokens_total = 0
-    section_summary = "; ".join(
-        f"{k.replace('_', ' ')}" for k in list(section_texts.keys())[:8] if section_texts.get(k)
-    )
-
-    if tool_type == "union_blueprint" and partner_name:
-        subjects = f"{person_name} and {partner_name}"
-        reading_type = "Union Blueprint"
-    else:
-        subjects = person_name
-        reading_type = "Individual Life Blueprint"
-
-    opening_prompt = (
-        f"Write a single opening paragraph (3–4 sentences) for {subjects}'s KAYAL {reading_type}.\n\n"
-        f"This paragraph precedes all domain sections. Its purpose is SIGNIFICANCE:\n"
-        f"Why does having a complete multi-system synthesis matter? "
-        f"What does a person carry differently in their life when they have an accurate map?\n\n"
-        f"The reading covers: {section_summary}.\n\n"
-        f"Rules:\n"
-        f"- Do NOT summarise what follows. Do NOT list the sections.\n"
-        f"- Establish WHY this reading exists — the problem it solves.\n"
-        f"- Address {person_name} directly. Warm, grounded, specific.\n"
-        f"- The last sentence should create forward pull into the reading.\n"
-        f"Never use em-dashes (—). Use commas (,) instead.\n"
-        f"Write the opening paragraph now. Nothing else."
-    )
-
-    try:
-        open_resp = _call_deepseek(
-            messages=[{"role": "user", "content": opening_prompt}],
-            system=global_context,
-            max_tokens=200,
-        )
-        opening_paragraph = _extract_text(open_resp).strip()
-        tokens_total += _token_count(open_resp)
-    except Exception as e:
-        logger.warning(f"Document opening paragraph failed: {e}")
-        opening_paragraph = ""
-
-    closing_prompt = (
-        f"Write a single closing paragraph (3–4 sentences) for {subjects}'s KAYAL {reading_type}.\n\n"
-        f"This paragraph follows all domain sections. Its purpose is IMPACT:\n"
-        f"Not a summary. A send-off. The last thing {person_name} reads should land.\n\n"
-        f"The reading covered: {section_summary}.\n\n"
-        f"Rules:\n"
-        f"- Do NOT summarise. Do NOT repeat insights already given.\n"
-        f"- Address what {person_name} now carries that they didn't have before.\n"
-        f"- The question the reading answers is: 'What do I do with this?'\n"
-        f"- End with a single sentence that feels like a door opening, not a door closing.\n"
-        f"Never use em-dashes (—). Use commas (,) instead.\n"
-        f"Write the closing paragraph now. Nothing else."
-    )
-
-    try:
-        close_resp = _call_deepseek(
-            messages=[{"role": "user", "content": closing_prompt}],
-            system=global_context,
-            max_tokens=200,
-        )
-        closing_paragraph = _extract_text(close_resp).strip()
-        tokens_total += _token_count(close_resp)
-    except Exception as e:
-        logger.warning(f"Document closing paragraph failed: {e}")
-        closing_paragraph = ""
-
-    return opening_paragraph, closing_paragraph, tokens_total
-
-
 # ---------------------------------------------------------------------------
-# v2.0.0 — Section-level LLM caller (enhanced in v3.0.0)
-# ---------------------------------------------------------------------------
-
-def _narrate_section(
-    section:        "SectionPrompt",
-    global_context: str,
-    model:          str,
-    compat_pcts:    Optional[Dict[str, float]] = None,
-) -> Tuple[str, int, bool]:
-    """Call DeepSeek for a single SectionPrompt."""
-    full_system = global_context + "\n\n" + section.system_prompt
-    messages    = [{"role": "user", "content": section.user_prompt}]
-
-    response = _call_deepseek(
-        messages=messages,
-        system=full_system,
-        max_tokens=section.max_tokens,
-    )
-    text   = _extract_text(response)
-    tokens = _token_count(response)
-
-    if not _check_opening_sentence(text):
-        logger.info(
-            "Weak opening sentence detected — retrying with framing instruction",
-            extra={"section_id": section.section_id, "opening": text[:80]},
-        )
-        retry_user_prompt = (
-            section.user_prompt
-            + "\n\nCRITICAL: Your previous opening was too weak — it led with a system name, "
-            "a number label, or a methodology reference before establishing why this dimension "
-            "of life matters to this specific person. "
-            "Rewrite. Open with the SIGNIFICANCE: the cost, the problem, or the question "
-            "that makes this section urgent. The reader must feel 'this is about me' "
-            "before they encounter any specific data. "
-            "Do not begin with the person's name, any system label (Life Path, Personal Year, "
-            "Sun sign, Pinnacle, Destiny number, Saturn return), any number, or any phrase "
-            "that names the method rather than what it reveals. "
-            "Open with the lived reality — the thing the person recognises before you explain "
-            "anything about how you know it. "
-            "Never use em-dashes (—). Use commas (,) instead."
-        )
-        try:
-            retry_resp = _call_deepseek(
-                messages=[{"role": "user", "content": retry_user_prompt}],
-                system=full_system,
-                max_tokens=section.max_tokens,
-            )
-            retry_text = _extract_text(retry_resp)
-            tokens += _token_count(retry_resp)
-            if retry_text and len(retry_text) > 50:
-                text = retry_text
-        except Exception as e:
-            logger.warning(f"Opening sentence retry failed [{section.section_id}]: {e}")
-
-    pct_injected = False
-    if section.is_pct_section and section.pct_label:
-        pct_value = 50.0
-        if compat_pcts and section.domain in compat_pcts:
-            pct_value = compat_pcts[section.domain]
-        elif compat_pcts and "overall" in compat_pcts and section.section_id == "union_overview":
-            pct_value = compat_pcts["overall"]
-        is_valid, _ = _validate_pct_output(text, section.pct_label)
-        if not is_valid:
-            text, pct_injected = _inject_pct_if_missing(text, section.pct_label, pct_value)
-
-    # Final safety net — strip methodology labels and clean em-dashes
-    text = _strip_methodology_labels(text)
-
-    return text, tokens, pct_injected
-
-
-async def _narrate_section_async(
-    section:        "SectionPrompt",
-    global_context: str,
-    model:          str,
-    compat_pcts:    Optional[Dict[str, float]] = None,
-) -> Tuple[str, int, bool]:
-    """Async version of _narrate_section()."""
-    full_system = global_context + "\n\n" + section.system_prompt
-    messages = [{"role": "user", "content": section.user_prompt}]
-    response = await _call_deepseek_async(
-        messages=messages,
-        system=full_system,
-        max_tokens=section.max_tokens,
-    )
-    text   = _extract_text(response)
-    tokens = _token_count(response)
-
-    if not _check_opening_sentence(text):
-        logger.info(
-            "Weak opening sentence detected — retrying with framing instruction",
-            extra={"section_id": section.section_id, "opening": text[:80]},
-        )
-        retry_user_prompt = (
-            section.user_prompt
-            + "\n\nCRITICAL: Your previous opening was too weak — it led with a system name, "
-            "a number label, or a methodology reference before establishing why this dimension "
-            "of life matters to this specific person. "
-            "Rewrite. Open with the SIGNIFICANCE: the cost, the problem, or the question "
-            "that makes this section urgent. The reader must feel 'this is about me' "
-            "before they encounter any specific data. "
-            "Do not begin with the person's name, any system label (Life Path, Personal Year, "
-            "Sun sign, Pinnacle, Destiny number, Saturn return), any number, or any phrase "
-            "that names the method rather than what it reveals. "
-            "Open with the lived reality — the thing the person recognises before you explain "
-            "anything about how you know it. "
-            "Never use em-dashes (—). Use commas (,) instead."
-        )
-        try:
-            retry_resp = await _call_deepseek_async(
-                messages=[{"role": "user", "content": retry_user_prompt}],
-                system=full_system,
-                max_tokens=section.max_tokens,
-            )
-            retry_text = _extract_text(retry_resp)
-            tokens += _token_count(retry_resp)
-            if retry_text and len(retry_text) > 50:
-                text = retry_text
-        except Exception as e:
-            logger.warning(f"Opening sentence retry failed [{section.section_id}]: {e}")
-
-    pct_injected = False
-    if section.is_pct_section and section.pct_label:
-        pct_value = 50.0
-        if compat_pcts and section.domain in compat_pcts:
-            pct_value = compat_pcts[section.domain]
-        elif compat_pcts and "overall" in compat_pcts and section.section_id == "union_overview":
-            pct_value = compat_pcts["overall"]
-        is_valid, _ = _validate_pct_output(text, section.pct_label)
-        if not is_valid:
-            text, pct_injected = _inject_pct_if_missing(text, section.pct_label, pct_value)
-
-    # Final safety net — strip methodology labels and clean em-dashes
-    text = _strip_methodology_labels(text)
-
-    return text, tokens, pct_injected
-
-
-def _assemble_full_text(
-    sections:          List["SectionPrompt"],
-    section_texts:     Dict[str, str],
-    tool_type:         str,
-    opening_paragraph: str = "",
-    closing_paragraph: str = "",
-) -> str:
-    """Assemble all section texts into the final reading document."""
-    ordered_sections = sorted(
-        sections,
-        key=lambda s: _NARRATIVE_ORDER.get(s.section_id, 50),
-    )
-
-    parts = []
-
-    if opening_paragraph:
-        parts.append(opening_paragraph)
-
-    for section in ordered_sections:
-        text = section_texts.get(section.section_id, "")
-        if not text:
-            continue
-        if tool_type == "union_blueprint":
-            parts.append(f"### {section.section_title}\n\n{text}")
-        else:
-            parts.append(text)
-
-    if closing_paragraph:
-        parts.append(closing_paragraph)
-
-    return _clean_output_text("\n\n".join(parts))
-
-
-# ---------------------------------------------------------------------------
-# v2.0.0 — Primary new entry point: narrate_from_package()
-# ---------------------------------------------------------------------------
-
-def narrate_from_package(
-    pkg:      "PromptPackage",
-    use_opus: bool = False,
-    fallback: bool = True,
-) -> NarrationResult:
-    """Narrate a complete Blueprint from a PromptPackage."""
-    t0 = time.monotonic()
-
-    model = _MODEL_DEEPSEEK  # Always use DeepSeek-V4
-
-    compat_pcts    = pkg.compatibility_percentages
-    global_context = pkg.system_context
-
-    section_texts: Dict[str, str] = {}
-    tokens_total:  int  = 0
-    any_injected:  bool = False
-    error:         Optional[str] = None
-    fallback_used: bool = False
-
-    sorted_sections = sorted(
-        pkg.sections,
-        key=lambda s: _NARRATIVE_ORDER.get(s.section_id, 50),
-    )
-    required_sections = [s for s in sorted_sections if s.required]
-    optional_sections = [s for s in sorted_sections if not s.required]
-    all_sections      = required_sections + optional_sections
-
-    for section in all_sections:
-        try:
-            text, tokens, injected = _narrate_section(
-                section, global_context, model, compat_pcts
-            )
-            section_texts[section.section_id] = text
-            tokens_total += tokens
-            if injected:
-                any_injected = True
-
-        except Exception as e:
-            logger.error(f"Section narration failed [{section.section_id}]: {e}")
-            if section.required and fallback:
-                # Fallback to same model with retry
-                fallback_used = True
-                try:
-                    text, tokens, injected = _narrate_section(
-                        section, global_context, model, compat_pcts
-                    )
-                    section_texts[section.section_id] = text
-                    tokens_total += tokens
-                    if injected:
-                        any_injected = True
-                except Exception as e2:
-                    section_texts[section.section_id] = (
-                        f"[Section temporarily unavailable: {section.section_title}]"
-                    )
-                    error = str(e2)
-            elif not section.required:
-                section_texts[section.section_id] = ""
-            else:
-                section_texts[section.section_id] = (
-                    f"[Section temporarily unavailable: {section.section_title}]"
-                )
-                error = str(e)
-
-    opening_paragraph = ""
-    closing_paragraph = ""
-    try:
-        opening_paragraph, closing_paragraph, frame_tokens = _build_document_frame(
-            person_name    = pkg.person_name,
-            tool_type      = pkg.tool_type,
-            partner_name   = pkg.partner_name,
-            section_texts  = section_texts,
-            model          = model,
-            global_context = global_context,
-        )
-        tokens_total += frame_tokens
-    except Exception as e:
-        logger.warning(f"Document frame generation failed: {e}")
-
-    full_text  = _assemble_full_text(
-        pkg.sections, section_texts, pkg.tool_type,
-        opening_paragraph, closing_paragraph,
-    )
-    word_count    = len(full_text.split())
-    pct_validated = not any_injected
-    processing_ms = int((time.monotonic() - t0) * 1000)
-
-    logger.info(
-        "Narrator.narrate_from_package completed",
-        extra={
-            "session_id":        pkg.session_id,
-            "tool_type":         pkg.tool_type,
-            "model":             model,
-            "sections_total":    len(all_sections),
-            "sections_narrated": sum(1 for t in section_texts.values() if t and not t.startswith("[")),
-            "pct_sections":      sum(1 for s in pkg.sections if s.is_pct_section),
-            "pct_validated":     pct_validated,
-            "any_injected":      any_injected,
-            "has_frame":         bool(opening_paragraph),
-            "words":             word_count,
-            "tokens":            tokens_total,
-            "fallback_used":     fallback_used,
-            "ms":                processing_ms,
-        },
-    )
-
-    return NarrationResult(
-        session_id                = pkg.session_id,
-        model_used                = model,
-        tier                      = pkg.tier,
-        full_text                 = full_text,
-        domain_sections           = {k: v for k, v in section_texts.items()},
-        word_count                = word_count,
-        tokens_used               = tokens_total,
-        processing_ms             = processing_ms,
-        fallback_used             = fallback_used,
-        error                     = error,
-        tool_type                 = pkg.tool_type,
-        section_texts             = section_texts,
-        compatibility_percentages = compat_pcts,
-        pct_validated             = pct_validated,
-        opening_paragraph         = opening_paragraph,
-        closing_paragraph         = closing_paragraph,
-    )
-
-
-async def narrate_from_package_async(
-    pkg:      "PromptPackage",
-    use_opus: bool = False,
-    fallback: bool = True,
-) -> NarrationResult:
-    """Async version of narrate_from_package()."""
-    import asyncio
-    t0 = time.monotonic()
-
-    model = _MODEL_DEEPSEEK  # Always use DeepSeek-V4
-
-    compat_pcts = pkg.compatibility_percentages
-    global_context = pkg.system_context
-
-    section_texts: Dict[str, str] = {}
-    tokens_total  = 0
-    any_injected  = False
-    error: Optional[str] = None
-
-    required_sections = [s for s in pkg.sections if s.required]
-    optional_sections = [s for s in pkg.sections if not s.required]
-
-    for section in required_sections:
-        try:
-            text, tokens, injected = await _narrate_section_async(
-                section, global_context, model, compat_pcts
-            )
-            section_texts[section.section_id] = text
-            tokens_total += tokens
-            if injected: any_injected = True
-        except Exception as e:
-            logger.error(f"Async section failed [{section.section_id}]: {e}")
-            section_texts[section.section_id] = f"[Section unavailable: {section.section_title}]"
-            error = str(e)
-
-    async def _opt_section(section):
-        try:
-            return section.section_id, await _narrate_section_async(
-                section, global_context, model, compat_pcts
-            )
-        except Exception as e:
-            return section.section_id, ("", 0, False)
-
-    if optional_sections:
-        opt_results = await asyncio.gather(*[_opt_section(s) for s in optional_sections])
-        for sid, (text, tokens, injected) in opt_results:
-            section_texts[sid] = text
-            tokens_total += tokens
-            if injected: any_injected = True
-
-    opening_paragraph = ""
-    closing_paragraph = ""
-    try:
-        opening_paragraph, closing_paragraph, frame_tokens = _build_document_frame(
-            person_name    = pkg.person_name,
-            tool_type      = pkg.tool_type,
-            partner_name   = pkg.partner_name,
-            section_texts  = section_texts,
-            model          = model,
-            global_context = global_context,
-        )
-        tokens_total += frame_tokens
-    except Exception as e:
-        logger.warning(f"Document frame generation failed: {e}")
-
-    full_text  = _assemble_full_text(
-        pkg.sections, section_texts, pkg.tool_type,
-        opening_paragraph, closing_paragraph,
-    )
-    word_count = len(full_text.split())
-    pct_validated = not any_injected
-    processing_ms = int((time.monotonic() - t0) * 1000)
-
-    logger.info("Narrator.narrate_from_package_async completed", extra={
-        "session_id": pkg.session_id, "tool_type": pkg.tool_type,
-        "model": model, "words": word_count, "tokens": tokens_total,
-        "pct_validated": pct_validated, "ms": processing_ms,
-    })
-
-    return NarrationResult(
-        session_id=pkg.session_id, model_used=model, tier=pkg.tier,
-        full_text=full_text, domain_sections=section_texts, word_count=word_count,
-        tokens_used=tokens_total, processing_ms=processing_ms,
-        fallback_used=False, error=error,
-        tool_type=pkg.tool_type, section_texts=section_texts,
-        compatibility_percentages=compat_pcts, pct_validated=pct_validated,
-        opening_paragraph=opening_paragraph,
-        closing_paragraph=closing_paragraph,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Legacy narrate() — v1.0.0, preserved for backward compatibility
+# Generic narration entry point — used for every real tool purchase
 # ---------------------------------------------------------------------------
 
 def narrate(
@@ -1116,11 +939,12 @@ def narrate(
     use_opus:      bool = False,
     fallback:      bool = True,
 ) -> NarrationResult:
-    """Legacy narrate() — now uses DeepSeek."""
+    """Generic narrator — used for every real tool purchase. Uses DeepSeek."""
     t0         = time.monotonic()
     session_id = llm_payload.get("session_id", "unknown")
     tier       = llm_payload.get("tier_description", "")
     tier_key   = _extract_tier_key(llm_payload)
+    tool_type  = llm_payload.get("tool_type") or llm_payload.get("tool_id") or "reading"
     primary_model = _MODEL_DEEPSEEK
 
     name           = llm_payload.get("user_name", "you")
@@ -1143,7 +967,7 @@ def narrate(
         pinnacle_preamble = f"\nLIFE CYCLE CONTEXT:\n{llm_payload['pinnacle_summary']}\n"
 
     fallback_used = False; full_text = ""; domain_sections: Dict[str, str] = {}
-    tokens_used = 0; error = None
+    tokens_used = 0; error = None; weak_opening_retried = False
 
     try:
         user_prompt = (
@@ -1157,6 +981,47 @@ def narrate(
         )
         full_text = _extract_text(response)
         tokens_used = _token_count(response)
+
+        # Weak-opening retry — the reader decides whether to keep reading in the
+        # first sentence, so a section that opens with a system label or number
+        # gets one retry with a reinforced instruction before we accept it.
+        if not _check_opening_sentence(full_text):
+            logger.info(
+                "Weak opening sentence detected — retrying with framing instruction",
+                extra={"session_id": session_id, "opening": full_text[:80]},
+            )
+            weak_opening_retried = True
+            retry_user_prompt = (
+                user_prompt
+                + "\n\nCRITICAL: Your previous opening was too weak, it led with a system name, "
+                "a number label, or a methodology reference before establishing why this dimension "
+                "of life matters to this specific person. "
+                "Rewrite. Open with the SIGNIFICANCE: the cost, the problem, or the question "
+                "that makes this reading urgent. The reader must feel 'this is about me' "
+                "before they encounter any specific data. "
+                "Do not begin with the person's name, any system label (Life Path, Personal Year, "
+                "Sun sign, Pinnacle, Destiny number, Saturn return), any number, or any phrase "
+                "that names the method rather than what it reveals. "
+                "Open with the lived reality, the thing the person recognises before you explain "
+                "anything about how you know it. "
+                "Never use em-dashes (—). Use commas (,) instead."
+            )
+            try:
+                retry_resp = _call_deepseek(
+                    messages=[{"role": "user", "content": retry_user_prompt}],
+                    system=system,
+                    max_tokens=max_tokens,
+                )
+                retry_text = _extract_text(retry_resp)
+                tokens_used += _token_count(retry_resp)
+                if retry_text and len(retry_text) > 50:
+                    full_text = retry_text
+            except Exception as e:
+                logger.warning(f"Opening sentence retry failed [{session_id}]: {e}")
+
+        # Final safety net — strip any methodology labels or numbers that
+        # survived the prompt constraints and the retry above.
+        full_text = _strip_methodology_labels(full_text)
         domain_sections = _split_into_sections(full_text, domains)
 
     except Exception as e:
@@ -1171,7 +1036,7 @@ def narrate(
                     system=system,
                     max_tokens=1200,
                 )
-                full_text = _extract_text(r)
+                full_text = _strip_methodology_labels(_extract_text(r))
                 tokens_used = _token_count(r)
                 error = None
             except Exception as e2:
@@ -1181,13 +1046,15 @@ def narrate(
     word_count = len(full_text.split()); processing_ms = int((time.monotonic() - t0) * 1000)
     logger.info("Narrator.narrate completed", extra={
         "session_id": session_id, "model": primary_model, "tier": tier_key,
-        "words": word_count, "tokens": tokens_used, "fallback": fallback_used, "ms": processing_ms,
+        "tool_type": tool_type, "words": word_count, "tokens": tokens_used,
+        "fallback": fallback_used, "weak_opening_retried": weak_opening_retried, "ms": processing_ms,
     })
     return NarrationResult(
         session_id=session_id, model_used=primary_model,
         tier=tier_key, full_text=full_text, domain_sections=domain_sections,
         word_count=word_count, tokens_used=tokens_used, processing_ms=processing_ms,
-        fallback_used=fallback_used, error=error, tool_type="individual_blueprint",
+        fallback_used=fallback_used, error=error, tool_type=tool_type,
+        weak_opening_retried=weak_opening_retried,
     )
 
 
@@ -1200,6 +1067,7 @@ async def narrate_async(
     t0            = time.monotonic()
     session_id    = llm_payload.get("session_id", "unknown")
     tier_key      = _extract_tier_key(llm_payload)
+    tool_type     = llm_payload.get("tool_type") or llm_payload.get("tool_id") or "reading"
     primary_model = _MODEL_DEEPSEEK
 
     name           = llm_payload.get("user_name", "you")
@@ -1217,7 +1085,7 @@ async def narrate_async(
     pinnacle_preamble = f"\nLIFE CYCLE:\n{llm_payload['pinnacle_summary']}\n"         if llm_payload.get("pinnacle_summary") else ""
 
     fallback_used = False; full_text = ""; domain_sections: Dict[str, str] = {}
-    tokens_used = 0; error = None
+    tokens_used = 0; error = None; weak_opening_retried = False
 
     try:
         user_prompt = karmic_preamble + pinnacle_preamble + _domain_prompt_sonnet(domains, timing_summary, journey, overall_theme, name, word_target)
@@ -1228,6 +1096,35 @@ async def narrate_async(
         )
         full_text = _extract_text(response)
         tokens_used = _token_count(response)
+
+        if not _check_opening_sentence(full_text):
+            logger.info(
+                "Weak opening sentence detected — retrying with framing instruction",
+                extra={"session_id": session_id, "opening": full_text[:80]},
+            )
+            weak_opening_retried = True
+            retry_user_prompt = (
+                user_prompt
+                + "\n\nCRITICAL: Your previous opening was too weak, it led with a system name, "
+                "a number label, or a methodology reference before establishing why this dimension "
+                "of life matters to this specific person. "
+                "Rewrite. Open with the SIGNIFICANCE: the cost, the problem, or the question "
+                "that makes this reading urgent. Never use em-dashes (—). Use commas (,) instead."
+            )
+            try:
+                retry_resp = await _call_deepseek_async(
+                    messages=[{"role": "user", "content": retry_user_prompt}],
+                    system=system,
+                    max_tokens=max_tokens,
+                )
+                retry_text = _extract_text(retry_resp)
+                tokens_used += _token_count(retry_resp)
+                if retry_text and len(retry_text) > 50:
+                    full_text = retry_text
+            except Exception as e:
+                logger.warning(f"Opening sentence retry failed [{session_id}]: {e}")
+
+        full_text = _strip_methodology_labels(full_text)
         domain_sections = _split_into_sections(full_text, domains)
 
     except Exception as e:
@@ -1240,7 +1137,7 @@ async def narrate_async(
                     system=system,
                     max_tokens=1200,
                 )
-                full_text = _extract_text(r)
+                full_text = _strip_methodology_labels(_extract_text(r))
                 tokens_used = _token_count(r)
                 error = None
             except Exception as e2:
@@ -1252,7 +1149,7 @@ async def narrate_async(
         tier=tier_key, full_text=full_text, domain_sections=domain_sections,
         word_count=len(full_text.split()), tokens_used=tokens_used,
         processing_ms=int((time.monotonic() - t0) * 1000), fallback_used=fallback_used, error=error,
-        tool_type="individual_blueprint",
+        tool_type=tool_type, weak_opening_retried=weak_opening_retried,
     )
 
 

@@ -236,6 +236,46 @@ def day_of_week_kayal(d: date) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Missing Numbers — digits 1–9 absent from the birth date
+# NEW: previously had no calculation anywhere despite being a shipped tool
+# (missing-numbers-reading) with real front-end copy already written.
+# ---------------------------------------------------------------------------
+
+def missing_numbers(day: int, month: int, year: int) -> List[int]:
+    """
+    KAYAL Formula: Identify which digits 1–9 never appear in the birth date.
+    Uses the full DD/MM/YYYY digit string. 0 carries no numerological value
+    in this system and is excluded from both the "present" and "missing" sets.
+
+    Example: 15/06/1982 -> digits used: 1,5,0,6,1,9,8,2
+             present (excluding 0): {1,2,5,6,8,9}
+             missing: [3, 4, 7]
+    """
+    all_digits = f"{day:02d}{month:02d}{year:04d}"
+    present = {int(d) for d in all_digits if d != '0'}
+    return [n for n in range(1, 10) if n not in present]
+
+
+_MISSING_NUMBER_THEMES: Dict[int, str] = {
+    1: "Independence and self-initiation were not naturally reinforced — leadership and standing alone are learned skills here, not instincts.",
+    2: "Cooperation and sensitivity to others were not automatically present — partnership and patience take conscious practice.",
+    3: "Self-expression and creative confidence were not a given — communicating freely is built deliberately, not innate.",
+    4: "Discipline and structure were not naturally reinforced — order and follow-through are chosen, not automatic.",
+    5: "Adaptability and comfort with change were not a given — flexibility is a practiced skill here, not a reflex.",
+    6: "Responsibility toward others and domestic care were not automatically present — nurturing is a conscious choice, not instinct.",
+    7: "Introspection and trust in the unseen were not naturally reinforced — depth and reflection are built, not inherited.",
+    8: "Comfort with authority, power, and material ambition was not a given — claiming this territory takes deliberate practice.",
+    9: "Compassion at scale and letting go were not automatically present — releasing and giving are learned rather than instinctive.",
+}
+
+
+def get_missing_number_theme(n: int) -> str:
+    return _MISSING_NUMBER_THEMES.get(
+        n, "A capacity built through deliberate practice rather than natural instinct."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Formula 6: Life Path Number  (v1.0.0 — preserved exactly)
 # ---------------------------------------------------------------------------
 
@@ -657,6 +697,12 @@ def compute_numerology_profile(
 
     karmic = detect_karmic_numbers(day, month, year, dest_pre, lp_pre)
 
+    # NEW: computed but not yet attached to the returned NumerologyProfile —
+    # see the note above compute_numerology_profile's return statement for
+    # exactly what needs to change in synthesis/logic/models.py to wire this
+    # all the way through.
+    missing_nums = missing_numbers(day, month, year)
+
     p1_num, p2_num, p3_num, p4_num = pinnacle_numbers(day, month, year)
     c1, c2, c3, c4                  = pinnacle_challenges(day, month, year)
     first_end, timing_ranges        = pinnacle_timing(lp)
@@ -712,30 +758,35 @@ def compute_numerology_profile(
             "personal_year":    pyv,
             "current_pinnacle": current_pinnacle.number,
             "karmic_debts":     [d.value for d in karmic],
+            "missing_numbers":  missing_nums,
         },
     )
 
+    # missing_numbers: List[int] = field(default_factory=list) was added to
+    # NumerologyProfile in synthesis/logic/models.py, closing the gap this
+    # comment used to document. Now actually wired through below.
     return NumerologyProfile(
         life_path              = lp,
         destiny                = dest,
-        soul_urge              = soul,
-        personality            = pers,
-        birthday_gift          = gift,
-        birthday_challenge     = challenge,
-        is_life_path_master    = is_master(lp),
-        is_destiny_master      = is_master(dest),
-        is_soul_urge_master    = is_master(soul),
-        karmic_debts           = karmic,
-        pinnacles              = pinnacles,
-        current_pinnacle       = current_pinnacle,
-        universal_year         = uy,
-        personal_year          = pyv,
-        personal_month         = mv,
-        personal_week          = wv,
-        personal_day           = dv,
-        chaldean_life_path     = chal_lp,
-        chaldean_destiny       = chal_dest,
-        chaldean_note          = chal_note,
+        soul_urge               = soul,
+        personality             = pers,
+        birthday_gift           = gift,
+        birthday_challenge      = challenge,
+        is_life_path_master     = is_master(lp),
+        is_destiny_master       = is_master(dest),
+        is_soul_urge_master     = is_master(soul),
+        karmic_debts            = karmic,
+        pinnacles                = pinnacles,
+        current_pinnacle         = current_pinnacle,
+        universal_year           = uy,
+        personal_year            = pyv,
+        personal_month           = mv,
+        personal_week            = wv,
+        personal_day             = dv,
+        chaldean_life_path       = chal_lp,
+        chaldean_destiny         = chal_dest,
+        chaldean_note            = chal_note,
+        missing_numbers          = missing_nums,
     )
 
 
@@ -1858,6 +1909,7 @@ def compute_partner_numerology(
     dow = day_of_week_kayal(current_date)
     wv  = weekly_vibration(pyv, cm, wom)
     dv  = daily_vibration(pyv, cm, wom, dow)
+    partner_missing_nums = missing_numbers(day, month, year)
 
     return NumerologyProfile(
         life_path              = lp,
@@ -1880,4 +1932,5 @@ def compute_partner_numerology(
         chaldean_life_path     = None,
         chaldean_destiny       = None,
         chaldean_note          = None,
+        missing_numbers        = partner_missing_nums,
     )

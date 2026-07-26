@@ -198,6 +198,25 @@ def _calculate_houses(jd,latitude,longitude,house_sys=_HOUSE_PLACIDUS,use_sidere
         logger.warning(f"House calc failed: {e}"); return {"Ascendant":0.0,"Midheaven":90.0}
 
 
+def _aspect_phase(lon1, spd1, lon2, spd2, angle):
+    """
+    Determine whether an aspect is applying (orb shrinking, intensifying)
+    or separating (orb growing, fading), using each planet's actual daily
+    motion. Projects both positions forward by a small time step and
+    compares orb size before/after — this works correctly regardless of
+    which planet is faster or whether either is retrograde, unlike a
+    simple "faster planet behind/ahead" check.
+    """
+    def _orb_at(l1, l2):
+        d = abs(l1 - l2) % 360
+        if d > 180: d = 360 - d
+        return abs(d - angle)
+    step = 0.01  # days — small enough that speed is effectively constant over the step
+    future_orb = _orb_at((lon1 + spd1 * step) % 360, (lon2 + spd2 * step) % 360)
+    current_orb = _orb_at(lon1, lon2)
+    return "applying" if future_orb < current_orb else "separating"
+
+
 def _detect_aspects(positions):
     aspects=[]; pnames=list(positions.keys())
     for i,p1 in enumerate(pnames):
@@ -206,7 +225,14 @@ def _detect_aspects(positions):
             if d>180: d=360-d
             for angle,(an,tone,orb) in _ASPECT_TYPES.items():
                 if abs(d-angle)<=orb:
-                    aspects.append({"planet1":p1,"planet2":p2,"aspect":an,"tone":tone,"orb":round(abs(d-angle),2),"angle":angle})
+                    spd1 = positions[p1].get("speed", 0.0)
+                    spd2 = positions[p2].get("speed", 0.0)
+                    phase = _aspect_phase(
+                        positions[p1]["longitude"], spd1,
+                        positions[p2]["longitude"], spd2,
+                        angle,
+                    )
+                    aspects.append({"planet1":p1,"planet2":p2,"aspect":an,"tone":tone,"orb":round(abs(d-angle),2),"angle":angle,"phase":phase,"applying":phase=="applying"})
                     break
     aspects.sort(key=lambda a:a["orb"]); return aspects
 
@@ -316,29 +342,58 @@ def _sign_to_domain_signal(sign,house,system="western"):
 
 def _aspect_to_signal(aspect):
     p1=aspect["planet1"]; p2=aspect["planet2"]; asp=aspect["aspect"]; tone=aspect["tone"]
+    phase=aspect.get("phase")  # "applying" or "separating" — absent on older cached aspect dicts
     d1=_PLANET_DOMAIN_MAP.get(p1,["character"]); d2=_PLANET_DOMAIN_MAP.get(p2,["character"])
     shared=[d for d in d1 if d in d2]; domain=shared[0] if shared else d1[0]
     quality="Harmonious flow" if "positive" in tone else "Creative tension"
-    return {"feature":f"{p1.lower()}_{asp}_{p2.lower()}","domain":domain,"tone":tone,"strength":0.75,
-        "reading":f"{p1} {asp} {p2} — {quality} between {p1.lower()} and {p2.lower()} energies in the {domain} domain.",
-        "keywords":[p1.lower(),p2.lower(),asp],"astro_affinity":[p1,p2],"numerology_link":[],
-        "chinese_element":None,"temporal_phase":"timeless","retrograde":False,"house":None,"system":"both"}
+    if phase == "applying":
+        phase_note = ", still tightening — this influence is actively intensifying"
+        strength = 0.80  # applying aspects are traditionally read as more active
+    elif phase == "separating":
+        phase_note = ", already past exact — this influence is settling and integrating"
+        strength = 0.70
+    else:
+        phase_note = ""
+        strength = 0.75
+    return {"feature":f"{p1.lower()}_{asp}_{p2.lower()}","domain":domain,"tone":tone,"strength":strength,
+        "reading":f"{p1} {asp} {p2} — {quality} between {p1.lower()} and {p2.lower()} energies in the {domain} domain{phase_note}.",
+        "keywords":[p1.lower(),p2.lower(),asp]+([phase] if phase else []),"astro_affinity":[p1,p2],"numerology_link":[],
+        "chinese_element":None,"temporal_phase":"timeless","retrograde":False,"house":None,"system":"both",
+        "aspect_phase":phase}
 
 
 def _calculate_transits(natal_positions,current_jd):
     current=_calculate_positions(current_jd); transits=[]
     for tp in ["Saturn","Jupiter","Uranus","Neptune","Pluto"]:
         if tp not in current: continue
-        tl=current[tp]["longitude"]; ts=current[tp]["sign"]
+        tl=current[tp]["longitude"]; ts=current[tp]["sign"]; tspd=current[tp].get("speed",0.0)
         for np_name in ["Sun","Moon","Venus","Mars","Mercury","Ascendant"]:
             if np_name not in natal_positions: continue
             nl=natal_positions[np_name]["longitude"]
             d=abs(tl-nl)%360
             if d>180: d=360-d
-            if d<=8: transits.append((d,f"{tp} conjunct natal {np_name} in {ts} — significant {tp.lower()} influence on {np_name.lower()} matters"))
-            elif 82<=d<=98: transits.append((abs(d-90),f"{tp} square natal {np_name} — tension between {tp.lower()} and {np_name.lower()} themes"))
-            elif 112<=d<=128: transits.append((abs(d-120),f"{tp} trine natal {np_name} — harmonious {tp.lower()} support into {np_name.lower()} area"))
-            elif 172<=d<=188: transits.append((abs(d-180),f"{tp} opposing natal {np_name} — polarity between {tp.lower()} demands and {np_name.lower()} needs"))
+            angle=None
+            if d<=8: angle=0
+            elif 82<=d<=98: angle=90
+            elif 112<=d<=128: angle=120
+            elif 172<=d<=188: angle=180
+            if angle is None: continue
+            # Natal point doesn't move — only the transiting planet's real
+            # daily motion determines whether this transit is building
+            # toward exact or has already passed it.
+            phase=_aspect_phase(tl,tspd,nl,0.0,angle)
+            phase_note=(" — applying, still building toward peak" if phase=="applying"
+                        else " — separating, past peak and integrating")
+            orb=abs(d-angle)
+            if angle==0:
+                desc=f"{tp} conjunct natal {np_name} in {ts} — significant {tp.lower()} influence on {np_name.lower()} matters{phase_note}"
+            elif angle==90:
+                desc=f"{tp} square natal {np_name} — tension between {tp.lower()} and {np_name.lower()} themes{phase_note}"
+            elif angle==120:
+                desc=f"{tp} trine natal {np_name} — harmonious {tp.lower()} support into {np_name.lower()} area{phase_note}"
+            else:
+                desc=f"{tp} opposing natal {np_name} — polarity between {tp.lower()} demands and {np_name.lower()} needs{phase_note}"
+            transits.append((orb,desc))
     transits.sort(key=lambda x:x[0]); return [desc for _,desc in transits[:5]]
 
 
