@@ -383,12 +383,6 @@ function MemberDashboardInner() {
     return 0
   }
 
-  const referralData = {
-    clicks:   purchases.length * 10 || 45,
-    earnings: purchases.reduce((sum, p) => sum + (p.price * 0.15), 0) || 120,
-    referrals: Math.floor(purchases.length / 2) || 3
-  }
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -603,7 +597,7 @@ function MemberDashboardInner() {
           </div>
 
           <div className="lg:col-span-1 space-y-6">
-            <RightWidgetSidebar referralData={referralData} userId={user?.id} userPurchases={purchases} dashboardType="member" userContext={userContext} />
+            <RightWidgetSidebar userId={user?.id} userPurchases={purchases} dashboardType="member" userContext={userContext} />
           </div>
         </div>
 

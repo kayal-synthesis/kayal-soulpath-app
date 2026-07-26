@@ -18,12 +18,25 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+// Reads the 60-day attribution cookie set by app/ref/[code]/route.ts.
+// Used as a fallback when someone registers without a ?ref= in the URL
+// of that specific page load, having clicked a referral link days
+// earlier and browsed before deciding to sign up.
+const getRefCodeCookie = (): string | null => {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|; )kayal_ref=([^;]*)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 function ReferralRegisterPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
 
-  const referralCode = searchParams.get('ref')
+  // The URL param takes priority when present, since it's the most direct
+  // signal, but falls back to the cookie for anyone who clicked a link
+  // and registered later without ?ref= on this specific page load.
+  const referralCode = searchParams.get('ref') || getRefCodeCookie()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -39,11 +52,11 @@ function ReferralRegisterPageInner() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  // ── Updated commission tiers — rate determined by tool price ──
+  // Updated commission tiers, rate determined by tool price
   const commissionTiers = [
     {
       label:      'Standard',
-      sublabel:   'Automatic on sign-up — begins immediately',
+      sublabel:   'Automatic on sign-up, begins immediately',
       commission: '25% / 30%',
       detail:     'Low-ticket ($19–$29) 25% · High-ticket ($37–$79) 30%',
       color:      'bg-blue-50 text-blue-700',
@@ -129,6 +142,13 @@ function ReferralRegisterPageInner() {
           pending_balance:  0,
           total_paid_out:   0,
           created:          new Date().toISOString(),
+          // This was being read from the URL and displayed in a badge, but
+          // never actually saved, meaning recruitment attribution was
+          // silently thrown away the moment an account was created, even
+          // when the code was right there. Null is a normal, valid case:
+          // most people register with no referrer at all, and become a
+          // plain top-level affiliate on their own.
+          recruited_by:     referralCode || null,
         })
 
       if (userError) { console.error('User insert error:', userError); throw userError }
@@ -175,7 +195,7 @@ function ReferralRegisterPageInner() {
           </h1>
           <p className="text-neutral-600 max-w-2xl mx-auto">
             Earn commission by sharing Kayal LifeOS with your audience.
-            Rate is determined by the tool price — higher-priced tools earn more automatically.
+            Rate is determined by the tool price, higher-priced tools earn more automatically.
           </p>
           {referralCode && (
             <Badge variant="primary" className="mt-4 px-4 py-2">
@@ -188,26 +208,25 @@ function ReferralRegisterPageInner() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+          className="grid md:grid-cols-3 gap-4 mb-8"
         >
-          {commissionTiers.map((tier, index) => {
+          {commissionTiers.map((tier) => {
             const Icon = tier.icon
             return (
-              <Card key={index} className="p-6 hover:shadow-lg transition">
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full ${tier.color} mb-3`}>
-                  <Icon className="w-6 h-6" />
+              <Card key={tier.label} className="p-5">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${tier.color}`}>
+                  <Icon className="w-5 h-5" />
                 </div>
-                <h3 className="font-semibold mb-1">{tier.label}</h3>
-                <p className="text-2xl font-bold text-primary-600 mb-1">{tier.commission}</p>
-                <p className="text-xs text-neutral-500 mb-1">{tier.sublabel}</p>
-                <p className="text-xs font-medium text-neutral-400">{tier.detail}</p>
+                <h3 className="font-serif text-lg mb-1">{tier.label}</h3>
+                <p className="text-xs text-neutral-500 mb-3">{tier.sublabel}</p>
+                <p className="text-2xl font-serif text-primary-600 mb-2">{tier.commission}</p>
+                <p className="text-xs text-neutral-500">{tier.detail}</p>
               </Card>
             )
           })}
         </motion.div>
 
-        {/* Payment schedule banner */}
+        {/* Terms Summary Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -216,7 +235,7 @@ function ReferralRegisterPageInner() {
         >
           <span className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-amber-600" />
-            <strong>First payout:</strong>&nbsp;5 qualifying points — no minimum amount
+            <strong>First payout:</strong>&nbsp;5 qualifying points, no minimum amount
           </span>
           <span className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-amber-600" />
@@ -348,10 +367,10 @@ function ReferralRegisterPageInner() {
                       Standard: 25% low-ticket · 30% high-ticket
                     </span>
                     <span className="block text-primary-500 text-xs">
-                      Performance (+5%): 30% low · 35% high — after 10 sales/30 days
+                      Performance (+5%): 30% low · 35% high, after 10 sales/30 days
                     </span>
                     <span className="block text-primary-500 text-xs">
-                      Strategic (+10%): 35% low · 40% high — by application
+                      Strategic (+10%): 35% low · 40% high, by application
                     </span>
                     <span className="block text-neutral-400 mt-1">
                       First payout: 5 points, no minimum · Recurring: $50 min, 15th monthly · 60-day cookie

@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Users, Search, MoreVertical, Ban, XCircle, Download, Loader2, RefreshCw } from 'lucide-react'
+import { Users, Search, MoreVertical, Ban, XCircle, Download, Loader2, RefreshCw, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface AdminUser {
@@ -35,6 +35,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [stats, setStats] = useState({ total:0, activeToday:0, affiliates:0, revenue:0 })
+  const [deleteWarning, setDeleteWarning] = useState<{ user: AdminUser; recruitCount: number } | null>(null)
 
   const fetchStats = async () => {
     const today = new Date().toISOString().split('T')[0]
@@ -94,7 +95,39 @@ export default function AdminUsersPage() {
     } catch { toast.error('Failed to suspend user') }
   }
 
-  const handleDelete = async (userId:string) => {
+  // Checks whether this user has recruited any active sub-affiliates before
+  // allowing deletion. Now that Tier-2 overrides are real, live money,
+  // deleting a recruiter would silently orphan every sub-affiliate under
+  // them, recruited_by would point at a user who no longer exists, and
+  // their overrides would just quietly stop crediting with no error
+  // anywhere. This surfaces that risk before it happens rather than after.
+  const checkRecruits = async (user: AdminUser): Promise<number> => {
+    const { data: profile } = await supabase
+      .from('affiliate_profiles')
+      .select('referral_code')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!profile?.referral_code) return 0
+
+    const { count } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('recruited_by', profile.referral_code)
+
+    return count || 0
+  }
+
+  const handleDeleteClick = async (user: AdminUser) => {
+    const recruitCount = await checkRecruits(user)
+    if (recruitCount > 0) {
+      setDeleteWarning({ user, recruitCount })
+      return
+    }
+    performDelete(user.id)
+  }
+
+  const performDelete = async (userId: string) => {
     if (!confirm('Delete this user? This cannot be undone.')) return
     try {
       const { error } = await supabase.from('users').delete().eq('id',userId)
@@ -202,7 +235,7 @@ export default function AdminUsersPage() {
                   <td className="py-3 px-2">
                     <div className="flex items-center gap-1">
                       <button onClick={()=>handleSuspend(u.id)} className="p-1 hover:bg-yellow-100 rounded text-yellow-600" title="Deactivate"><Ban className="w-4 h-4"/></button>
-                      <button onClick={()=>handleDelete(u.id)} className="p-1 hover:bg-red-100 rounded text-red-600" title="Delete"><XCircle className="w-4 h-4"/></button>
+                      <button onClick={()=>handleDeleteClick(u)} className="p-1 hover:bg-red-100 rounded text-red-600" title="Delete"><XCircle className="w-4 h-4"/></button>
                     </div>
                   </td>
                 </tr>
@@ -225,6 +258,44 @@ export default function AdminUsersPage() {
           </div>
         </div>
       </Card>
+
+      {/* Delete warning modal */}
+      {deleteWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setDeleteWarning(null)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <h2 className="text-lg font-bold">This person has recruited affiliates</h2>
+            </div>
+            <p className="text-sm text-neutral-600 mb-4">
+              <strong>{deleteWarning.user.full_name || deleteWarning.user.email}</strong> has recruited <strong>{deleteWarning.recruitCount}</strong> {deleteWarning.recruitCount === 1 ? 'affiliate' : 'affiliates'}. Deleting this account leaves those affiliates' recruited_by pointing at a user that no longer exists, and any Tier-2 override they were generating for this person will simply stop crediting anyone, silently, no error, no record of why.
+            </p>
+            <p className="text-sm text-neutral-600 mb-6">
+              Deactivating instead keeps the recruitment relationship intact and stops this person from earning further, without breaking anything for the affiliates underneath them.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => { handleSuspend(deleteWarning.user.id); setDeleteWarning(null) }}
+                className="flex-1"
+              >
+                Deactivate Instead
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => { performDelete(deleteWarning.user.id); setDeleteWarning(null) }}
+                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+              >
+                Delete Anyway
+              </Button>
+            </div>
+            <button onClick={() => setDeleteWarning(null)} className="mt-3 text-sm text-neutral-400 hover:text-neutral-600 w-full text-center">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

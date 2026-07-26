@@ -31,7 +31,9 @@ import {
 } from 'lucide-react'
 
 // Import all your tool constants
-import { omniTools as omniSeerTools } from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { voiceTools } from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools } from '@/lib/constants/time-keeper-tools'
@@ -39,6 +41,9 @@ import { loveTools } from '@/lib/constants/love-tools'
 import { wealthTools } from '@/lib/constants/wealth-tools'
 import { wellnessTools } from '@/lib/constants/wellness-spiritual'
 import { lifePathTools } from '@/lib/constants/life-path-tools'
+
+const omniSeerTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
+
 
 // ============================================
 // HELPER: Safely convert feature to string
@@ -344,7 +349,7 @@ const getToolTypeInfo = (domainId: string) => {
   }
 }
 
-// ── FIX 1: VideoEmbed component — handles YouTube and Vimeo URLs ──────────────
+// FIX 1: VideoEmbed component, handles YouTube and Vimeo URLs
 function VideoEmbed({ url, label = 'Watch overview' }: { url: string; label?: string }) {
   const getSrc = (raw: string) => {
     const yt = raw.match(/youtu\.be\/([^?&]+)/) || raw.match(/[?&]v=([^&]+)/) || raw.match(/embed\/([^?&]+)/)
@@ -416,7 +421,7 @@ export default function AffiliateDashboard() {
     type: 'tool_specific' as 'general' | 'tool_specific' | 'campaign'
   })
 
-  // ── FIX 2: Affiliate explainer video URL — set once video is recorded ────────
+  // FIX 2: Affiliate explainer video URL, set once video is recorded
   const AFFILIATE_EXPLAINER_VIDEO_URL = '' // e.g. 'https://youtu.be/YOUR_ID'
 
   // ============================================
@@ -646,10 +651,13 @@ export default function AffiliateDashboard() {
                 tier === 'silver' ? 5000 :
                 tier === 'gold' ? 10000 : 50000,
         current: totalEarnings,
-        // ── FIX 3: corrected reward strings ─────────────────────────────────
-        reward: tier === 'bronze' ? 'Performance tier (30% commission)' :
-                tier === 'silver' ? 'Strategic tier (35% commission)' :
-                tier === 'gold' ? 'Strategic tier + VIP perks' : 'Elite — up to 40% (negotiated)'
+        // Reward text corrected to match the real dual-rate commission
+        // structure from the register page (25/30, 30/35, 35/40 by tool
+        // price), rather than an invented Elite/40% tier that didn't
+        // exist anywhere in the real structure, which capped at Strategic.
+        reward: tier === 'bronze' ? 'Performance tier (30% / 35% commission)' :
+                tier === 'silver' ? 'Strategic tier (35% / 40% commission)' :
+                tier === 'gold' ? 'Strategic tier + VIP perks' : 'A custom negotiated rate, by application'
       }
 
       // Build affiliate data object
@@ -1346,7 +1354,7 @@ export default function AffiliateDashboard() {
               </button>
             </div>
 
-            {/* ── FIX 6: Affiliate explainer video card (NEW — invisible until URL set) */}
+            {/* FIX 6: Affiliate explainer video card (NEW, invisible until URL set) */}
             {AFFILIATE_EXPLAINER_VIDEO_URL && (
               <Card className="p-5">
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
@@ -1732,7 +1740,7 @@ export default function AffiliateDashboard() {
               <ul className="text-xs text-amber-700 space-y-1">
                 <li>• <strong>First payout:</strong> within 7 working days of your first qualifying sale</li>
                 <li>• <strong>All subsequent payouts:</strong> 15th of every month</li>
-                <li>• <strong>Minimum threshold:</strong> $50 — balances below this roll to next month</li>
+                <li>• <strong>Minimum threshold:</strong> $50, balances below this roll to next month</li>
                 <li>• <strong>Methods:</strong> PayPal or international bank transfer</li>
               </ul>
             </div>
@@ -1812,7 +1820,7 @@ export default function AffiliateDashboard() {
                   <div className="bg-primary-50 p-3 rounded-lg">
                     <p className="text-xs text-primary-700 mb-1">Commission Rate</p>
                     <p className="text-sm font-medium">You'll earn <span className="text-primary-600 font-bold">25%</span> of every sale</p>
-                    <p className="text-xs text-primary-600 mt-1">60-day cookie — any purchase within 60 days earns commission</p>
+                    <p className="text-xs text-primary-600 mt-1">60-day cookie, any purchase within 60 days earns commission</p>
                     <p className="text-xs text-primary-500 mt-1">Reach 10 sales/month to auto-upgrade to 30% Performance tier</p>
                   </div>
                   <div className="flex gap-2 pt-4"><Button onClick={handleCreateLink} className="flex-1">Generate Link</Button><Button variant="outline" className="flex-1" onClick={() => setShowCreateLinkModal(false)}>Cancel</Button></div>

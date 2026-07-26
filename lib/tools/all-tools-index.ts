@@ -20,10 +20,14 @@ import { loveTools }         from '@/lib/constants/love-tools'
 import { wealthTools }       from '@/lib/constants/wealth-tools'
 import { wellnessTools }     from '@/lib/constants/wellness-spiritual'
 import { lifePathTools }     from '@/lib/constants/life-path-tools'
-import { omniTools }         from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
 import { voiceTools }        from '@/lib/constants/voice-tools'
+
+const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
 
 // ─────────────────────────────────────────────────────────────
 // Flat tool shape — what the dashboard components expect
@@ -401,13 +405,13 @@ export function getPersonalisedDashboardTools(
   if (indicators.personalYearNumber) {
     const forecast = getToolById('annual-destiny-forecast')
     if (forecast) selected.push(forecast)
-    const cycle    = getToolById('nine-year-cycle-reading-os')
+    const cycle    = getToolById('nine-year-cycle-reading')
     if (cycle)     selected.push(cycle)
   }
 
   // Karmic debt holders always see the cleanser
   if (indicators.hasKarmicDebts) {
-    const debt = getToolById('karmic-debt-cleanser')
+    const debt = getToolById('karmic-lessons-reading')
     if (debt) selected.push(debt)
   }
 
@@ -426,12 +430,13 @@ export function getPersonalisedDashboardTools(
     if (heart)    selected.push(heart)
   }
 
-  // Face data available — show physiognomy tools
+  // Face data available — only one face tool exists in the current catalog
+  // (the pre-restructure catalog had two, wealth-face and character-verdict,
+  // since merged into one), so this pushes it once rather than risking a
+  // duplicate push if both old ids happened to resolve to the same tool.
   if (indicators.hasFaceData) {
-    const wealth  = getToolById('mian-xiang-wealth-face')
-    const face    = getToolById('face-shape-character-verdict')
-    if (wealth)   selected.push(wealth)
-    if (face)     selected.push(face)
+    const face = getToolById('complete-face-reading')
+    if (face) selected.push(face)
   }
 
   // Fill remaining slots with globally popular tools not yet included

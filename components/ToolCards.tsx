@@ -20,17 +20,17 @@ interface DomainAccent {
 }
 
 const ACCENTS: Record<string, DomainAccent> = {
-  'love':          { label:'Love & Relationships',    from:'#F43F5E',to:'#E11D48',accent:'#BE123C',soft:'#FFF1F2',pill:'#FFE4E6',pillText:'#BE123C' },
-  'wealth':        { label:'Wealth & Career',         from:'#10B981',to:'#059669',accent:'#065F46',soft:'#F0FDF4',pill:'#D1FAE5',pillText:'#065F46' },
-  'wellness':      { label:'Wellness & Spirituality', from:'#8B5CF6',to:'#7C3AED',accent:'#5B21B6',soft:'#F5F3FF',pill:'#EDE9FE',pillText:'#5B21B6' },
-  'life-path':     { label:'Life Path & Destiny',     from:'#F59E0B',to:'#D97706',accent:'#92400E',soft:'#FFFBEB',pill:'#FEF3C7',pillText:'#92400E' },
-  'oracle-temple': { label:'Omni-Seer Sanctum',       from:'#6366F1',to:'#4F46E5',accent:'#3730A3',soft:'#EEF2FF',pill:'#E0E7FF',pillText:'#3730A3' },
-  'sacred-script': { label:'Sacred Script',           from:'#F97316',to:'#EA580C',accent:'#9A3412',soft:'#FFF7ED',pill:'#FFEDD5',pillText:'#9A3412' },
-  'time-keeper':   { label:'Eternal Clock',           from:'#14B8A6',to:'#0D9488',accent:'#115E59',soft:'#F0FDFA',pill:'#CCFBF1',pillText:'#115E59' },
-  'voice':         { label:'Voice of Prophecy',       from:'#7C3AED',to:'#6D28D9',accent:'#4C1D95',soft:'#F5F3FF',pill:'#EDE9FE',pillText:'#4C1D95' },
-  'physical':      { label:'Physical Readings',       from:'#0EA5E9',to:'#0284C7',accent:'#075985',soft:'#F0F9FF',pill:'#E0F2FE',pillText:'#075985' },
-  'health':        { label:'Health & Vitality',       from:'#22C55E',to:'#16A34A',accent:'#14532D',soft:'#F0FDF4',pill:'#DCFCE7',pillText:'#14532D' },
-  'brand':         { label:'Brand & Identity',        from:'#EC4899',to:'#DB2777',accent:'#831843',soft:'#FDF2F8',pill:'#FCE7F3',pillText:'#831843' },
+  'love':          { label:'Love & Relationships',    from:'#8C3A47',to:'#6F2E38',accent:'#52222A',soft:'#F3EBED',pill:'#E6D4D7',pillText:'#5A252D' },
+  'wealth':        { label:'Wealth & Career',         from:'#7A5C2E',to:'#5C4623',accent:'#3F2F18',soft:'#F2EFEA',pill:'#E2DBD1',pillText:'#46351A' },
+  'wellness':      { label:'Wellness & Spirituality', from:'#5C6B4F',to:'#48543E',accent:'#343C2C',soft:'#EFF0ED',pill:'#DBDED8',pillText:'#394231' },
+  'life-path':     { label:'Life Path & Destiny',     from:'#4A3B6B',to:'#382C51',accent:'#261E36',soft:'#EDEBF0',pill:'#D7D4DE',pillText:'#2A223D' },
+  'oracle-temple': { label:'Omni-Seer Sanctum',       from:'#2D2340',to:'#1A1526',accent:'#08060B',soft:'#EAE9EC',pill:'#D1CFD5',pillText:'#0D0A12' },
+  'sacred-script': { label:'Sacred Script',           from:'#5C4326',to:'#3F2E1A',accent:'#22190E',soft:'#EFECE9',pill:'#DBD6CF',pillText:'#291E11' },
+  'time-keeper':   { label:'Eternal Clock',           from:'#3D5C56',to:'#2D433F',accent:'#1C2B28',soft:'#ECEFEE',pill:'#D4DBDA',pillText:'#21312E' },
+  'voice':         { label:'Voice of Prophecy',       from:'#5C3A52',to:'#432A3C',accent:'#2A1A25',soft:'#EFEBEE',pill:'#DBD4D9',pillText:'#301E2B' },
+  'physical':      { label:'Physical Readings',       from:'#8C5A3D',to:'#704831',accent:'#533524',soft:'#F3EEEC',pill:'#E6DBD4',pillText:'#5A3A27' },
+  'health':        { label:'Health & Vitality',       from:'#3D5439',to:'#2B3C29',accent:'#1A2318',soft:'#ECEEEB',pill:'#D4D9D3',pillText:'#1E291C' },
+  'brand':         { label:'Brand & Identity',        from:'#7A4A42',to:'#603A34',accent:'#452A25',soft:'#F2EDEC',pill:'#E2D7D5',pillText:'#4C2E29' },
 }
 const DEFAULT_ACCENT: DomainAccent = ACCENTS['oracle-temple']
 const getAccent = (domain: string): DomainAccent => ACCENTS[domain] ?? DEFAULT_ACCENT
@@ -276,7 +276,7 @@ export function StandardToolCard({
   const [expanded,      setExpanded]      = useState(false)
   const [showPartner,   setShowPartner]   = useState(false)
   const features  = tool.whatYouGet ?? []
-  const LIMIT     = 4
+  const LIMIT     = 5
   const visible   = expanded ? features : features.slice(0, LIMIT)
 
   const navigateToPurchase = (partnerName?: string, partnerDob?: string) => {
@@ -350,7 +350,7 @@ export function StandardToolCard({
           <p className="text-xs text-neutral-500 leading-relaxed mb-2 italic">{tool.tagline}</p>
 
           {tool.hook && (
-            <p className="text-xs text-neutral-600 leading-relaxed mb-3 line-clamp-3">{tool.hook}</p>
+            <p className="text-xs text-neutral-600 leading-relaxed mb-3">{tool.hook}</p>
           )}
 
           <div className="flex flex-wrap gap-1.5 mb-3">
@@ -370,7 +370,7 @@ export function StandardToolCard({
                 {visible.map((f, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: a.from }} />
-                    <span className="text-xs text-neutral-600 leading-snug">{f}</span>
+                    <span className="text-sm text-neutral-600 leading-snug">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -521,7 +521,7 @@ export function FlagshipToolCard({
           <p className="text-xs sm:text-sm text-neutral-500 leading-relaxed mb-2 italic">{tool.tagline}</p>
 
           {tool.hook && (
-            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mb-3 sm:mb-4 line-clamp-3">{tool.hook}</p>
+            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mb-3 sm:mb-4">{tool.hook}</p>
           )}
 
           <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-5">
@@ -543,7 +543,7 @@ export function FlagshipToolCard({
                     <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: a.soft }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: a.from }} />
                     </div>
-                    <span className="text-xs text-neutral-600 leading-snug">{f}</span>
+                    <span className="text-sm text-neutral-600 leading-snug">{f}</span>
                   </li>
                 ))}
               </ul>

@@ -5,11 +5,11 @@ export * from './messages'
 export * from './tools'
 export * from './voice-tools'
 export * from './time-keeper-tools';
-export * from './voice-tools';
 export * from './love-tools';
 export * from './wealth-tools';
 export * from './wellness-spiritual';
-export * from './life-path-destiny';
+export * from './life-path-tools';
 export * from './sacred-script-tools';
-export * from './omni-seer-tools';
-
+export * from './omni-seer-relationships';
+export * from './omni-seer-self-purpose';
+export * from './omni-seer-physical-timing';

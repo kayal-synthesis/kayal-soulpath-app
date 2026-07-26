@@ -16,14 +16,17 @@ import { loveTools }         from '@/lib/constants/love-tools'
 import { wealthTools }       from '@/lib/constants/wealth-tools'
 import { wellnessTools }     from '@/lib/constants/wellness-spiritual'
 import { lifePathTools }     from '@/lib/constants/life-path-tools'
-import { omniTools }         from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
 import { voiceTools }        from '@/lib/constants/voice-tools'
 
 const ALL_TOOLS = [
   ...loveTools, ...wealthTools, ...wellnessTools, ...lifePathTools,
-  ...omniTools, ...sacredScriptTools, ...timeKeeperTools, ...voiceTools,
+  ...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools,
+  ...sacredScriptTools, ...timeKeeperTools, ...voiceTools,
 ]
 
 const clean = (s?: string) => (s ? s.trim() : '')
@@ -88,21 +91,15 @@ const DOMAIN_CONFIG: Record<string, { accent: string; accentSoft: string; label:
 const getDomain = (tool: any) => (tool.domain || tool.category || 'oracle-temple') as string
 const getConfig = (tool: any) => DOMAIN_CONFIG[getDomain(tool)] ?? DOMAIN_CONFIG['oracle-temple']
 
-const PARTNER_TOOL_IDS = new Set([
-  'twin-flame-verdict', 'compatibility-decoder', 'relationship-health-scan',
-  'divorce-or-stay-reading', 'soulmate-compatibility-verdict', 'professional-compatibility-scan',
-])
+// Both flags now read the real per-tool fields directly (requiresPartner,
+// subscriptionPeriod) as the single source of truth, rather than a
+// separately-maintained id list here that could drift out of sync with the
+// actual data files — same reasoning as the domainColors fix in colors.ts.
 const needsPartner = (tool: any): boolean =>
-  tool.requiresPartner === true || tool.requires_partner === true || PARTNER_TOOL_IDS.has(tool.id)
+  tool.requiresPartner === true || tool.requires_partner === true
 
-const SUBSCRIPTION_TOOL_IDS = new Set([
-  'the-life-scribe', 'love-scribe', 'wealth-scribe', 'spiritual-scribe', 'health-scribe',
-  'purpose-scribe', 'relationship-scribe', 'grief-scribe', 'parenting-scribe', 'business-scribe',
-  'daily-personal-oracle', 'monthly-cycle-navigator', 'quarterly-destiny-pulse',
-  'annual-arc-keeper', 'nine-year-arc-compass', 'oracle-voice-session', 'oracle-deep-dive-session',
-])
 const isSubscription = (tool: any): boolean =>
-  !!(tool.isSubscription) || !!(tool.is_subscription) || SUBSCRIPTION_TOOL_IDS.has(tool.id)
+  !!tool.subscriptionPeriod || !!tool.isSubscription || !!tool.is_subscription
 
 const TESTIMONIALS: Record<string, { name: string; text: string }[]> = {
   love:            [ { name: 'Rachel, Austin',  text: 'Named a relationship pattern I had never seen described anywhere, and pinpointed almost exactly when it started.' },
@@ -137,7 +134,7 @@ const HOOKS: Record<string, string> = {
 const getHook = (tool: any) => clean(tool.hook) || HOOKS[getDomain(tool)] || HOOKS['oracle-temple']
 
 const GET_ITEMS_DEFAULT = ['Private & permanent', 'Built from your details', 'Plain language', 'Delivered fast']
-const getGetItems = (tool: any) => (tool.getItems?.length ? tool.getItems : GET_ITEMS_DEFAULT)
+const getGetItems = (tool: any) => (tool.whatYouGet?.length ? tool.whatYouGet : GET_ITEMS_DEFAULT)
 
 const FOR_LINE_DEFAULT = 'For you if past readings have felt generic, not built for the life you are actually living.'
 const getForLine = (tool: any) => clean(tool.forLine) || FOR_LINE_DEFAULT
@@ -176,7 +173,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
     <div className={styles.faqItem}>
       <button className={styles.faqQ} onClick={() => setOpen(v => !v)} aria-expanded={open}>
         <span className={styles.faqQText}>{q}</span>
-        {open ? <ChevronUp size={16} style={{ color: '#d4af6e', flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: 'rgba(248,245,239,0.35)', flexShrink: 0 }} />}
+        {open ? <ChevronUp size={16} style={{ color: '#d4af6e', flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: 'rgba(26,23,20,0.35)', flexShrink: 0 }} />}
       </button>
       <AnimatePresence>
         {open && (
@@ -237,7 +234,7 @@ export default function ToolPage() {
     return (
       <div className={styles.page} style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'rgba(248,245,239,0.5)', marginBottom: 16 }}>Tool not found.</p>
+          <p style={{ color: 'rgba(26,23,20,0.5)', marginBottom: 16 }}>Tool not found.</p>
           <button onClick={() => router.push('/dashboard')} className={styles.ctaLink}>Back to dashboard</button>
         </div>
       </div>
@@ -250,7 +247,11 @@ export default function ToolPage() {
   const deliveryMins = tool.deliveryMinutes || 15
   const price = tool.price ?? 29
   const headline = sanitize(tool.headline || tool.name)
-  const hook = sanitize(getHook(tool))
+  // Hero subhead uses tagline (short, one line) — hook stays reserved for
+  // fuller-context surfaces like tool listing cards, which want a paragraph.
+  // Fallback order stays short-to-short: only reaches for the paragraph hook
+  // if literally nothing else is set.
+  const heroSub = sanitize(clean(tool.tagline) || HOOKS[getDomain(tool)] || getHook(tool))
   const hasHeroImage = tool.heroImageStyle !== 'none'
 
   const speakTeaser = () => {
@@ -336,7 +337,7 @@ export default function ToolPage() {
         <div className={styles.heroInner}>
           <span className={styles.eyebrow} style={{ color: cfg.accent }}>{cfg.label}</span>
           <h1 className={styles.heroTitle}>{headline}</h1>
-          <p className={styles.heroSub}>{hook}</p>
+          <p className={styles.heroSub}>{heroSub}</p>
           <div className={styles.heroCtaRow}>
             <button onClick={handleCTA} className={styles.ctaBtn}>Begin your reading &middot; ${price}</button>
             <button onClick={() => document.getElementById('teaser')?.scrollIntoView({ behavior: 'smooth' })} className={styles.ctaLink}>
@@ -347,11 +348,13 @@ export default function ToolPage() {
       </section>
 
       {hasHeroImage && (
-        <div className={styles.heroImageZone}>
-          <div
-            className={styles.heroImgLayer}
-            style={{ backgroundImage: `url(/images/tools/${tool.id}.webp), linear-gradient(160deg, #4c2a9e 0%, #2d1b69 55%, #1a1136 100%)` }}
-          />
+        <div className={styles.heroImageWrap}>
+          <div className={styles.heroImageZone}>
+            <div
+              className={styles.heroImgLayer}
+              style={{ backgroundImage: `url(/images/tools/${tool.id}.webp), linear-gradient(160deg, #4c2a9e 0%, #2d1b69 55%, #1a1136 100%)` }}
+            />
+          </div>
         </div>
       )}
 
@@ -361,7 +364,7 @@ export default function ToolPage() {
       <section id="teaser" className={styles.section}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: '#c084fc' }}>Try it first</span>
+            <span className={styles.eyebrow} style={{ color: '#7c3aed' }}>Try it first</span>
             <h2 className={styles.sectionTitle}>See a real preview</h2>
             <p className={styles.sectionSub}>On your details. Under a minute.</p>
           </div>
@@ -411,7 +414,7 @@ export default function ToolPage() {
             ) : (
               <div ref={teaserResultRef}>
                 <div className={styles.audioRow}>
-                  <p style={{ flex: 1, fontSize: '0.76rem', color: 'rgba(248,245,239,0.6)', margin: 0 }}>Prefer to listen?</p>
+                  <p style={{ flex: 1, fontSize: '0.76rem', color: 'rgba(26,23,20,0.6)', margin: 0 }}>Prefer to listen?</p>
                   <button onClick={audioPlaying ? stopAudio : speakTeaser} className={`${styles.audioBtn} ${audioPlaying ? styles.audioBtnActive : ''}`}>
                     {audioPlaying ? <><VolumeX size={13} /> Stop</> : <><Volume2 size={13} /> Listen</>}
                   </button>
@@ -449,10 +452,21 @@ export default function ToolPage() {
             <span className={styles.eyebrow} style={{ color: cfg.accent }}>What you get</span>
             <h2 className={styles.sectionTitle}>A complete synthesis</h2>
           </div>
-          <div className={styles.pillRow}>
-            {getGetItems(tool).map((item: string, i: number) => <span key={i} className={styles.pill}>{sanitize(item)}</span>)}
+          <div className={styles.getList}>
+            {getGetItems(tool).map((item: string, i: number) => (
+              <div key={i} className={styles.getItem}>
+                <span className={styles.getDot} style={{ background: cfg.accent }} />
+                <span>{sanitize(item)}</span>
+              </div>
+            ))}
           </div>
           <p className={styles.forLine}>{sanitize(getForLine(tool))}</p>
+          {(tool.guidanceText) && (
+            <div className={styles.guidanceCallout}>
+              <span className={styles.guidanceLabel}>Included</span>
+              <p>{sanitize(tool.guidanceText)}</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -462,7 +476,7 @@ export default function ToolPage() {
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: '#c084fc' }}>How it works</span>
+            <span className={styles.eyebrow} style={{ color: '#7c3aed' }}>How it works</span>
             <h2 className={styles.sectionTitle}>Three steps</h2>
           </div>
           <div className={styles.stepsRow}>
@@ -517,7 +531,7 @@ export default function ToolPage() {
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: '#c084fc' }}>Questions</span>
+            <span className={styles.eyebrow} style={{ color: '#7c3aed' }}>Questions</span>
             <h2 className={styles.sectionTitle}>Before you begin</h2>
           </div>
           <div className={styles.faqList}>
@@ -585,7 +599,7 @@ export default function ToolPage() {
       {/* Sticky mobile bar */}
       <div className={styles.stickyBar}>
         <div className={styles.stickyInner}>
-          <div>
+          <div className={styles.stickyText}>
             <p className={styles.stickyName}>{tool.name}</p>
             <p className={styles.stickyPrice}>${price}{isSub ? '/mo' : ''}</p>
           </div>

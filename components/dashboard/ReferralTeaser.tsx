@@ -64,7 +64,7 @@ function Btn({ label, ghost, accent = '#6D28D9', onClick }: { label: string; gho
 function MiniTiers() {
   return (
     <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
-      {[['25%', 'Standard'], ['30%', 'Performer'], ['35%', 'Strategic']].map(([pct, label]) => (
+      {[['25%', 'Standard'], ['30%', 'Performance'], ['35%', 'Strategic']].map(([pct, label]) => (
         <div key={label} style={{
           flex: 1, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
           borderRadius: '10px', padding: '8px 4px', textAlign: 'center',
@@ -193,7 +193,7 @@ export const ReferralTeaser = ({ userId }: Props) => {
       <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '22px', fontWeight: 600, marginBottom: '6px', color: 'white' }}>Earn Up to 40%</h3>
       <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginBottom: '14px', lineHeight: 1.5 }}>Share KAYAL and earn commission on every sale from day one.</p>
       <MiniTiers />
-      <Btn label="Join Free — Start Earning" accent="#6D28D9" onClick={() => router.push('/member/referral/register')} />
+      <Btn label="Join Free, Start Earning" accent="#6D28D9" onClick={() => router.push('/member/referral/register')} />
     </div>
   )
 
@@ -221,7 +221,13 @@ export const ReferralTeaser = ({ userId }: Props) => {
     <div style={AMBER}>
       <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Under Review</div>
       <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '22px', fontWeight: 600, marginBottom: '6px', color: 'white' }}>Almost There, {firstName}</h3>
-      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginBottom: '14px', lineHeight: 1.5 }}>Your account activates automatically within 24 hours.</p>
+      {/* Was "Your account activates automatically within 24 hours", true
+          for Standard tier but not for Strategic, which is genuinely
+          by-application and reviewed manually, no guaranteed timeframe.
+          This can't easily tell which tier someone applied for at this
+          point, so it stays honest for both rather than promising a
+          specific window that may not hold for everyone who sees it. */}
+      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginBottom: '14px', lineHeight: 1.5 }}>Your application is being reviewed. We will notify you the moment it's approved.</p>
       <Btn label="Review Programme Rules" ghost onClick={() => router.push('/member/referral/rules')} />
     </div>
   )

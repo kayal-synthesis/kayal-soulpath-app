@@ -74,48 +74,79 @@ export const gradients = {
   earth: 'bg-gradient-to-br from-amber-700 via-yellow-600 to-green-700',
 }
 
+// FIX: previously had 6 keys (love, career, wealth, spiritual, health,
+// life-path) against the real 8-domain set (love, wealth, wellness,
+// life-path, oracle-temple, sacred-script, time-keeper, voice).
+// "career" was never a real domain (career tools live inside Wealth) —
+// kept below as a deprecated alias pointing at wealth's colors, in case
+// something already references domainColors.career directly, rather than
+// silently removing a key that might still be in use somewhere.
+// Colors here match the accent system already established in page.tsx's
+// DOMAIN_CONFIG, so this file and the live tool pages stay in sync.
 export const domainColors = {
   love: {
-    primary: '#E11D48',
-    light: '#FFF1F2',
-    dark: '#881337',
-    gradient: 'from-rose-500 to-pink-500',
+    primary: '#EC4899',
+    light: '#FDF2F8',
+    dark: '#831843',
+    gradient: 'from-pink-500 to-rose-500',
     icon: '❤️',
   },
-  career: {
-    primary: '#2563EB',
+  wealth: {
+    primary: '#10B981',
+    light: '#ECFDF5',
+    dark: '#065F46',
+    gradient: 'from-emerald-500 to-green-500',
+    icon: '💰',
+  },
+  wellness: {
+    primary: '#D946EF',
+    light: '#FDF4FF',
+    dark: '#86198F',
+    gradient: 'from-fuchsia-500 to-purple-500',
+    icon: '✨',
+  },
+  'life-path': {
+    primary: '#F59E0B',
+    light: '#FFFBEB',
+    dark: '#92400E',
+    gradient: 'from-amber-500 to-orange-500',
+    icon: '🌟',
+  },
+  'oracle-temple': {
+    primary: '#3B82F6',
     light: '#EFF6FF',
     dark: '#1E3A8A',
     gradient: 'from-blue-500 to-indigo-500',
-    icon: '💼',
+    icon: '🔮',
   },
-  wealth: {
-    primary: '#16A34A',
-    light: '#F0FDF4',
-    dark: '#14532D',
-    gradient: 'from-green-500 to-emerald-500',
-    icon: '💰',
+  'sacred-script': {
+    primary: '#EF4444',
+    light: '#FEF2F2',
+    dark: '#991B1B',
+    gradient: 'from-red-500 to-rose-500',
+    icon: '📜',
   },
-  spiritual: {
-    primary: '#9333EA',
-    light: '#FAF5FF',
-    dark: '#581C87',
-    gradient: 'from-purple-500 to-violet-500',
-    icon: '✨',
+  'time-keeper': {
+    primary: '#14B8A6',
+    light: '#F0FDFA',
+    dark: '#115E59',
+    gradient: 'from-teal-500 to-cyan-500',
+    icon: '⏳',
   },
-  health: {
-    primary: '#EAB308',
-    light: '#FEFCE8',
-    dark: '#854D0E',
-    gradient: 'from-yellow-400 to-amber-500',
-    icon: '🌿',
-  },
-  'life-path': {
-    primary: '#6366F1',
+  voice: {
+    primary: '#818CF8',
     light: '#EEF2FF',
     dark: '#3730A3',
-    gradient: 'from-indigo-500 to-purple-500',
-    icon: '🌟',
+    gradient: 'from-indigo-400 to-violet-400',
+    icon: '🎙️',
+  },
+  // deprecated alias — "career" isn't a real domain, remove once confirmed unused
+  career: {
+    primary: '#10B981',
+    light: '#ECFDF5',
+    dark: '#065F46',
+    gradient: 'from-emerald-500 to-green-500',
+    icon: '💰',
   },
 }
 

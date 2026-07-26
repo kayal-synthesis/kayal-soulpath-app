@@ -15,7 +15,9 @@ import {
   Check, Lock, Sparkles, User,
 } from 'lucide-react'
 
-import { omniTools }         from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
 import { voiceTools }        from '@/lib/constants/voice-tools'
 import { loveTools }         from '@/lib/constants/love-tools'
@@ -25,7 +27,8 @@ import { lifePathTools }     from '@/lib/constants/life-path-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 
 const allTools = [
-  ...omniTools, ...timeKeeperTools, ...voiceTools, ...loveTools,
+  ...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools,
+  ...timeKeeperTools, ...voiceTools, ...loveTools,
   ...wealthTools, ...wellnessTools, ...lifePathTools, ...sacredScriptTools,
 ]
 
@@ -62,6 +65,15 @@ const getDeviceId = () => {
     localStorage.setItem('kayal_device_id', id)
   }
   return id
+}
+
+// Reads the 60-day attribution cookie set by app/ref/[code]/route.ts.
+// Returns null if the visitor never clicked an affiliate link, or the
+// cookie has expired, both entirely normal, not an error.
+const getRefCode = (): string | null => {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|; )kayal_ref=([^;]*)/)
+  return match ? decodeURIComponent(match[1]) : null
 }
 
 type Step = 'images' | 'payment'
@@ -103,8 +115,69 @@ export default function PurchasePage() {
   const [couponError,      setCouponError]      = useState('')
   const [validatingCoupon, setValidatingCoupon] = useState(false)
   const [showCoupon,       setShowCoupon]       = useState(true)
-  const [finalPrice,       setFinalPrice]       = useState(tool?.price || 0)
-  const [originalPrice]                         = useState(tool?.price || 0)
+
+  // Regional pricing. localizedBase is the catalog USD price after the
+  // flat 20% African discount if applicable, converted to the visitor's
+  // local currency, no visible discount messaging, this is simply what
+  // "the price" is for that visitor. finalPrice starts equal to it and
+  // only moves further if a coupon is applied on top.
+  //
+  // Design decision, not explicitly confirmed: a coupon and the regional
+  // discount stack, the coupon's percentage applies to the
+  // already-localized amount, rather than the two being mutually
+  // exclusive. Worth confirming this is actually the intended behavior.
+  const [localizedBase,   setLocalizedBase]   = useState(tool?.price || 0)
+  const [displayCurrency, setDisplayCurrency] = useState('USD')
+  const [baseUsdEquivalent, setBaseUsdEquivalent] = useState(tool?.price || 0)
+  const [pricingLoaded,   setPricingLoaded]   = useState(false)
+
+  const [finalPrice,    setFinalPrice]    = useState(tool?.price || 0)
+  const [originalPrice, setOriginalPrice] = useState(tool?.price || 0)
+
+  // The USD-equivalent of whatever finalPrice currently is, proportional
+  // to any coupon discount applied on top of the localized base, this is
+  // what actually gets sent as the commission-calculation reference,
+  // regardless of what currency the customer was shown or charged in.
+  const finalPriceUsd = localizedBase > 0
+    ? baseUsdEquivalent * (finalPrice / localizedBase)
+    : baseUsdEquivalent
+
+  // Proper currency formatting, not a hardcoded $ prefix, most
+  // currencies don't format like USD, and showing a $ sign for a
+  // Nigerian Naira price would defeat the entire point of localizing it.
+  const formatPrice = (amount: number) => {
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: displayCurrency, currencyDisplay: 'narrowSymbol' }).format(amount)
+    } catch {
+      return `${displayCurrency} ${amount.toFixed(2)}`
+    }
+  }
+
+  useEffect(() => {
+    if (!tool?.price) return
+    const fetchLocalizedPrice = async () => {
+      try {
+        const res = await fetch(`/api/pricing/localize?basePrice=${tool.price}`)
+        const data = await res.json()
+        setLocalizedBase(data.amount)
+        setDisplayCurrency(data.currency)
+        setBaseUsdEquivalent(data.usdEquivalent)
+        setFinalPrice(data.amount)
+        setOriginalPrice(data.amount)
+      } catch {
+        // Fall back to flat USD display if the pricing endpoint fails,
+        // never block checkout entirely over a display-price fetch.
+        setLocalizedBase(tool.price)
+        setDisplayCurrency('USD')
+        setBaseUsdEquivalent(tool.price)
+        setFinalPrice(tool.price)
+        setOriginalPrice(tool.price)
+      } finally {
+        setPricingLoaded(true)
+      }
+    }
+    fetchLocalizedPrice()
+  }, [tool?.price])
 
   const [email, setEmail] = useState('')
 
@@ -250,6 +323,7 @@ export default function PurchasePage() {
         email:         email || loggedInUser?.email || '',
         job_id:        jId,
         purchaseDate:  new Date().toISOString(),
+        ref_code:      getRefCode(),
       }),
     })
   }
@@ -260,14 +334,46 @@ export default function PurchasePage() {
       setPurchaseError('Please agree to the Terms of Service to continue.')
       return
     }
+    if (!loggedInUser && !email.trim()) {
+      setPurchaseError('Please enter your email so we know where to send your reading.')
+      return
+    }
     setIsProcessing(true)
     try {
-      await new Promise(r => setTimeout(r, 1500))
       const newJobId = await submitReadingJob()
-      if (loggedInUser) {
-        await savePurchase(loggedInUser.id, newJobId)
+
+      // This no longer creates the purchase or credits anything, it only
+      // starts a real Flutterwave checkout session. The purchase itself
+      // only gets created once Flutterwave's webhook confirms the charge
+      // actually completed, never from this client-side call directly.
+      const initResponse = await fetch('/api/checkout/initiate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId:        loggedInUser?.id || getDeviceId(),
+          email:         email || loggedInUser?.email || '',
+          fullName:      fullName,
+          toolId:        tool.id,
+          toolName:      tool.name,
+          toolType:      destination,
+          category:      domain,
+          amountCharged: finalPrice,     // already the localized, discounted-if-African amount
+          currency:      displayCurrency, // from the pricing localization already resolved for this visitor
+          usdEquivalent: finalPriceUsd,   // the true USD reference, what commission math actually uses
+          refCode:       getRefCode(),
+          jobId:         newJobId,
+        }),
+      })
+
+      const initData = await initResponse.json()
+      if (!initResponse.ok || !initData.paymentLink) {
+        throw new Error(initData.error || 'Could not start checkout, please try again.')
       }
-      router.push(`/purchase/${toolId}/confirmation${newJobId ? `?job=${newJobId}` : ''}`)
+
+      // Real redirect to Flutterwave's hosted payment page, this is
+      // where the customer actually enters payment details, never on
+      // this site.
+      window.location.href = initData.paymentLink
     } catch (err: any) {
       setPurchaseError(err.message || 'Something went wrong. Please try again.')
     } finally {
@@ -293,11 +399,11 @@ export default function PurchasePage() {
             </span>
             {hasDiscount && (
               <span className="text-xs text-neutral-400 line-through flex-shrink-0">
-                ${originalPrice}
+                {formatPrice(originalPrice)}
               </span>
             )}
             <span className="text-base font-bold text-primary-600 flex-shrink-0">
-              ${finalPrice.toFixed(2)}
+              {formatPrice(finalPrice)}
             </span>
           </div>
           <div className="w-9 flex-shrink-0 flex justify-end">
@@ -360,7 +466,7 @@ export default function PurchasePage() {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-              <span className="text-lg font-bold text-primary-600">${finalPrice.toFixed(2)}</span>
+              <span className="text-lg font-bold text-primary-600">{formatPrice(finalPrice)}</span>
               {showSummary
                 ? <ChevronUp className="w-4 h-4 text-neutral-400" />
                 : <ChevronDown className="w-4 h-4 text-neutral-400" />}
@@ -391,7 +497,7 @@ export default function PurchasePage() {
                     </div>
                   )}
                   <div className="space-y-2">
-                    {['Secure 256-bit encryption', 'Private — only you can access', '7-day money-back guarantee'].map(item => (
+                    {['Secure 256-bit encryption', 'Private, only you can access', '7-day money-back guarantee'].map(item => (
                       <div key={item} className="flex items-center gap-2 text-xs text-neutral-500">
                         <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />{item}
                       </div>
@@ -406,7 +512,7 @@ export default function PurchasePage() {
         {/* Step Content */}
         <AnimatePresence mode="wait">
 
-          {/* STEP 1 — Image Upload */}
+          {/* STEP 1, Image Upload */}
           {currentStep === 'images' && (
             <motion.div
               key="images"
@@ -511,7 +617,7 @@ export default function PurchasePage() {
             </motion.div>
           )}
 
-          {/* STEP 2 — Payment */}
+          {/* STEP 2, Payment */}
           {currentStep === 'payment' && (
             <motion.div
               key="payment"
@@ -550,7 +656,7 @@ export default function PurchasePage() {
                   <div className="border-t border-neutral-100 pt-3 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-neutral-500">Price</span>
-                      <span className="font-medium">${originalPrice}</span>
+                      <span className="font-medium">{formatPrice(originalPrice)}</span>
                     </div>
                     {hasDiscount && (
                       <div className="flex justify-between text-sm text-green-600">
@@ -563,11 +669,33 @@ export default function PurchasePage() {
                         Total{isSub ? ' /month' : ''}
                       </span>
                       <span className="text-2xl font-serif text-primary-700">
-                        ${finalPrice.toFixed(2)}
+                        {formatPrice(finalPrice)}
                       </span>
                     </div>
                   </div>
                 </div>
+
+                {/* Email, required for guest checkout, since without a saved
+                    email there is no way to know where to send the finished
+                    report once the reading is ready. */}
+                {!loggedInUser && (
+                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
+                    <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
+                      Your Email
+                    </label>
+                    <p className="text-xs text-neutral-400 mb-3">
+                      Your reading will be sent here once it is ready.
+                    </p>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-base focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 bg-white"
+                    />
+                  </div>
+                )}
 
                 {/* Coupon Code */}
                 <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
@@ -685,7 +813,7 @@ export default function PurchasePage() {
                     </div>
                   </div>
                   <p className="text-xs text-neutral-400 mt-3 text-center">
-                    Stripe coming soon — no card will be charged
+                    Stripe coming soon, no card will be charged
                   </p>
                 </div>
 
@@ -742,7 +870,7 @@ export default function PurchasePage() {
                   {isProcessing ? (
                     <><Loader2 className="w-5 h-5 animate-spin mr-2" />Processing your order...</>
                   ) : (
-                    <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase ${finalPrice.toFixed(2)}{isSub ? '/mo' : ''}</>
+                    <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase {formatPrice(finalPrice)}{isSub ? '/mo' : ''}</>
                   )}
                 </Button>
 

@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Search, SlidersHorizontal, X, TrendingUp, Clock, DollarSign } from 'lucide-react'
 
-import { omniTools }         from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import { voiceTools }        from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { timeKeeperTools }   from '@/lib/constants/time-keeper-tools'
@@ -13,6 +15,8 @@ import { loveTools }         from '@/lib/constants/love-tools'
 import { wealthTools }       from '@/lib/constants/wealth-tools'
 import { wellnessTools }     from '@/lib/constants/wellness-spiritual'
 import { lifePathTools }     from '@/lib/constants/life-path-tools'
+
+const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
 
 const allTools = [
   ...omniTools, ...voiceTools, ...sacredScriptTools, ...timeKeeperTools,

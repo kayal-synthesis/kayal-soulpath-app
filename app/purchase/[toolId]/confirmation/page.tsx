@@ -7,26 +7,31 @@ import { CheckCircle, Clock, Zap, ChevronRight, Star, X } from 'lucide-react'
 import { allTools, getToolById } from '@/lib/tools/all-tools-index'
 import type { Tool } from '@/lib/tools/all-tools-index'
 
-// ── Upsell map — toolId → recommended upsell tool id ────
+// Upsell map, toolId to recommended upsell tool id. Every id below verified
+// against the real, current 113-tool catalog directly, not assumed. The
+// previous version used pre-restructure ids (several with a stale "-os"
+// suffix, plus a few, like full-soul-portrait, that never matched anything
+// in the current catalog at all), so most of these mappings silently never
+// fired.
 const UPSELL_MAP: Record<string, string> = {
-  'soulmate-arrival-window-os':   'soulmate-compatibility-verdict',
-  'love-wound-reading-os':        'karmic-debt-cleanser',
-  'income-ceiling-breaker-os':    'complete-wealth-synthesis',
-  'calling-decoder-os':           'complete-purpose-synthesis',
-  'nine-year-cycle-reading-os':   'annual-destiny-forecast',
-  'birthday-blueprint':           'nine-year-cycle-reading-os',
-  'karmic-debt-cleanser':         'relationship-karma-synthesis',
-  'complete-love-synthesis':      'full-soul-portrait',
-  'complete-wealth-synthesis':    'full-soul-portrait',
-  'complete-purpose-synthesis':   'full-soul-portrait',
-  'full-soul-portrait':           'oracle-voice-unlimited',
-  'daily-personal-oracle':        'monthly-cycle-navigator',
-  'monthly-cycle-navigator':      'quarterly-destiny-pulse',
-  'oracle-voice-session':         'oracle-deep-dive-session',
-  'oracle-deep-dive-session':     'oracle-voice-unlimited',
+  'soulmate-arrival-window':    'soulmate-compatibility-verdict',
+  'love-wound-reading':         'karmic-love-debt',
+  'income-ceiling-breaker':     'complete-wealth-synthesis',
+  'calling-decoder':            'complete-purpose-synthesis',
+  'nine-year-cycle-reading':    'annual-destiny-forecast',
+  'birthday-blueprint':         'nine-year-cycle-reading',
+  'karmic-lessons-reading':     'complete-life-portrait',
+  'complete-love-synthesis':    'complete-life-portrait',
+  'complete-wealth-synthesis':  'complete-life-portrait',
+  'complete-purpose-synthesis': 'complete-life-portrait',
+  'complete-life-portrait':     'oracle-voice-unlimited',
+  'daily-personal-oracle':      'monthly-cycle-navigator',
+  'monthly-cycle-navigator':    'quarterly-destiny-pulse',
+  'oracle-voice-session':       'oracle-deep-dive-session',
+  'oracle-deep-dive-session':   'oracle-voice-unlimited',
 }
 
-// ── Star rating ──────────────────────────────────────────
+// Star rating
 function Stars({ rating = 4.9 }: { rating?: number }) {
   return (
     <div className="flex items-center gap-1">
@@ -40,7 +45,7 @@ function Stars({ rating = 4.9 }: { rating?: number }) {
   )
 }
 
-// ── Upsell card ──────────────────────────────────────────
+// Upsell card
 function UpsellCard({
   tool,
   onAccept,
@@ -64,7 +69,7 @@ function UpsellCard({
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full uppercase tracking-wider">
-            One-Time Offer — This Session Only
+            One-Time Offer, This Session Only
           </span>
           <button
             onClick={onDecline}
@@ -98,7 +103,7 @@ function UpsellCard({
           {tool.features.slice(0, 3).map((f, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-700">
               <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <span>{typeof f === 'string' ? f.split(' — ')[0] : String(f)}</span>
+              <span>{typeof f === 'string' ? f : String(f)}</span>
             </li>
           ))}
         </ul>
@@ -107,7 +112,7 @@ function UpsellCard({
           <Zap className="w-5 h-5 text-amber-500 flex-shrink-0" />
           <div>
             <p className="text-xs font-bold text-amber-800">
-              Add this now and save 20% — available only at checkout
+              Add this now and save 20%, available only at checkout
             </p>
             <p className="text-xs text-amber-600 mt-0.5">
               Full price after this page: <span className="line-through">${tool.price}</span>
@@ -127,7 +132,7 @@ function UpsellCard({
             </span>
           ) : (
             <>
-              Yes — Add {tool.name} for ${Math.round(tool.price * 0.8)}
+              Yes, add {tool.name} for ${Math.round(tool.price * 0.8)}
               <ChevronRight className="w-4 h-4" />
             </>
           )}
@@ -144,7 +149,7 @@ function UpsellCard({
   )
 }
 
-// ── Main page ────────────────────────────────────────────
+// Main page
 export default function PurchaseConfirmationPage() {
   const router = useRouter()
   const params = useParams()
@@ -302,7 +307,7 @@ export default function PurchaseConfirmationPage() {
         </div>
 
         <p className="text-center text-xs text-neutral-400">
-          Questions? Email support@kayalsoulpath.com — we respond within 2 hours.
+          Questions? Email support@kayalsoulpath.com, we respond within 2 hours.
         </p>
 
       </div>

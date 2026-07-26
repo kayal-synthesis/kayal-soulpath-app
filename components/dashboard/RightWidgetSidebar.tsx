@@ -9,11 +9,6 @@ import { MemberCouponWidget }   from './MemberCouponWidget'
 import { DailyGuidance }        from './DailyGuidance'
 
 interface RightWidgetSidebarProps {
-  referralData: {
-    clicks:    number
-    earnings:  number
-    referrals: number
-  }
   userId?:        string
   userPurchases?: any[]
   dashboardType?: 'main' | 'member' | 'referral'
@@ -28,7 +23,6 @@ interface RightWidgetSidebarProps {
 }
 
 export function RightWidgetSidebar({
-  referralData,
   userId,
   userPurchases  = [],
   dashboardType  = 'main',
@@ -45,7 +39,7 @@ export function RightWidgetSidebar({
   return (
     <div className="space-y-6">
 
-      {/* ── Daily Guidance — only shown on member dashboard when user is known ── */}
+      {/* Daily Guidance, only shown on member dashboard when user is known */}
       {userId && dashboardType === 'member' && (
         <DailyGuidance
           userName={userContext?.name || 'Seeker'}
@@ -84,7 +78,12 @@ export function RightWidgetSidebar({
       )}
 
       <EnrollConsultWidget />
-      <ReferralTeaser data={referralData} />
+      {/* Fixed: was passing a fabricated data={referralData} object the
+          component never actually reads. ReferralTeaser fetches its own
+          real data from affiliate_profiles/affiliate_conversions once it
+          has a userId, which was already available here as a top-level
+          prop and simply never forwarded. */}
+      <ReferralTeaser userId={userId} />
       <SeekersCommunity />
       <RecentArticles />
     </div>
