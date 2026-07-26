@@ -1,11 +1,15 @@
 'use client'
 
 import { ToolCard, BundleSelector } from '@/components/ToolCards'
-import { omniTools } from '@/lib/constants/omni-seer-tools'
+import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
+import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
+import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
 import type { ToolData } from '@/components/ToolCards'
 import { useMemo, useState } from 'react'
 import { Crown, ArrowLeft, Search, X, TrendingUp, Clock, DollarSign } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+
+const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
 
 const tools: ToolData[] = omniTools.map(t => ({
   ...t,
@@ -76,7 +80,7 @@ export default function OmniSeerSanctumPage() {
                   <span className="text-xs font-semibold text-yellow-600 uppercase tracking-widest">Grand Revelation</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Omni-Seer Sanctum</h1>
-                <p className="text-neutral-500 mt-1 text-sm max-w-xl">Every system. Every domain. The most complete synthesis readings available — across {tools.length} dedicated readings.</p>
+                <p className="text-neutral-500 mt-1 text-sm max-w-xl">Every system. Every domain. The most complete synthesis readings available, across {tools.length} dedicated readings.</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
