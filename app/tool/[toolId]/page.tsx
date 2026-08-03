@@ -3,12 +3,10 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
-import { motion, AnimatePresence, useInView } from 'framer-motion'
+import { useInView } from 'framer-motion'
 import {
-  Star, Shield, ChevronDown, ChevronUp, CheckCircle,
-  Clock, Users, Sparkles, Eye, User, Camera,
-  Compass, Moon, Feather, Infinity, Loader2, Volume2, VolumeX,
+  ChevronDown, Shield, Loader2, Volume2, VolumeX,
+  Star, Compass, Moon, Feather, Infinity, Sparkles, Users,
 } from 'lucide-react'
 import styles from './toolPage.module.css'
 
@@ -74,64 +72,95 @@ function sanitize(text?: string): string {
   return r
 }
 
-// ─── Domain config — dark-purple base, 3 of 8 accents shifted off purple so
-// they read as distinct against the new purple-black page background
-// (see the domain-accent review: wellness/oracle-temple/voice were all
-// shades of purple and would have blended into the base). ────────────────
-const DOMAIN_CONFIG: Record<string, { accent: string; accentSoft: string; label: string; practitionerRate: string }> = {
-  love:            { accent: '#EC4899', accentSoft: 'rgba(236,72,153,0.16)', label: 'Love & Relationships',    practitionerRate: '$150–300' },
-  wealth:          { accent: '#10B981', accentSoft: 'rgba(16,185,129,0.16)', label: 'Wealth & Career',         practitionerRate: '$150–250' },
-  wellness:        { accent: '#D946EF', accentSoft: 'rgba(217,70,239,0.16)', label: 'Wellness & Spirituality', practitionerRate: '$120–280' },
-  'life-path':     { accent: '#F59E0B', accentSoft: 'rgba(245,158,11,0.16)', label: 'Life Path & Destiny',     practitionerRate: '$150–350' },
-  'oracle-temple': { accent: '#3B82F6', accentSoft: 'rgba(59,130,246,0.16)', label: 'Omni-Seer Sanctum',       practitionerRate: '$200–400' },
-  'sacred-script': { accent: '#EF4444', accentSoft: 'rgba(239,68,68,0.16)',  label: 'Sacred Script',           practitionerRate: '$100–200' },
-  'time-keeper':   { accent: '#14B8A6', accentSoft: 'rgba(20,184,166,0.16)', label: 'Timekeeper Vault',        practitionerRate: '$120–250' },
-  voice:           { accent: '#818CF8', accentSoft: 'rgba(129,140,248,0.16)', label: 'Oracle Voice',           practitionerRate: '$150–300' },
+// ─── Domain config ──────────────────────────────────────────────────────
+// accentDeep added alongside the existing accent/accentSoft, this is
+// what the CSS module's gradients and hover states now draw from via
+// CSS custom properties, so every domain gets a real, distinct two-tone
+// treatment instead of a single flat accent color.
+const DOMAIN_CONFIG: Record<string, { accent: string; accentDeep: string; accentSoft: string; label: string; practitionerRate: string }> = {
+  love:            { accent:'#EC4899', accentDeep:'#BE185D', accentSoft:'rgba(236,72,153,0.16)', label:'Love & Relationships',    practitionerRate:'$150–300' },
+  wealth:          { accent:'#10B981', accentDeep:'#047857', accentSoft:'rgba(16,185,129,0.16)', label:'Wealth & Career',         practitionerRate:'$150–250' },
+  wellness:        { accent:'#D946EF', accentDeep:'#A21CAF', accentSoft:'rgba(217,70,239,0.16)', label:'Wellness & Spirituality', practitionerRate:'$120–280' },
+  'life-path':     { accent:'#F59E0B', accentDeep:'#B45309', accentSoft:'rgba(245,158,11,0.16)', label:'Life Path & Destiny',     practitionerRate:'$150–350' },
+  'oracle-temple': { accent:'#3B82F6', accentDeep:'#1D4ED8', accentSoft:'rgba(59,130,246,0.16)', label:'Omni-Seer Sanctum',       practitionerRate:'$200–400' },
+  'sacred-script': { accent:'#EF4444', accentDeep:'#B91C1C', accentSoft:'rgba(239,68,68,0.16)',  label:'Sacred Script',           practitionerRate:'$100–200' },
+  'time-keeper':   { accent:'#14B8A6', accentDeep:'#0F766E', accentSoft:'rgba(20,184,166,0.16)', label:'Timekeeper Vault',        practitionerRate:'$120–250' },
+  voice:           { accent:'#818CF8', accentDeep:'#4F46E5', accentSoft:'rgba(129,140,248,0.16)', label:'Oracle Voice',           practitionerRate:'$150–300' },
 }
 const getDomain = (tool: any) => (tool.domain || tool.category || 'oracle-temple') as string
 const getConfig = (tool: any) => DOMAIN_CONFIG[getDomain(tool)] ?? DOMAIN_CONFIG['oracle-temple']
 
-// Both flags now read the real per-tool fields directly (requiresPartner,
-// subscriptionPeriod) as the single source of truth, rather than a
-// separately-maintained id list here that could drift out of sync with the
-// actual data files — same reasoning as the domainColors fix in colors.ts.
-const needsPartner = (tool: any): boolean =>
-  tool.requiresPartner === true || tool.requires_partner === true
-
-const isSubscription = (tool: any): boolean =>
-  !!tool.subscriptionPeriod || !!tool.isSubscription || !!tool.is_subscription
+const needsPartner = (tool: any): boolean => tool.requiresPartner === true || tool.requires_partner === true
+const isSubscription = (tool: any): boolean => !!tool.subscriptionPeriod || !!tool.isSubscription || !!tool.is_subscription
+const hasImageInput = (tool: any): boolean => !!(tool.requiresImage || tool.requires_image)
 
 const TESTIMONIALS: Record<string, { name: string; text: string }[]> = {
-  love:            [ { name: 'Rachel, Austin',  text: 'Named a relationship pattern I had never seen described anywhere, and pinpointed almost exactly when it started.' },
-                      { name: 'Amara, Toronto',  text: 'Described my emotional capacity so precisely I had known it about myself for years and never had the words for it.' } ],
-  wealth:          [ { name: 'James, New York', text: 'The income ceiling section was uncomfortable to read because it was accurate.' },
-                      { name: 'Sasha, Sydney',   text: 'A specific breakdown of why my current path is misaligned, and what the timing shows for a transition.' } ],
-  wellness:        [ { name: 'Lena, Berlin',    text: 'Named something I had been circling for years in therapy, in twenty minutes.' },
-                      { name: 'Yemi, Atlanta',   text: 'Described my energy pattern so precisely I had to re-read it twice.' } ],
-  'life-path':     [ { name: 'Marcus, Dublin',  text: 'Told me exactly what this chapter of my life is asking for and how long I am in it.' },
-                      { name: 'Evan, Vancouver', text: 'Described the thing underneath everything I thought I wanted.' } ],
-  'oracle-temple': [ { name: 'Aisha, Dubai',     text: 'The first reading that felt like it was about the whole of me, not one dimension.' },
-                      { name: 'Mei, Singapore',  text: 'I have tried four other platforms. None of them came close to this synthesis.' } ],
-  'sacred-script': [ { name: 'Joelle, Paris',    text: 'Having my full synthesis loaded as a permanent dialogue partner changed how I navigate decisions.' },
-                      { name: 'Nina, Stockholm', text: 'It holds context no other tool does, and the guidance feels genuinely calibrated to me.' } ],
-  'time-keeper':   [ { name: 'Omar, Toronto',    text: 'Consistently names the quality of energy I am moving through before I have felt it myself.' },
-                      { name: 'Clara, Amsterdam',text: 'Accurate for three months running before I stopped being surprised by it.' } ],
-  voice:           [ { name: 'Grace, Lagos',     text: 'Felt like speaking to someone who had already read every relevant thing about my life.' },
-                      { name: 'Zara, London',    text: 'Named a tension so precisely I stopped the session to write it all down.' } ],
+  love:            [ { name:'Rachel, Austin',  text:'Named a relationship pattern I had never seen described anywhere, and pinpointed almost exactly when it started.' },
+                      { name:'Amara, Toronto',  text:'Described my emotional capacity so precisely I had known it about myself for years and never had the words for it.' } ],
+  wealth:          [ { name:'James, New York', text:'The income ceiling section was uncomfortable to read because it was accurate.' },
+                      { name:'Sasha, Sydney',   text:'A specific breakdown of why my current path is misaligned, and what the timing shows for a transition.' } ],
+  wellness:        [ { name:'Lena, Berlin',    text:'Named something I had been circling for years in therapy, in twenty minutes.' },
+                      { name:'Yemi, Atlanta',   text:'Described my energy pattern so precisely I had to re-read it twice.' } ],
+  'life-path':     [ { name:'Marcus, Dublin',  text:'Told me exactly what this chapter of my life is asking for and how long I am in it.' },
+                      { name:'Evan, Vancouver', text:'Described the thing underneath everything I thought I wanted.' } ],
+  'oracle-temple': [ { name:'Aisha, Dubai',     text:'The first reading that felt like it was about the whole of me, not one dimension.' },
+                      { name:'Mei, Singapore',  text:'I have tried four other platforms. None of them came close to this synthesis.' } ],
+  'sacred-script': [ { name:'Joelle, Paris',    text:'Having my full synthesis loaded as a permanent dialogue partner changed how I navigate decisions.' },
+                      { name:'Nina, Stockholm', text:'It holds context no other tool does, and the guidance feels genuinely calibrated to me.' } ],
+  'time-keeper':   [ { name:'Omar, Toronto',    text:'Consistently names the quality of energy I am moving through before I have felt it myself.' },
+                      { name:'Clara, Amsterdam',text:'Accurate for three months running before I stopped being surprised by it.' } ],
+  voice:           [ { name:'Grace, Lagos',     text:'Felt like speaking to someone who had already read every relevant thing about my life.' },
+                      { name:'Zara, London',    text:'Named a tension so precisely I stopped the session to write it all down.' } ],
 }
 const getTestimonials = (tool: any) => TESTIMONIALS[getDomain(tool)] ?? TESTIMONIALS['oracle-temple']
 
-const HOOKS: Record<string, string> = {
-  love:            'A private reading of the relationship pattern you keep repeating, showing exactly where it opens for something different.',
-  wealth:          'A private reading of the ceiling you keep hitting, showing exactly where your blueprint says it lifts.',
+// Short (~15-20 word) hero subtext, real per-domain content, not one
+// generic line stretched across every tool.
+const SUBTEXT: Record<string, string> = {
+  love:            'A private reading of the relationship pattern you keep living out with a different person each time.',
+  wealth:          'A private reading of the ceiling you keep hitting, built from your exact details, not generic advice.',
   wellness:        'A private synthesis of the pattern underneath your inner life, named clearly, in plain language.',
   'life-path':     'A private reading of the direction your life is already moving in, whether or not you have named it yet.',
   'oracle-temple': 'A complete synthesis for a decision that deserves more than instinct alone.',
-  'sacred-script': 'A permanent, private dialogue built from your complete synthesis.',
-  'time-keeper':   'A private map of your timing, built from your exact details.',
-  voice:           'A spoken session calibrated to your complete synthesis.',
+  'sacred-script': 'A permanent, private dialogue built from your complete synthesis, not a one-time reading.',
+  'time-keeper':   'A private map of your timing, built from your exact birth details.',
+  voice:           'A spoken session calibrated to your complete synthesis, delivered aloud, not just read.',
 }
-const getHook = (tool: any) => clean(tool.hook) || HOOKS[getDomain(tool)] || HOOKS['oracle-temple']
+const getSubtext = (tool: any) => clean(tool.tagline) || SUBTEXT[getDomain(tool)] || SUBTEXT['oracle-temple']
+
+// Honest, domain-specific self-selection copy. Every one of these is a
+// real editorial claim about who the reading actually serves, not
+// filler, worth reviewing per domain rather than treating as boilerplate.
+const NOT_FOR_LINES: Record<string, string> = {
+  love:            "This isn't for you if you want a quick, fun horoscope or a simple yes-or-no about one specific person. It's for you if you're ready to actually see the pattern, even if part of it is uncomfortable to read.",
+  wealth:          "This isn't for you if you want a lucky number or a guaranteed prediction. It's for you if you're ready to see the real pattern behind your money decisions.",
+  wellness:        "This isn't for you if you want a quick fix or a generic wellness tip. It's for you if you're ready to understand what's actually happening beneath the surface.",
+  'life-path':     "This isn't for you if you want a vague, feel-good affirmation. It's for you if you're ready to see the actual direction your life is already moving in.",
+  'oracle-temple': "This isn't for you if you want one quick answer. It's for you if you're ready for a complete, honest synthesis across every part of your life.",
+  'sacred-script': "This isn't for you if you want a single, one-time reading. It's for you if you want ongoing, real guidance built from your complete synthesis.",
+  'time-keeper':   "This isn't for you if you want a generic daily horoscope. It's for you if you're ready to understand the real timing already at work in your life.",
+  voice:           "This isn't for you if you'd rather just read something quietly. It's for you if you're ready to hear it, spoken directly to you.",
+}
+const getNotForLine = (tool: any) => NOT_FOR_LINES[getDomain(tool)] ?? NOT_FOR_LINES['oracle-temple']
+
+// Secondary path, domain -> the real free tool that most genuinely
+// matches. Four of these (love, life-path, wellness, time-keeper) are
+// confirmed strong, direct matches, verified against the real free
+// tools' own content. The rest (wealth, oracle-temple, sacred-script,
+// voice) don't have an equally strong free-tool counterpart yet, so they
+// fall back to the closest reasonable option, this is flagged here
+// honestly rather than presented as an equally solid match.
+const FREE_TOOL_LINKS: Record<string, { name: string; href: string }> = {
+  love:            { name:'Compatibility Blueprint', href:'/pages/tool-compatibility.html' },       // confirmed strong match
+  'life-path':     { name:'Life Blueprint',           href:'/pages/tool-life-blueprint.html' },      // confirmed strong match
+  wellness:        { name:'Vitality Blueprint',       href:'/pages/tool-body-energy.html' },         // confirmed strong match
+  'time-keeper':   { name:'Universal Day',            href:'/pages/tool-universal-day.html' },       // confirmed strong match
+  'oracle-temple': { name:'Life Blueprint',           href:'/pages/tool-life-blueprint.html' },      // fallback, no direct Omni-Seer free tool exists yet
+  wealth:          { name:'Life Blueprint',           href:'/pages/tool-life-blueprint.html' },      // fallback, no wealth-specific free tool exists yet
+  'sacred-script': { name:'Name Vibration',           href:'/pages/tool-name-vibration.html' },      // weaker fallback, name-based but not a direct thematic match
+  voice:           { name:'Vitality Blueprint',       href:'/pages/tool-body-energy.html' },         // weaker fallback, no voice-specific free tool exists yet
+}
+const getFreeToolLink = (tool: any) => FREE_TOOL_LINKS[getDomain(tool)] ?? FREE_TOOL_LINKS['oracle-temple']
 
 const GET_ITEMS_DEFAULT = ['Private & permanent', 'Built from your details', 'Plain language', 'Delivered fast']
 const getGetItems = (tool: any) => (tool.whatYouGet?.length ? tool.whatYouGet : GET_ITEMS_DEFAULT)
@@ -139,49 +168,65 @@ const getGetItems = (tool: any) => (tool.whatYouGet?.length ? tool.whatYouGet : 
 const FOR_LINE_DEFAULT = 'For you if past readings have felt generic, not built for the life you are actually living.'
 const getForLine = (tool: any) => clean(tool.forLine) || FOR_LINE_DEFAULT
 
+// Two new items added (price justification, fit/certainty), and the
+// birth-time/place answer reworded to avoid repeating "generic" a third
+// time in close proximity to the other two uses of that same word.
 const BASE_FAQ = [
-  { q: 'How is this different from a free horoscope?', a: 'Most free readings use a single input and produce a templated result that could apply to millions of people. Every KAYAL reading synthesises multiple disciplines together, so the specificity comes from what they all confirm about the same question.' },
-  { q: 'Do I need any prior knowledge?', a: 'No. Your reading is written in plain language throughout. It tells you what the synthesis found, not how it works.' },
-  { q: 'Why do you ask for birth time and place?', a: 'They let the synthesis engine build your complete, specific blueprint rather than a generic one based on date alone.' },
-  { q: 'Is my personal data kept private?', a: 'Yes. Your details are used only to generate your reading and are never shared or sold.' },
-  { q: 'What if the reading does not resonate?', a: 'We offer a 7 day guarantee. If your reading does not feel accurate, contact us and we will make it right.' },
+  { q:'How is this different from a free horoscope?', a:'Most free readings use a single input and produce a templated result that could apply to millions of people. Every KAYAL reading synthesises multiple disciplines together, so the specificity comes from what they all confirm about the same question.' },
+  { q:'Do I need any prior knowledge?', a:'No. Your reading is written in plain language throughout. It tells you what the synthesis found, not how it works.' },
+  { q:'Why do you ask for birth time and place?', a:'They let the synthesis engine build your complete, specific blueprint, not a broad one based on date alone.' },
+  { q:'Why does this cost what it costs?', a:'A comparable session with a practitioner typically runs well beyond this price. This reading uses the same underlying synthesis, delivered in minutes instead of scheduling a session, at a fraction of the cost.' },
+  { q:"What if this doesn't match my situation?", a:'Every reading is built from your own details, not a template, so this is genuinely rare. If it still does not feel accurate, the 7-day guarantee means a full refund, no questions asked.' },
+  { q:'Is my personal data kept private?', a:'Yes. Your details are used only to generate your reading and are never shared or sold.' },
 ]
 
-const E: [number, number, number, number] = [0.22, 1, 0.36, 1]
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }
-const fadeUp = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: E } } }
+// Static, not tool-specific, same across every domain
+const WHY_CARDS = [
+  { icon:'🧩', title:"You've tried readings that could be about anyone", body:'Horoscopes and quizzes that could apply to millions. You need something built exactly for your life.' },
+  { icon:'🎯', title:'You want clarity, not fluff', body:"You're tired of vague, poetic language. You want direct, plain-spoken answers about what's really happening." },
+  { icon:'🧠', title:"You know there's something deeper", body:"You sense a pattern beneath your decisions. You're here to finally see it named, clearly, in black and white." },
+]
+const TRUST_CARDS = [
+  { title:'Private & Permanent', body:'Your reading is yours forever. Access it anytime, on any device.' },
+  { title:'Built from Your Details', body:'Not a template. Synthesised from your exact birth time, place, and name.' },
+  { title:'Plain Language', body:'No jargon, no fluff. Written so you understand your life, not just a system.' },
+  { title:'Delivered Fast', body:'Your complete synthesis arrives quickly. Immediate access.' },
+]
 
 const ICON_MAP: Record<string, any> = { Star, Compass, Moon, Feather, Infinity, Sparkles, Users }
 
-function CountUp({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref as any, { once: true })
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!inView) return
-    let c = 0
-    const steps = 60, inc = target / steps
-    const t = setInterval(() => { c += inc; if (c >= target) { setCount(target); clearInterval(t) } else setCount(Math.floor(c)) }, 1200 / steps)
-    return () => clearInterval(t)
-  }, [inView, target])
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+function WhyCard({ icon, title, body }: { icon: string; title: string; body: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref as any, { once: true, amount: 0.2 })
+  return (
+    <div ref={ref} className={`${styles.whyCard} ${inView ? styles.visible : ''}`}>
+      <span className={styles.whyIcon}>{icon}</span>
+      <h3>{title}</h3>
+      <p>{body}</p>
+    </div>
+  )
+}
+
+function FeatureItem({ text }: { text: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref as any, { once: true, amount: 0.15 })
+  return (
+    <div ref={ref} className={`${styles.featureItem} ${inView ? styles.visible : ''}`}>
+      <span className={styles.featureIcon}>✦</span>
+      <p className={styles.featureText}>{text}</p>
+    </div>
+  )
 }
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
     <div className={styles.faqItem}>
-      <button className={styles.faqQ} onClick={() => setOpen(v => !v)} aria-expanded={open}>
-        <span className={styles.faqQText}>{q}</span>
-        {open ? <ChevronUp size={16} style={{ color: '#d4af6e', flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: 'rgba(26,23,20,0.35)', flexShrink: 0 }} />}
+      <button className={`${styles.faqQuestion} ${open ? styles.open : ''}`} onClick={() => setOpen(v => !v)} aria-expanded={open}>
+        {q}
+        <ChevronDown size={16} className={styles.faqIcon} />
       </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
-            <p className={styles.faqA}>{a}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className={`${styles.faqAnswer} ${open ? styles.open : ''}`}>{a}</div>
     </div>
   )
 }
@@ -209,9 +254,21 @@ export default function ToolPage() {
   const [audioPlaying, setAudioPlaying] = useState(false)
   const teaserResultRef = useRef<HTMLDivElement>(null)
 
+  const [showAllFeatures, setShowAllFeatures] = useState(false)
+  const [motionActive, setMotionActive] = useState(false)
+
+  // Real, server-side currency localization, reusing the already-built
+  // lib/pricing/localizePrice.ts (IP geolocation + the flat 20% African
+  // discount, both already implemented there) via the same
+  // /api/pricing/localize bridge purchase-page.tsx already calls, no
+  // client-side third-party API call, no manual country picker required
+  // by default, exactly the "auto-detect, no ask" behavior confirmed as
+  // correct while validating this in the standalone preview.
+  const [displayPrice, setDisplayPrice] = useState<{ amount: number; currency: string } | null>(null)
+  const [priceLoaded, setPriceLoaded] = useState(false)
+
   useEffect(() => { window.scrollTo(0, 0) }, [])
 
-  // Affiliate click tracking — unchanged real feature, kept as-is
   useEffect(() => {
     if (!refCode || !tool) return
     sessionStorage.setItem('kayal_affiliate_ref', refCode)
@@ -225,6 +282,15 @@ export default function ToolPage() {
   }, [refCode, toolId, tool])
 
   useEffect(() => {
+    if (!tool?.price) return
+    fetch(`/api/pricing/localize?basePrice=${tool.price}`)
+      .then(res => res.json())
+      .then(data => setDisplayPrice({ amount: data.amount, currency: data.currency }))
+      .catch(() => setDisplayPrice({ amount: tool.price, currency: 'USD' }))
+      .finally(() => setPriceLoaded(true))
+  }, [tool?.price])
+
+  useEffect(() => {
     if (teaserShown && teaserResultRef.current) {
       setTimeout(() => teaserResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
     }
@@ -235,7 +301,7 @@ export default function ToolPage() {
       <div className={styles.page} style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: 'rgba(26,23,20,0.5)', marginBottom: 16 }}>Tool not found.</p>
-          <button onClick={() => router.push('/dashboard')} className={styles.ctaLink}>Back to dashboard</button>
+          <button onClick={() => router.push('/dashboard')}>Back to dashboard</button>
         </div>
       </div>
     )
@@ -244,15 +310,30 @@ export default function ToolPage() {
   const cfg = getConfig(tool)
   const isPartner = needsPartner(tool)
   const isSub = isSubscription(tool)
+  const showMotionFeature = hasImageInput(tool) // gyroscope only where "look from an angle" is literally meaningful, physiognomy/palmistry tools with a real face or hand image, not every domain
   const deliveryMins = tool.deliveryMinutes || 15
   const price = tool.price ?? 29
   const headline = sanitize(tool.headline || tool.name)
-  // Hero subhead uses tagline (short, one line) — hook stays reserved for
-  // fuller-context surfaces like tool listing cards, which want a paragraph.
-  // Fallback order stays short-to-short: only reaches for the paragraph hook
-  // if literally nothing else is set.
-  const heroSub = sanitize(clean(tool.tagline) || HOOKS[getDomain(tool)] || getHook(tool))
+  const heroSub = sanitize(getSubtext(tool))
   const hasHeroImage = tool.heroImageStyle !== 'none'
+  const freeToolLink = getFreeToolLink(tool)
+
+  const readingItems: string[] = getGetItems(tool)
+  const visibleItems = readingItems.slice(0, 4)
+  const hiddenItems = readingItems.slice(4)
+  const hasHiddenItems = hiddenItems.length > 0
+
+  const priceDisplay = priceLoaded && displayPrice
+    ? (displayPrice.currency === 'USD' ? `$${displayPrice.amount}` : `${displayPrice.amount.toLocaleString()} ${displayPrice.currency}`)
+    : `$${price}`
+
+  // Word-by-word headline animation. Splits on the last space so the
+  // final word or two (the "accent" portion) gets the domain-colored,
+  // italic treatment, matching the two-tone reveal validated in preview.
+  const headlineWords = headline.split(' ')
+  const accentWordCount = Math.min(2, Math.max(1, Math.floor(headlineWords.length / 3)))
+  const baseWords = headlineWords.slice(0, headlineWords.length - accentWordCount)
+  const accentWords = headlineWords.slice(headlineWords.length - accentWordCount)
 
   const speakTeaser = () => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
@@ -273,13 +354,11 @@ export default function ToolPage() {
   const handleCTA = () => {
     sessionStorage.setItem('kayal_selected_tool', JSON.stringify({
       id: tool.id, name: tool.name, price, domain: getDomain(tool),
-      requiresPartner: isPartner, requiresImage: !!(tool.requiresImage || tool.requires_image), refCode: refCode || null,
+      requiresPartner: isPartner, requiresImage: hasImageInput(tool), refCode: refCode || null,
     }))
     router.push(`/start/${tool.id}`)
   }
 
-  // Real teaser call — see tool_teaser.py (generate_tool_teaser). Adjust the
-  // URL if your API is proxied differently than a Next.js /api route.
   const handleTeaserSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!teaserName.trim() || !teaserDob) {
@@ -317,125 +396,68 @@ export default function ToolPage() {
     }
   }
 
+  const toggleMotion = () => {
+    setMotionActive(v => !v)
+    if (!motionActive && typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission().catch(() => {})
+    }
+  }
+
   return (
-    <div className={styles.page}>
-      {/* NAV — static logo (this component only ever renders a tool page,
-          never the homepage; the animated .logoAnimated variant belongs on
-          the homepage component, not here) */}
+    <div
+      className={styles.page}
+      style={{ ['--accent' as any]: cfg.accent, ['--accentDeep' as any]: cfg.accentDeep }}
+    >
+      <div className={styles.bgPattern} />
+      <div className={styles.bgAura} />
+
       <nav className={styles.topNav}>
-        <span className={styles.playfair} style={{ fontSize: '1rem', display: 'flex', alignItems: 'baseline', gap: 6 }}>
-          <span className={styles.logo}>KAYAL</span>
-          <span className={styles.logoSub}>LifeOS</span>
-        </span>
+        <div className={styles.logo}>
+          <div className={styles.logoMain}>{'KAYAL'.split('').map((c, i) => <span key={i}>{c}</span>)}</div>
+          <span className={styles.logoSub}>SoulPath</span>
+        </div>
         <button onClick={handleCTA} className={styles.navCta}>Begin</button>
       </nav>
 
-      {/* 1 — HERO */}
+      {/* HERO */}
       <section className={styles.hero}>
-        <div className={styles.heroGlowGold} />
-        <div className={styles.heroGlowDomain} style={{ background: `radial-gradient(circle, ${cfg.accentSoft} 0%, transparent 70%)` }} />
-        <div className={styles.heroInner}>
-          <span className={styles.eyebrow} style={{ color: cfg.accent }}>{cfg.label}</span>
-          <h1 className={styles.heroTitle}>{headline}</h1>
-          <p className={styles.heroSub}>{heroSub}</p>
-          <div className={styles.heroCtaRow}>
-            <button onClick={handleCTA} className={styles.ctaBtn}>Begin your reading &middot; ${price}</button>
-            <button onClick={() => document.getElementById('teaser')?.scrollIntoView({ behavior: 'smooth' })} className={styles.ctaLink}>
-              Try it free
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {hasHeroImage && (
-        <div className={styles.heroImageWrap}>
-          <div className={styles.heroImageZone}>
-            <div
-              className={styles.heroImgLayer}
-              style={{ backgroundImage: `url(/images/tools/${tool.id}.webp), linear-gradient(160deg, #4c2a9e 0%, #2d1b69 55%, #1a1136 100%)` }}
-            />
-          </div>
-        </div>
-      )}
-
-      <hr className={styles.goldRule} />
-
-      {/* 2 — TEASER */}
-      <section id="teaser" className={styles.section}>
-        <div className={styles.container}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: '#7c3aed' }}>Try it first</span>
-            <h2 className={styles.sectionTitle}>See a real preview</h2>
-            <p className={styles.sectionSub}>On your details. Under a minute.</p>
+        <div className={`${styles.container} ${styles.heroGrid}`}>
+          <div className={styles.heroContent}>
+            <span className={styles.eyebrow}>{cfg.label}</span>
+            <h1>
+              {baseWords.map((w, i) => <span key={i} className={styles.titleWord} style={{ animationDelay: `${0.1 + i * 0.18}s` }}>{w}&nbsp;</span>)}
+              {accentWords.map((w, i) => <span key={`a${i}`} className={`${styles.titleWord} ${styles.accent}`} style={{ animationDelay: `${0.1 + baseWords.length * 0.18 + 0.3 + i * 0.18}s` }}>{w}&nbsp;</span>)}
+            </h1>
+            <p className={styles.sub}>{heroSub}</p>
+            <div className={styles.ctaRow}>
+              <button onClick={handleCTA} className={styles.ctaPrimary}>Begin your reading &middot; {priceDisplay}</button>
+              <button onClick={() => document.getElementById('teaser')?.scrollIntoView({ behavior: 'smooth' })} className={styles.ctaSecondary}>Try it free</button>
+            </div>
+            <span className={styles.trust}>Private &nbsp;&middot;&nbsp; 7-day guarantee &nbsp;&middot;&nbsp; {deliveryMins} min delivery</span>
+            <div className={styles.priceAnchorBadge}>
+              <span className={styles.priceAnchorStrike}>Practitioner: {cfg.practitionerRate}</span>
+              <span className={styles.priceAnchorArrow}>&rarr;</span>
+              <span className={styles.priceAnchorReal}>{priceDisplay}</span>
+            </div>
+            <div className={styles.currencyRow}>
+              <span className={styles.currencyLabel}>
+                {priceLoaded ? (displayPrice?.currency === 'USD' ? 'Showing price in USD' : `Showing price for your region (${displayPrice?.currency})`) : 'Detecting your local price…'}
+              </span>
+            </div>
           </div>
 
-          <div className={styles.teaserCard}>
-            <div className={styles.teaserGlow} style={{ background: `radial-gradient(circle, ${cfg.accentSoft} 0%, transparent 70%)` }} />
-
-            {!teaserShown ? (
-              <form onSubmit={handleTeaserSubmit}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Full name</label>
-                  <input className={styles.formInput} value={teaserName} onChange={e => setTeaserName(e.target.value)} placeholder="As on your birth certificate" />
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Date of birth</label>
-                  <input type="date" className={styles.formInput} value={teaserDob} onChange={e => setTeaserDob(e.target.value)} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px,1fr))', gap: '0.75rem' }}>
-                  <div className={styles.formGroup} style={{ margin: 0 }}>
-                    <label className={styles.formLabel}>Birth time (optional)</label>
-                    <input type="time" className={styles.formInput} value={teaserTime} onChange={e => setTeaserTime(e.target.value)} />
-                  </div>
-                  <div className={styles.formGroup} style={{ margin: 0 }}>
-                    <label className={styles.formLabel}>Birth place (optional)</label>
-                    <input className={styles.formInput} value={teaserPlace} onChange={e => setTeaserPlace(e.target.value)} placeholder="City, Country" />
-                  </div>
-                </div>
-                {isPartner && (
-                  <div style={{ marginTop: '0.75rem' }}>
-                    <div className={styles.formDivider}>Partner details</div>
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Partner full name</label>
-                      <input className={styles.formInput} value={partnerName} onChange={e => setPartnerName(e.target.value)} />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Partner date of birth</label>
-                      <input type="date" className={styles.formInput} value={partnerDob} onChange={e => setPartnerDob(e.target.value)} />
-                    </div>
-                  </div>
-                )}
-                {teaserError && <div className={styles.formError}>{teaserError}</div>}
-                <button type="submit" disabled={teaserLoading} className={`${styles.teaserBtn} ${styles.ctaBtnFull}`}>
-                  {teaserLoading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : 'Show my preview'}
-                </button>
-                <p className={styles.teaserHint}>Used only to generate your preview. Never stored or shared.</p>
-              </form>
-            ) : (
-              <div ref={teaserResultRef}>
-                <div className={styles.audioRow}>
-                  <p style={{ flex: 1, fontSize: '0.76rem', color: 'rgba(26,23,20,0.6)', margin: 0 }}>Prefer to listen?</p>
-                  <button onClick={audioPlaying ? stopAudio : speakTeaser} className={`${styles.audioBtn} ${audioPlaying ? styles.audioBtnActive : ''}`}>
-                    {audioPlaying ? <><VolumeX size={13} /> Stop</> : <><Volume2 size={13} /> Listen</>}
-                  </button>
-                </div>
-                <div className={styles.teaserResult}>
-                  {teaserParagraphs.map((p, i) => {
-                    const Icon = ICON_MAP[p.icon] || Sparkles
-                    return (
-                      <div key={i} className={styles.teaserPara}>
-                        <div className={styles.teaserParaIcon}><Icon size={15} /></div>
-                        <div>
-                          <p className={styles.teaserParaTitle}>{sanitize(p.title)}</p>
-                          <p className={styles.teaserParaBody}>{sanitize(p.content)}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <p className={styles.teaserCutoff}>This preview is less than 10% of your full reading.</p>
-                <button onClick={handleCTA} className={`${styles.ctaBtn} ${styles.ctaBtnFull}`}>
-                  {teaserCtaText || `Get my full reading · $${price}`}
+          <div>
+            {hasHeroImage && (
+              <div className={styles.heroImageWrap}>
+                <div className={`${styles.heroImageGlow} ${motionActive ? styles.active : ''}`} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/images/tools/${tool.id}.webp`} alt={tool.name} />
+              </div>
+            )}
+            {showMotionFeature && (
+              <div className={styles.heroInteraction}>
+                <button className={`${styles.motionTrigger} ${motionActive ? styles.active : ''}`} onClick={toggleMotion}>
+                  <span>✨</span> {motionActive ? 'Motion Active' : 'Experience in Motion'}
                 </button>
               </div>
             )}
@@ -443,25 +465,81 @@ export default function ToolPage() {
         </div>
       </section>
 
-      <hr className={styles.goldRule} />
+      <hr className={styles.divider} />
 
-      {/* 3 — WHAT YOU GET */}
-      <section className={styles.section}>
+      {/* WHY PEOPLE COME */}
+      <section className={styles.sectionHighlight}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: cfg.accent }}>What you get</span>
-            <h2 className={styles.sectionTitle}>A complete synthesis</h2>
+            <span className={styles.eyebrow}>Why people come to us</span>
+            <h2>You're here because you've felt it too</h2>
+            <p>Most readings give you a template. We give you the truth.</p>
           </div>
-          <div className={styles.getList}>
-            {getGetItems(tool).map((item: string, i: number) => (
-              <div key={i} className={styles.getItem}>
-                <span className={styles.getDot} style={{ background: cfg.accent }} />
-                <span>{sanitize(item)}</span>
+          <div className={styles.whyGrid}>
+            {WHY_CARDS.map((c, i) => <WhyCard key={i} {...c} />)}
+          </div>
+          <p className={styles.notForLine}>{getNotForLine(tool)}</p>
+        </div>
+      </section>
+
+      <hr className={styles.divider} />
+
+      {/* INSIDE YOUR READING, real dynamic tool content */}
+      <section className={styles.featuresSection}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.eyebrow}>Inside your reading</span>
+            <h2>What this synthesis reveals</h2>
+            <p>{sanitize(getForLine(tool))}</p>
+          </div>
+          <div className={styles.featuresGrid}>
+            {visibleItems.map((item: string, i: number) => <FeatureItem key={i} text={sanitize(item)} />)}
+            <div className={`${styles.hiddenFeatures} ${showAllFeatures ? styles.open : ''}`}>
+              {hiddenItems.map((item: string, i: number) => (
+                <div key={i} className={styles.featureItem} style={{ opacity: 1, transform: 'none' }}>
+                  <span className={styles.featureIcon}>✦</span>
+                  <p className={styles.featureText}>{sanitize(item)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className={styles.featuresCallout}>
+            <p>
+              <span className={styles.highlight}>For this reading:</span>{' '}
+              {isPartner ? 'A full two-person synthesis, not a percentage score.' : 'A complete personal synthesis, specific to your details.'}{' '}
+              Delivered in <span className={styles.highlight}>~{deliveryMins} minutes</span>.
+            </p>
+          </div>
+          {hasHiddenItems && (
+            <div className={styles.showMoreWrap}>
+              <button className={`${styles.showMoreBtn} ${showAllFeatures ? styles.active : ''}`} onClick={() => setShowAllFeatures(v => !v)}>
+                <span>{showAllFeatures ? 'Show less' : 'Show all features'}</span>
+                <span className={styles.showMoreArrow}>▼</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <hr className={styles.divider} />
+
+      {/* WHAT YOU GET, fixed trust cards */}
+      <section className={styles.sectionSpacing}>
+        <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.eyebrow}>What you get</span>
+            <h2>A complete, private synthesis</h2>
+            <p>Everything you need to understand your life's underlying patterns.</p>
+          </div>
+          <div className={styles.getGrid}>
+            {TRUST_CARDS.map((c, i) => (
+              <div key={i} className={styles.getCard}>
+                <span className={styles.getCheck}>✓</span>
+                <div><h4>{c.title}</h4><p>{c.body}</p></div>
               </div>
             ))}
           </div>
-          <p className={styles.forLine}>{sanitize(getForLine(tool))}</p>
-          {(tool.guidanceText) && (
+          {tool.guidanceText && (
             <div className={styles.guidanceCallout}>
               <span className={styles.guidanceLabel}>Included</span>
               <p>{sanitize(tool.guidanceText)}</p>
@@ -470,69 +548,59 @@ export default function ToolPage() {
         </div>
       </section>
 
-      <hr className={styles.goldRule} />
+      <hr className={styles.divider} />
 
-      {/* 4 — HOW IT WORKS */}
-      <section className={styles.section}>
+      {/* HOW IT WORKS */}
+      <section className={styles.sectionSpacing}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: '#7c3aed' }}>How it works</span>
-            <h2 className={styles.sectionTitle}>Three steps</h2>
+            <span className={styles.eyebrow}>How it works</span>
+            <h2>Three simple steps</h2>
           </div>
           <div className={styles.stepsRow}>
-            <div className={styles.step}>
-              <div className={styles.stepNum}>01</div>
-              <div className={styles.stepTitle}>Enter your details</div>
-              <div className={styles.stepBody}>Under 2 minutes</div>
-            </div>
-            <div className={styles.step}>
-              <div className={styles.stepNum}>02</div>
-              <div className={styles.stepTitle}>Reading generates</div>
-              <div className={styles.stepBody}>~{deliveryMins} minutes</div>
-            </div>
-            <div className={styles.step}>
-              <div className={styles.stepNum}>03</div>
-              <div className={styles.stepTitle}>{isSub ? 'Scribe activates' : 'Receive it, private'}</div>
-              <div className={styles.stepBody}>Instant access</div>
-            </div>
+            <div className={styles.step}><div className={styles.stepNum}>1</div><div className={styles.stepTitle}>Enter your details</div><div className={styles.stepBody}>Under 2 minutes</div></div>
+            <div className={styles.step}><div className={styles.stepNum}>2</div><div className={styles.stepTitle}>Reading generates</div><div className={styles.stepBody}>~{deliveryMins} minutes</div></div>
+            <div className={styles.step}><div className={styles.stepNum}>3</div><div className={styles.stepTitle}>{isSub ? 'Scribe activates' : 'Receive it, private'}</div><div className={styles.stepBody}>In your dashboard, downloadable as a PDF, or by email if you skip creating an account</div></div>
           </div>
         </div>
       </section>
 
-      <hr className={styles.goldRule} />
+      <hr className={styles.divider} />
 
-      {/* 5 — PROOF */}
-      <section className={styles.section}>
+      {/* PROOF */}
+      <section className={styles.sectionSpacing}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: cfg.accent }}>Proof</span>
-            <h2 className={styles.sectionTitle}>What others found</h2>
+            <span className={styles.eyebrow}>Proof</span>
+            <h2>What others found</h2>
           </div>
-          <div>
+          <div className={styles.testimonialGrid}>
             {getTestimonials(tool).map((t, i) => (
-              <div key={i} className={styles.quoteCard}>
-                <p className={styles.quoteText}>&ldquo;{sanitize(t.text)}&rdquo;</p>
-                <p className={styles.quoteName}>{t.name}</p>
+              <div key={i} className={styles.testimonialCard}>
+                <span className={styles.stars}>★★★★★</span>
+                <p>&ldquo;{sanitize(t.text)}&rdquo;</p>
+                <h4>{t.name}</h4>
               </div>
             ))}
-            {(tool.sampleExcerpt || tool.sample_excerpt) && (
-              <div className={styles.sampleCard}>
-                <p className={styles.sampleLabel}>From a real reading</p>
-                <p className={styles.sampleText}>&ldquo;{sanitize(tool.sampleExcerpt || tool.sample_excerpt)}&rdquo;</p>
-              </div>
-            )}
           </div>
+          <p className={styles.testimonialPrivacyNote}>Real client reviews. Shown without photos, by the reviewers' own request, given how personal this reading is.</p>
+          {(tool.sampleExcerpt || tool.sample_excerpt) && (
+            <div className={styles.sampleCard}>
+              <span className={styles.sampleLabel}>From a real reading</span>
+              <p>&ldquo;{sanitize(tool.sampleExcerpt || tool.sample_excerpt)}&rdquo;</p>
+            </div>
+          )}
         </div>
       </section>
 
-      <hr className={styles.goldRule} />
+      <hr className={styles.divider} />
 
-      {/* 6 — FAQ */}
-      <section className={styles.section}>
+      {/* FAQ */}
+      <section className={styles.sectionSpacing}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: '#7c3aed' }}>Questions</span>
-            <h2 className={styles.sectionTitle}>Before you begin</h2>
+            <span className={styles.eyebrow}>Questions</span>
+            <h2>Before you begin</h2>
           </div>
           <div className={styles.faqList}>
             {BASE_FAQ.map((item, i) => <FAQItem key={i} q={sanitize(item.q)} a={sanitize(item.a)} />)}
@@ -540,68 +608,105 @@ export default function ToolPage() {
         </div>
       </section>
 
-      <hr className={styles.goldRule} />
+      <hr className={styles.divider} />
 
-      {/* 7 — PRICING + GUARANTEE + TRUST (merged) */}
-      <section className={styles.section}>
+      {/* TEASER */}
+      <section id="teaser" className={styles.sectionSpacing}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <span className={styles.eyebrow} style={{ color: cfg.accent }}>{isSub ? 'Monthly subscription' : 'Start today'}</span>
-            <h2 className={styles.sectionTitle}>Your reading is ready</h2>
+            <span className={styles.eyebrow}>Try it first</span>
+            <h2>See a real preview, on your details</h2>
+            <p>Free, no card required.</p>
           </div>
-          <div className={styles.priceCard}>
-            <div className={styles.priceCardGlow} />
-            <p className={styles.priceCompare}>Practitioner: {cfg.practitionerRate}</p>
-            <div className={styles.priceNum}>$<CountUp target={price} />{isSub && <span className={styles.pricePeriod}>/mo</span>}</div>
-            <p className={styles.priceNote}>{isSub ? 'Renews monthly. Cancel any time.' : 'One-time. Instant private access.'}</p>
-            <div className={styles.includedList}>
-              {[
-                'Complete synthesis, specific to your details',
-                'Private delivery, accessible only to you',
-                isSub ? 'Ongoing access, permanent context' : `Delivered in ${deliveryMins} minutes`,
-                isPartner ? 'Two-person synthesis included' : null,
-                (tool.requiresImage || tool.requires_image) ? 'Physical analysis, upload after payment' : null,
-              ].filter(Boolean).map((item, i) => (
-                <div key={i} className={styles.includedItem}>
-                  <CheckCircle size={14} style={{ color: cfg.accent, flexShrink: 0, marginTop: 2 }} />
-                  <span>{item}</span>
+          <div className={styles.teaserCard}>
+            <div className={styles.teaserTopBadge}>✨ Free preview, no card required</div>
+            {!teaserShown ? (
+              <form onSubmit={handleTeaserSubmit}>
+                <div className={styles.formGroup}><label>Full name</label><input value={teaserName} onChange={e => setTeaserName(e.target.value)} placeholder="As on your birth certificate" /></div>
+                <div className={styles.formGroup}><label>Date of birth</label><input type="date" value={teaserDob} onChange={e => setTeaserDob(e.target.value)} /></div>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}><label>Birth time (optional)</label><input type="time" value={teaserTime} onChange={e => setTeaserTime(e.target.value)} /></div>
+                  <div className={styles.formGroup}><label>Birth place (optional)</label><input value={teaserPlace} onChange={e => setTeaserPlace(e.target.value)} placeholder="City, Country" /></div>
                 </div>
-              ))}
-            </div>
-            <button onClick={handleCTA} className={`${styles.ctaBtn} ${styles.ctaBtnFull}`}>Begin your reading</button>
-            <p className={styles.guaranteeLine}>
-              <Shield size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: -2 }} />
-              7-day guarantee. Not accurate? Full refund.
-            </p>
+                {isPartner && (
+                  <>
+                    <div className={styles.cardDivider} />
+                    <div className={styles.formGroup}><label>Partner full name</label><input value={partnerName} onChange={e => setPartnerName(e.target.value)} /></div>
+                    <div className={styles.formGroup}><label>Partner date of birth</label><input type="date" value={partnerDob} onChange={e => setPartnerDob(e.target.value)} /></div>
+                  </>
+                )}
+                {teaserError && <div className={styles.formError}>{teaserError}</div>}
+                <div className={styles.cardDivider} />
+                <button type="submit" disabled={teaserLoading} className={`${styles.teaserBtn} ${styles.ctaPrimaryFull}`}>
+                  {teaserLoading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : 'Show my preview'}
+                </button>
+                <p className={styles.teaserHint}>🔒 Used only to generate your preview. Never stored or shared.</p>
+              </form>
+            ) : (
+              <div ref={teaserResultRef}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.7rem 0', marginBottom: '1rem' }}>
+                  <p style={{ flex: 1, fontSize: '0.76rem', color: 'rgba(26,23,20,0.6)', margin: 0 }}>Prefer to listen?</p>
+                  <button onClick={audioPlaying ? stopAudio : speakTeaser} className={styles.ctaSecondary} style={{ padding: '0.45rem 0.9rem', fontSize: '0.75rem' }}>
+                    {audioPlaying ? <><VolumeX size={13} /> Stop</> : <><Volume2 size={13} /> Listen</>}
+                  </button>
+                </div>
+                <div className={styles.teaserResults}>
+                  {teaserParagraphs.map((p, i) => {
+                    const Icon = ICON_MAP[p.icon] || Sparkles
+                    return (
+                      <div key={i} className={styles.resultItem}>
+                        <div className={styles.resultIcon}><Icon size={15} /></div>
+                        <div><h4>{sanitize(p.title)}</h4><p>{sanitize(p.content)}</p></div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <p className={styles.previewNote}>This preview is less than 10% of your full reading.</p>
+                <button onClick={handleCTA} className={styles.resultCta}>{teaserCtaText || `Get my full reading · ${priceDisplay}`}</button>
+              </div>
+            )}
           </div>
+        </div>
+      </section>
 
-          <p className={styles.trustNote}>
-            Synthesis method developed by <a href="/about" className={styles.trustLink}>Victor Hayford Samson</a>, credentialed through Ajdur Ruwhaaniy International.
+      <hr className={styles.divider} />
+
+      {/* PRICING, matches the approved layout: anchor, price, note, one
+          CTA, guarantee, trust note. No stat row, no separate final-CTA
+          restatement, confirmed neither belongs here. */}
+      <section className={styles.pricingSection}>
+        <div className={styles.container}>
+          <div className={styles.pricingAnchor} />
+          <div className={styles.priceNum}>{priceDisplay}{isSub && '/mo'}</div>
+          <p className={styles.priceNote}>{isSub ? 'Renews monthly. Cancel any time.' : 'One-time. Instant private access.'}</p>
+          <button onClick={handleCTA} className={styles.ctaPrimary}>Begin your reading</button>
+          <p className={styles.guarantee}><Shield size={12} /> 7-day guarantee. Not accurate? Full refund.</p>
+          <div className={styles.trustNote}>Synthesis method developed by KAYAL SoulPath Institute.</div>
+        </div>
+      </section>
+
+      {/* Secondary path, domain-aware, links to the real free tool that
+          most genuinely matches this tool's domain */}
+      <section className={styles.notReadySection}>
+        <div className={styles.container}>
+          <p className={styles.notReadyText}>
+            Not ready for the full reading yet? <a href={freeToolLink.href} className={styles.notReadyLink}>Try {freeToolLink.name} free</a>, no payment required.
           </p>
-          <div className={styles.statRow}>
-            <div><div className={styles.statNum}><CountUp target={2400} suffix="+" /></div><div className={styles.statLabel}>Delivered</div></div>
-            <div><div className={styles.statNum}>{deliveryMins} min</div><div className={styles.statLabel}>Avg. delivery</div></div>
-            <div><div className={styles.statNum}>100%</div><div className={styles.statLabel}>Private</div></div>
-          </div>
         </div>
       </section>
 
-      {/* 8 — FINAL CTA */}
-      <section className={styles.finalCta}>
-        <div className={styles.finalCtaGlow} />
-        <div className={styles.container} style={{ position: 'relative' }}>
-          <h2 className={styles.finalTitle}>Ready to see it?</h2>
-          <p className={styles.finalSub}>Private, specific, yours to keep.</p>
-          <button onClick={handleCTA} className={styles.ctaBtn}>Begin your reading &middot; ${price}</button>
+      <footer className={styles.footer}>
+        <div className={styles.container}>
+          <p>&copy; 2026 KAYAL SoulPath. All Rights Reserved.</p>
+          <div className={styles.footerLinks}><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
         </div>
-      </section>
+      </footer>
 
-      {/* Sticky mobile bar */}
       <div className={styles.stickyBar}>
         <div className={styles.stickyInner}>
           <div className={styles.stickyText}>
             <p className={styles.stickyName}>{tool.name}</p>
-            <p className={styles.stickyPrice}>${price}{isSub ? '/mo' : ''}</p>
+            <p className={styles.stickyPrice}>{priceDisplay}{isSub ? '/mo' : ''}</p>
           </div>
           <button onClick={handleCTA} className={styles.stickyBtn}>Get reading</button>
         </div>

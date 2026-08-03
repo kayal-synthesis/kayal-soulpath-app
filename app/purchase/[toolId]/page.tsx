@@ -110,6 +110,14 @@ export default function PurchasePage() {
   const [partnerDob,  setPartnerDob]  = useState('')
   const [dominantHand, setDominantHand] = useState<'right' | 'left'>('right')
 
+  // Specific to relocation-power-map only, optional, up to two places the
+  // person is actually considering, so the reading can compare each
+  // against their pattern directly rather than only covering where they
+  // currently live.
+  const [candidateCity1, setCandidateCity1] = useState('')
+  const [candidateCity2, setCandidateCity2] = useState('')
+  const isRelocationTool = tool?.id === 'relocation-power-map'
+
   const [couponCode,       setCouponCode]       = useState('WELCOME20')
   const [appliedCoupon,    setAppliedCoupon]    = useState<any>(null)
   const [couponError,      setCouponError]      = useState('')
@@ -290,6 +298,8 @@ export default function PurchasePage() {
     form.append('user_token',    loggedInUser?.id || getDeviceId())
     if (userBirthTime) form.append('birth_time',     userBirthTime)
     if (userBirthLoc)  form.append('birth_location', userBirthLoc)
+    if (candidateCity1) form.append('candidate_city_1', candidateCity1)
+    if (candidateCity2) form.append('candidate_city_2', candidateCity2)
     if (partnerName)   form.append('partner_name',   partnerName)
     if (partnerDob)    form.append('partner_dob',    partnerDob)
     if (email)         form.append('email',          email)
@@ -674,6 +684,35 @@ export default function PurchasePage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Candidate cities, relocation-power-map only, entirely
+                    optional. Without these the reading still evaluates the
+                    person's current location, this just lets the reading
+                    also compare specific places they're genuinely weighing. */}
+                {isRelocationTool && (
+                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
+                    <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
+                      Considering Moving Somewhere? (Optional)
+                    </label>
+                    <p className="text-xs text-neutral-400 mb-3">
+                      Name up to two places you're actually weighing, and your reading will compare each one directly against your pattern, not just cover where you live now.
+                    </p>
+                    <input
+                      type="text"
+                      value={candidateCity1}
+                      onChange={e => setCandidateCity1(e.target.value)}
+                      placeholder="City, Country (e.g. Lisbon, Portugal)"
+                      className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-base focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 bg-white mb-2"
+                    />
+                    <input
+                      type="text"
+                      value={candidateCity2}
+                      onChange={e => setCandidateCity2(e.target.value)}
+                      placeholder="Second city, optional"
+                      className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-base focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 bg-white"
+                    />
+                  </div>
+                )}
 
                 {/* Email, required for guest checkout, since without a saved
                     email there is no way to know where to send the finished

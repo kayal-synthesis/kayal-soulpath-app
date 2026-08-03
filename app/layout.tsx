@@ -12,9 +12,59 @@ export const viewport = {
   maximumScale: 1,
 }
 
+// metadataBase was missing entirely. Without it, Next.js has to guess how
+// to resolve relative URLs used in openGraph.images, alternates.canonical,
+// and similar, and in production that guess can silently resolve to the
+// wrong host, in some setups even localhost. This is the single most
+// likely reason app.kayalsoulpath.com's real content was never properly
+// represented to crawlers, everything below this line depends on it
+// being correct.
+const metadataBase = new URL('https://app.kayalsoulpath.com')
+
 export const metadata: Metadata = {
-  title: 'KAYAL LifeOS',
-  description: 'Self-discovery platform by Kayal Soulpath Institute',
+  metadataBase,
+  title: {
+    default:  'KAYAL LifeOS | Numerology & Astrology Readings',
+    template: '%s | KAYAL LifeOS',
+  },
+  description: 'Discover your Soul Blueprint through numerology, astrology, and physiognomy. Personalized readings built from your exact birth data, name, and face.',
+  robots: {
+    // Explicit rather than relying on Next.js defaults, since indexing
+    // this app was confirmed as genuinely wanted, not incidental.
+    index:  true,
+    follow: true,
+    googleBot: {
+      index:  true,
+      follow: true,
+    },
+  },
+  alternates: {
+    canonical: 'https://app.kayalsoulpath.com',
+  },
+  openGraph: {
+    title:       'KAYAL LifeOS | Numerology & Astrology Readings',
+    description: 'Discover your Soul Blueprint through numerology, astrology, and physiognomy, personalized readings built from your exact birth data.',
+    url:         'https://app.kayalsoulpath.com',
+    siteName:    'KAYAL LifeOS',
+    type:        'website',
+    images: [
+      {
+        // Resolves against metadataBase above, since public/images/tools/
+        // maps directly to the /images/tools/ URL path in Next.js.
+        // Width/height deliberately omitted, real dimensions weren't
+        // confirmed, and most platforms auto-detect the actual size from
+        // the file rather than trusting declared values anyway.
+        url: '/images/tools/the_Calling.webp',
+        alt: 'KAYAL LifeOS',
+      },
+    ],
+  },
+  twitter: {
+    card:        'summary_large_image',
+    title:       'KAYAL LifeOS | Numerology & Astrology Readings',
+    description: 'Discover your Soul Blueprint through numerology, astrology, and physiognomy, personalized readings built from your exact birth data.',
+    images: ['/images/tools/the_Calling.webp'],
+  },
   icons: {
     icon:     '/favicon.svg',
     shortcut: '/favicon.svg',
@@ -52,7 +102,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         CSS variables, so they are unaffected by this class.
 
         The grain texture and mineral dark background are applied by ToolShell
-        directly on its wrapper div — NOT on body — so your light marketing
+        directly on its wrapper div, NOT on body, so your light marketing
         pages remain completely clean.
       */}
       <body className={inter.className}>
