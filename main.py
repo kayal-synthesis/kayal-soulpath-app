@@ -128,7 +128,7 @@ except ImportError as _ne_err:
     print(f"⚠️  numerology_engine / numerology_reader not importable: {_ne_err}")
 
 try:
-    from synthesis.astrology_engine import compute_western
+    from synthesis.astrology_engine import compute_western, compute_astrocartography, evaluate_astrocartography_location
     from synthesis.logic.astrology_selector import select_systems
     _ASTROLOGY_AVAILABLE = True
 except ImportError as _ae_err:
@@ -2184,6 +2184,8 @@ def process_reading_job(
     palm_bytes_left:   Optional[bytes] = None,
     palm_bytes_right:  Optional[bytes] = None,
     dominant_hand:     Optional[str] = None,
+    candidate_city_1:  Optional[str] = None,
+    candidate_city_2:  Optional[str] = None,
 ):
     print(f"🚀 Starting job {job_id} for tool '{tool_id}'")
     conn = get_db_connection(); cur = conn.cursor()
@@ -2434,13 +2436,89 @@ def process_reading_job(
         if hasattr(logic_result, "error"):
             raise RuntimeError(f"Logic engine error: {logic_result.error}")
 
+        # ── Astrocartography, relocation-power-map only ──────────────────────────────
+        # present_geo falls back to birth_geo when IP-based geolocation was
+        # unavailable or failed (see the current_location handling earlier in
+        # this function). In that fallback case present and birth coordinates
+        # are identical, evaluating "current location" against them would be
+        # meaningless, not just imprecise, so the current-location check
+        # specifically only runs when present_geo is genuinely distinct from
+        # birth_geo. Candidate cities are independent of this and still get
+        # evaluated even when the current-location check is skipped.
+        #
+        # Worth being honest about even when it does run: current_location
+        # comes from IP-based geolocation (geolocate_ip), not a confirmed
+        # home address. That is a real accuracy limit for a reading that
+        # specifically claims to evaluate "your current place", VPNs, mobile
+        # carriers, and corporate networks can all report a city that is not
+        # actually where someone lives. The 3-degree orb below is deliberately
+        # a full degree wider than evaluate_astrocartography_location()'s own
+        # 2-degree default specifically to absorb some of that real-world
+        # imprecision, not an arbitrary choice. Candidate cities, entered by
+        # the person directly rather than inferred from an IP, do not carry
+        # that same uncertainty, but use the same orb for consistency across
+        # every location evaluated in a single reading.
+        astrocartography_data = None
+        if tool_id == 'relocation-power-map' and _ASTROLOGY_AVAILABLE:
+            try:
+                # Computed once, regardless of how many locations get
+                # checked against it, this is the whole reason
+                # compute_astrocartography() and evaluate_astrocartography_location()
+                # were built as two separate functions.
+                astro_lines = compute_astrocartography(
+                    bd.day, bd.month, bd.year, hour, birth_geo.utc_offset,
+                )
+
+                current_active = None
+                same_point = (
+                    round(present_geo.latitude, 4)  == round(birth_geo.latitude, 4) and
+                    round(present_geo.longitude, 4) == round(birth_geo.longitude, 4)
+                )
+                if not same_point:
+                    current_active = evaluate_astrocartography_location(
+                        lat=present_geo.latitude, lon=present_geo.longitude,
+                        astro_lines=astro_lines, orb_degrees=3.0,
+                    )
+                else:
+                    print(f"⚠️ Job {job_id}: no distinct current location captured, skipping current-location evaluation")
+
+                candidates_active = []
+                for candidate_name in [candidate_city_1, candidate_city_2]:
+                    if not candidate_name:
+                        continue
+                    if not _GEO_AVAILABLE:
+                        continue
+                    try:
+                        cand_raw = geocode_birth_location(candidate_name)
+                        cand_geo = _build_geo_location(cand_raw)
+                        cand_active = evaluate_astrocartography_location(
+                            lat=cand_geo.latitude, lon=cand_geo.longitude,
+                            astro_lines=astro_lines, orb_degrees=3.0,
+                        )
+                        candidates_active.append({
+                            "city":         cand_geo.city or candidate_name,
+                            "active_lines": cand_active,
+                        })
+                    except Exception as e:
+                        print(f"⚠️ Job {job_id}: geocoding/evaluation failed for candidate '{candidate_name}': {e}")
+
+                if current_active is not None or candidates_active:
+                    astrocartography_data = {
+                        "current_city":  present_geo.city or present_geo.place_name,
+                        "active_lines":  current_active or [],
+                        "candidates":    candidates_active,
+                    }
+            except Exception as e:
+                print(f"⚠️ Job {job_id}: astrocartography computation failed: {e}")
+
         tool_catalog_data = _get_tool_catalog_data(tool_id)
         tool_payload = {
             **logic_result.to_dict(),
-            "tool_id":      tool_id,
-            "tool_name":    tool_catalog_data["name"],
-            "tool_price":   tool_catalog_data["price"],
-            "what_you_get": tool_catalog_data["what_you_get"],
+            "tool_id":            tool_id,
+            "tool_name":          tool_catalog_data["name"],
+            "tool_price":         tool_catalog_data["price"],
+            "what_you_get":       tool_catalog_data["what_you_get"],
+            "astrocartography":   astrocartography_data,
         }
         narration = narrate_tool(tool_payload, use_opus=False)
 
@@ -2517,6 +2595,8 @@ async def submit_reading(
     dominant_hand:    Optional[str]        = Form(None),
     user_question:    Optional[str]        = Form(None),
     gender:           Optional[str]        = Form(None),
+    candidate_city_1: Optional[str]        = Form(None),
+    candidate_city_2: Optional[str]        = Form(None),
 ):
     client_ip        = get_client_ip(request)
     current_location = geolocate_ip(client_ip)
@@ -2554,6 +2634,8 @@ async def submit_reading(
         palm_bytes_left   = palm_bytes_left,
         palm_bytes_right  = palm_bytes_right,
         dominant_hand     = dominant_hand,
+        candidate_city_1  = candidate_city_1,
+        candidate_city_2  = candidate_city_2,
     )
     return {"job_id": job_id, "status": "pending"}
 

@@ -309,7 +309,64 @@ def _build_shared_context(payload: Dict) -> str:
     if journey:         parts.append(f"[Journey]\n{journey}")
     if overall_theme:   parts.append(f"[Overall Theme]\n{overall_theme}")
 
+    # ── Astrocartography, relocation-power-map only ──────────────────────
+    # active_lines from main.py's evaluate_astrocartography_location() is
+    # raw astronomical data (planet name, line type MC/IC/AC/DC, orb,
+    # domains). None of that vocabulary is safe to feed into a prompt
+    # directly, planet names and line-type labels are exactly the kind of
+    # methodology exposure this whole system exists to avoid. What the
+    # model actually needs is which life domains carry a real signal at
+    # each location, nothing about how that was calculated.
+    def _summarize_location_signal(city: str, active_lines: List[Dict]) -> str:
+        if active_lines:
+            domains_seen: List[str] = []
+            for line in active_lines:
+                for d in line.get("domains", []):
+                    if d not in domains_seen:
+                        domains_seen.append(d)
+            domain_phrase = ", ".join(d.replace("_", " ") for d in domains_seen[:5])
+            strength = "a strong" if len(active_lines) >= 3 else "a real"
+            return (
+                f"{city}: carries {strength} astronomical signal connected "
+                f"specifically to: {domain_phrase}."
+            )
+        return (
+            f"{city}: shows no notably strong astronomical signal in either "
+            f"direction, a relatively neutral place for this person, neither "
+            f"working strongly for them nor against them. This is a real, "
+            f"honest finding, reflect it plainly rather than inventing a "
+            f"stronger signal than is actually present."
+        )
+
+    astro_data = payload.get("astrocartography")
+    if astro_data:
+        current_city    = astro_data.get("current_city", "this location")
+        current_lines   = astro_data.get("active_lines", [])
+        candidates      = astro_data.get("candidates", [])
+
+        location_summaries = [_summarize_location_signal(current_city, current_lines)]
+        for cand in candidates:
+            location_summaries.append(
+                _summarize_location_signal(cand.get("city", "the candidate city"), cand.get("active_lines", []))
+            )
+
+        if candidates:
+            parts.append(
+                f"[Location Signal, Comparison]\n"
+                + "\n".join(location_summaries) +
+                f"\n\nThe person is directly weighing these specific places against "
+                f"each other, not just asking about their current location in "
+                f"isolation. Compare them honestly, if one genuinely carries a "
+                f"stronger signal for what this person actually needs, say so "
+                f"plainly, do not artificially balance the comparison if the real "
+                f"signals are not actually balanced."
+            )
+        else:
+            parts.append(f"[Location Signal]\n{location_summaries[0]}\n\nFactor this directly into whether this place is working with or against their pattern, and what that means for staying, adjusting their relationship to this place, or considering a move.")
+
     return "\n\n".join(parts)
+
+
 
 
 def narrate_tool(
@@ -825,6 +882,19 @@ _METHODOLOGY_STRIP_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\b(as an?|typical of|being an?)\s+(Aries|Taurus|Gemini|Cancer|Leo|Virgo|Libra|Scorpio|Sagittarius|Capricorn|Aquarius|Pisces)s?\b', re.IGNORECASE), "with this specific placement"),
     (re.compile(r'\b[Cc]haldean\b'), "this cross-check"),
     (re.compile(r'\b[Kk]armic\s+[Dd]ebt\s+[Nn]umber\s+\d+\b'), "this karmic pattern"),
+    # Astrocartography-specific, added alongside relocation-power-map. The
+    # shared context passed into the prompt is already translated into
+    # plain language before the model ever sees it (see
+    # _build_shared_context()'s astrocartography block), so these exist as
+    # a genuine safety net, in case the model surfaces this vocabulary on
+    # its own from training data, not because raw line-type labels are
+    # ever deliberately fed into a prompt.
+    (re.compile(r'\b(MC|IC|AC|DC)\s+line\b', re.IGNORECASE), "this signal"),
+    (re.compile(r'\b(Midheaven|Ascendant|Descendant|Imum\s+Coeli)\s+line\b', re.IGNORECASE), "this signal"),
+    (re.compile(r'\b(Sun|Moon|Mercury|Venus|Mars|Jupiter|Saturn|Uranus|Neptune|Pluto|Rahu)\s+line\b'), "this signal"),
+    (re.compile(r'\b[Aa]strocartography\b'), "this location reading"),
+    (re.compile(r'\b(relocation|relocated)\s+chart\b', re.IGNORECASE), "this reading"),
+    (re.compile(r'\bplanetary\s+lines?\b', re.IGNORECASE), "location signals"),
 ]
 
 
