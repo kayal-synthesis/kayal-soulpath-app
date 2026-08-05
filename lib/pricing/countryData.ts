@@ -73,21 +73,43 @@ export const COUNTRY_DATA: Record<string, CountryPricing> = {
   ZM: { currency: 'ZMW', isAfrican: true }, // Zambia
   ZW: { currency: 'ZWL', isAfrican: true }, // Zimbabwe
 
-  // ── Rest of world, a starting set, extend as needed, all full price ──
+  // ── Rest of world, expanded from the original 16-country starting
+  // set after a real visitor (Kuala Lumpur) hit a country that wasn't
+  // covered at all, not exhaustive, but meaningfully broader now,
+  // covering every major region rather than just North America/Europe. ──
   US: { currency: 'USD', isAfrican: false },
   GB: { currency: 'GBP', isAfrican: false },
   CA: { currency: 'CAD', isAfrican: false },
   AU: { currency: 'AUD', isAfrican: false },
+  NZ: { currency: 'NZD', isAfrican: false },
   DE: { currency: 'EUR', isAfrican: false },
   FR: { currency: 'EUR', isAfrican: false },
   ES: { currency: 'EUR', isAfrican: false },
   IT: { currency: 'EUR', isAfrican: false },
   IE: { currency: 'EUR', isAfrican: false },
   NL: { currency: 'EUR', isAfrican: false },
-  IN: { currency: 'INR', isAfrican: false },
-  PH: { currency: 'PHP', isAfrican: false },
+  MY: { currency: 'MYR', isAfrican: false }, // Malaysia
   SG: { currency: 'SGD', isAfrican: false },
-  NZ: { currency: 'NZD', isAfrican: false },
+  TH: { currency: 'THB', isAfrican: false },
+  ID: { currency: 'IDR', isAfrican: false },
+  PH: { currency: 'PHP', isAfrican: false },
+  VN: { currency: 'VND', isAfrican: false },
+  JP: { currency: 'JPY', isAfrican: false },
+  KR: { currency: 'KRW', isAfrican: false },
+  CN: { currency: 'CNY', isAfrican: false },
+  HK: { currency: 'HKD', isAfrican: false },
+  TW: { currency: 'TWD', isAfrican: false },
+  IN: { currency: 'INR', isAfrican: false },
+  PK: { currency: 'PKR', isAfrican: false },
+  BD: { currency: 'BDT', isAfrican: false },
+  AE: { currency: 'AED', isAfrican: false },
+  SA: { currency: 'SAR', isAfrican: false },
+  IL: { currency: 'ILS', isAfrican: false },
+  TR: { currency: 'TRY', isAfrican: false },
+  BR: { currency: 'BRL', isAfrican: false },
+  MX: { currency: 'MXN', isAfrican: false },
+  AR: { currency: 'ARS', isAfrican: false },
+  CO: { currency: 'COP', isAfrican: false },
   JM: { currency: 'JMD', isAfrican: false },
   TT: { currency: 'TTD', isAfrican: false },
 }

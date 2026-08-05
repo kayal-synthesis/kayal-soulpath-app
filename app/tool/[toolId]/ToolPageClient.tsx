@@ -250,6 +250,32 @@ export function ToolPageClient({ tool }: { tool: any }) {
   // correct while validating this in the standalone preview.
   const [displayPrice, setDisplayPrice] = useState<{ amount: number; currency: string } | null>(null)
   const [priceLoaded, setPriceLoaded] = useState(false)
+  const [showCurrencyOverride, setShowCurrencyOverride] = useState(false)
+
+  // Real fallback for when auto-detection is wrong or unavailable,
+  // matches the full country list in lib/pricing/countryData.ts exactly,
+  // not a shortened example set, since a shortened list was confirmed
+  // to leave out real visitors, Malaysia specifically.
+  const COUNTRY_NAMES: Record<string, string> = {
+    DZ:'Algeria', AO:'Angola', BJ:'Benin', BW:'Botswana', BF:'Burkina Faso', BI:'Burundi',
+    CV:'Cabo Verde', CM:'Cameroon', CF:'Central African Republic', TD:'Chad', KM:'Comoros',
+    CG:'Congo (Republic)', CD:'Congo (DRC)', DJ:'Djibouti', EG:'Egypt', GQ:'Equatorial Guinea',
+    ER:'Eritrea', SZ:'Eswatini', ET:'Ethiopia', GA:'Gabon', GM:'Gambia', GH:'Ghana', GN:'Guinea',
+    GW:'Guinea-Bissau', CI:'Ivory Coast', KE:'Kenya', LS:'Lesotho', LR:'Liberia', LY:'Libya',
+    MG:'Madagascar', MW:'Malawi', ML:'Mali', MR:'Mauritania', MU:'Mauritius', MA:'Morocco',
+    MZ:'Mozambique', NA:'Namibia', NE:'Niger', NG:'Nigeria', RW:'Rwanda',
+    ST:'Sao Tome and Principe', SN:'Senegal', SC:'Seychelles', SL:'Sierra Leone', SO:'Somalia',
+    ZA:'South Africa', SS:'South Sudan', SD:'Sudan', TZ:'Tanzania', TG:'Togo', TN:'Tunisia',
+    UG:'Uganda', ZM:'Zambia', ZW:'Zimbabwe',
+    US:'United States', GB:'United Kingdom', CA:'Canada', AU:'Australia', NZ:'New Zealand',
+    DE:'Germany', FR:'France', ES:'Spain', IT:'Italy', IE:'Ireland', NL:'Netherlands',
+    MY:'Malaysia', SG:'Singapore', TH:'Thailand', ID:'Indonesia', PH:'Philippines',
+    VN:'Vietnam', JP:'Japan', KR:'South Korea', CN:'China', HK:'Hong Kong', TW:'Taiwan',
+    IN:'India', PK:'Pakistan', BD:'Bangladesh', AE:'United Arab Emirates', SA:'Saudi Arabia',
+    IL:'Israel', TR:'Turkey', BR:'Brazil', MX:'Mexico', AR:'Argentina', CO:'Colombia',
+    JM:'Jamaica', TT:'Trinidad and Tobago',
+  }
+  const countryOptions = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1]))
 
   useEffect(() => { window.scrollTo(0, 0) }, [])
 
@@ -273,6 +299,17 @@ export function ToolPageClient({ tool }: { tool: any }) {
       .catch(() => setDisplayPrice({ amount: tool.price, currency: 'USD' }))
       .finally(() => setPriceLoaded(true))
   }, [tool?.price])
+
+  // Manual override, uses the exact same real endpoint auto-detect
+  // does, route.ts already supports the ?country= param, this was
+  // never actually wired to anything in the UI until now.
+  const applyCountryOverride = (code: string) => {
+    if (!tool?.price) return
+    fetch(`/api/pricing/localize?basePrice=${tool.price}&country=${code}`)
+      .then(res => res.json())
+      .then(data => setDisplayPrice({ amount: data.amount, currency: data.currency }))
+      .catch(() => {})
+  }
 
   useEffect(() => {
     if (teaserShown && teaserResultRef.current) {
@@ -416,7 +453,24 @@ export function ToolPageClient({ tool }: { tool: any }) {
               <span className={styles.currencyLabel}>
                 {priceLoaded ? (displayPrice?.currency === 'USD' ? 'Showing price in USD' : `Showing price for your region (${displayPrice?.currency})`) : 'Detecting your local price…'}
               </span>
+              <button className={styles.currencyChangeLink} onClick={() => setShowCurrencyOverride(v => !v)}>
+                Not right? Change it
+              </button>
             </div>
+            {showCurrencyOverride && (
+              <div className={styles.currencyOverrideWrap}>
+                <select
+                  className={styles.currencySelect}
+                  defaultValue=""
+                  onChange={e => { if (e.target.value) applyCountryOverride(e.target.value) }}
+                >
+                  <option value="" disabled>Select your country</option>
+                  {countryOptions.map(([code, name]) => (
+                    <option key={code} value={code}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div>
