@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid or missing basePrice' }, { status: 400 })
   }
 
-  const countryCode = countryOverride || getCountryFromRequest(request)
+  const countryCode = countryOverride || await getCountryFromRequest(request)
   const result = await localizePrice(basePriceUsd, countryCode)
 
   return NextResponse.json({ ...result, detectedCountry: countryCode })
