@@ -852,7 +852,7 @@ export default function PurchasePage() {
                     </div>
                   </div>
                   <p className="text-xs text-neutral-400 mt-3 text-center">
-                    Stripe coming soon, no card will be charged
+                    Test mode — no card will be charged
                   </p>
                 </div>
 
