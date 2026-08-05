@@ -226,8 +226,7 @@
 .priceNum { font-family:'Playfair Display',serif; font-size:clamp(2.2rem,4vw,3.5rem); font-weight:700; color:#1a1714; line-height:1; }
 .priceNote { font-size:0.95rem; color:#6b6560; margin-top:0.3rem; margin-bottom:1.5rem; }
 .guarantee { font-size:0.75rem; color:rgba(26,23,20,0.4); margin-top:1.5rem; display:flex; align-items:center; justify-content:center; gap:6px; }
-.trustNote { text-align:center; font-size:0.8rem; color:#4a4036; letter-spacing:0.02em; max-width:600px; margin:2rem auto 0; line-height:1.6; }
-.trustLink { color:var(--accentDeep); font-weight:700; text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+/* trustNote removed, the footer already has a better version of this */
 
 .notReadySection { padding:1.5rem 0; text-align:center; }
 .notReadyText { font-size:0.82rem; color:#6b6560; }

@@ -136,15 +136,21 @@ const getNotForLine = (tool: any) => NOT_FOR_LINES[getDomain(tool)] ?? NOT_FOR_L
 // voice) don't have an equally strong free-tool counterpart yet, so they
 // fall back to the closest reasonable option, this is flagged here
 // honestly rather than presented as an equally solid match.
+// Absolute URLs, deliberately, not relative paths. This component runs
+// on app.kayalsoulpath.com, but the free tools live on the separate
+// marketing site, kayalsoulpath.com. A relative href like
+// "/pages/tool-life-blueprint.html" resolves against whatever domain
+// the browser is currently on, which is the app, not the marketing
+// site, and 404s every time, confirmed live, not just theoretical.
 const FREE_TOOL_LINKS: Record<string, { name: string; href: string }> = {
-  love:            { name:'Compatibility Blueprint', href:'/pages/tool-compatibility.html' },       // confirmed strong match
-  'life-path':     { name:'Life Blueprint',           href:'/pages/tool-life-blueprint.html' },      // confirmed strong match
-  wellness:        { name:'Vitality Blueprint',       href:'/pages/tool-body-energy.html' },         // confirmed strong match
-  'time-keeper':   { name:'Universal Day',            href:'/pages/tool-universal-day.html' },       // confirmed strong match
-  'oracle-temple': { name:'Life Blueprint',           href:'/pages/tool-life-blueprint.html' },      // fallback, no direct Omni-Seer free tool exists yet
-  wealth:          { name:'Life Blueprint',           href:'/pages/tool-life-blueprint.html' },      // fallback, no wealth-specific free tool exists yet
-  'sacred-script': { name:'Name Vibration',           href:'/pages/tool-name-vibration.html' },      // weaker fallback, name-based but not a direct thematic match
-  voice:           { name:'Vitality Blueprint',       href:'/pages/tool-body-energy.html' },         // weaker fallback, no voice-specific free tool exists yet
+  love:            { name:'Compatibility Blueprint', href:'https://kayalsoulpath.com/pages/tool-compatibility.html' },       // confirmed strong match
+  'life-path':     { name:'Life Blueprint',           href:'https://kayalsoulpath.com/pages/tool-life-blueprint.html' },      // confirmed strong match
+  wellness:        { name:'Vitality Blueprint',       href:'https://kayalsoulpath.com/pages/tool-body-energy.html' },         // confirmed strong match
+  'time-keeper':   { name:'Universal Day',            href:'https://kayalsoulpath.com/pages/tool-universal-day.html' },       // confirmed strong match
+  'oracle-temple': { name:'Life Blueprint',           href:'https://kayalsoulpath.com/pages/tool-life-blueprint.html' },      // fallback, no direct Omni-Seer free tool exists yet
+  wealth:          { name:'Life Blueprint',           href:'https://kayalsoulpath.com/pages/tool-life-blueprint.html' },      // fallback, no wealth-specific free tool exists yet
+  'sacred-script': { name:'Name Vibration',           href:'https://kayalsoulpath.com/pages/tool-name-vibration.html' },      // weaker fallback, name-based but not a direct thematic match
+  voice:           { name:'Vitality Blueprint',       href:'https://kayalsoulpath.com/pages/tool-body-energy.html' },         // weaker fallback, no voice-specific free tool exists yet
 }
 const getFreeToolLink = (tool: any) => FREE_TOOL_LINKS[getDomain(tool)] ?? FREE_TOOL_LINKS['oracle-temple']
 
@@ -651,7 +657,6 @@ export function ToolPageClient({ tool }: { tool: any }) {
           <p className={styles.priceNote}>{isSub ? 'Renews monthly. Cancel any time.' : 'One-time. Instant private access.'}</p>
           <button onClick={handleCTA} className={styles.ctaPrimary}>Begin your reading</button>
           <p className={styles.guarantee}><Shield size={12} /> 7-day guarantee. Not accurate? Full refund.</p>
-          <div className={styles.trustNote}>Synthesis method developed by KAYAL SoulPath Institute.</div>
         </div>
       </section>
 
@@ -660,7 +665,7 @@ export function ToolPageClient({ tool }: { tool: any }) {
       <section className={styles.notReadySection}>
         <div className={styles.container}>
           <p className={styles.notReadyText}>
-            Not ready for the full reading yet? <a href={freeToolLink.href} className={styles.notReadyLink}>Try {freeToolLink.name} free</a>, no payment required.
+            Not ready for the full reading yet? <a href={freeToolLink.href} target="_blank" rel="noopener noreferrer" className={styles.notReadyLink}>Try {freeToolLink.name} free</a>, no payment required.
           </p>
         </div>
       </section>
