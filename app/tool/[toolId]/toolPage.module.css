@@ -87,9 +87,7 @@
 .priceAnchorArrow { color:var(--accent); }
 .priceAnchorReal { color:var(--accentDeep); font-weight:700; }
 
-.currencyRow { margin-top:0.6rem; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px 10px; }
-.currencyLabel { font-size:0.68rem; color:rgba(26,23,20,0.4); }
-/* Manual currency override removed, auto-detect only for now */
+/* Currency status line removed too, the price itself (which already reflects auto-detected currency) is the only thing shown now */
 
 .heroImageWrap { position:relative; width:100%; height:460px; border-radius:16px; overflow:hidden; background:linear-gradient(160deg,var(--accent) 0%,var(--accentDeep) 45%,#2d1b69 100%); box-shadow:0 12px 40px rgba(26,23,20,0.06); transition:transform 0.3s ease-out; }
 .heroImage { width:100%; height:100%; object-fit:cover; display:block; animation:kenBurns 24s ease-in-out infinite alternate; }

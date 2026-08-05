@@ -413,11 +413,6 @@ export function ToolPageClient({ tool }: { tool: any }) {
               <span className={styles.priceAnchorArrow}>&rarr;</span>
               <span className={styles.priceAnchorReal}>{priceDisplay}</span>
             </div>
-            <div className={styles.currencyRow}>
-              <span className={styles.currencyLabel}>
-                {priceLoaded ? (displayPrice?.currency === 'USD' ? 'Showing price in USD' : `Showing price for your region (${displayPrice?.currency})`) : 'Detecting your local price…'}
-              </span>
-            </div>
           </div>
 
           <div>
