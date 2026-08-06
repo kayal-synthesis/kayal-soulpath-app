@@ -1290,19 +1290,28 @@ async def health():
     except Exception as e:
         status["supabase"] = {"status": "error", "detail": str(e)}
 
-    anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
     if not anthropic_key:
         status["anthropic"] = {"status": "missing", "detail": "ANTHROPIC_API_KEY not set — narration will fail"}
         overall_ok = False
-    elif not anthropic_key.startswith("sk-ant-"):
+    elif not anthropic_key.startswith("sk-ant-") and not anthropic_key.startswith("sk-"):
         status["anthropic"] = {"status": "invalid_key_format"}
         overall_ok = False
     else:
-        status["anthropic"] = {
-            "status":       "key_present",
-            "model_haiku":  "claude-haiku-4-5-20251001",
-            "model_sonnet": "claude-sonnet-4-6",
-        }
+        import os as _os
+        _using_deepseek = bool(_os.environ.get("DEEPSEEK_API_KEY")) and not _os.environ.get("ANTHROPIC_API_KEY")
+        if _using_deepseek:
+            status["anthropic"] = {
+                "status":  "key_present",
+                "model":   "deepseek-chat",
+                "provider":"DeepSeek V4",
+            }
+        else:
+            status["anthropic"] = {
+                "status":       "key_present",
+                "model_haiku":  "claude-haiku-4-5-20251001",
+                "model_sonnet": "claude-sonnet-4-6",
+            }
 
     try:
         import swisseph as swe
