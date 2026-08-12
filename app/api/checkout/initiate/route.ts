@@ -2,14 +2,14 @@
 //
 // The purchase page calls this instead of calling savePurchase()
 // directly. This creates a pending_checkouts record, initiates payment
-// with Flutterwave, and returns a redirect link. Nothing about the
+// with Stripe, and returns a redirect link. Nothing about the
 // actual purchase, the commission, the reading job's real generation, is
 // created or triggered from here, all of that waits for the webhook to
 // confirm the charge actually completed.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { initiateCheckout } from '@/lib/flutterwave/checkout'
+import { initiateCheckout } from '@/lib/stripe/checkout'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
