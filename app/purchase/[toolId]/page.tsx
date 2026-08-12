@@ -353,8 +353,8 @@ export default function PurchasePage() {
       const newJobId = await submitReadingJob()
 
       // This no longer creates the purchase or credits anything, it only
-      // starts a real Flutterwave checkout session. The purchase itself
-      // only gets created once Flutterwave's webhook confirms the charge
+      // starts a real Stripe checkout session. The purchase itself
+      // only gets created once Stripe's webhook confirms the charge
       // actually completed, never from this client-side call directly.
       const initResponse = await fetch('/api/checkout/initiate', {
         method:  'POST',
@@ -380,7 +380,7 @@ export default function PurchasePage() {
         throw new Error(initData.error || 'Could not start checkout, please try again.')
       }
 
-      // Real redirect to Flutterwave's hosted payment page, this is
+      // Real redirect to Stripe's hosted payment page, this is
       // where the customer actually enters payment details, never on
       // this site.
       window.location.href = initData.paymentLink
@@ -809,51 +809,6 @@ export default function PurchasePage() {
                       </AnimatePresence>
                     </div>
                   )}
-                </div>
-
-                {/* Demo Payment */}
-                <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Lock className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <p className="text-sm font-semibold text-neutral-700">Secure Payment</p>
-                    <span className="ml-auto text-xs text-neutral-400 bg-neutral-100 px-2.5 py-1 rounded-full">
-                      Demo Mode
-                    </span>
-                  </div>
-                  <div className="space-y-3 opacity-60 pointer-events-none">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1.5">Card Number</label>
-                      <input
-                        type="text"
-                        value="4242 4242 4242 4242"
-                        readOnly
-                        className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm bg-neutral-50"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-neutral-500 mb-1.5">Expiry</label>
-                        <input
-                          type="text"
-                          value="12/25"
-                          readOnly
-                          className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm bg-neutral-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-neutral-500 mb-1.5">CVV</label>
-                        <input
-                          type="text"
-                          value="123"
-                          readOnly
-                          className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm bg-neutral-50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-neutral-400 mt-3 text-center">
-                    Test mode — no card will be charged
-                  </p>
                 </div>
 
                 {/* Trust Signals */}
