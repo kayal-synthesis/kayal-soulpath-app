@@ -407,14 +407,6 @@ export default function PurchasePage() {
             <span className="text-sm font-semibold text-neutral-800 truncate max-w-[160px]">
               {tool.name}
             </span>
-            {hasDiscount && (
-              <span className="text-xs text-neutral-400 line-through flex-shrink-0">
-                {formatPrice(originalPrice)}
-              </span>
-            )}
-            <span className="text-base font-bold text-primary-600 flex-shrink-0">
-              {formatPrice(finalPrice)}
-            </span>
           </div>
           <div className="w-9 flex-shrink-0 flex justify-end">
             {loggedInUser && <CheckCircle className="w-5 h-5 text-green-500" />}

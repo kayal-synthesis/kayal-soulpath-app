@@ -15,18 +15,26 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient }              from '@supabase/supabase-js'
+import { Resend }                    from 'resend'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Python FastAPI backend — reads from NEXT_PUBLIC_SYNTHESIS_ENGINE_URL
+// RESEND_API_KEY needs to be set in .env.local, the real key from your
+// Resend dashboard, not a placeholder, same trap CRON_SECRET fell into
+// earlier in this project.
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.kayalsoulpath.com'
+
+// Python FastAPI backend, reads from NEXT_PUBLIC_SYNTHESIS_ENGINE_URL
 // which is already set to http://127.0.0.1:8000 in your .env.local
 const SYNTHESIS_API = process.env.SYNTHESIS_API_URL
                    || process.env.NEXT_PUBLIC_SYNTHESIS_ENGINE_URL
                    || 'https://api.kayalsoulpath.com'
                    || 'https://api.kayalsoulpath.com'
+
 const SYNTHESIS_KEY = process.env.SYNTHESIS_API_KEY
                    || process.env.INTERNAL_API_KEY
                    || ''
@@ -34,7 +42,6 @@ const SYNTHESIS_KEY = process.env.SYNTHESIS_API_KEY
 // ─────────────────────────────────────────────────────────────
 // POST /api/reading/submit
 // ─────────────────────────────────────────────────────────────
-
 export async function POST(request: NextRequest) {
   try {
     const formData    = await request.formData()
@@ -75,7 +82,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create job' }, { status: 500 })
     }
 
-    // Start background processing — do NOT await
+    // Start background processing, do NOT await
     processReading(jobId, userToken, toolId, {
       full_name:    fullName,
       date_of_birth: dateOfBirth,
@@ -90,7 +97,6 @@ export async function POST(request: NextRequest) {
     )
 
     return NextResponse.json({ job_id: jobId })
-
   } catch (error) {
     console.error('Unexpected error in /api/reading/submit:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -100,7 +106,6 @@ export async function POST(request: NextRequest) {
 // ─────────────────────────────────────────────────────────────
 // Background: calls FastAPI backend to generate the reading
 // ─────────────────────────────────────────────────────────────
-
 async function processReading(
   jobId:      string,
   userId:     string,
@@ -110,7 +115,65 @@ async function processReading(
   palmImage:   File | null
 ) {
   try {
-    // Update progress to 10%
+    // Queued, waiting on real payment confirmation before anything
+    // expensive runs. This job gets created here, on the purchase page,
+    // *before* /api/checkout/initiate even runs, pending_checkouts for
+    // this job_id may not exist yet the moment this loop starts, that's
+    // expected, not an error, the loop just keeps waiting until it does.
+    //
+    // The only thing that ever flips pending_checkouts to 'completed' is
+    // the real Stripe webhook, a genuine server-to-server confirmation
+    // the charge actually went through, never the customer's browser,
+    // never this function assuming anything on its own.
+    await supabaseAdmin
+      .from('reading_jobs')
+      .update({ progress: 5, updated_at: new Date().toISOString() })
+      .eq('id', jobId)
+
+    const PAYMENT_TIMEOUT_MS = 30 * 60 * 1000 // generous, but not indefinite
+    const POLL_INTERVAL_MS   = 5000
+    const waitStartedAt      = Date.now()
+    let paymentConfirmed     = false
+    let paymentFailed        = false
+
+    while (Date.now() - waitStartedAt < PAYMENT_TIMEOUT_MS) {
+      const { data: checkout } = await supabaseAdmin
+        .from('pending_checkouts')
+        .select('status')
+        .eq('job_id', jobId)
+        .maybeSingle()
+
+      if (checkout?.status === 'completed') {
+        paymentConfirmed = true
+        break
+      }
+      if (checkout?.status === 'failed') {
+        paymentFailed = true
+        break
+      }
+      await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
+    }
+
+    if (!paymentConfirmed) {
+      // Either payment was explicitly marked failed, or the timeout
+      // above ran out with no confirmation ever arriving, either way,
+      // the expensive DeepSeek call below never happens. This is the
+      // entire fix, nothing after this point runs without it.
+      await supabaseAdmin
+        .from('reading_jobs')
+        .update({
+          status: 'failed',
+          error:  paymentFailed
+            ? 'Payment failed, reading was not generated.'
+            : 'Payment was not confirmed in time, reading was not generated.',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', jobId)
+      console.log(`[reading/submit] Job ${jobId} stopped before generation, payment never confirmed`)
+      return
+    }
+
+    // Update progress to 10%, payment is now genuinely confirmed
     await supabaseAdmin
       .from('reading_jobs')
       .update({ progress: 10, updated_at: new Date().toISOString() })
@@ -123,7 +186,6 @@ async function processReading(
     apiForm.append('date_of_birth', userData.date_of_birth || '')
     apiForm.append('job_id',        jobId)
     apiForm.append('user_token',    userId || '')
-
     if (userData.birth_time)    apiForm.append('birth_time',     userData.birth_time)
     if (userData.birth_location)apiForm.append('birth_location', userData.birth_location)
     if (userData.gender)        apiForm.append('gender',         userData.gender)
@@ -133,7 +195,7 @@ async function processReading(
     if (facialImage)            apiForm.append('facial_image',   facialImage)
     if (palmImage)              apiForm.append('palm_image',      palmImage)
 
-    // Progress: 20% — sending to FastAPI
+    // Progress: 20%, sending to FastAPI
     await supabaseAdmin
       .from('reading_jobs')
       .update({ progress: 20, updated_at: new Date().toISOString() })
@@ -157,7 +219,7 @@ async function processReading(
 
     const content = await apiResponse.json()
 
-    // Progress: 90% — storing result
+    // Progress: 90%, storing result
     await supabaseAdmin
       .from('reading_jobs')
       .update({ progress: 90, updated_at: new Date().toISOString() })
@@ -191,10 +253,79 @@ async function processReading(
 
     console.log(`[reading/submit] Job ${jobId} completed successfully`)
 
+    // Notify by email, real, both for guests (who have no dashboard
+    // session and no other way to ever find out) and for logged-in
+    // users, as a genuine convenience on top of the dashboard polling
+    // that already exists for them. Wrapped in its own try/catch, a
+    // failed email should never flip a genuinely completed reading back
+    // to a failed state.
+    //
+    // The link below points at /report/{toolId}?jobId={jobId}, the
+    // exact route the dashboard itself already uses for a completed
+    // report. I have not confirmed that route permits viewing without
+    // a login, which matters specifically for guests, if it requires
+    // authentication, this link will not work for them even though the
+    // email itself sends correctly. Worth verifying directly before
+    // relying on this for anonymous delivery.
+    if (userData.email && resend) {
+      try {
+        // A plain link to /report/[toolId] was tried first and rejected,
+        // that route used to identify "who's viewing" from local browser
+        // state, not a real session, meaning the link would only work
+        // by coincidence, on the same device and browser someone
+        // purchased from, and showed sensitive, personal reading content
+        // with no real access control behind it at all.
+        //
+        // A real Supabase magic link instead: single-use, time-limited,
+        // and genuinely authenticates the recipient, creating an account
+        // automatically on first use if they don't have one, no password
+        // required. Points straight at the report page itself, not a
+        // server-side /auth/callback route, that pattern was tried first
+        // too and also rejected, this client (lib/supabase/client.ts)
+        // stores sessions in localStorage under a custom key, not
+        // cookies, and sets detectSessionInUrl: true, meaning the client
+        // library itself already detects and exchanges the auth code the
+        // moment the report page loads, no server hop needed or even
+        // compatible with how sessions are actually stored here.
+        const reportPath = `/report/${toolId}?jobId=${jobId}`
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+          type:    'magiclink',
+          email:   userData.email,
+          options: { redirectTo: `${APP_URL}${reportPath}` },
+        })
+
+        const readingLink = linkError ? null : linkData?.properties?.action_link
+
+        if (!readingLink) {
+          console.error(`[reading/submit] Failed to generate magic link for job ${jobId}:`, linkError?.message)
+        }
+
+        await resend.emails.send({
+          from:    'KAYAL SoulPath <readings@kayalsoulpath.com>',
+          to:      userData.email,
+          subject: 'Your reading is ready',
+          html: readingLink
+            ? `
+              <p>Hi ${userData.full_name || 'there'},</p>
+              <p>Your reading is complete and ready to view.</p>
+              <p><a href="${readingLink}">View your reading</a></p>
+              <p>This link signs you in securely and is single-use. If it's already been opened, contact support and we'll send a fresh one.</p>
+            `
+            : `
+              <p>Hi ${userData.full_name || 'there'},</p>
+              <p>Your reading is complete. We ran into an issue generating your secure access link, please contact support and we'll get you access right away.</p>
+            `,
+        })
+      } catch (emailErr: any) {
+        console.error(`[reading/submit] Email send failed for job ${jobId}:`, emailErr.message)
+      }
+    } else if (!resend) {
+      console.warn(`[reading/submit] RESEND_API_KEY not configured, skipped email for job ${jobId}`)
+    }
   } catch (error: any) {
     console.error(`[reading/submit] Job ${jobId} failed:`, error.message)
 
-    // Mark failed — dashboard shows error state
+    // Mark failed, dashboard shows error state
     await supabaseAdmin
       .from('reading_jobs')
       .update({

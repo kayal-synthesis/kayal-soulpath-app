@@ -1,11 +1,11 @@
 // app/purchase/[toolId]/callback/route.ts
 //
 // Where the customer's browser lands after paying (or cancelling) on
-// Flutterwave's hosted page. This does a best-effort verification purely
+// Stripe's hosted page. This does a best-effort verification purely
 // to decide which screen to show the customer right now, it does NOT
 // create the purchase record, credit commission, or trigger reading
-// generation. That only ever happens in app/api/webhooks/flutterwave's
-// charge.completed handler, once Flutterwave's own server-to-server
+// generation. That only ever happens in app/api/webhooks/stripe's
+// checkout.session.completed handler, once Stripe's own server-to-server
 // confirmation arrives, which is not something a redirect, fully
 // controllable by the customer's browser, should ever be trusted for.
 //
@@ -17,7 +17,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { verifyTransaction } from '@/lib/flutterwave/checkout'
+import { verifyTransaction } from '@/lib/stripe/checkout'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,8 +27,12 @@ const supabaseAdmin = createClient(
 export async function GET(request: NextRequest, { params }: { params: { toolId: string } }) {
   const searchParams = request.nextUrl.searchParams
   const txRef         = searchParams.get('tx_ref')
-  const transactionId = searchParams.get('transaction_id')
-  const status         = searchParams.get('status') // Flutterwave's own redirect param, informational only, never trusted for fulfillment
+  // Stripe substitutes {CHECKOUT_SESSION_ID} into success_url with the
+  // real session id, session_id here, not transaction_id, Flutterwave's
+  // naming, which never matched what Stripe actually sends, silently
+  // leaving the live-verification fallback below unreachable.
+  const sessionId = searchParams.get('session_id')
+  const status    = searchParams.get('status') // Stripe's own redirect param, informational only, never trusted for fulfillment
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
 
@@ -54,8 +58,8 @@ export async function GET(request: NextRequest, { params }: { params: { toolId: 
 
   // Not yet confirmed by webhook. Do a best-effort live check purely to
   // decide what to show right now, this does not write anything.
-  if (transactionId) {
-    const verification = await verifyTransaction(transactionId)
+  if (sessionId) {
+    const verification = await verifyTransaction(sessionId)
     if (verification.status === 'failed') {
       return NextResponse.redirect(`${appUrl}/purchase/${params.toolId}?error=payment_failed`)
     }

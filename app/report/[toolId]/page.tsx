@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect }                       from 'react'
 import { useParams, useSearchParams, useRouter }      from 'next/navigation'
-import { useAnonymousStore }                          from '@/lib/store/anonymousStore'
+import { createClient }                               from '@/lib/supabase/client'
 import { Card }                                       from '@/components/ui/Card'
 import { Button }                                     from '@/components/ui/Button'
 import { Badge }                                      from '@/components/ui/Badge'
@@ -17,7 +17,6 @@ import {
   Copy, Check, Facebook, Twitter, Linkedin, Mail,
   Bookmark, BookmarkCheck, DownloadCloud, AlertCircle,
 } from 'lucide-react'
-
 import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
 import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
 import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
@@ -34,7 +33,6 @@ const omniTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhy
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
-
 const getFeatureText = (feature: any): { title: string; description: string } => {
   if (typeof feature === 'string') {
     const parts = feature.split(' - ')
@@ -62,7 +60,6 @@ const allTools = [
 // ─────────────────────────────────────────────────────────────
 // Domain config
 // ─────────────────────────────────────────────────────────────
-
 const domainConfigs: Record<string, any> = {
   'omni-seer': {
     name: "Omni-Seer's Sanctum", icon: Crown,
@@ -104,16 +101,17 @@ const domainConfigs: Record<string, any> = {
 // ─────────────────────────────────────────────────────────────
 // Component
 // ─────────────────────────────────────────────────────────────
-
 export default function ReportPage() {
   const params       = useParams()
   const searchParams = useSearchParams()
-  const router       = useRouter()
-  const { user }     = useAnonymousStore()
+  const router        = useRouter()
+  const supabase      = createClient()
 
   const toolId = params.toolId as string
   const jobId  = searchParams.get('jobId')
 
+  const [user,          setUser]          = useState<any>(null)
+  const [authChecked,   setAuthChecked]   = useState(false)
   const [loading,       setLoading]       = useState(true)
   const [error,         setError]         = useState<string | null>(null)
   const [content,       setContent]       = useState<any>(null)
@@ -122,6 +120,51 @@ export default function ReportPage() {
   const [isSaved,       setIsSaved]       = useState(false)
   const [copied,        setCopied]        = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
+
+  // Real session check, replacing reliance on local browser state,
+  // which only worked by coincidence, same device and browser someone
+  // purchased from. Unauthenticated visitors go to login with a real
+  // `next` redirect back here.
+  //
+  // A magic link lands directly on this exact page with the auth code
+  // still in the URL, lib/supabase/client.ts sets
+  // detectSessionInUrl: true, so the client library itself detects and
+  // exchanges that code the moment it initializes, no server callback
+  // route involved. That detection isn't necessarily finished by the
+  // time this first getUser() call resolves though, a bare one-shot
+  // check could race ahead of it and redirect someone to login before
+  // their own valid session has even been created. onAuthStateChange
+  // is the real source of truth here, it fires once detection actually
+  // completes, getUser() below is only a fast path for a visitor who
+  // was already signed in before landing on this page at all.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        setAuthChecked(true)
+      }
+    })
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user)
+        setAuthChecked(true)
+        return
+      }
+      const hasIncomingAuthCode =
+        window.location.hash.includes('access_token') || window.location.search.includes('code=')
+      if (!hasIncomingAuthCode) {
+        // No session, and nothing in the URL suggests one is about to
+        // arrive, safe to send to login now rather than wait
+        // indefinitely for an event that was never going to fire.
+        router.push(`/auth/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`)
+      }
+      // Otherwise, a magic-link code is present, wait for
+      // onAuthStateChange above to resolve it instead of redirecting.
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Find tool metadata and detect domain
   useEffect(() => {
@@ -139,10 +182,10 @@ export default function ReportPage() {
     else if (voiceTools.some(t       => t.id === toolId)) setDomain('omni-seer')
   }, [toolId])
 
-  // Load reading content
+  // Load reading content, only once we know who's actually asking.
   useEffect(() => {
     const loadContent = async () => {
-      if (!tool) return
+      if (!tool || !authChecked) return
 
       // No jobId → use tool metadata as fallback
       if (!jobId) {
@@ -158,9 +201,20 @@ export default function ReportPage() {
         return
       }
 
-      // Poll reading job
+      // Poll reading job. The real session token goes with every
+      // request, this is what lets the server verify the reading
+      // actually belongs to whoever's asking, rather than trusting a
+      // jobId alone, which anyone could type into the URL.
       try {
-        const res  = await fetch(`/api/reading/job/${jobId}`)
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch(`/api/reading/job/${jobId}`, {
+          headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+        })
+        if (res.status === 403) {
+          setError("This reading doesn't belong to your account.")
+          setLoading(false)
+          return
+        }
         if (!res.ok) {
           setError('Unable to load reading. Please contact support.')
           setLoading(false)
@@ -186,12 +240,19 @@ export default function ReportPage() {
     }
 
     if (tool) loadContent()
-  }, [tool, jobId])
+  }, [tool, jobId, authChecked])
 
   const config = domainConfigs[domain] || domainConfigs['omni-seer']
   const Icon   = config.icon
 
   // ── Loading states ─────────────────────────────────────────
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
+    )
+  }
 
   if (!tool) {
     return (
@@ -239,7 +300,6 @@ export default function ReportPage() {
   }
 
   // ── Handlers ───────────────────────────────────────────────
-
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
     setCopied(true)
@@ -275,7 +335,6 @@ export default function ReportPage() {
   const handlePrint = () => window.print()
 
   // ── Extract display content ────────────────────────────────
-
   const displayContent  = content || {}
   const readingText     = displayContent.reading || (typeof displayContent === 'string' ? displayContent : '')
   const domainSections  = displayContent.domain_sections || {}
@@ -285,10 +344,8 @@ export default function ReportPage() {
   }))
 
   // ── Render ─────────────────────────────────────────────────
-
   return (
     <div className="min-h-screen bg-neutral-50">
-
       {/* Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -304,7 +361,6 @@ export default function ReportPage() {
               <Icon className="w-3 h-3 mr-1" />{config.name}
             </Badge>
           </div>
-
           <div className="flex items-center gap-1">
             <button onClick={() => setIsSaved(!isSaved)}
               className="p-2 rounded-lg hover:bg-neutral-100">
@@ -351,7 +407,6 @@ export default function ReportPage() {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Card className="p-8">
           <div className="prose max-w-none">
-
             {/* Title block */}
             <div className="text-center mb-12 pb-12 border-b">
               <h1 className="text-4xl font-serif mb-4">
@@ -362,7 +417,7 @@ export default function ReportPage() {
                 {(tool as any).emoji || config.emoji}
               </div>
               <p className="text-neutral-600">
-                Prepared for: <span className="font-semibold">{user?.name || 'Seeker'}</span>
+                Prepared for: <span className="font-semibold">{user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email || 'Seeker'}</span>
               </p>
               <p className="text-neutral-600">
                 Date: {new Date().toLocaleDateString()}
