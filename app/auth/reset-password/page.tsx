@@ -1,121 +1,117 @@
 'use client'
-// app/auth/reset-password/page.tsx
 
-import { useState, useEffect } from 'react'
-import { useRouter }           from 'next/navigation'
-import { createClient }        from '@/lib/supabase/client'
-import { Card }                from '@/components/ui/Card'
-import { Button }              from '@/components/ui/Button'
-import {
-  Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader2,
-} from 'lucide-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { Key, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+
+// The page resetPasswordForEmail's redirectTo actually points at. Same
+// detectSessionInUrl-based pattern already confirmed working for the
+// magic link, lib/supabase/client.ts detects the reset token in the URL
+// itself the moment this page loads, no separate server callback route
+// needed, updateUser() below just works against that session directly.
 
 export default function ResetPasswordPage() {
-  const router   = useRouter()
+  const router = useRouter()
   const supabase = createClient()
 
-  const [password,     setPassword]     = useState('')
-  const [confirm,      setConfirm]      = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading,      setLoading]      = useState(false)
-  const [error,        setError]        = useState('')
-  const [done,         setDone]         = useState(false)
-  const [ready,        setReady]        = useState(false)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
 
-  useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' && session) setReady(true)
-    })
-  }, [])
-
-  async function handleReset(e: React.FormEvent) {
-    e.preventDefault()
-    if (password !== confirm) { setError('Passwords do not match'); return }
-    if (password.length < 8)  { setError('Password must be at least 8 characters'); return }
-    setLoading(true); setError('')
+  const handleSubmit = async () => {
+    setError('')
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+    setLoading(true)
     try {
-      const { error } = await supabase.auth.updateUser({ password })
-      if (error) throw error
+      const { error: updateError } = await supabase.auth.updateUser({ password })
+      if (updateError) throw updateError
       setDone(true)
-      setTimeout(() => router.replace('/member/dashboard'), 2000)
+      setTimeout(() => router.push('/member/dashboard'), 2000)
     } catch (err: any) {
-      setError(err.message || 'Failed to update password')
-    } finally { setLoading(false) }
+      setError(err.message || 'Could not update your password. The reset link may have expired, request a new one.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="p-8 text-center max-w-md">
-          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-serif mb-2">Password updated!</h2>
-          <p className="text-neutral-600">Taking you to your dashboard…</p>
-        </Card>
-      </div>
-    )
-  }
-
-  if (!ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="p-8 text-center max-w-md">
-          <Loader2 className="w-10 h-10 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-neutral-600">Verifying your reset link…</p>
-        </Card>
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl border border-emerald-200 shadow-sm p-8 text-center max-w-sm w-full"
+        >
+          <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+          <h1 className="text-xl font-serif mb-2">Password updated</h1>
+          <p className="text-sm text-neutral-500">Taking you to your dashboard…</p>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
-      <Card className="p-8 max-w-md w-full">
-        <h2 className="text-2xl font-serif mb-1">Set new password</h2>
-        <p className="text-neutral-500 text-sm mb-6">Choose a new password for your account.</p>
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-8 max-w-sm w-full"
+      >
+        <h1 className="text-xl font-serif mb-1">Set a new password</h1>
+        <p className="text-sm text-neutral-500 mb-6">Choose something at least 8 characters.</p>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl
-                          flex items-center gap-2 text-red-700 text-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
-          </div>
-        )}
-
-        <form onSubmit={handleReset} className="space-y-4">
+        <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1.5">New password</label>
+            <label className="block text-xs text-neutral-500 mb-1">New Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <input type={showPassword ? 'text' : 'password'}
-                value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="Minimum 8 characters"
-                className="w-full pl-10 pr-10 py-2.5 border rounded-xl
-                           focus:ring-2 focus:ring-primary-500" required />
-              <button type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+              <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="w-full pl-10 pr-3 py-2 border rounded-lg"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Confirm password</label>
+            <label className="block text-xs text-neutral-500 mb-1">Confirm Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <input type="password"
-                value={confirm} onChange={e => setConfirm(e.target.value)}
-                placeholder="Re-enter password"
-                className="w-full pl-10 pr-4 py-2.5 border rounded-xl
-                           focus:ring-2 focus:ring-primary-500" required />
+              <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Repeat your new password"
+                className="w-full pl-10 pr-3 py-2 border rounded-lg"
+              />
             </div>
           </div>
-          <Button type="submit"
-            disabled={loading || !password || !confirm}
-            fullWidth size="lg" className="mt-2">
-            {loading
-              ? <Loader2 className="w-5 h-5 animate-spin" />
-              : 'Update Password'}
-          </Button>
-        </form>
-      </Card>
+          {error && (
+            <p className="text-xs text-red-500 flex items-start gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{error}
+            </p>
+          )}
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !password || !confirmPassword}
+            className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white font-medium rounded-xl mt-2"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update Password'}
+          </button>
+        </div>
+      </motion.div>
     </div>
   )
 }

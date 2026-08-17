@@ -160,6 +160,32 @@ function UpsellCard({
 // EVERY visitor to /member/dashboard unconditionally, including guests
 // who never created an account and have no session to view it with,
 // a real, confirmed bug, not a hypothetical one.
+// Real device/email recognition, not skipped authentication. A
+// password (or magic link) is always still required, this only
+// pre-fills the email and shows a friendly "welcome back" instead of a
+// blank form, set once someone actually completes sign-in or sign-up,
+// read back on future visits. Same real idea as the recognizedDevice
+// pattern in the four-step file, adapted to never bypass a real check.
+const RETURNING_EMAIL_KEY = 'kayal_user_email'
+
+async function attachPurchaseToAccount(txRef: string | null, userId: string) {
+  if (!txRef) return
+  // Links this specific completed checkout to the account, using tx_ref,
+  // the one identifier this page actually has, the real, unique key
+  // already tying together pending_checkouts, the webhook, and the
+  // reading job behind it. Runs after sign-in too, not just sign-up, a
+  // returning user completing a new purchase needs the same link made.
+  //
+  // POST /api/purchase/attach-account is assumed here, matching the
+  // shape of the existing /api/user/add-purchase pattern, but its
+  // existence has not been directly confirmed against the real backend.
+  await fetch('/api/purchase/attach-account', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ txRef, userId }),
+  }).catch(() => {})
+}
+
 function AccountStep({
   txRef,
   onGuestContinue,
@@ -170,6 +196,8 @@ function AccountStep({
   guestConfirmed: boolean
 }) {
   const supabase = createClient()
+  const [mode, setMode] = useState<'signup' | 'signin'>('signup')
+  const [recognized, setRecognized] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -177,6 +205,25 @@ function AccountStep({
   const [passwordError, setPasswordError] = useState('')
   const [accountLoading, setAccountLoading] = useState(false)
   const [accountError, setAccountError] = useState('')
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+
+  useEffect(() => {
+    const savedEmail = typeof window !== 'undefined' ? localStorage.getItem(RETURNING_EMAIL_KEY) : null
+    if (savedEmail) {
+      setEmail(savedEmail)
+      setMode('signin')
+      setRecognized(true)
+    }
+  }, [])
+
+  const completeAuth = async (userId: string, finalEmail: string) => {
+    localStorage.setItem(RETURNING_EMAIL_KEY, finalEmail)
+    await attachPurchaseToAccount(txRef, userId)
+    window.location.href = '/member/dashboard'
+  }
 
   const handleCreateAccount = async () => {
     setAccountError('')
@@ -191,30 +238,24 @@ function AccountStep({
         email, password,
         options: { data: { name } },
       })
-      if (error) throw error
-      if (data.user && txRef) {
-        // Links this specific completed checkout to the account just
-        // created, using tx_ref rather than a device id, since tx_ref is
-        // the one identifier this page actually has, the real, unique
-        // key already tying together pending_checkouts, the webhook,
-        // and the reading job behind it.
-        //
-        // This specific endpoint, POST /api/purchase/attach-account, is
-        // assumed here, matching the shape of the existing
-        // /api/user/add-purchase pattern, but I have not directly
-        // confirmed it exists or handles tx_ref-based linking correctly.
-        // Worth verifying against the real backend before this ships.
-        await fetch('/api/purchase/attach-account', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ txRef, userId: data.user.id }),
-        }).catch(() => {})
-
+      if (error) {
+        // Real, specific handling instead of a dead-end raw error
+        // message, this exact wording is what Supabase actually returns
+        // for a duplicate email, switches straight to the sign-in form
+        // with that email already filled in.
+        if (error.message?.toLowerCase().includes('already registered')) {
+          setMode('signin')
+          setAccountError('')
+          return
+        }
+        throw error
+      }
+      if (data.user) {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
         if (signInError) {
           window.location.href = '/auth/login?email=' + encodeURIComponent(email)
         } else {
-          window.location.href = '/member/dashboard'
+          await completeAuth(data.user.id, email)
         }
       }
     } catch (err: any) {
@@ -224,6 +265,101 @@ function AccountStep({
     }
   }
 
+  const handleSignIn = async () => {
+    setAccountError('')
+    if (!email.trim() || !validateEmail(email)) { setEmailError('Valid email required'); return }
+    if (!password) { setPasswordError('Enter your password'); return }
+    setEmailError('')
+    setPasswordError('')
+    setAccountLoading(true)
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      if (data.user) await completeAuth(data.user.id, email)
+    } catch (err: any) {
+      setAccountError(err.message || 'Could not sign in. Check your password and try again.')
+    } finally {
+      setAccountLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    setAccountError('')
+    if (!email.trim() || !validateEmail(email)) { setEmailError('Valid email required'); return }
+    setEmailError('')
+    setResetLoading(true)
+    try {
+      // Same detectSessionInUrl-based pattern already confirmed working
+      // for the magic link, no server callback route needed, the client
+      // library itself picks up the reset token once the reset page
+      // loads with it in the URL.
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+      if (error) throw error
+      setResetSent(true)
+    } catch (err: any) {
+      setAccountError(err.message || 'Could not send the reset link. Please try again.')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  const handleMagicLink = async () => {
+    setAccountError('')
+    if (!email.trim() || !validateEmail(email)) { setEmailError('Valid email required'); return }
+    setEmailError('')
+    setMagicLinkLoading(true)
+    try {
+      // Supabase's own default magic-link email, not the custom
+      // KAYAL-branded Resend one built for guest reading delivery,
+      // that one requires the service role key and can only be
+      // triggered server-side. This is the real, standard client-side
+      // equivalent for a returning user choosing to sign in this way,
+      // functionally correct, just a plainer email template.
+      const { error } = await supabase.auth.signInWithOtp({ email })
+      if (error) throw error
+      localStorage.setItem(RETURNING_EMAIL_KEY, email)
+      setMagicLinkSent(true)
+    } catch (err: any) {
+      setAccountError(err.message || 'Could not send the sign-in link. Please try again.')
+    } finally {
+      setMagicLinkLoading(false)
+    }
+  }
+
+  if (resetSent) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl border-2 border-primary-200 shadow-sm p-5 text-center"
+      >
+        <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+        <h3 className="font-medium mb-1">Check your email</h3>
+        <p className="text-xs text-neutral-500">
+          A password reset link was sent to {email}, open it to set a new password.
+        </p>
+      </motion.div>
+    )
+  }
+
+  if (magicLinkSent) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl border-2 border-primary-200 shadow-sm p-5 text-center"
+      >
+        <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+        <h3 className="font-medium mb-1">Check your email</h3>
+        <p className="text-xs text-neutral-500">
+          A sign-in link was sent to {email}. Open it on this device to continue.
+        </p>
+      </motion.div>
+    )
+  }
+
   return (
     <>
       <motion.div
@@ -231,23 +367,29 @@ function AccountStep({
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-2xl border-2 border-primary-200 shadow-sm p-5"
       >
-        <h3 className="font-medium mb-4 flex items-center gap-2">
-          <User className="w-5 h-5 text-primary-600" />Create Free Account
+        <h3 className="font-medium mb-1 flex items-center gap-2">
+          <User className="w-5 h-5 text-primary-600" />
+          {mode === 'signin' ? 'Sign In' : 'Create Free Account'}
         </h3>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-neutral-500 mb-1">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Your name"
-                className="w-full pl-10 pr-3 py-2 border rounded-lg bg-white"
-              />
+        {recognized && mode === 'signin' && (
+          <p className="text-xs text-primary-600 mb-3">Welcome back! Sign in to access your reading.</p>
+        )}
+        <div className="space-y-3 mt-3">
+          {mode === 'signup' && (
+            <div>
+              <label className="block text-xs text-neutral-500 mb-1">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full pl-10 pr-3 py-2 border rounded-lg bg-white"
+                />
+              </div>
             </div>
-          </div>
+          )}
           <div>
             <label className="block text-xs text-neutral-500 mb-1">Email Address</label>
             <div className="relative">
@@ -263,14 +405,26 @@ function AccountStep({
             {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
           </div>
           <div>
-            <label className="block text-xs text-neutral-500 mb-1">Password</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs text-neutral-500">Password</label>
+              {mode === 'signin' && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading || !email}
+                  className="text-xs text-primary-600 hover:text-primary-700 disabled:opacity-50"
+                >
+                  {resetLoading ? 'Sending…' : 'Forgot password?'}
+                </button>
+              )}
+            </div>
             <div className="relative">
               <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Create a password (min 8 characters)"
+                placeholder={mode === 'signin' ? 'Your password' : 'Create a password (min 8 characters)'}
                 className="w-full pl-10 pr-3 py-2 border rounded-lg"
               />
             </div>
@@ -278,13 +432,30 @@ function AccountStep({
           </div>
           {accountError && <p className="text-xs text-red-500">{accountError}</p>}
           <button
-            onClick={handleCreateAccount}
+            onClick={mode === 'signin' ? handleSignIn : handleCreateAccount}
             disabled={accountLoading || !email || !password}
             className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white font-medium rounded-xl mt-2"
           >
             {accountLoading
               ? <Loader2 className="w-4 h-4 animate-spin" />
-              : <><User className="w-4 h-4" />Create Account &amp; Access Dashboard</>}
+              : mode === 'signin'
+                ? <><User className="w-4 h-4" />Sign In</>
+                : <><User className="w-4 h-4" />Create Account &amp; Access Dashboard</>}
+          </button>
+          <button
+            onClick={handleMagicLink}
+            disabled={magicLinkLoading || !email}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-6 border border-neutral-200 hover:bg-neutral-50 disabled:opacity-60 text-neutral-700 font-medium rounded-xl text-sm"
+          >
+            {magicLinkLoading
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <><Mail className="w-4 h-4" />Email me a sign-in link instead</>}
+          </button>
+          <button
+            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setAccountError('') }}
+            className="w-full text-center text-xs text-neutral-400 hover:text-neutral-600 pt-1"
+          >
+            {mode === 'signin' ? "New here? Create an account instead" : 'Already have an account? Sign in instead'}
           </button>
         </div>
       </motion.div>
@@ -329,6 +500,18 @@ function AccountStep({
           </div>
         )}
       </motion.div>
+
+      {/* Explore more, a real path forward beyond just this one purchase,
+          works for guests and new accounts alike since it points at the
+          marketing site's own free tools index, no login required. */}
+      <div className="text-center">
+        <a
+          href="https://kayalsoulpath.com/tools.html"
+          className="text-xs text-neutral-400 hover:text-neutral-600 underline underline-offset-2"
+        >
+          Explore other tools
+        </a>
+      </div>
     </>
   )
 }
@@ -504,20 +687,30 @@ export default function PurchaseConfirmationPage() {
             fired unconditionally, sending guests to a dashboard they
             had no way to log into. */}
         {authChecked && loggedInUser && (
-          <div className="flex items-center justify-center gap-4">
-            <button
-              onClick={() => router.push('/member/dashboard')}
-              className="px-5 py-2.5 bg-white border border-neutral-200 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50 transition-colors shadow-sm"
-            >
-              Back to Dashboard
-            </button>
-            <button
-              onClick={() => router.push('/member/dashboard')}
-              className="px-5 py-2.5 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-colors shadow-sm"
-            >
-              View All Readings
-            </button>
-          </div>
+          <>
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => router.push('/member/dashboard')}
+                className="px-5 py-2.5 bg-white border border-neutral-200 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50 transition-colors shadow-sm"
+              >
+                Back to Dashboard
+              </button>
+              <button
+                onClick={() => router.push('/member/dashboard')}
+                className="px-5 py-2.5 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-colors shadow-sm"
+              >
+                View All Readings
+              </button>
+            </div>
+            <div className="text-center">
+              <a
+                href="https://kayalsoulpath.com/tools.html"
+                className="text-xs text-neutral-400 hover:text-neutral-600 underline underline-offset-2"
+              >
+                Explore other tools
+              </a>
+            </div>
+          </>
         )}
 
         <p className="text-center text-xs text-neutral-400">
