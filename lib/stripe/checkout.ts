@@ -58,7 +58,14 @@ export async function initiateCheckout(input: InitiateCheckoutInput): Promise<Ch
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       client_reference_id: input.txRef, // the primary key the webhook uses to find this checkout's pending_checkouts row
-      customer_email: input.email,
+      // Omitted entirely, not sent as an empty string, when input.email
+      // is blank, which it now genuinely is for every guest, the
+      // purchase page's own email field was removed. An empty string
+      // sent to Stripe as customer_email would likely be rejected as an
+      // invalid address outright, omitting the key lets Stripe correctly
+      // treat it as "not provided" and ask for one on its own page
+      // instead, exactly the intended fallback.
+      ...(input.email ? { customer_email: input.email } : {}),
       // {CHECKOUT_SESSION_ID} is a literal placeholder Stripe itself
       // substitutes with the real session id on redirect, not a template
       // var of ours. Without it, verifyTransaction() below would have no

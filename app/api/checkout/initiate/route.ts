@@ -30,7 +30,11 @@ export async function POST(request: NextRequest) {
       refCode, jobId,
     } = body
 
-    if (!email || !toolId || !toolName || amountCharged == null || !currency) {
+    // email intentionally excluded here, the field on the purchase
+    // page was removed entirely, Stripe's own checkout page collects
+    // one as a normal part of paying regardless, and the webhook picks
+    // it up from there once payment confirms.
+    if (!toolId || !toolName || amountCharged == null || !currency) {
       return NextResponse.json({ error: 'Missing required checkout fields' }, { status: 400 })
     }
 
