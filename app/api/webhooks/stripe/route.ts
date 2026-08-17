@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     const { data: pending, error: lookupError } = await supabaseAdmin
       .from('pending_checkouts')
-      .select('id, status, tool_id, job_id, email')
+      .select('id, status, tool_id, tool_name, tool_type, category, job_id, email, user_id, usd_equivalent, ref_code')
       .eq('tx_ref', txRef)
       .maybeSingle()
 
@@ -99,6 +99,46 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('Failed to mark pending_checkouts completed for tx_ref:', txRef, updateError)
       return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+    }
+
+    // The real, missing piece, confirmed missing by tracing every file
+    // in this entire checkout flow: nothing anywhere ever wrote to
+    // purchases, the exact table /member/dashboard reads from. Payment
+    // could succeed, a reading could generate and email correctly, and
+    // the dashboard would still show zero purchases regardless, because
+    // this row never existed. This is the one place with genuine,
+    // trusted, server-confirmed payment success, the right place for it
+    // to happen.
+    //
+    // Upserted, not inserted, purchases has a real unique constraint on
+    // (user_id, tool_id), confirmed from the actual database indexes, a
+    // plain insert would fail outright on any legitimate second
+    // purchase of the same tool by the same account.
+    const resolvedEmail = stripeEmail || pending.email || null
+
+    const { error: purchaseError } = await supabaseAdmin
+      .from('purchases')
+      .upsert({
+        user_id:        pending.user_id,
+        tool_id:        pending.tool_id,
+        tool_name:      pending.tool_name,
+        tool_type:      pending.tool_type,
+        category:       pending.category,
+        price:          pending.usd_equivalent,
+        status:         'active',
+        purchase_date:  new Date().toISOString(),
+        job_id:         pending.job_id,
+        user_email:     resolvedEmail,
+        ref_code:       pending.ref_code,
+      }, { onConflict: 'user_id,tool_id' })
+
+    if (purchaseError) {
+      // Logged loudly, not returned as a failure to Stripe, the payment
+      // itself genuinely succeeded and pending_checkouts is already
+      // correctly marked completed, Stripe shouldn't be told to retry
+      // over a downstream bookkeeping problem it can't fix by resending
+      // the same event again.
+      console.error('Failed to upsert purchases row for tx_ref:', txRef, purchaseError)
     }
 
     // pending.job_id references the reading job already created at
