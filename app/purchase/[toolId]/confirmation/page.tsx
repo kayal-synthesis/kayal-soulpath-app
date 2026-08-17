@@ -502,11 +502,11 @@ function AccountStep({
       </motion.div>
 
       {/* Explore more, a real path forward beyond just this one purchase,
-          works for guests and new accounts alike since it points at the
-          marketing site's own free tools index, no login required. */}
+          points at the app's own domains catalog, works for both guests
+          and logged-in accounts. */}
       <div className="text-center">
         <a
-          href="https://kayalsoulpath.com/tools.html"
+          href="/domains"
           className="text-xs text-neutral-400 hover:text-neutral-600 underline underline-offset-2"
         >
           Explore other tools
@@ -704,7 +704,7 @@ export default function PurchaseConfirmationPage() {
             </div>
             <div className="text-center">
               <a
-                href="https://kayalsoulpath.com/tools.html"
+                href="/domains"
                 className="text-xs text-neutral-400 hover:text-neutral-600 underline underline-offset-2"
               >
                 Explore other tools
