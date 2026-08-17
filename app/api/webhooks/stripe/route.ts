@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     const { data: pending, error: lookupError } = await supabaseAdmin
       .from('pending_checkouts')
-      .select('id, status, tool_id, job_id')
+      .select('id, status, tool_id, job_id, email')
       .eq('tx_ref', txRef)
       .maybeSingle()
 
@@ -82,9 +82,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, note: 'already processed' })
     }
 
+    // The purchase page's own email field is optional now, Stripe's
+    // hosted checkout page asks for one as a normal part of paying
+    // regardless, session.customer_details.email is that real, genuinely
+    // confirmed address. Only fills the gap if nothing was already
+    // captured earlier, never overwrites a value someone actually
+    // provided upfront.
+    const stripeEmail = session.customer_details?.email
+    const emailUpdate = !pending.email && stripeEmail ? { email: stripeEmail } : {}
+
     const { error: updateError } = await supabaseAdmin
       .from('pending_checkouts')
-      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .update({ status: 'completed', completed_at: new Date().toISOString(), ...emailUpdate })
       .eq('tx_ref', txRef)
 
     if (updateError) {

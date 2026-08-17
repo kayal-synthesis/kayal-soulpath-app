@@ -344,10 +344,6 @@ export default function PurchasePage() {
       setPurchaseError('Please agree to the Terms of Service to continue.')
       return
     }
-    if (!loggedInUser && !email.trim()) {
-      setPurchaseError('Please enter your email so we know where to send your reading.')
-      return
-    }
     setIsProcessing(true)
     try {
       const newJobId = await submitReadingJob()
@@ -706,23 +702,25 @@ export default function PurchasePage() {
                   </div>
                 )}
 
-                {/* Email, required for guest checkout, since without a saved
-                    email there is no way to know where to send the finished
-                    report once the reading is ready. */}
+                {/* Optional, not required, Stripe's own checkout page asks
+                    for an email as a normal part of paying regardless, so
+                    this genuinely isn't the only place it gets collected.
+                    Filling it in here just means the confirmation shows a
+                    name/email match a little sooner, nothing breaks if
+                    it's left blank. */}
                 {!loggedInUser && (
                   <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
                     <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
-                      Your Email
+                      Your Email <span className="text-neutral-400 font-normal">(optional)</span>
                     </label>
                     <p className="text-xs text-neutral-400 mb-3">
-                      Your reading will be sent here once it is ready.
+                      You'll also be asked for this on the payment page.
                     </p>
                     <input
                       type="email"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      required
                       className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-base focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 bg-white"
                     />
                   </div>

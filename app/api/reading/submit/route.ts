@@ -267,7 +267,25 @@ async function processReading(
     // authentication, this link will not work for them even though the
     // email itself sends correctly. Worth verifying directly before
     // relying on this for anonymous delivery.
-    if (userData.email && resend) {
+    // The upfront email field on the purchase page is optional now,
+    // Stripe's own checkout page collects one as a normal part of
+    // paying regardless, and the webhook saves that into
+    // pending_checkouts.email if nothing was captured earlier. By this
+    // point payment is confirmed, so that row holds whichever email
+    // actually turned out to be the real one, userData.email alone,
+    // from submission time, before checkout even started, isn't
+    // reliable enough anymore on its own.
+    let deliveryEmail = userData.email
+    if (!deliveryEmail) {
+      const { data: checkoutRow } = await supabaseAdmin
+        .from('pending_checkouts')
+        .select('email')
+        .eq('job_id', jobId)
+        .maybeSingle()
+      deliveryEmail = checkoutRow?.email || null
+    }
+
+    if (deliveryEmail && resend) {
       try {
         // A plain link to /report/[toolId] was tried first and rejected,
         // that route used to identify "who's viewing" from local browser
@@ -290,7 +308,7 @@ async function processReading(
         const reportPath = `/report/${toolId}?jobId=${jobId}`
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
           type:    'magiclink',
-          email:   userData.email,
+          email:   deliveryEmail,
           options: { redirectTo: `${APP_URL}${reportPath}` },
         })
 
@@ -302,7 +320,7 @@ async function processReading(
 
         await resend.emails.send({
           from:    'KAYAL SoulPath <readings@kayalsoulpath.com>',
-          to:      userData.email,
+          to:      deliveryEmail,
           subject: 'Your reading is ready',
           html: readingLink
             ? `
