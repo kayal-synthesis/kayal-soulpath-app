@@ -25,10 +25,24 @@ I Ching — The Book of Changes:
     The hexagram derived from birth data indicates the nature
     of the current life chapter.
 
-Author: KAYAL Engineering
-Version: 1.0.0
-"""
+v1.0.1 — Real bug fix, confirmed against a live production traceback:
+    get_element_domain_reading() called domain.value unconditionally,
+    with no protection at all, while its only caller, _chinese_enrichment()
+    in synthesiser.py, already converts domain to a plain string before
+    ever calling this function. Every v3.0.0 domain added in the
+    synthesiser (spirit_world, sexuality, children_forecast, and others)
+    is a plain string, never a real Domain enum member, confirmed
+    directly against models.py, so this crashed every reading that
+    touched one of those domains with AttributeError: 'str' object has
+    no attribute 'value'. Original domains like "career" happened to
+    also be valid Domain enum members elsewhere, masking the bug for
+    them specifically. Now accepts either a real Domain enum or a plain
+    string, the same defensive pattern already used successfully
+    throughout synthesiser.py.
 
+Author: KAYAL Engineering
+Version: 1.0.1
+"""
 from __future__ import annotations
 
 import logging
@@ -44,11 +58,9 @@ from ..models import (
 
 logger = logging.getLogger(__name__)
 
-
 # ---------------------------------------------------------------------------
 # Heavenly Stems (天干 Tiān Gān) — 10 stems, 5 elements × 2 polarity
 # ---------------------------------------------------------------------------
-
 _HEAVENLY_STEMS = [
     ("Jiǎ",  ChineseElement.WOOD,  "yang"),   # 甲
     ("Yǐ",   ChineseElement.WOOD,  "yin"),    # 乙
@@ -110,11 +122,9 @@ _HOUR_BRANCHES = {
     (21, 23): 11,  # Hài (Pig) / Water
 }
 
-
 # ---------------------------------------------------------------------------
 # Ba Zi calculation
 # ---------------------------------------------------------------------------
-
 def _year_stem_branch(year: int) -> Tuple[int, int]:
     """Return (stem_idx, branch_idx) for a given year."""
     # Year 4 CE = Jiǎ Zǐ (stem 0, branch 0)
@@ -122,7 +132,6 @@ def _year_stem_branch(year: int) -> Tuple[int, int]:
     stem_idx   = offset % 10
     branch_idx = offset % 12
     return stem_idx, branch_idx
-
 
 def _month_stem_branch(year: int, month: int) -> Tuple[int, int]:
     """Return (stem_idx, branch_idx) for a given year and month."""
@@ -134,7 +143,6 @@ def _month_stem_branch(year: int, month: int) -> Tuple[int, int]:
     month_offset = (month - 1) % 12
     stem_idx = (base_stem + month_offset) % 10
     return stem_idx, branch_idx
-
 
 def _day_stem_branch(year: int, month: int, day: int) -> Tuple[int, int]:
     """
@@ -157,9 +165,7 @@ def _day_stem_branch(year: int, month: int, day: int) -> Tuple[int, int]:
     diff       = jdn - ref_jdn
     stem_idx   = (ref_stem   + diff) % 10
     branch_idx = (ref_branch + diff) % 12
-
     return stem_idx, branch_idx
-
 
 def _hour_stem_branch(hour: int, day_stem_idx: int) -> Tuple[int, int]:
     """Return (stem_idx, branch_idx) for the hour pillar."""
@@ -180,29 +186,23 @@ def _hour_stem_branch(hour: int, day_stem_idx: int) -> Tuple[int, int]:
     stem_idx  = (base_stem + branch_idx // 2) % 10
     return stem_idx, branch_idx
 
-
 def _element_from_stem(stem_idx: int) -> ChineseElement:
     return _HEAVENLY_STEMS[stem_idx % 10][1]
-
 
 def _element_from_branch(branch_idx: int) -> ChineseElement:
     return _EARTHLY_BRANCHES[branch_idx % 12][1]
 
-
 # ---------------------------------------------------------------------------
 # Five element balance
 # ---------------------------------------------------------------------------
-
 def _count_elements(elements: List[ChineseElement]) -> Dict[str, int]:
     counts = {e.value: 0 for e in ChineseElement}
     for e in elements:
         counts[e.value] += 1
     return counts
 
-
 def _dominant_element(counts: Dict[str, int]) -> ChineseElement:
     return ChineseElement(max(counts, key=counts.get))
-
 
 def _lacking_element(
     counts: Dict[str, int],
@@ -217,11 +217,9 @@ def _lacking_element(
         return ChineseElement(min(non_dominant, key=non_dominant.get))
     return None
 
-
 # ---------------------------------------------------------------------------
 # Five element domain profiles
 # ---------------------------------------------------------------------------
-
 _ELEMENT_DOMAIN_PROFILES: Dict[str, Dict[str, str]] = {
     ChineseElement.WOOD.value: {
         Domain.CAREER.value:    "Growth-oriented career. Excels in creative, educational, and planning roles. Natural leader who builds teams.",
@@ -265,11 +263,9 @@ _ELEMENT_DOMAIN_PROFILES: Dict[str, Dict[str, str]] = {
     },
 }
 
-
 # ---------------------------------------------------------------------------
 # Ba Zi profile language
 # ---------------------------------------------------------------------------
-
 def _ba_zi_profile(
     day_master: ChineseElement,
     dominant:   ChineseElement,
@@ -309,11 +305,9 @@ def _ba_zi_profile(
 
     return profile
 
-
 # ---------------------------------------------------------------------------
 # I Ching timing signal
 # ---------------------------------------------------------------------------
-
 def _derive_iching_hexagram(birth_data: BirthData) -> Tuple[int, str]:
     """
     Derive an I Ching hexagram from birth data for timing domain.
@@ -404,11 +398,9 @@ def _derive_iching_hexagram(birth_data: BirthData) -> Tuple[int, str]:
     meaning = meanings.get(hexagram, "A unique moment of transition and opportunity")
     return hexagram, meaning
 
-
 # ---------------------------------------------------------------------------
 # Main function
 # ---------------------------------------------------------------------------
-
 def synthesise_chinese(birth_data: BirthData) -> ChineseSynthesis:
     """
     Perform complete Chinese cosmological synthesis.
@@ -448,6 +440,7 @@ def synthesise_chinese(birth_data: BirthData) -> ChineseSynthesis:
         month_element, month_branch_el,
         day_element, day_branch_el,
     ]
+
     if not hour_uncertain:
         all_elements.extend([hour_element, hour_branch_el])
     else:
@@ -491,14 +484,25 @@ def synthesise_chinese(birth_data: BirthData) -> ChineseSynthesis:
         iching_meaning      = hexagram_meaning,
     )
 
-
 def get_element_domain_reading(
     element: ChineseElement,
-    domain: Domain,
+    domain,
 ) -> Optional[str]:
     """
     Get the Chinese element's reading for a specific domain.
     Used by synthesiser to add Chinese layer to domain synthesis.
+
+    domain may be a real Domain enum member, for the original domains
+    that were always part of the enum, or a plain string, for the
+    v3.0.0 domain keys (spirit_world, sexuality, children_forecast, and
+    others) that were never added to the Domain enum itself. The only
+    caller, _chinese_enrichment() in synthesiser.py, already converts
+    domain to a plain string before calling this function, so this
+    always received a plain string in practice, calling .value on it
+    unconditionally, with no protection, crashed every reading that
+    touched one of those newer domains, confirmed against a real
+    production traceback.
     """
+    domain_key = domain.value if hasattr(domain, "value") else domain
     element_profile = _ELEMENT_DOMAIN_PROFILES.get(element.value, {})
-    return element_profile.get(domain.value)
+    return element_profile.get(domain_key)
