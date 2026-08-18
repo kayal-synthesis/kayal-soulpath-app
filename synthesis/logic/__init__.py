@@ -32,7 +32,6 @@ Usage — Union Blueprint ($397):
         spirit_profile_a    = spirit_a,    # optional
         health_profile_a    = health_a,    # optional
     )
-
     # result is LLMPayload — send to llm_narrator.py
     # All compatibility scores are in % (pct_output_mode=True always)
 
@@ -49,10 +48,21 @@ v2.0.0 additions:
     - __all__ updated with all new public exports
     - tier_detector removed (tier system deprecated)
 
-Author: KAYAL Engineering
-Version: 2.0.0
-"""
+v2.0.1 — Real bug fix, confirmed against a live production traceback:
+    tier_assessment = types.SimpleNamespace(tier=ReadingTier.STANDARD) crashed
+    every single reading, in both run_logic_engine() and run_union_engine(),
+    with AttributeError: STANDARD. ReadingTier never had a STANDARD member,
+    confirmed directly against models.py's real, complete list (tier_1_core,
+    tier_2_face, tier_3_palm, tier_4_full, tier_2b_palm_only,
+    tier_3b_face_palm). Whoever deprecated the real tier-detection system and
+    replaced it with this hardcoded placeholder typed a value that was never
+    actually defined. Both occurrences now use ReadingTier.TIER_1_CORE,
+    matching the deprecated system's evident intent, a single, default tier
+    for every reading now that per-tier detection isn't used.
 
+Author: KAYAL Engineering
+Version: 2.0.1
+"""
 from __future__ import annotations
 
 import logging
@@ -123,13 +133,11 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-
 # ---------------------------------------------------------------------------
 # Individual Blueprint pipeline — run_logic_engine()
 # v2.0.0: extended with spirit_profile, health_profile,
 #         synastry_profile, remedy_bundle parameters
 # ---------------------------------------------------------------------------
-
 def run_logic_engine(
     user_input:           UserInput,
     # Astrology and numerology (pre-computed by upstream engines)
@@ -177,7 +185,7 @@ def run_logic_engine(
 
     Pipeline:
         1.  Validate input
-        2.  Tier detection (deprecated — defaults to STANDARD)
+        2.  Tier detection (deprecated — defaults to a fixed tier)
         3.  Select astrology / numerology systems
         4.  Collect all signals (incl. spirit, health, synastry, remedy)
         5.  Weigh all signals
@@ -215,11 +223,17 @@ def run_logic_engine(
             missing_data = errors,
         )
 
-    # --- Step 2: Tier detection (tier system deprecated — defaults to STANDARD) ---
-    tier_assessment = types.SimpleNamespace(tier=ReadingTier.STANDARD)
+    # --- Step 2: Tier detection (tier system deprecated — defaults to a fixed
+    # tier). ReadingTier.STANDARD was never a real member of this enum, confirmed
+    # directly against models.py, that typo crashed every single reading with
+    # AttributeError: STANDARD, confirmed against a real production traceback.
+    # TIER_1_CORE matches the deprecated system's evident intent, a single,
+    # default tier now that per-tier detection isn't actually used.
+    tier_assessment = types.SimpleNamespace(tier=ReadingTier.TIER_1_CORE)
 
     # --- Step 3: System selection ---
     cultural_profile, astro_weighting = select_systems(user_input.birth_data)
+
     present_modifiers = apply_present_location_modifier(
         astro_weighting,
         user_input.birth_data.present_location,
@@ -314,7 +328,6 @@ def run_logic_engine(
     )
 
     total_ms = int((time.monotonic() - t0) * 1000)
-
     logger.info(
         "LogicEngine.run_logic_engine completed",
         extra={
@@ -334,7 +347,6 @@ def run_logic_engine(
 # Union Blueprint pipeline — run_union_engine()
 # v2.0.0: new function for the $397 Complete Union Blueprint tool
 # ---------------------------------------------------------------------------
-
 def run_union_engine(
     # Person A (primary — the client who purchased the reading)
     user_input_a:         UserInput,
@@ -399,7 +411,7 @@ def run_union_engine(
 
     Pipeline:
         1.  Validate both UserInput objects
-        2.  Tier detection (deprecated — defaults to STANDARD)
+        2.  Tier detection (deprecated — defaults to a fixed tier)
         3.  select_union_systems() -> UnionSystemConfig (pct_output_mode=True)
         4.  collect_signals() with synastry_profile (triggers synastry signal layer)
         5.  weigh_signals()
@@ -442,8 +454,10 @@ def run_union_engine(
             missing_data = all_errors,
         )
 
-    # --- Step 2: Tier detection (tier system deprecated — defaults to STANDARD) ---
-    tier_assessment = types.SimpleNamespace(tier=ReadingTier.STANDARD)
+    # --- Step 2: Tier detection (tier system deprecated — defaults to a fixed
+    # tier). Same real bug as run_logic_engine() above, ReadingTier.STANDARD
+    # was never a real enum member, confirmed against a live traceback.
+    tier_assessment = types.SimpleNamespace(tier=ReadingTier.TIER_1_CORE)
 
     # --- Step 3: Union system selection ---
     # select_union_systems() automatically sets pct_output_mode=True
@@ -564,7 +578,6 @@ def run_union_engine(
 
     # Log compatibility % summary for monitoring
     compat_pcts = getattr(synthesis, "compatibility_percentages", None) or {}
-
     logger.info(
         "LogicEngine.run_union_engine completed",
         extra={
@@ -588,7 +601,6 @@ def run_union_engine(
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
-
 __all__ = [
     # Main pipeline functions
     "run_logic_engine",         # Individual Blueprint ($297)
