@@ -64,8 +64,13 @@ export async function generateReading(jobId: string, userId: string, toolId: str
     apiForm.append('tool_id',       toolId)
     apiForm.append('full_name',     inputData.full_name    || '')
     apiForm.append('date_of_birth', inputData.date_of_birth || '')
-    apiForm.append('job_id',        jobId)
-    apiForm.append('user_token',    userId || '')
+    // job_id and user_token intentionally not sent, /api/reading doesn't
+    // declare either as a parameter, it generates its own internal job
+    // id and writes results to its own local jobs table, neither of
+    // which this code reads from. This call only cares about the real,
+    // tool-specific reading content /api/reading returns directly in
+    // its response body, tracking which job this belongs to on the
+    // Supabase side is handled entirely by this file's own caller.
     if (inputData.birth_time)     apiForm.append('birth_time',     inputData.birth_time)
     if (inputData.birth_location) apiForm.append('birth_location', inputData.birth_location)
     if (inputData.gender)         apiForm.append('gender',         inputData.gender)
@@ -85,7 +90,16 @@ export async function generateReading(jobId: string, userId: string, toolId: str
     const headers: Record<string, string> = {}
     if (SYNTHESIS_KEY) headers['X-API-Key'] = SYNTHESIS_KEY
 
-    const apiResponse = await fetch(`${SYNTHESIS_API}/predict`, {
+    // /api/reading, not /predict. /predict uses the plain, generic
+    // narrate(), no tool name, no price, no what_you_get promises, it
+    // has no way to know what was actually purchased, confirmed
+    // directly against main.py, that's exactly why every reading came
+    // back generic regardless of the tool. /api/reading calls
+    // process_reading_job() synchronously, the real, tool-aware
+    // pipeline, pulling the tool's actual catalog data and narrating
+    // through narrate_tool(), then returns that real result directly
+    // in the response body.
+    const apiResponse = await fetch(`${SYNTHESIS_API}/api/reading`, {
       method: 'POST',
       headers,
       body:   apiForm,

@@ -1,14 +1,19 @@
 // app/api/purchase/attach-account/route.ts
 //
 // Called from the confirmation page's account-creation and sign-in
-// flows, referenced and assumed there three separate times across this
-// project, never actually built until now, confirmed genuinely needed
-// by a real report: a purchase made as a guest gets stored under a
-// temporary device id, not a real account id, since no account exists
-// yet at the moment payment happens. Once someone creates an account or
-// signs in right after, this is what re-points that purchase at the
-// real, permanent id instead, using tx_ref, the one identifier that
-// survives the whole trip from checkout through to right now.
+// flows. Originally built as an update-only endpoint, re-pointing an
+// existing purchases row from a guest's device id to a real account id.
+// That assumed the row already existed, confirmed against real
+// production data that it never did, purchases.user_id is a genuine
+// UUID-typed column, a guest's device id string never fit that type at
+// all, the webhook's own insert attempt silently failed every single
+// time for every guest purchase, caught and logged, never visibly
+// breaking. There was never a row here to update.
+//
+// Now creates the row for real, upserted using data pulled from
+// pending_checkouts, the same real, complete record the webhook itself
+// draws from, this is genuinely the first time a guest purchase's real
+// tool, price, and job get written into purchases at all.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -28,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     const { data: pending, error: lookupError } = await supabaseAdmin
       .from('pending_checkouts')
-      .select('job_id, tool_id')
+      .select('job_id, tool_id, tool_name, tool_type, category, usd_equivalent, email, ref_code, status')
       .eq('tx_ref', txRef)
       .maybeSingle()
 
@@ -37,31 +42,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No matching purchase found for this reference' }, { status: 404 })
     }
 
-    // job_id is the real, stable link between this exact checkout and
-    // the purchases row the webhook created, more precise than matching
-    // on tool_id alone, which someone could plausibly buy more than
-    // once. Falls back to tool_id + the old device id only if job_id
-    // somehow isn't present, defensive, not the expected path.
-    let updateQuery = supabaseAdmin.from('purchases').update({ user_id: userId })
-
-    if (pending.job_id) {
-      updateQuery = updateQuery.eq('job_id', pending.job_id)
-    } else if (pending.tool_id) {
-      updateQuery = updateQuery.eq('tool_id', pending.tool_id)
-    } else {
-      return NextResponse.json({ error: 'Nothing to match this purchase against' }, { status: 500 })
+    if (pending.status !== 'completed') {
+      // Never creates a purchases row for anything payment hasn't
+      // genuinely confirmed, same discipline as the webhook itself,
+      // account creation happening quickly after checkout doesn't mean
+      // payment necessarily has confirmed yet.
+      return NextResponse.json({
+        error: 'Payment is not confirmed for this purchase yet',
+        pendingCheckoutStatus: pending.status,
+      }, { status: 400 })
     }
 
-    const { error: updateError, count } = await updateQuery.select('id', { count: 'exact' })
+    // Upserted, not inserted, same real unique constraint on
+    // (user_id, tool_id) the webhook itself respects, this call may
+    // also be the very first time this row is created at all, for a
+    // guest whose original insert silently never happened, not
+    // necessarily just re-pointing something that already existed.
+    const { error: upsertError, count } = await supabaseAdmin
+      .from('purchases')
+      .upsert({
+        user_id:        userId,
+        tool_id:        pending.tool_id,
+        tool_name:      pending.tool_name,
+        tool_type:      pending.tool_type,
+        category:       pending.category,
+        price:          pending.usd_equivalent,
+        status:         'active',
+        purchase_date:  new Date().toISOString(),
+        job_id:         pending.job_id,
+        user_email:     pending.email,
+        ref_code:       pending.ref_code,
+      }, { onConflict: 'user_id,tool_id' })
+      .select('id', { count: 'exact' })
 
-    if (updateError) {
-      console.error('[purchase/attach-account] Failed to re-point purchase for tx_ref:', txRef, updateError)
+    if (upsertError) {
+      console.error('[purchase/attach-account] Failed to upsert purchase for tx_ref:', txRef, upsertError)
       return NextResponse.json({ error: 'Failed to link purchase to account' }, { status: 500 })
     }
 
-    // A real, honest signal back to the caller rather than a silent
-    // 200, zero rows matched means the webhook's own purchases upsert
-    // either hasn't landed yet or never ran, worth knowing, not hiding.
     return NextResponse.json({ success: true, updated: count ?? 0 })
   } catch (error: any) {
     console.error('[purchase/attach-account] Unexpected error:', error)

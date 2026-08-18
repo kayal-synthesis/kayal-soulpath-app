@@ -110,35 +110,50 @@ export async function POST(request: NextRequest) {
     // trusted, server-confirmed payment success, the right place for it
     // to happen.
     //
-    // Upserted, not inserted, purchases has a real unique constraint on
-    // (user_id, tool_id), confirmed from the actual database indexes, a
-    // plain insert would fail outright on any legitimate second
-    // purchase of the same tool by the same account.
+    // purchases.user_id is a genuine UUID-typed column, matching real
+    // Supabase accounts, confirmed against real production data: every
+    // purchase made while already logged in correctly got a row here,
+    // every guest purchase, pending.user_id holding a device id string
+    // like "device_abc123", not a real UUID at all, silently failed the
+    // insert outright, caught, logged, and swallowed, never visibly
+    // breaking anything while quietly never writing. A guest purchase
+    // has no real account yet at this exact moment for this row to
+    // meaningfully belong to anyway, so it's skipped here entirely
+    // rather than attempted and quietly failed, and created for real
+    // once app/api/purchase/attach-account actually has a genuine
+    // account to attach it to.
     const resolvedEmail = stripeEmail || pending.email || null
+    const isGuestPurchase = pending.user_id?.startsWith('device_')
 
-    const { error: purchaseError } = await supabaseAdmin
-      .from('purchases')
-      .upsert({
-        user_id:        pending.user_id,
-        tool_id:        pending.tool_id,
-        tool_name:      pending.tool_name,
-        tool_type:      pending.tool_type,
-        category:       pending.category,
-        price:          pending.usd_equivalent,
-        status:         'active',
-        purchase_date:  new Date().toISOString(),
-        job_id:         pending.job_id,
-        user_email:     resolvedEmail,
-        ref_code:       pending.ref_code,
-      }, { onConflict: 'user_id,tool_id' })
+    if (!isGuestPurchase) {
+      // Upserted, not inserted, purchases has a real unique constraint on
+      // (user_id, tool_id), confirmed from the actual database indexes, a
+      // plain insert would fail outright on any legitimate second
+      // purchase of the same tool by the same account.
+      const { error: purchaseError } = await supabaseAdmin
+        .from('purchases')
+        .upsert({
+          user_id:        pending.user_id,
+          tool_id:        pending.tool_id,
+          tool_name:      pending.tool_name,
+          tool_type:      pending.tool_type,
+          category:       pending.category,
+          price:          pending.usd_equivalent,
+          status:         'active',
+          purchase_date:  new Date().toISOString(),
+          job_id:         pending.job_id,
+          user_email:     resolvedEmail,
+          ref_code:       pending.ref_code,
+        }, { onConflict: 'user_id,tool_id' })
 
-    if (purchaseError) {
-      // Logged loudly, not returned as a failure to Stripe, the payment
-      // itself genuinely succeeded and pending_checkouts is already
-      // correctly marked completed, Stripe shouldn't be told to retry
-      // over a downstream bookkeeping problem it can't fix by resending
-      // the same event again.
-      console.error('Failed to upsert purchases row for tx_ref:', txRef, purchaseError)
+      if (purchaseError) {
+        // Logged loudly, not returned as a failure to Stripe, the payment
+        // itself genuinely succeeded and pending_checkouts is already
+        // correctly marked completed, Stripe shouldn't be told to retry
+        // over a downstream bookkeeping problem it can't fix by resending
+        // the same event again.
+        console.error('Failed to upsert purchases row for tx_ref:', txRef, purchaseError)
+      }
     }
 
     // pending.job_id references the reading job already created at
