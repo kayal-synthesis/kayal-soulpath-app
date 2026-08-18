@@ -218,14 +218,8 @@ except ImportError as _tr_err:
     _TOOL_REGISTRY_AVAILABLE = False
     print(f"⚠️  tool_registry not importable: {_tr_err}")
 
-try:
-    from free_reading_endpoint import router as _free_reading_router
-    _FREE_READING_AVAILABLE = True
-    print("✅ free_reading_endpoint loaded")
-except ImportError as _fre_err:
-    _FREE_READING_AVAILABLE = False
-    _free_reading_router   = None
-    print(f"⚠️  free_reading_endpoint not importable: {_fre_err}")
+_FREE_READING_AVAILABLE = False
+_free_reading_router = None
 
 
 # ─────────────────────────────────────────────
@@ -444,7 +438,7 @@ async def lifespan(app: FastAPI):
     print(f"  Astrology        : {'✅' if _ASTROLOGY_AVAILABLE else '❌ (check EPHE_PATH + .se1 files)'}")
     print(f"  Logic layer      : {'✅' if _LOGIC_AVAILABLE else '❌'}")
     print(f"  LLM narrator     : {'✅' if _NARRATOR_AVAILABLE else '❌ (check ANTHROPIC_API_KEY)'}")
-    print(f"  Free reading API : {'✅' if _FREE_READING_AVAILABLE else '❌ (free_reading_endpoint.py missing)'}")
+
 
     init_db()
 
@@ -1366,10 +1360,9 @@ async def health():
         ("astrology_engine",  _ASTROLOGY_AVAILABLE),
         ("logic_engine",      _LOGIC_AVAILABLE),
         ("llm_narrator",      _NARRATOR_AVAILABLE),
-        ("free_reading_api",  _FREE_READING_AVAILABLE),
     ]:
         status[label] = {"status": "importable" if flag else "import_error"}
-        if not flag and label != "free_reading_api":
+        if not flag:
             overall_ok = False
 
     try:
