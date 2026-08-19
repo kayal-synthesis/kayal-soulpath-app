@@ -38,7 +38,8 @@ try:
         from synthesis.config import EPHE_PATH
     except ImportError:
         EPHE_PATH = os.environ.get("KAYAL_EPHE_PATH",
-            r"C:\Users\user\Desktop\KAYAL SYNTHESIS ENGINE\data\ephemeris\ephe")
+            os.environ.get("EPHE_PATH",
+            "/root/Kayal-Synthesis-Engine/data/ephemeris/ephe"))
     swe.set_ephe_path(EPHE_PATH)
     SWE_AVAILABLE = True
     logger.info(f"Swiss Ephemeris initialised. Ephemeris path: {EPHE_PATH}")
