@@ -38,6 +38,68 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required checkout fields' }, { status: 400 })
     }
 
+    // Real, deliberate block, not a UX nicety, this stops a second
+    // charge before it can happen at all, not after. These are
+    // personalized readings built from birth data that doesn't change,
+    // rebuying the same static tool would mean paying again for output
+    // that comes back nearly identical. time-keeper tools are the one
+    // genuine exception, their content legitimately varies by when
+    // they're purchased, everything else, subscription tools included,
+    // gets its freshness from renewal, not a manual repurchase.
+    //
+    // Two separate paths, not one, because purchases.user_id is a real,
+    // UUID-typed column, confirmed directly against production data
+    // earlier, it structurally cannot hold a device id string at all, a
+    // guest never gets a row there in the first place. reading_jobs,
+    // by contrast, genuinely does store device ids correctly, so for a
+    // guest, a completed reading_jobs row for this device and this
+    // tool is the real, honest signal of prior ownership, not
+    // purchases. This still only catches the same device, browser, and
+    // storage, a deliberate, accepted limit, not every conceivable way
+    // around it, extending real protection to every guest scenario
+    // would mean collecting an email or requiring an account before
+    // purchase, both real, separate product decisions, not something
+    // to introduce as a side effect of this fix.
+    const isRealAccount = userId && !userId.startsWith('device_')
+    const isGuest        = userId && userId.startsWith('device_')
+    const isTimingTool  = category === 'time-keeper'
+
+    if (!isTimingTool && isRealAccount) {
+      const { data: existingPurchase } = await supabaseAdmin
+        .from('purchases')
+        .select('id, job_id, purchase_date')
+        .eq('user_id', userId)
+        .eq('tool_id', toolId)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (existingPurchase) {
+        return NextResponse.json({
+          error: 'You already own this reading, no need to purchase it again.',
+          alreadyOwned: true,
+          existingJobId: existingPurchase.job_id,
+        }, { status: 409 })
+      }
+    }
+
+    if (!isTimingTool && isGuest) {
+      const { data: existingJob } = await supabaseAdmin
+        .from('reading_jobs')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('tool_id', toolId)
+        .eq('status', 'completed')
+        .maybeSingle()
+
+      if (existingJob) {
+        return NextResponse.json({
+          error: 'You already own this reading on this device, no need to purchase it again.',
+          alreadyOwned: true,
+          existingJobId: existingJob.id,
+        }, { status: 409 })
+      }
+    }
+
     const txRef = buildTxRef()
 
     const { error: insertError } = await supabaseAdmin.from('pending_checkouts').insert({

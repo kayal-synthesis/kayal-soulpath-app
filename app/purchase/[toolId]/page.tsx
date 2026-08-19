@@ -124,6 +124,22 @@ export default function PurchasePage() {
   const [validatingCoupon, setValidatingCoupon] = useState(false)
   const [showCoupon,       setShowCoupon]       = useState(true)
 
+  // Real, deliberate ownership gate, not a UX nicety. These are
+  // personalized readings built from birth data that doesn't change,
+  // repurchasing the same static tool means paying again for output
+  // that comes back nearly identical. time-keeper tools are the one
+  // genuine exception, matching exactly the same rule enforced
+  // server-side in app/api/checkout/initiate/route.ts, this is the
+  // early, friendly version of that same check, so a returning
+  // customer sees a clear message immediately rather than clicking
+  // through the whole flow only to be rejected at the very last step.
+  // Guests, no logged-in account yet, have no stable identity to check
+  // this against, same honest limitation as the backend check, this
+  // only protects a real, logged-in account.
+  const [checkingOwnership, setCheckingOwnership] = useState(true)
+  const [alreadyOwned,      setAlreadyOwned]      = useState(false)
+  const [existingJobId,     setExistingJobId]     = useState<string | null>(null)
+
   // Regional pricing. localizedBase is the catalog USD price after the
   // flat 20% African discount if applicable, converted to the visitor's
   // local currency, no visible discount messaging, this is simply what
@@ -194,13 +210,79 @@ export default function PurchasePage() {
   }, [hasCompletedOnboarding, router])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setLoggedInUser(user)
-        setEmail(user.email || '')
+    let cancelled = false
+
+    const checkAuthAndOwnership = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (cancelled) return
+
+      const domain = tool?.domain || tool?.category || 'oracle-temple'
+
+      if (!user) {
+        // Guest, checked against reading_jobs, not purchases,
+        // purchases.user_id is a real, UUID-typed column, a device id
+        // string never fits it, a guest never gets a row there at
+        // all, confirmed directly against production data. A
+        // completed reading_jobs row for this same device and tool is
+        // the real, honest signal of prior ownership here instead.
+        // This is a best-effort courtesy check, not the authoritative
+        // guard, if row-level security restricts anonymous reads of
+        // reading_jobs, this may not find a real match even when one
+        // exists, app/api/checkout/initiate/route.ts's own server-side
+        // check, using the service role key, is what actually,
+        // reliably prevents the charge either way.
+        if (!tool || domain === 'time-keeper') {
+          setCheckingOwnership(false)
+          return
+        }
+
+        const deviceId = getDeviceId()
+        const { data: existingJob } = await supabase
+          .from('reading_jobs')
+          .select('id')
+          .eq('user_id', deviceId)
+          .eq('tool_id', tool.id)
+          .eq('status', 'completed')
+          .maybeSingle()
+
+        if (cancelled) return
+
+        if (existingJob) {
+          setAlreadyOwned(true)
+          setExistingJobId(existingJob.id || null)
+        }
+        setCheckingOwnership(false)
+        return
       }
-    })
-  }, [])
+
+      setLoggedInUser(user)
+      setEmail(user.email || '')
+
+      if (!tool || domain === 'time-keeper') {
+        setCheckingOwnership(false)
+        return
+      }
+
+      const { data: existing } = await supabase
+        .from('purchases')
+        .select('job_id')
+        .eq('user_id', user.id)
+        .eq('tool_id', tool.id)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (cancelled) return
+
+      if (existing) {
+        setAlreadyOwned(true)
+        setExistingJobId(existing.job_id || null)
+      }
+      setCheckingOwnership(false)
+    }
+
+    checkAuthAndOwnership()
+    return () => { cancelled = true }
+  }, [tool?.id])
 
   useEffect(() => {
     const saved = sessionStorage.getItem(`kayal_reading_${toolId}`)
@@ -236,6 +318,7 @@ export default function PurchasePage() {
   const categoryColor  = categoryColors[domain]    || 'text-indigo-600 bg-indigo-50'
   const categoryGrad   = categoryGradients[domain] || 'from-indigo-500 to-purple-600'
   const CategoryIcon   = categoryIcons[domain]     || Crown
+
   const savings        = originalPrice - finalPrice
   const hasDiscount    = savings > 0
 
@@ -340,10 +423,12 @@ export default function PurchasePage() {
 
   const handlePurchase = async () => {
     setPurchaseError('')
+
     if (!agreedToTerms) {
       setPurchaseError('Please agree to the Terms of Service to continue.')
       return
     }
+
     setIsProcessing(true)
     try {
       const newJobId = await submitReadingJob()
@@ -372,7 +457,18 @@ export default function PurchasePage() {
       })
 
       const initData = await initResponse.json()
+
       if (!initResponse.ok || !initData.paymentLink) {
+        // Real, specific message if the backend's own ownership check
+        // caught this, matching app/api/checkout/initiate/route.ts's
+        // alreadyOwned response, this is a genuine, expected outcome,
+        // not a generic failure, even though this page's own earlier
+        // check should normally prevent reaching this point at all.
+        if (initData.alreadyOwned) {
+          setAlreadyOwned(true)
+          setExistingJobId(initData.existingJobId || null)
+          throw new Error(initData.error || 'You already own this reading.')
+        }
         throw new Error(initData.error || 'Could not start checkout, please try again.')
       }
 
@@ -387,9 +483,52 @@ export default function PurchasePage() {
     }
   }
 
+  // ── Already-owned gate ──────────────────────────────────────────────
+  // Shown instead of the entire purchase flow once ownership is
+  // confirmed, a returning customer never reaches image upload or
+  // payment for a tool they already have.
+  if (checkingOwnership) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <Loader2 className="w-6 h-6 text-neutral-300 animate-spin" />
+      </div>
+    )
+  }
+
+  if (alreadyOwned) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 bg-neutral-50">
+        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-8 text-center max-w-md w-full">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-5 ${categoryColor}`}>
+            {tool.emoji || '📦'}
+          </div>
+          <h2 className="text-2xl font-serif mb-2 text-neutral-900">You Already Have This Reading</h2>
+          <p className="text-neutral-500 mb-6 leading-relaxed">
+            {tool.name} is based on your birth data, which hasn't changed, so your existing reading is still accurate. No need to purchase it again.
+          </p>
+          <div className="space-y-3">
+            <Button
+              onClick={() => router.push(`/report/${tool.id}`)}
+              fullWidth
+              size="lg"
+            >
+              View Your Reading
+            </Button>
+            <Button
+              onClick={() => router.push('/domains')}
+              variant="outline"
+              fullWidth
+            >
+              Explore Other Tools
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-white overflow-x-hidden">
-
       {/* Header */}
       <div className="bg-white/90 backdrop-blur-sm border-b border-neutral-100 sticky top-0 z-20">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
@@ -411,7 +550,6 @@ export default function PurchasePage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-
         {/* Progress Steps */}
         {steps.length > 1 && (
           <div className="flex items-center justify-center mb-8">
@@ -509,7 +647,6 @@ export default function PurchasePage() {
 
         {/* Step Content */}
         <AnimatePresence mode="wait">
-
           {/* STEP 1, Image Upload */}
           {currentStep === 'images' && (
             <motion.div
@@ -625,7 +762,6 @@ export default function PurchasePage() {
               transition={{ duration: 0.25 }}
             >
               <div className="space-y-4">
-
                 {/* Order Summary Card */}
                 <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
                   <h2 className="text-lg font-serif text-neutral-900 mb-4">Order Summary</h2>
@@ -843,11 +979,9 @@ export default function PurchasePage() {
                 <p className="text-xs text-center text-neutral-400 pb-2">
                   Your reading will be ready in approximately {tool.deliveryMinutes || 20} minutes after payment.
                 </p>
-
               </div>
             </motion.div>
           )}
-
         </AnimatePresence>
       </div>
     </div>
