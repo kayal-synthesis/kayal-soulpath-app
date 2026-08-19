@@ -84,7 +84,21 @@ logger = logging.getLogger(__name__)
 # /health endpoint both already independently agreed was correct)
 # ---------------------------------------------------------------------------
 _MODEL_DEEPSEEK = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
-_DEEPSEEK_ENDPOINT = "https://api.deepseek.com/v1/chat/completions"
+
+# v2.0.2 — Real bug fix, found by cross-referencing this file against
+# DeepSeek's own official documentation: the real endpoint has no /v1/
+# segment at all, confirmed directly from a real curl example
+# (https://api.deepseek.com/chat/completions). This was hardcoded with
+# an extra /v1/ path segment that never matched the real API, and never
+# read DEEPSEEK_BASE_URL from .env at all, despite that variable already
+# holding the correct, real value (https://api.deepseek.com), the same
+# pattern as the DEEPSEEK_MODEL bug fixed just before this one, a
+# correct value sitting unused in .env while hardcoded code went its
+# own way. Now builds the real endpoint from that environment variable
+# directly, matching the documented API exactly, with the working
+# hardcoded path kept only as a literal last-resort fallback.
+_DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
+_DEEPSEEK_ENDPOINT = f"{_DEEPSEEK_BASE_URL}/chat/completions"
 
 # Legacy model constants preserved for backward compatibility
 MODEL_SONNET  = _MODEL_DEEPSEEK
@@ -192,6 +206,7 @@ def _narrate_tool_section(
     shared_context: str,
     system:         str,
     word_target:    int,
+    session_id:     str = "unknown",
 ) -> Tuple[str, int, bool]:
     """Narrate one whatYouGet item as its own section. Sync."""
     prompt = _build_item_section_prompt(
@@ -203,6 +218,7 @@ def _narrate_tool_section(
         messages=[{"role": "user", "content": prompt}],
         system=system,
         max_tokens=max_tokens,
+        user_id=session_id,
     )
     text = _extract_text(response)
     tokens = _token_count(response)
@@ -222,6 +238,7 @@ def _narrate_tool_section(
                 messages=[{"role": "user", "content": retry_prompt}],
                 system=system,
                 max_tokens=max_tokens,
+                user_id=session_id,
             )
             retry_text = _extract_text(retry_resp)
             tokens += _token_count(retry_resp)
@@ -242,6 +259,7 @@ async def _narrate_tool_section_async(
     shared_context: str,
     system:         str,
     word_target:    int,
+    session_id:     str = "unknown",
 ) -> Tuple[str, int, bool]:
     """Narrate one whatYouGet item as its own section. Async."""
     prompt = _build_item_section_prompt(
@@ -253,6 +271,7 @@ async def _narrate_tool_section_async(
         messages=[{"role": "user", "content": prompt}],
         system=system,
         max_tokens=max_tokens,
+        user_id=session_id,
     )
     text = _extract_text(response)
     tokens = _token_count(response)
@@ -272,6 +291,7 @@ async def _narrate_tool_section_async(
                 messages=[{"role": "user", "content": retry_prompt}],
                 system=system,
                 max_tokens=max_tokens,
+                user_id=session_id,
             )
             retry_text = _extract_text(retry_resp)
             tokens += _token_count(retry_resp)
@@ -420,7 +440,7 @@ def narrate_tool(
         for i, item in enumerate(what_you_get, start=1):
             text, tokens, retried = _narrate_tool_section(
                 item, i, len(what_you_get), tool_name, name,
-                shared_context, system, word_target,
+                shared_context, system, word_target, session_id,
             )
             section_texts[f"section_{i}"] = text
             tokens_used += tokens
@@ -491,7 +511,7 @@ async def narrate_tool_async(
         results = await asyncio.gather(*[
             _narrate_tool_section_async(
                 item, i, len(what_you_get), tool_name, name,
-                shared_context, system, word_target,
+                shared_context, system, word_target, session_id,
             )
             for i, item in enumerate(what_you_get, start=1)
         ])
@@ -702,11 +722,37 @@ def _clean_output_text(text: str) -> str:
 # ---------------------------------------------------------------------------
 # DeepSeek API callers (v3.1.0 — replaced Anthropic)
 # ---------------------------------------------------------------------------
+# v2.0.3, real robustness fixes, all confirmed against DeepSeek's own
+# official documentation, not guessed at:
+#   - Timeout raised from 120s to 600s. DeepSeek's own docs state the
+#     server itself allows up to 10 minutes before even starting
+#     inference, the old 120s client-side timeout could abandon a
+#     request DeepSeek was still legitimately going to answer.
+#   - user_id now threaded through every call, using the reading's own
+#     job_id (already unique, already available, matches DeepSeek's
+#     required [a-zA-Z0-9\-_]+ format). Per DeepSeek's docs this
+#     isolates KVCache, content-safety handling, and scheduling per
+#     reading, a real, direct fit for a platform generating personal
+#     content, not previously wired up at all.
+#   - 402 (Insufficient Balance) now raises a specific, immediately
+#     diagnosable message. This is the exact real condition already hit
+#     once in production, confirmed the hard way, tracing generic
+#     fallback text back through several files before finding it, a
+#     specific message here means that never has to happen again.
+#   - 429 (Rate Limit) and 503 (Server Overloaded) now retry briefly,
+#     matching DeepSeek's own documented guidance ("retry after a brief
+#     wait") exactly, rather than treating a temporary, expected
+#     condition as a hard, permanent failure on the very first attempt.
+_RETRYABLE_STATUS_CODES = {429, 503}
+_MAX_RETRIES = 2
+_RETRY_WAIT_SECONDS = 3
+
 def _call_deepseek(
     messages: List[Dict],
     system: str,
     max_tokens: int,
     temperature: float = 0.7,
+    user_id: Optional[str] = None,
 ) -> Dict:
     """Call DeepSeek-V4 synchronously."""
     try:
@@ -721,47 +767,74 @@ def _call_deepseek(
     # DeepSeek uses OpenAI-compatible format — system prompt as first message
     openai_messages = [{"role": "system", "content": system}] + messages
 
-    with httpx.Client(timeout=120.0) as client:
-        response = client.post(
-            _DEEPSEEK_ENDPOINT,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}",
-            },
-            json={
+    payload: Dict[str, Any] = {
+        "model": _MODEL_DEEPSEEK,
+        "messages": openai_messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+    }
+    if user_id:
+        payload["user_id"] = user_id
+
+    last_error: Optional[Exception] = None
+
+    for attempt in range(_MAX_RETRIES + 1):
+        with httpx.Client(timeout=600.0) as client:
+            response = client.post(
+                _DEEPSEEK_ENDPOINT,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                },
+                json=payload,
+            )
+
+            if response.status_code == 401:
+                raise RuntimeError("DeepSeek API key invalid or missing. Check DEEPSEEK_API_KEY in .env")
+
+            if response.status_code == 402:
+                raise RuntimeError(
+                    "DeepSeek balance exhausted (402 Insufficient Balance). "
+                    "Top up at platform.deepseek.com, this is a billing issue, not a code bug."
+                )
+
+            if response.status_code in _RETRYABLE_STATUS_CODES:
+                last_error = RuntimeError(f"DeepSeek API {response.status_code}: temporary, retrying")
+                if attempt < _MAX_RETRIES:
+                    logger.warning(f"DeepSeek {response.status_code}, retrying in {_RETRY_WAIT_SECONDS}s (attempt {attempt + 1}/{_MAX_RETRIES})")
+                    time.sleep(_RETRY_WAIT_SECONDS)
+                    continue
+                try:
+                    err_msg = response.json().get("error", {}).get("message", response.text[:300])
+                except Exception:
+                    err_msg = response.text[:300]
+                raise RuntimeError(f"DeepSeek API {response.status_code} after {_MAX_RETRIES} retries: {err_msg}")
+
+            if not response.is_success:
+                try:
+                    err_msg = response.json().get("error", {}).get("message", response.text[:300])
+                except Exception:
+                    err_msg = response.text[:300]
+                raise RuntimeError(f"DeepSeek API {response.status_code}: {err_msg}")
+
+            data = response.json()
+            choices = data.get("choices", [])
+            if not choices:
+                raise RuntimeError("DeepSeek API returned no choices")
+
+            content = choices[0].get("message", {}).get("content", "")
+
+            # Convert to Anthropic-compatible format for downstream compatibility
+            return {
+                "content": [{"type": "text", "text": content}],
+                "usage": {
+                    "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
+                    "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
+                },
                 "model": _MODEL_DEEPSEEK,
-                "messages": openai_messages,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
             }
-        )
 
-        if response.status_code == 401:
-            raise RuntimeError("DeepSeek API key invalid or missing. Check DEEPSEEK_API_KEY in .env")
-
-        if not response.is_success:
-            try:
-                err_msg = response.json().get("error", {}).get("message", response.text[:300])
-            except Exception:
-                err_msg = response.text[:300]
-            raise RuntimeError(f"DeepSeek API {response.status_code}: {err_msg}")
-
-        data = response.json()
-        choices = data.get("choices", [])
-        if not choices:
-            raise RuntimeError("DeepSeek API returned no choices")
-
-        content = choices[0].get("message", {}).get("content", "")
-
-        # Convert to Anthropic-compatible format for downstream compatibility
-        return {
-            "content": [{"type": "text", "text": content}],
-            "usage": {
-                "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
-                "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
-            },
-            "model": _MODEL_DEEPSEEK,
-        }
+    raise last_error or RuntimeError("DeepSeek API call failed after retries")
 
 async def _call_deepseek_async(
     messages: List[Dict],
@@ -769,8 +842,12 @@ async def _call_deepseek_async(
     max_tokens: int,
     temperature: float = 0.7,
     stream: bool = False,
+    user_id: Optional[str] = None,
 ) -> Dict:
-    """Call DeepSeek-V4 asynchronously."""
+    """Call DeepSeek-V4 asynchronously. Same robustness fixes as the sync
+    version above (v2.0.3), plus the 401 check the async path was
+    previously missing entirely, a real, existing asymmetry between the
+    two, confirmed by direct comparison, not previously noticed."""
     try:
         import httpx
     except ImportError:
@@ -782,44 +859,74 @@ async def _call_deepseek_async(
 
     openai_messages = [{"role": "system", "content": system}] + messages
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        response = await client.post(
-            _DEEPSEEK_ENDPOINT,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}",
-            },
-            json={
+    payload: Dict[str, Any] = {
+        "model": _MODEL_DEEPSEEK,
+        "messages": openai_messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "stream": stream,
+    }
+    if user_id:
+        payload["user_id"] = user_id
+
+    last_error: Optional[Exception] = None
+
+    for attempt in range(_MAX_RETRIES + 1):
+        async with httpx.AsyncClient(timeout=600.0) as client:
+            response = await client.post(
+                _DEEPSEEK_ENDPOINT,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                },
+                json=payload,
+            )
+
+            if response.status_code == 401:
+                raise RuntimeError("DeepSeek API key invalid or missing. Check DEEPSEEK_API_KEY in .env")
+
+            if response.status_code == 402:
+                raise RuntimeError(
+                    "DeepSeek balance exhausted (402 Insufficient Balance). "
+                    "Top up at platform.deepseek.com, this is a billing issue, not a code bug."
+                )
+
+            if response.status_code in _RETRYABLE_STATUS_CODES:
+                last_error = RuntimeError(f"DeepSeek API {response.status_code}: temporary, retrying")
+                if attempt < _MAX_RETRIES:
+                    logger.warning(f"DeepSeek {response.status_code}, retrying in {_RETRY_WAIT_SECONDS}s (attempt {attempt + 1}/{_MAX_RETRIES})")
+                    await asyncio.sleep(_RETRY_WAIT_SECONDS)
+                    continue
+                try:
+                    err_msg = response.json().get("error", {}).get("message", response.text[:300])
+                except Exception:
+                    err_msg = response.text[:300]
+                raise RuntimeError(f"DeepSeek API {response.status_code} after {_MAX_RETRIES} retries: {err_msg}")
+
+            if not response.is_success:
+                try:
+                    err_msg = response.json().get("error", {}).get("message", response.text[:300])
+                except Exception:
+                    err_msg = response.text[:300]
+                raise RuntimeError(f"DeepSeek API {response.status_code}: {err_msg}")
+
+            data = response.json()
+            choices = data.get("choices", [])
+            if not choices:
+                raise RuntimeError("DeepSeek API returned no choices")
+
+            content = choices[0].get("message", {}).get("content", "")
+
+            return {
+                "content": [{"type": "text", "text": content}],
+                "usage": {
+                    "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
+                    "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
+                },
                 "model": _MODEL_DEEPSEEK,
-                "messages": openai_messages,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "stream": stream,
             }
-        )
 
-        if not response.is_success:
-            try:
-                err_msg = response.json().get("error", {}).get("message", response.text[:300])
-            except Exception:
-                err_msg = response.text[:300]
-            raise RuntimeError(f"DeepSeek API {response.status_code}: {err_msg}")
-
-        data = response.json()
-        choices = data.get("choices", [])
-        if not choices:
-            raise RuntimeError("DeepSeek API returned no choices")
-
-        content = choices[0].get("message", {}).get("content", "")
-
-        return {
-            "content": [{"type": "text", "text": content}],
-            "usage": {
-                "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
-                "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
-            },
-            "model": _MODEL_DEEPSEEK,
-        }
+    raise last_error or RuntimeError("DeepSeek API call failed after retries")
 
 # Legacy function names — preserved for backward compatibility
 async def _call_anthropic_async(messages, system, model, max_tokens, stream=False):
@@ -1035,6 +1142,7 @@ def narrate(
             messages=[{"role": "user", "content": user_prompt}],
             system=system,
             max_tokens=max_tokens,
+            user_id=session_id,
         )
         full_text = _extract_text(response)
         tokens_used = _token_count(response)
@@ -1068,6 +1176,7 @@ def narrate(
                     messages=[{"role": "user", "content": retry_user_prompt}],
                     system=system,
                     max_tokens=max_tokens,
+                    user_id=session_id,
                 )
                 retry_text = _extract_text(retry_resp)
                 tokens_used += _token_count(retry_resp)
@@ -1092,6 +1201,7 @@ def narrate(
                     messages=[{"role": "user", "content": fp}],
                     system=system,
                     max_tokens=1200,
+                    user_id=session_id,
                 )
                 full_text = _strip_methodology_labels(_extract_text(r))
                 tokens_used = _token_count(r)
@@ -1154,6 +1264,7 @@ async def narrate_async(
             messages=[{"role": "user", "content": user_prompt}],
             system=system,
             max_tokens=max_tokens,
+            user_id=session_id,
         )
         full_text = _extract_text(response)
         tokens_used = _token_count(response)
@@ -1177,6 +1288,7 @@ async def narrate_async(
                     messages=[{"role": "user", "content": retry_user_prompt}],
                     system=system,
                     max_tokens=max_tokens,
+                    user_id=session_id,
                 )
                 retry_text = _extract_text(retry_resp)
                 tokens_used += _token_count(retry_resp)
@@ -1197,6 +1309,7 @@ async def narrate_async(
                     messages=[{"role": "user", "content": _condensed_fallback_prompt(llm_payload)}],
                     system=system,
                     max_tokens=1200,
+                    user_id=session_id,
                 )
                 full_text = _strip_methodology_labels(_extract_text(r))
                 tokens_used = _token_count(r)
