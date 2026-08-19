@@ -27,6 +27,14 @@ interface InitiateCheckoutInput {
   txRef:       string   // unique reference, this is the idempotency key threaded through the whole flow
   redirectUrl: string   // where the customer's browser goes after payment
   meta?:       Record<string, any>
+  // Real, Stripe-managed recurring billing, added for the subscription
+  // tools, previously every one of these was silently a one-time
+  // charge with "/mo" as display text only, nothing here actually
+  // managed a renewal. Deliberately not retroactive, every subscription
+  // tool purchased before this stays exactly as it was purchased, a
+  // one-time charge, only new purchases going through this path get
+  // real recurring billing.
+  isSubscription?: boolean
 }
 
 interface CheckoutResult {
@@ -55,8 +63,25 @@ export async function initiateCheckout(input: InitiateCheckoutInput): Promise<Ch
   if (!stripe) return { success: false, error: 'STRIPE_SECRET_KEY not configured' }
 
   try {
+    const isSub = !!input.isSubscription
+
+    // Same dynamic, inline pricing pattern as the one-time path below,
+    // Stripe's Checkout API accepts a recurring block directly inside
+    // price_data, no pre-created Price object needed per tool per
+    // currency, consistent with why price_data was chosen originally,
+    // 113 tools across many localized currencies makes pre-created
+    // fixed prices unworkable either way.
+    const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
+      currency: input.currency.toLowerCase(),
+      unit_amount: toStripeAmount(input.amount, input.currency),
+      product_data: {
+        name: input.meta?.tool_name || 'KAYAL Reading',
+      },
+      ...(isSub ? { recurring: { interval: 'month' as const } } : {}),
+    }
+
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: isSub ? 'subscription' : 'payment',
       client_reference_id: input.txRef, // the primary key the webhook uses to find this checkout's pending_checkouts row
       // Omitted entirely, not sent as an empty string, when input.email
       // is blank, which it now genuinely is for every guest, the
@@ -75,13 +100,7 @@ export async function initiateCheckout(input: InitiateCheckoutInput): Promise<Ch
       cancel_url:  `${input.redirectUrl}?tx_ref=${encodeURIComponent(input.txRef)}&status=cancelled`,
       line_items: [{
         quantity: 1,
-        price_data: {
-          currency: input.currency.toLowerCase(),
-          unit_amount: toStripeAmount(input.amount, input.currency),
-          product_data: {
-            name: input.meta?.tool_name || 'KAYAL Reading',
-          },
-        },
+        price_data: priceData,
       }],
       metadata: {
         tx_ref: input.txRef, // duplicated into metadata too, belt-and-suspenders alongside client_reference_id

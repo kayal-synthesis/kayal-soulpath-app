@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       userId, email, fullName,
       toolId, toolName, toolType, category,
       amountCharged, currency, usdEquivalent,
-      refCode, jobId,
+      refCode, jobId, isSubscription,
     } = body
 
     // email intentionally excluded here, the field on the purchase
@@ -62,9 +62,18 @@ export async function POST(request: NextRequest) {
     // to introduce as a side effect of this fix.
     const isRealAccount = userId && !userId.startsWith('device_')
     const isGuest        = userId && userId.startsWith('device_')
-    const isTimingTool  = category === 'time-keeper'
+    // v1.1, urgent, real correction, not yet Stripe-managed recurring
+    // billing, confirmed directly, this repo has no real subscription
+    // mode anywhere, just a one-time charge with "/mo" as display text.
+    // Without this exemption, the very first monthly renewal of a
+    // subscription tool would be permanently blocked by this same
+    // check, indistinguishable from a genuine, accidental repurchase.
+    // Real Stripe-native billing is the right eventual fix, this
+    // exemption is the correct, honest stopgap until that's built.
+    const isTimingTool     = category === 'time-keeper'
+    const isSubscriptionTool = !!isSubscription
 
-    if (!isTimingTool && isRealAccount) {
+    if (!isTimingTool && !isSubscriptionTool && isRealAccount) {
       const { data: existingPurchase } = await supabaseAdmin
         .from('purchases')
         .select('id, job_id, purchase_date')
@@ -82,7 +91,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!isTimingTool && isGuest) {
+    if (!isTimingTool && !isSubscriptionTool && isGuest) {
       const { data: existingJob } = await supabaseAdmin
         .from('reading_jobs')
         .select('id')
@@ -131,6 +140,7 @@ export async function POST(request: NextRequest) {
       txRef,
       redirectUrl: `${appUrl}/purchase/${toolId}/callback`,
       meta: { tool_id: toolId, tx_ref: txRef }, // best-effort echo, not relied upon, pending_checkouts is the real source of truth
+      isSubscription: isSubscriptionTool,
     })
 
     if (!checkoutResult.success) {

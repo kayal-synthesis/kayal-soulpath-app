@@ -37,6 +37,13 @@ const CRON_SECRET = process.env.CRON_SECRET
 const MAX_CONCURRENT_GENERATIONS = 10
 const PAYMENT_TIMEOUT_MINUTES = 30
 const STALE_PROCESSING_MINUTES = 10
+// A real, deliberate cap, not unlimited, if DeepSeek stays genuinely
+// broken for an extended stretch, or the real cause turns out to be
+// something else entirely, an invalid key, a permanently dead
+// endpoint, a job shouldn't retry forever, quietly consuming capacity
+// on every single tick. Past this many attempts it stays failed for
+// real, human attention, the same as any other genuine failure.
+const MAX_DEEPSEEK_RETRIES = 5
 
 // The real ceiling on how many readings generate at once, system-wide,
 // not per tick. Each generation does real, meaningful work, astrology
@@ -58,6 +65,7 @@ export async function POST(request: NextRequest) {
   const started: string[] = []
   const failed: string[] = []
   const resumed: string[] = []
+  const retriedAfterDeepseekFailure: string[] = []
 
   // Real, live count, not a per-tick local counter, this is what
   // actually bounds total concurrency correctly even across multiple
@@ -94,7 +102,46 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 2. Jobs awaiting payment confirmation, oldest first, fair FIFO
+  // 2. Jobs that genuinely, completely failed to narrate, DeepSeek
+  //    exhausted right down to the local emergency placeholder,
+  //    confirmed by generateReading.ts's own DEEPSEEK_TOTAL_FAILURE:
+  //    marker, real money already collected for these, real synthesis
+  //    already computed correctly, only the narration step failed.
+  //    The moment DeepSeek is genuinely funded again, this same cron,
+  //    already running every minute, picks these back up automatically
+  //    within that same minute, no manual intervention, no customer
+  //    ever needing to notice or complain. retry_count caps this at
+  //    MAX_DEEPSEEK_RETRIES so a job that fails for a different, real
+  //    reason doesn't retry forever.
+  if (remainingCapacity > 0) {
+    const { data: deepseekFailedJobs } = await supabaseAdmin
+      .from('reading_jobs')
+      .select('id, user_id, tool_id, input_data, retry_count')
+      .eq('status', 'failed')
+      .like('error', 'DEEPSEEK_TOTAL_FAILURE:%')
+      .lt('retry_count', MAX_DEEPSEEK_RETRIES)
+      .order('updated_at', { ascending: true })
+      .limit(remainingCapacity)
+
+    for (const job of deepseekFailedJobs || []) {
+      retriedAfterDeepseekFailure.push(job.id)
+      remainingCapacity--
+      await supabaseAdmin
+        .from('reading_jobs')
+        .update({
+          status:      'processing',
+          retry_count: (job.retry_count ?? 0) + 1,
+          error:       null,
+          updated_at:  new Date().toISOString(),
+        })
+        .eq('id', job.id)
+      generateReading(job.id, job.user_id, job.tool_id, job.input_data || {}).catch(err =>
+        console.error(`[process-pending-readings] deepseek retry failed for ${job.id}:`, err)
+      )
+    }
+  }
+
+  // 3. Jobs awaiting payment confirmation, oldest first, fair FIFO
   //    order, so a deep queue drains in the order people actually paid,
   //    not arbitrarily.
   const { data: pendingJobs } = await supabaseAdmin
@@ -148,6 +195,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     started, failed, resumed,
+    retriedAfterDeepseekFailure,
     currentlyProcessing: currentlyProcessing ?? 0,
     stillQueued: (pendingJobs?.length ?? 0) - started.length - failed.length,
   })

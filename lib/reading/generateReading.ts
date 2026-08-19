@@ -113,6 +113,45 @@ export async function generateReading(jobId: string, userId: string, toolId: str
 
     const content = await apiResponse.json()
 
+    // Real, deliberate check, not previously possible at all, before
+    // tonight main.py's own response never included this signal, every
+    // total DeepSeek failure completed silently with placeholder text
+    // standing in for a real reading, confirmed directly against
+    // production data, no way back once DeepSeek recovered short of
+    // someone noticing by hand.
+    //
+    // fallback_used alone isn't enough to treat this as a failure, the
+    // condensed fallback prompt is still a real DeepSeek call, when it
+    // succeeds the result is genuine, if shorter, content, not a
+    // placeholder. narration_error is only ever populated when every
+    // real attempt failed, right down to the local emergency text with
+    // no API call behind it at all, that combination is the actual,
+    // honest signal of total failure, not fallback_used by itself.
+    const isTotalNarrationFailure = content?.fallback_used === true && !!content?.narration_error
+
+    if (isTotalNarrationFailure) {
+      console.error(`[generateReading] Job ${jobId} total narration failure: ${content.narration_error}`)
+      await supabaseAdmin
+        .from('reading_jobs')
+        .update({
+          status: 'failed',
+          // DEEPSEEK_TOTAL_FAILURE: prefix is a real, deliberate marker,
+          // app/api/cron/process-pending-readings/route.ts searches for
+          // this exact prefix to find jobs safe to automatically retry,
+          // once DeepSeek is genuinely funded again, this specific job
+          // gets picked back up and completed for real within the same
+          // minute, no manual intervention required.
+          error: `DEEPSEEK_TOTAL_FAILURE: ${content.narration_error}`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', jobId)
+      // No reading_results row created, no email sent, there is
+      // genuinely nothing real yet to show or deliver, a misleading
+      // "completed" row with placeholder content would be worse than
+      // an honest, visible failed state waiting on automatic recovery.
+      return
+    }
+
     await supabaseAdmin
       .from('reading_jobs')
       .update({ progress: 90, updated_at: new Date().toISOString() })
