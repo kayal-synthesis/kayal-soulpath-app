@@ -1,5 +1,4 @@
-﻿'use client'
-
+'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -7,7 +6,13 @@ import { voiceTools } from '@/lib/constants/voice-tools'
 import { sacredScriptTools } from '@/lib/constants/sacred-script-tools'
 import { ChevronRight, Clock, Star } from 'lucide-react'
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+// v1.1, real bug fix, the fallback below pointed at localhost, the
+// same category of bug already found and fixed across several files
+// tonight. The actual endpoint call in this file,
+// /api/subscription/tier, was already checked directly against
+// main.py's real, current routes and confirmed an exact match,
+// nothing else needed changing.
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 
 const TOOL_DOMAIN: Record<string,string> = {
   'oracle-voice-session':'all','oracle-deep-dive-session':'all',
@@ -141,17 +146,14 @@ export default function NewConversationPage() {
         <h1 style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:26,fontWeight:400,color:'rgba(239,230,214,0.88)',marginBottom:4}}>New Session</h1>
         <p style={{fontSize:12,color:'rgba(106,96,86,0.55)'}}>Your active tools</p>
       </div>
-
       {purchasedVoice.length>0&&(
         <Section emoji="🎙️" title="Voice of Prophecy" subtitle="Live voice sessions" accent="#c9a96e">
           {purchasedVoice.map(t=><ToolCard key={t.id} tool={t} route={`/domain/voice-of-prophecy/${t.id}`}/>)}
         </Section>
       )}
-
       {purchasedVoice.length>0&&purchasedChat.length>0&&(
         <div style={{margin:'16px 20px',height:1,background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent)'}}/>
       )}
-
       {purchasedChat.length>0&&(
         <Section emoji="📜" title="Sacred Script" subtitle="Text chat sessions" accent="#b8966a">
           {purchasedChat.map(t=><ToolCard key={t.id} tool={t} route={`/domain/sacred-script/${t.id}`}/>)}

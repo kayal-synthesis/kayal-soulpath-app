@@ -13,13 +13,24 @@
  *  - Timing themes spelled out, not just numbers
  *  - Astrology filtered to domain-relevant planets only
  *  - Synthesis block always sits at history[0], never trimmed
+ *
+ * v1.1, real bug fix, the fallback below still pointed at localhost,
+ * the same real bug already found and fixed in lib/api.ts and
+ * ChatSession.tsx, now that .env.local correctly sets
+ * NEXT_PUBLIC_API_URL, this fallback should never actually trigger in
+ * production, fixed anyway to match the same safe pattern used
+ * consistently everywhere else, in case that variable is ever missing
+ * during a future build. Every real API call in this file was checked
+ * directly against main.py's actual, current route list, both
+ * /api/subscription/tier and /api/reading/job/latest are already
+ * exact matches, nothing else needed changing.
  */
 
 // ─────────────────────────────────────────────────────────────
 // Config
 // ─────────────────────────────────────────────────────────────
 const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+  process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com'
 ).replace(/\/$/, '')
 
 // ─────────────────────────────────────────────────────────────
@@ -88,7 +99,6 @@ export interface SynthesisContext {
   face_shape:       string | null
   face_archetype:   string | null
   face_element:     string | null
-
   has_palm:         boolean
   palm_shape:       string | null
   palm_element:     string | null
@@ -174,7 +184,6 @@ export async function fetchSynthesis(
       }
     )
     if (!res.ok) return EMPTY_SYNTHESIS
-
     const data = await res.json()
     if (!data?.result) return EMPTY_SYNTHESIS
 
@@ -310,7 +319,6 @@ export async function fetchSynthesis(
       face_shape:     faceShape,
       face_archetype: faceArchetype,
       face_element:   faceElement,
-
       has_palm:           hasPalm,
       palm_shape:         palmShape,
       palm_element:       palmElement,
@@ -333,6 +341,7 @@ export async function fetchSynthesis(
 // ─────────────────────────────────────────────────────────────
 export function buildSynthesisPills(ctx: SynthesisContext): string[] {
   const pills: string[] = []
+
   if (ctx.life_path)     pills.push(`Life Path ${ctx.life_path}${ctx.master_numbers.includes(ctx.life_path) ? ' ✦' : ''}`)
   if (ctx.soul_urge)     pills.push(`Soul ${ctx.soul_urge}`)
   if (ctx.sun_sign)      pills.push(`☉ ${ctx.sun_sign}`)
@@ -341,9 +350,11 @@ export function buildSynthesisPills(ctx: SynthesisContext): string[] {
   if (ctx.personal_month)pills.push(`PM ${ctx.personal_month}`)
   if (ctx.personal_day)  pills.push(`PD ${ctx.personal_day}`)
   if (ctx.pinnacle_label)pills.push(ctx.pinnacle_label)
+
   // Only show face/palm if actually collected
   if (ctx.has_face && ctx.face_archetype) pills.push(ctx.face_archetype)
   if (ctx.has_palm && ctx.palm_element)   pills.push(`Palm · ${ctx.palm_element}`)
+
   return pills
 }
 
@@ -453,7 +464,6 @@ export function buildSynthesisBlock(
     if (ctx.face_element)   lines.push(`Element:    ${ctx.face_element}`)
     lines.push('')
   }
-
   if (ctx.has_palm) {
     lines.push('PALM READING (collected)')
     lines.push('────────────────────────')
@@ -462,7 +472,6 @@ export function buildSynthesisBlock(
     if (ctx.palm_ruling_planet)  lines.push(`Ruling planet:  ${ctx.palm_ruling_planet}`)
     lines.push('')
   }
-
   if (!ctx.has_face && !ctx.has_palm) {
     lines.push('NOTE: No face or palm reading was collected for this user.')
     lines.push('Do not reference face shape, palm lines, or physical features.')
@@ -473,7 +482,6 @@ export function buildSynthesisBlock(
   const domainSection = ctx.domain_sections[scope]
     ?? ctx.domain_sections[scope.replace('-', '_')]
     ?? null
-
   if (domainSection) {
     lines.push(`${scope.toUpperCase()} DOMAIN READING`)
     lines.push('─────────────────────────────────────')
@@ -511,13 +519,11 @@ export function buildSynthesisBlock(
   lines.push('- Connect their questions to their current timing — what does PY '
     + (ctx.personal_year ?? '?') + ' mean for this?')
   lines.push('')
-
   if (!ctx.has_face && !ctx.has_palm) {
     lines.push('IMPORTANT: No physical readings were collected. Do not reference face shape,')
     lines.push('palm lines, hand shape, or any physiognomy. Work only from numerology and astrology.')
     lines.push('')
   }
-
   lines.push(isVoice
     ? 'FORMAT: Natural spoken sentences only. No bullet points, no headers, no markdown.'
     : 'FORMAT: Paragraphs. No bullet points unless explicitly asked. No headers. Write as a reader speaking.'

@@ -1,13 +1,25 @@
 'use client'
-
 /**
  * app/(app)/home/page.tsx
  * ========================
  * Dashboard — the first screen after sign-in.
  * Everything is personalised to the user's synthesis.
  * Never generic. Always specific.
+ *
+ * v1.1, two real bug fixes, confirmed directly against main.py's
+ * actual, current route list:
+ *   1. The fallback API address still pointed at localhost, the same
+ *      category of bug already found and fixed across several files
+ *      tonight.
+ *   2. The conversations endpoint was missing the /api prefix
+ *      main.py's real route actually uses, /api/user/{token}/
+ *      conversations exists, /user/{token}/conversations doesn't, the
+ *      same bug now found a third time, independently, across
+ *      ToolShell.tsx, app/conversations/page.tsx, and here. Without
+ *      it this dashboard would silently show zero recent
+ *      conversations, wrapped in an existing try/catch, no crash,
+ *      just an empty section where real, recent history should be.
  */
-
 import { useState, useEffect } from 'react'
 import { useRouter }           from 'next/navigation'
 import { useAuth }             from '@/lib/hooks/useAuth'
@@ -29,7 +41,6 @@ interface DailyBriefing {
   moon_note:      string
   energy_quality: string  // 'action' | 'reflection' | 'expression' | 'building' etc
 }
-
 interface RecentSession {
   id:            string
   tool_id:       string
@@ -40,7 +51,6 @@ interface RecentSession {
   updated_at:    string
   message_count: number
 }
-
 interface ActiveSubscription {
   tool_id:     string
   tool_name:   string
@@ -49,7 +59,6 @@ interface ActiveSubscription {
   price:       number
   sessions_this_month: number
 }
-
 interface Dashboard {
   first_name:        string
   life_path:         number | null
@@ -83,14 +92,12 @@ const DOMAIN_COLOUR: Record<string, string> = {
   'time-keeper':   '#a8c4a0',
   all:       '#c9a96e',
 }
-
 const LP_COLOUR: Record<number, string> = {
   1: '#c9a96e', 2: '#d4856a', 3: '#e8a060',
   4: '#7aaa8a', 5: '#b89fd4', 6: '#d4856a',
   7: '#8ba8d4', 8: '#c9a96e', 9: '#9a8ac4',
   11: '#b89fd4', 22: '#c9a96e', 33: '#e8a060',
 }
-
 const ENERGY_ICON: Record<string, React.ElementType> = {
   action:     Zap,
   reflection: Moon,
@@ -103,7 +110,7 @@ const ENERGY_ICON: Record<string, React.ElementType> = {
 // ─────────────────────────────────────────────────────────────
 // API
 // ─────────────────────────────────────────────────────────────
-const API = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+const API = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 
 async function fetchDashboard(userId: string): Promise<Dashboard | null> {
   try {
@@ -119,7 +126,7 @@ async function fetchDashboard(userId: string): Promise<Dashboard | null> {
     // Load recent conversations
     let recentSessions: RecentSession[] = []
     try {
-      const convRes = await fetch(`${API}/user/${userId}/conversations`)
+      const convRes = await fetch(`${API}/api/user/${userId}/conversations`)
       if (convRes.ok) {
         const convData = await convRes.json()
         // Group by session_id and take the most recent ones
@@ -199,7 +206,6 @@ function getBriefingAction(pd: number): string {
   }
   return actions[pd] ?? 'Be present to what arises today'
 }
-
 function getBriefingCaution(pd: number): string {
   const cautions: Record<number, string> = {
     1: 'Avoid beginning too many things at once',
@@ -217,7 +223,6 @@ function getBriefingCaution(pd: number): string {
   }
   return cautions[pd] ?? 'Stay present rather than anticipating'
 }
-
 function getEnergyQuality(pd: number): string {
   const qualities: Record<number, string> = {
     1: 'action', 2: 'reflection', 3: 'expression',
@@ -227,7 +232,6 @@ function getEnergyQuality(pd: number): string {
   }
   return qualities[pd] ?? 'default'
 }
-
 function getMoonPhase(): string {
   // Approximate from day of month
   const day = new Date().getDate()
@@ -240,7 +244,6 @@ function getMoonPhase(): string {
   if (day < 27) return 'Last Quarter'
   return 'Waning Crescent'
 }
-
 function timeAgo(ts: string): string {
   const diff = Date.now() - new Date(ts).getTime()
   const mins = Math.floor(diff / 60000)
@@ -257,7 +260,6 @@ function timeAgo(ts: string): string {
 export default function HomePage() {
   const router   = useRouter()
   const { user } = useAuth()
-
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
   const [loading,   setLoading]   = useState(true)
 
@@ -272,7 +274,6 @@ export default function HomePage() {
   const lpColour  = dashboard?.life_path
     ? (LP_COLOUR[dashboard.life_path] ?? '#c9a96e')
     : '#c9a96e'
-
   const EnergyIcon = dashboard?.briefing
     ? (ENERGY_ICON[dashboard.briefing.energy_quality] ?? ENERGY_ICON.default)
     : Sun
@@ -319,7 +320,6 @@ export default function HomePage() {
       className="max-w-2xl mx-auto px-5 py-6 space-y-5"
       style={{ fontFamily: 'var(--font-body)' }}
     >
-
       {/* ── Greeting ───────────────────────────────────────── */}
       <div className="animate-fade-up">
         <h1
@@ -369,7 +369,6 @@ export default function HomePage() {
               {dashboard.briefing.personal_day}
             </div>
           </div>
-
           {/* Action + Caution */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             <div className="rounded-xl p-3"
@@ -393,7 +392,6 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-
           {/* Moon + CTA */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -441,7 +439,6 @@ export default function HomePage() {
             View full
           </button>
         </div>
-
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
             { label: 'Life Path',      value: dashboard.life_path,     colour: lpColour },
@@ -462,7 +459,6 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-
         {dashboard.pinnacle && (
           <div className="mt-3 px-3 py-2 rounded-xl"
             style={{ background: 'var(--surface)', border: '1px solid var(--rim)' }}>
@@ -560,7 +556,6 @@ export default function HomePage() {
               </p>
             </div>
           </button>
-
           <button
             onClick={() => router.push('/domain/sacred-script')}
             className="flex flex-col items-start gap-2 p-4 rounded-2xl transition-all"

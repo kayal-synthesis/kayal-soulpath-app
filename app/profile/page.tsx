@@ -1,13 +1,29 @@
 'use client'
-
 /**
  * app/(app)/profile/page.tsx
  * ===========================
  * The user's sacred document.
  * Synthesis portrait, reading history, subscriptions, account.
  * Feels like a personal oracle dossier — not a settings page.
+ *
+ * v1.1, real bug fix, the fallback below pointed at localhost, the
+ * same category of bug already found and fixed across several files
+ * tonight. The actual endpoint call in this file, /api/reading/job/
+ * latest, was already checked directly against main.py's real,
+ * current routes and confirmed an exact match, nothing else needed
+ * changing there.
+ *
+ * NOTE, real, pre-existing gap, not touched here: `subscriptions`
+ * below is declared and never once populated, no fetch call anywhere
+ * updates it, so the Subscriptions tab always shows "No active
+ * subscriptions" regardless of what the user actually owns. The
+ * correct fix would mirror checkSub() from
+ * app/domain/voice-of-prophecy/new/page.tsx and
+ * app/domain/sacred-script/new/page.tsx, checking
+ * /api/subscription/tier against each real tool, that's genuinely new
+ * work, not a quick correction, left flagged rather than built
+ * silently as a side effect of this pass.
  */
-
 import { useState, useEffect } from 'react'
 import { useRouter }            from 'next/navigation'
 import { useAuth }              from '@/lib/hooks/useAuth'
@@ -47,7 +63,6 @@ interface SynthesisPortrait {
   reading_count:     number
   last_reading_at:   string | null
 }
-
 interface Subscription {
   tool_id:     string
   tool_name:   string
@@ -62,7 +77,7 @@ interface Subscription {
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
-const API = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+const API = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 
 const LP_COLOUR: Record<number, string> = {
   1:'#c9a96e',2:'#d4856a',3:'#e8a060',4:'#7aaa8a',5:'#b89fd4',
@@ -73,7 +88,6 @@ const DOMAIN_COLOUR: Record<string, string> = {
   love:'#d4856a',wealth:'#b8966a',spiritual:'#9a8ac4',
   health:'#7aaa8a',purpose:'#7a9ac4',voice:'#c9a96e',all:'#c9a96e',
 }
-
 type ProfileSection = 'synthesis' | 'readings' | 'subscriptions' | 'account'
 
 // ─────────────────────────────────────────────────────────────
@@ -100,7 +114,6 @@ const LP_DESC: Record<number, string> = {
 export default function ProfilePage() {
   const router   = useRouter()
   const { user, signOut } = useAuth()
-
   const [portrait,      setPortrait]      = useState<SynthesisPortrait | null>(null)
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [section,       setSection]       = useState<ProfileSection>('synthesis')
@@ -117,7 +130,6 @@ export default function ProfilePage() {
           const r    = data.result ?? {}
           const num  = r.numerology ?? {}
           const pins = num.pinnacles ?? {}
-
           setPortrait({
             full_name:         r.full_name    ?? '',
             date_of_birth:     data.date_of_birth ?? r.date_of_birth ?? null,
@@ -167,7 +179,6 @@ export default function ProfilePage() {
   // ─────────────────────────────────────────────────────────
   return (
     <div className="max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-body)', minHeight: '100vh' }}>
-
       {/* ── Hero ────────────────────────────────────────── */}
       <div
         className="px-5 pt-8 pb-6"
@@ -194,20 +205,17 @@ export default function ProfilePage() {
             >
               {portrait?.life_path ?? '🔮'}
             </div>
-
             <h1
               className="text-2xl mb-1"
               style={{ fontFamily: 'var(--font-display)', color: 'var(--text-parchment)' }}
             >
               {portrait?.full_name || user?.email?.split('@')[0] || 'Seeker'}
             </h1>
-
             {portrait?.life_path && (
               <p className="text-xs mb-3" style={{ color: 'var(--text-stone)' }}>
                 {LP_DESC[portrait.life_path]?.split('—')[0].trim()}
               </p>
             )}
-
             {/* Quick pills */}
             <div className="flex flex-wrap justify-center gap-1.5">
               {portrait?.life_path && (
@@ -238,7 +246,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
       {/* ── Section tabs ──────────────────────────────────── */}
       <div
         className="sticky top-0 z-20 flex gap-1 px-5 py-3 overflow-x-auto"
@@ -259,10 +266,8 @@ export default function ProfilePage() {
           </button>
         ))}
       </div>
-
       {/* ── Sections ──────────────────────────────────────── */}
       <div className="px-5 py-5 space-y-4">
-
         {/* SYNTHESIS */}
         {section === 'synthesis' && portrait && (
           <>
@@ -290,7 +295,6 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
-
             {/* Numerology core */}
             <div className="rounded-2xl p-4" style={{ background: 'var(--depth)', border: '1px solid var(--rim)' }}>
               <p className="text-[9px] tracking-widest uppercase font-label mb-3" style={{ color: 'var(--text-void)' }}>
@@ -326,7 +330,6 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-
               {portrait.karmic_debts.length > 0 && (
                 <div className="mt-3 px-3 py-2 rounded-xl"
                   style={{ background: 'var(--surface)', border: '1px solid var(--divider)' }}>
@@ -339,7 +342,6 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
-
             {/* Astrology */}
             {(portrait.sun_sign || portrait.moon_sign || portrait.rising_sign) && (
               <div className="rounded-2xl p-4" style={{ background: 'var(--depth)', border: '1px solid var(--rim)' }}>
@@ -367,7 +369,6 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
-
             {/* Physical readings */}
             {(portrait.has_face || portrait.has_palm) && (
               <div className="rounded-2xl p-4" style={{ background: 'var(--depth)', border: '1px solid var(--rim)' }}>
@@ -398,7 +399,6 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
-
             {/* Current timing */}
             {portrait.personal_year && (
               <div className="rounded-2xl p-4" style={{ background: 'var(--depth)', border: '1px solid var(--rim)' }}>
@@ -433,7 +433,6 @@ export default function ProfilePage() {
             )}
           </>
         )}
-
         {/* READINGS */}
         {section === 'readings' && (
           <div className="space-y-3">
@@ -460,7 +459,6 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-
         {/* SUBSCRIPTIONS */}
         {section === 'subscriptions' && (
           <div className="space-y-3">
@@ -517,7 +515,6 @@ export default function ProfilePage() {
             )}
           </div>
         )}
-
         {/* ACCOUNT */}
         {section === 'account' && (
           <div className="space-y-3">
@@ -542,7 +539,6 @@ export default function ProfilePage() {
                 <ChevronRight className="w-3.5 h-3.5" style={{ color: 'var(--text-void)' }} />
               </button>
             ))}
-
             <div style={{ borderTop: '1px solid var(--rim)', paddingTop: '12px' }}>
               <button
                 onClick={signOut}

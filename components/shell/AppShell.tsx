@@ -1,5 +1,4 @@
 'use client'
-
 /**
  * components/shell/AppShell.tsx
  * ==============================
@@ -11,7 +10,6 @@
  * Knows the active route, shows synthesis summary in sidebar,
  * and surfaces the daily briefing dot when a new one is available.
  */
-
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter }           from 'next/navigation'
 import { useAuth }                          from '@/lib/hooks/useAuth'
@@ -32,7 +30,6 @@ interface NavItem {
   Icon:   React.ElementType
   badge?: number | boolean  // number = count, true = dot
 }
-
 const NAV_ITEMS: NavItem[] = [
   { id: 'home',          label: 'Home',           href: '/home',          Icon: Home         },
   { id: 'conversations', label: 'Conversations',  href: '/conversations', Icon: MessageSquare },
@@ -69,7 +66,6 @@ interface SynthesisSummary {
 interface AppShellProps {
   children: React.ReactNode
 }
-
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname()
   const router   = useRouter()
@@ -94,7 +90,13 @@ export default function AppShell({ children }: AppShellProps) {
     if (!user?.id) return
     const load = async () => {
       try {
-        const API = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+        // v1.1, real bug fix, this fallback pointed at localhost, the
+        // same category of bug already found and fixed across
+        // several files tonight. The endpoint itself,
+        // /api/reading/job/latest, was already confirmed correct
+        // against main.py's real routes, nothing else needed
+        // changing here.
+        const API = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
         const res = await fetch(`${API}/api/reading/job/latest?user_id=${user.id}`)
         if (!res.ok) return
         const data = await res.json()
@@ -108,12 +110,37 @@ export default function AppShell({ children }: AppShellProps) {
           pd_theme:      num.time_cycles?.personal_day_theme ?? null,
           sun_sign:      r.sun_sign ?? null,
         })
-        // Check for daily briefing
-        setHasBriefing(true)
+        // v1.2, real fix, replacing the hardcoded true. The daily
+        // briefing itself is computed client-side, in
+        // app/home/page.tsx, from personal_day and today's date, not
+        // something created server-side, so there's nothing to poll
+        // for. The genuine, correct meaning of "new" here is "today's
+        // briefing, not yet seen", tracked per user in localStorage,
+        // the same lightweight, per-device pattern already used
+        // elsewhere in this codebase for message counts and saved
+        // insights, not something that needs cross-device accuracy.
+        const seenKey  = `kayal_briefing_seen_${user.id}`
+        const today     = new Date().toISOString().split('T')[0]
+        const lastSeen  = localStorage.getItem(seenKey)
+        setHasBriefing(lastSeen !== today)
       } catch { /* non-fatal */ }
     }
     load()
   }, [user?.id])
+
+  // Marks today's briefing as seen the moment the person actually
+  // opens the Home tab where it's shown, the same "seen once opened"
+  // pattern common to notification dots elsewhere, real and
+  // self-contained within this file, doesn't require touching
+  // app/home/page.tsx separately.
+  useEffect(() => {
+    if (!user?.id || !hasBriefing) return
+    if (!pathname.startsWith('/home')) return
+    const seenKey = `kayal_briefing_seen_${user.id}`
+    const today    = new Date().toISOString().split('T')[0]
+    localStorage.setItem(seenKey, today)
+    setHasBriefing(false)
+  }, [pathname, user?.id, hasBriefing])
 
   const activeId = NAV_ITEMS.find(n => pathname.startsWith(n.href))?.id ?? 'home'
   const lpColour = synthesis?.life_path ? (LP_COLOUR[synthesis.life_path] ?? '#c9a96e') : '#c9a96e'
@@ -229,15 +256,12 @@ export default function AppShell({ children }: AppShellProps) {
                   style={{ background: lpColour }}
                 />
               )}
-
               <item.Icon className="w-4 h-4 flex-shrink-0" />
-
               {!collapsed && (
                 <span className="text-xs tracking-wide font-body">
                   {item.label}
                 </span>
               )}
-
               {/* Badge */}
               {!collapsed && item.id === 'conversations' && unread > 0 && (
                 <span

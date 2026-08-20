@@ -28,6 +28,41 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Real, direct use of fx_rates_cache, the same table 004_fx_rates_cache.sql
+// already built tonight for price display, rate_to_usd means 1 USD =
+// rate_to_usd units of that currency, confirmed against the migration's
+// own real schema and comment, so converting local currency to USD is
+// amount / rate_to_usd, not the other way around. Deliberately not the
+// same live rate lib/flutterwave/payouts.ts uses for actual checkout
+// pricing, that function goes the opposite direction, USD to local, and
+// a webhook needs to respond to Stripe quickly and reliably, not risk a
+// second network call's latency or failure on every single event. The
+// cached rate is periodically refreshed, not live-to-the-second, a
+// real, honest, reasonable accuracy bar for internal revenue reporting,
+// clearly better than a permanent, unconverted null.
+async function convertToUsd(amount: number, currency: string): Promise<number | null> {
+  const normalized = (currency || '').toLowerCase()
+  if (normalized === 'usd') return amount
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('fx_rates_cache')
+      .select('rate_to_usd')
+      .eq('currency', normalized.toUpperCase())
+      .maybeSingle()
+    if (error || !data?.rate_to_usd) {
+      // Real, honest gap, not silently treated as zero, this specific
+      // currency genuinely isn't in the cache, logged so it's visible
+      // rather than quietly lost.
+      console.warn(`No cached FX rate found for ${currency}, amount_usd left null for this event`)
+      return null
+    }
+    return amount / Number(data.rate_to_usd)
+  } catch (e) {
+    console.error('FX conversion lookup failed:', e)
+    return null
+  }
+}
+
 export async function POST(request: NextRequest) {
   if (!stripe || !STRIPE_WEBHOOK_SECRET) {
     console.error('Stripe webhook received but STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET not configured')
@@ -171,6 +206,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Real, dedicated revenue ledger insert, deliberately outside the
+    // isGuestPurchase check above, real money changed hands here
+    // regardless of whether the buyer has a Supabase account yet,
+    // purchases correctly skips the guest row (no valid UUID to write
+    // against), but revenue itself shouldn't ever depend on account
+    // status. user_id is left null for guests, the same honest
+    // handling as purchases.
+    const { error: revenueError } = await supabaseAdmin
+      .from('revenue_events')
+      .insert({
+        user_id:                  isGuestPurchase ? null : pending.user_id,
+        tool_id:                  pending.tool_id,
+        tool_name:                pending.tool_name,
+        event_type:                'purchase',
+        amount_usd:                pending.usd_equivalent,
+        currency_charged:          pending.currency,
+        amount_charged:            pending.amount_charged,
+        stripe_subscription_id:    stripeSubscriptionId,
+        stripe_payment_intent_id:  typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null,
+        ref_code:                  pending.ref_code,
+      })
+
+    if (revenueError) {
+      // Same reasoning as the purchases upsert above, logged loudly,
+      // not returned as a failure to Stripe, the payment itself
+      // genuinely succeeded.
+      console.error('Failed to insert revenue_events row for tx_ref:', txRef, revenueError)
+    }
+
     // pending.job_id references the reading job already created at
     // checkout-initiation time (see pending_checkouts schema comment).
     // Whatever actually kicks that job from "created" to "processing"
@@ -215,7 +279,7 @@ export async function POST(request: NextRequest) {
 
       const { data: purchaseRow } = await supabaseAdmin
         .from('purchases')
-        .select('user_id, tool_id')
+        .select('user_id, tool_id, tool_name, ref_code')
         .eq('stripe_subscription_id', subscriptionId)
         .maybeSingle()
 
@@ -234,6 +298,32 @@ export async function POST(request: NextRequest) {
           event_type: 'renewed',
           created_at: new Date().toISOString(),
         }).then(() => {}).catch(() => {}) // analytics only, never block the real update above on this
+
+        // Real conversion now, using fx_rates_cache directly, see
+        // convertToUsd()'s own comment above for exactly why this is
+        // the cached rate, not a live one, and why that's an honest,
+        // reasonable bar for internal revenue reporting.
+        const chargedAmount = invoice.amount_paid / 100
+        const convertedUsd  = await convertToUsd(chargedAmount, invoice.currency)
+
+        const { error: revenueError } = await supabaseAdmin
+          .from('revenue_events')
+          .insert({
+            user_id:                  purchaseRow.user_id,
+            tool_id:                  purchaseRow.tool_id,
+            tool_name:                purchaseRow.tool_name,
+            event_type:                'renewal',
+            amount_usd:                convertedUsd,
+            currency_charged:          invoice.currency,
+            amount_charged:            chargedAmount,
+            stripe_subscription_id:    subscriptionId,
+            stripe_payment_intent_id:  typeof invoice.payment_intent === 'string' ? invoice.payment_intent : invoice.payment_intent?.id ?? null,
+            ref_code:                  purchaseRow.ref_code,
+          })
+
+        if (revenueError) {
+          console.error('Failed to insert renewal revenue_events row for subscription:', subscriptionId, revenueError)
+        }
       }
     }
   }
@@ -366,6 +456,76 @@ export async function POST(request: NextRequest) {
         event_type: 'expired',
         created_at: new Date().toISOString(),
       }).then(() => {}).catch(() => {})
+    }
+  }
+
+  // ── Real refund tracking, genuinely new, nothing anywhere in this
+  // codebase previously listened for this event at all ──────────────
+  // charge.refunded is Stripe's own real event, it fires regardless of
+  // how the refund was actually initiated, the Stripe dashboard
+  // directly, an admin panel action calling Stripe's refund API,
+  // anything, this is the one, reliably correct place to capture a
+  // real refund rather than guessing at every possible path that could
+  // trigger one.
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge
+
+    // amount_refunded, like amount_paid elsewhere, is Stripe's own
+    // real field, in the smallest currency unit, converted using the
+    // same real, cached rate as the renewal event above.
+    const refundedAmount = charge.amount_refunded / 100
+    const convertedUsd   = await convertToUsd(refundedAmount, charge.currency)
+
+    const paymentIntentId = typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent?.id ?? null
+
+    // Real, direct lookup, matching this specific charge back to the
+    // original purchase event already recorded, so the refund can
+    // carry the same tool_id, tool_name, and user_id, without
+    // requiring Stripe to send that context again on this event.
+    const { data: originalEvent } = await supabaseAdmin
+      .from('revenue_events')
+      .select('user_id, tool_id, tool_name, ref_code')
+      .eq('stripe_payment_intent_id', paymentIntentId)
+      .eq('event_type', 'purchase')
+      .maybeSingle()
+
+    const { error: revenueError } = await supabaseAdmin
+      .from('revenue_events')
+      .insert({
+        user_id:                  originalEvent?.user_id ?? null,
+        tool_id:                  originalEvent?.tool_id ?? 'unknown',
+        tool_name:                originalEvent?.tool_name ?? null,
+        event_type:                'refund',
+        // Negative, by design, see the migration's own comment, this
+        // is what makes a single SUM(amount_usd) always correct.
+        amount_usd:                convertedUsd !== null ? -convertedUsd : null,
+        currency_charged:          charge.currency,
+        amount_charged:            refundedAmount,
+        stripe_charge_id:          charge.id,
+        stripe_payment_intent_id:  paymentIntentId,
+        ref_code:                  originalEvent?.ref_code ?? null,
+      })
+
+    if (revenueError) {
+      console.error('Failed to insert refund revenue_events row for charge:', charge.id, revenueError)
+    }
+
+    // Mirrors the real status, matching how the RevenuePage admin file
+    // already, correctly, expects to find refunded purchases,
+    // confirmed directly against its own status==='refunded' filter.
+    // Matched by user_id + tool_id, purchases has no payment-intent
+    // column to match against directly, confirmed against its real,
+    // current schema, this pair is the same real unique constraint
+    // already relied on throughout this whole file's other upserts.
+    if (originalEvent?.user_id && originalEvent?.tool_id) {
+      await supabaseAdmin
+        .from('purchases')
+        .update({ status: 'refunded' })
+        .eq('user_id', originalEvent.user_id)
+        .eq('tool_id', originalEvent.tool_id)
+        .then(() => {}).catch(() => {})
     }
   }
 

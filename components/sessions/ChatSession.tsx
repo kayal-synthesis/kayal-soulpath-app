@@ -1,13 +1,21 @@
 'use client'
-
 /**
  * components/sessions/ChatSession.tsx  — v2
  * ==========================================
  * Sacred Script — premium messaging interface.
  * 16px message text, frosted glass bubbles,
  * full light/dark mode, domain glow background.
+ *
+ * v2.1, real bug fix, the fallback below pointed at localhost, the
+ * same category of bug already found and fixed across several files
+ * tonight. Both actual endpoint calls in this file, /api/reading/job/
+ * latest and /agency/chat, were already checked directly against
+ * main.py's real, current routes and confirmed exact matches, nothing
+ * else needed changing here, the real crash this file was hitting
+ * earlier came from lib/constants/sacred-script-tools.ts missing
+ * getLimitStatus, getResponseDepthInstruction, getMemoryInstruction,
+ * and the limits field entirely, already fixed separately.
  */
-
 import {
   useState, useEffect, useRef, useCallback
 } from 'react'
@@ -30,7 +38,7 @@ import {
   RotateCcw, Bookmark, AlertTriangle, Lock, RefreshCw,
 } from 'lucide-react'
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 
 const TOOL_SCOPE: Record<string,string> = {
   'the-life-scribe':'all','love-scribe':'love','wealth-scribe':'wealth',
@@ -38,13 +46,11 @@ const TOOL_SCOPE: Record<string,string> = {
   'relationship-scribe':'love','grief-scribe':'grief',
   'parenting-scribe':'all','business-scribe':'wealth',
 }
-
 const DOMAIN_ACCENT: Record<string,string> = {
   love:'#d4856a',wealth:'#c9a96e',spiritual:'#a48ac4',
   health:'#7aaa8a',purpose:'#7a9ac4',timing:'#a0c49a',
   grief:'#8a9aaa',all:'#c9a96e',
 }
-
 const QUICK_PROMPTS: Record<string,string[]> = {
   'the-life-scribe':     ['What does my chart say right now?','What pattern keeps returning?','What does my Personal Year ask?','What is the most important move?'],
   'love-scribe':         ['What is my love pattern?','Why does the same pain return?','What does my Venus placement mean?','When does my love window open?'],
@@ -62,7 +68,6 @@ const QUICK_PROMPTS: Record<string,string[]> = {
 // Message limit storage
 // ─────────────────────────────────────────────────────────────
 interface MsgRecord { count:number; resetDate:string; nextReset:string }
-
 function getRecord(uid:string,tid:string):MsgRecord{
   try{
     const raw=localStorage.getItem(`kayal_msg_${uid}_${tid}`)
@@ -84,7 +89,6 @@ function fmtDate(iso:string):string{return new Date(iso).toLocaleDateString('en-
 // Synthesis
 // ─────────────────────────────────────────────────────────────
 interface SynthCtx{first_name:string;full_name:string;birth_location:string|null;has_synthesis:boolean;has_face:boolean;has_palm:boolean;pills:string[];job_id:string|null;history_block:string}
-
 async function loadSynthesis(userId:string,tool:SacredScriptTool,signal?:AbortSignal):Promise<SynthCtx>{
   const scope=TOOL_SCOPE[tool.id]??'all'
   const empty:SynthCtx={first_name:'Seeker',full_name:'',birth_location:null,has_synthesis:false,has_face:false,has_palm:false,pills:[],job_id:null,history_block:''}
@@ -143,7 +147,6 @@ async function loadSynthesis(userId:string,tool:SacredScriptTool,signal?:AbortSi
     return{first_name:firstName,full_name:fullName,birth_location:bl,has_synthesis:true,has_face:hasFace,has_palm:hasPalm,pills,job_id:data.id??null,history_block:lines.filter(Boolean).join('\n')}
   }catch(e:any){if(e?.name==='AbortError')throw e;return empty}
 }
-
 function saveInsight(content:string,tool:SacredScriptTool,sessionId:string|null){
   try{
     const saved=JSON.parse(localStorage.getItem('kayal_saved_insights')??'[]')
@@ -151,7 +154,6 @@ function saveInsight(content:string,tool:SacredScriptTool,sessionId:string|null)
     localStorage.setItem('kayal_saved_insights',JSON.stringify(saved.slice(0,200)))
   }catch{/**/}
 }
-
 interface Turn{id:string;role:'user'|'scribe';content:string;timestamp:Date;streaming?:boolean;out_of_scope?:boolean;redirect?:string}
 
 // ─────────────────────────────────────────────────────────────
@@ -196,7 +198,6 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
   const scope=TOOL_SCOPE[toolId]??'all'
   const accent=DOMAIN_ACCENT[scope]??'#c9a96e'
   const d=(l:string,dk:string)=>isDark?dk:l
-
   const[synthesis,setSynthesis]=useState<SynthCtx|null>(null)
   const[turns,setTurns]=useState<Turn[]>([])
   const[input,setInput]=useState('')
@@ -206,18 +207,14 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
   const[copiedId,setCopiedId]=useState<string|null>(null)
   const[savedId,setSavedId]=useState<string|null>(null)
   const[msgRecord,setMsgRecord]=useState<MsgRecord|null>(null)
-
   const bottomRef=useRef<HTMLDivElement>(null)
   const inputRef=useRef<HTMLTextAreaElement>(null)
   const turnsRef=useRef<Turn[]>([])
   const synthRef=useRef<SynthCtx|null>(null)
-
   useEffect(()=>{turnsRef.current=turns},[turns])
   useEffect(()=>{synthRef.current=synthesis},[synthesis])
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'})},[turns])
-
   useEffect(()=>{if(!user?.id)return;setMsgRecord(getRecord(user.id,toolId))},[user?.id,toolId])
-
   useEffect(()=>{
     if(authLoading)return
     if(!isAuthenticated||!user?.id){setIsIniting(false);return}
@@ -230,16 +227,13 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
     }).catch(err=>{if(cancelled||err?.name==='AbortError')return;setIsIniting(false)})
     return()=>{cancelled=true;ctrl.abort()}
   },[user?.id,authLoading,isAuthenticated])
-
   useEffect(()=>{
     if(shell.loadedHistory.length===0)return
     const loaded:Turn[]=shell.loadedHistory.filter(h=>!(h.role==='assistant'&&h.content.includes('KAYAL SYNTHESIS'))).map(h=>({id:`${Date.now()}-${Math.random()}`,role:h.role==='user'?'user':'scribe',content:h.content,timestamp:new Date()}))
     if(loaded.length>0)setTurns(loaded)
   },[shell.loadedHistory])
-
   const limitStatus=msgRecord?getLimitStatus(tool,msgRecord.count):null
   const isBlocked=limitStatus?.status==='blocked'
-
   const handleSend=useCallback(async(override?:string)=>{
     const message=(override??input).trim()
     if(!message||isSending||!user?.id)return
@@ -283,14 +277,11 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
       setErrorMsg(e.message)
     }finally{setIsSending(false);shell.setAmbientState('idle');setTimeout(()=>inputRef.current?.focus(),80)}
   },[input,isSending,user?.id,toolId,isAuthenticated,router,shell,isBlocked])
-
   const handleKeyDown=(e:React.KeyboardEvent<HTMLTextAreaElement>)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSend()}}
   const handleCopy=useCallback((id:string,text:string)=>{navigator.clipboard.writeText(text);setCopiedId(id);setTimeout(()=>setCopiedId(null),2000)},[])
   const handleSave=useCallback((id:string,text:string)=>{saveInsight(text,tool,shell.sessionId);setSavedId(id);setTimeout(()=>setSavedId(null),2000);shell.setTurnCount(c=>c+1)},[tool,shell])
   const handleClear=useCallback(()=>{const syn=synthRef.current;setTurns([{id:`${Date.now()}`,role:'scribe',content:syn?.has_synthesis?`Your synthesis is still loaded, ${syn.first_name}. What else would you like to explore?`:'New conversation started.',timestamp:new Date()}]);setErrorMsg(null)},[])
-
   const prompts=QUICK_PROMPTS[toolId]??QUICK_PROMPTS['the-life-scribe']
-
   if(!authLoading&&!isAuthenticated)return(
     <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',gap:16}}>
       <div style={{fontSize:48}}>{tool.emoji}</div>
@@ -298,17 +289,14 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
       <button onClick={()=>router.push('/auth/login')} style={{padding:'13px 30px',borderRadius:16,background:accent,color:'#1a1200',fontSize:15,cursor:'pointer',border:'none',fontFamily:"'Cormorant SC',Georgia,serif",letterSpacing:'0.06em',textTransform:'uppercase',boxShadow:`0 4px 20px ${accent}28`}}>Sign In</button>
     </div>
   )
-
   if(authLoading||isIniting)return(
     <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14}}>
       <div style={{fontSize:42}}>{tool.emoji}</div>
       <p style={{fontSize:13,letterSpacing:'0.08em',textTransform:'uppercase',color:`${accent}88`}}>Loading your synthesis…</p>
     </div>
   )
-
   return(
     <div style={{flex:1,display:'flex',flexDirection:'column',height:'100%',overflow:'hidden'}}>
-
       {/* Synthesis badge */}
       <div style={{padding:'10px 14px 6px',flexShrink:0}}>
         {synthesis?.has_synthesis?(
@@ -332,12 +320,10 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
           </div>
         )}
       </div>
-
       {/* Limit banner */}
       {limitStatus&&limitStatus.status!=='ok'&&msgRecord&&(
         <LimitBanner status={limitStatus.status} remaining={limitStatus.remaining} graceRemaining={limitStatus.graceRemaining} nextReset={msgRecord.nextReset} accent={accent} tool={tool} isDark={isDark} onUpsell={()=>router.push(`/domain/sacred-script/${tool.upsell?.id}`)}/>
       )}
-
       {/* Messages */}
       <div style={{flex:1,overflowY:'auto',padding:'12px 14px',display:'flex',flexDirection:'column',gap:14,minHeight:0,scrollbarWidth:'thin',scrollbarColor:`${accent}18 transparent`}}>
         {turns.map(turn=>(
@@ -391,7 +377,6 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
             {turn.role==='user'&&<div style={{width:30,height:30,borderRadius:'50%',background:d('rgba(0,0,0,0.08)','rgba(100,90,130,0.25)'),border:`1px solid ${d('rgba(0,0,0,0.1)','rgba(100,90,130,0.22)')}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:600,flexShrink:0,marginBottom:2,color:d('rgba(0,0,0,0.42)','rgba(255,255,255,0.38)')}}>{(synthesis?.first_name?.[0]??'Y').toUpperCase()}</div>}
           </div>
         ))}
-
         {isSending&&(
           <div style={{display:'flex',gap:9,alignItems:'flex-end'}}>
             <div style={{width:30,height:30,borderRadius:'50%',background:`${accent}0e`,border:`1px solid ${accent}1e`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>{tool.emoji}</div>
@@ -404,7 +389,6 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
         )}
         <div ref={bottomRef}/>
       </div>
-
       {/* Quick prompts */}
       {!isSending&&turns.length<=2&&!isBlocked&&(
         <div style={{padding:'0 14px 6px',display:'flex',gap:6,overflowX:'auto',flexShrink:0,scrollbarWidth:'none'}}>
@@ -417,11 +401,9 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
           ))}
         </div>
       )}
-
       {errorMsg&&!isSending&&(
         <div style={{margin:'0 14px 6px',padding:'10px 16px',borderRadius:14,background:'rgba(180,84,84,0.09)',border:'1px solid rgba(180,84,84,0.2)',color:'rgba(180,84,84,0.88)',fontSize:14,textAlign:'center',flexShrink:0,backdropFilter:'blur(8px)'}}>{errorMsg}</div>
       )}
-
       {/* Input */}
       <div style={{padding:'4px 14px 18px',flexShrink:0}}>
         {isBlocked?(
@@ -444,7 +426,6 @@ function ChatInner({toolId,tool}:{toolId:string;tool:SacredScriptTool}){
           </div>
         )}
       </div>
-
       <style>{`
         @keyframes blink{0%,100%{opacity:.6}50%{opacity:1}}
         @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
@@ -462,15 +443,12 @@ export default function ChatSession() {
   const params=useParams()
   const toolId=params.toolId as string
   const tool=getSacredScriptToolById(toolId)
-
   if(!tool)return(
     <div style={{minHeight:'100vh',background:'#0d0b0f',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(154,140,122,0.5)',fontFamily:'Georgia,serif'}}>
       <p>Tool not found: <strong>{toolId}</strong></p>
     </div>
   )
-
   const toolMeta:ToolMeta={id:tool.id,name:tool.name,emoji:tool.emoji,tagline:tool.tagline,domain:TOOL_SCOPE[toolId]??'all',type:'chat',price:tool.price}
-
   return(
     <ToolShell tool={toolMeta} isVoice={false}>
       <ChatInner toolId={toolId} tool={tool}/>

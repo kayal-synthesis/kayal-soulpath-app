@@ -1,5 +1,4 @@
 'use client'
-
 /**
  * app/(app)/conversations/page.tsx
  * ==================================
@@ -7,8 +6,21 @@
  * Grouped by recency, filterable by domain.
  * Each card shows the last message, domain colour,
  * and time since last activity.
+ *
+ * v1.1, two real bug fixes, confirmed directly against main.py's
+ * actual, current route list:
+ *   1. The fallback API address still pointed at localhost, the same
+ *      category of bug already found and fixed across several files
+ *      tonight.
+ *   2. The conversations endpoint was missing the /api prefix
+ *      main.py's real route actually uses, /api/user/{token}/
+ *      conversations exists, /user/{token}/conversations doesn't, the
+ *      same bug already found once in ToolShell.tsx, showing up here
+ *      independently since this page calls the same endpoint on its
+ *      own. Without it this page would silently show zero
+ *      conversations, wrapped in an existing try/catch, no crash,
+ *      just an empty list where real history should be.
  */
-
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter }                         from 'next/navigation'
 import { useAuth }                           from '@/lib/hooks/useAuth'
@@ -34,13 +46,12 @@ interface Conversation {
   updated_at:    string
   is_unread:     boolean
 }
-
 type FilterDomain = 'all' | 'love' | 'wealth' | 'spiritual' | 'health' | 'purpose' | 'voice'
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
-const API = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+const API = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 
 const DOMAIN_COLOUR: Record<string, string> = {
   love:           '#d4856a',
@@ -53,7 +64,6 @@ const DOMAIN_COLOUR: Record<string, string> = {
   'time-keeper':  '#a8c4a0',
   all:            '#c9a96e',
 }
-
 const DOMAIN_FILTERS: { id: FilterDomain; label: string; emoji: string }[] = [
   { id: 'all',      label: 'All',      emoji: '✦' },
   { id: 'love',     label: 'Love',     emoji: '💕' },
@@ -80,20 +90,17 @@ function groupByDate(conversations: Conversation[]): Record<string, Conversation
   const now   = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const week  = today - 6 * 86400000
-
   const groups: Record<string, Conversation[]> = {
     'Today':      [],
     'This week':  [],
     'Earlier':    [],
   }
-
   for (const c of conversations) {
     const t = new Date(c.updated_at).getTime()
     if (t >= today)     groups['Today'].push(c)
     else if (t >= week) groups['This week'].push(c)
     else                groups['Earlier'].push(c)
   }
-
   // Remove empty groups
   return Object.fromEntries(
     Object.entries(groups).filter(([, v]) => v.length > 0)
@@ -111,7 +118,6 @@ function ConversationCard({
   onClick: () => void
 }) {
   const dc = DOMAIN_COLOUR[conv.domain] ?? '#c9a96e'
-
   return (
     <button
       onClick={onClick}
@@ -132,7 +138,6 @@ function ConversationCard({
       >
         {conv.tool_emoji}
       </div>
-
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
@@ -163,7 +168,6 @@ function ConversationCard({
           {conv.last_message || 'Start of session'}
         </p>
       </div>
-
       {/* Meta */}
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
         <span className="text-[9px] tabular-nums" style={{ color: 'var(--text-void)' }}>
@@ -201,10 +205,9 @@ export default function ConversationsPage() {
     if (!user?.id) return
     const load = async () => {
       try {
-        const res  = await fetch(`${API}/user/${user.id}/conversations`)
+        const res  = await fetch(`${API}/api/user/${user.id}/conversations`)
         if (!res.ok) { setLoading(false); return }
         const data = await res.json()
-
         // Group raw messages into sessions
         const sessionMap: Record<string, any> = {}
         for (const msg of (data.conversations ?? [])) {
@@ -232,10 +235,8 @@ export default function ConversationsPage() {
             }
           }
         }
-
         const convList = Object.values(sessionMap)
           .sort((a: any, b: any) => b.updated_at.localeCompare(a.updated_at)) as Conversation[]
-
         setConversations(convList)
         setFiltered(convList)
       } catch { /* non-fatal */ }
@@ -301,7 +302,6 @@ export default function ConversationsPage() {
             <Plus className="w-4 h-4" />
           </button>
         </div>
-
         {/* Search */}
         <div
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-3"
@@ -321,7 +321,6 @@ export default function ConversationsPage() {
             }}
           />
         </div>
-
         {/* Domain filters */}
         <div
           className="flex gap-1.5 overflow-x-auto pb-1"
@@ -348,7 +347,6 @@ export default function ConversationsPage() {
           })}
         </div>
       </div>
-
       {/* ── Body ─────────────────────────────────────────── */}
       <div>
         {loading ? (
@@ -397,7 +395,6 @@ export default function ConversationsPage() {
                   {label}
                 </span>
               </div>
-
               {/* Conversations */}
               {convs.map(conv => (
                 <ConversationCard

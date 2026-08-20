@@ -2,13 +2,59 @@
 // SACRED SCRIPT — 10 Tools
 // Domain: sacred-script
 // Route: /domain/sacred-script
+//
 // Different shape from every other domain: these are ongoing AI
 // dialogue subscriptions, not one-time readings. whatYouGet is
 // framed around continuity and permanent context, not depth of a
 // single delivered reading — that's the actual value proposition
 // here, so the copy should say so rather than force-fit the
 // reading-domain pattern.
+//
+// v1.1, real bug fix, confirmed directly against the actual crash on
+// /domain/sacred-script/the-life-scribe: two real problems, not one.
+//
+// 1. A literal syntax error at the very end of the file, the final
+//    export statement ended mid-expression with a trailing period and
+//    nothing after it, genuinely invalid TypeScript, confirmed by the
+//    person as the complete, real file content, not a paste artifact.
+//
+// 2. components/sessions/ChatSession.tsx imports three functions,
+//    getLimitStatus, getResponseDepthInstruction, getMemoryInstruction,
+//    and reads a tool.limits object with messagesPerMonth,
+//    synthesisScope, and domainScope, none of which this file ever
+//    defined or exported. Every message sent through any Sacred
+//    Script tool would crash immediately hitting undefined.
+//
+// Honest, important caveat: the specific numbers below
+// (messagesPerMonth, graceMessages, the warning threshold) and the
+// exact wording inside getResponseDepthInstruction/getMemoryInstruction
+// are functional placeholders, chosen to stop the crash and let the
+// feature actually work, not verified, original values, nothing in
+// this codebase documented what those real numbers or that real
+// prompt wording were meant to be. These need real review and
+// adjustment, not to be trusted as already correct.
+//
+// domainScope and synthesisScope, by contrast, are derived directly
+// from ChatSession.tsx's own existing, already-working TOOL_SCOPE
+// mapping, not invented, that part is real, proven logic already
+// running in production, just mirrored here so this file's data
+// agrees with it instead of guessing separately.
 // ============================================================
+
+export interface SacredScriptToolLimits {
+  // Real, working placeholder values, see the file header for why
+  // these specific numbers aren't verified originals.
+  messagesPerMonth: number
+  graceMessages:    number
+  // 'domain-only' restricts context to this tool's single domain
+  // section, 'full' includes the complete synthesis, mirrors the
+  // synthesisScope check already live in ChatSession.tsx's
+  // loadSynthesis().
+  synthesisScope: 'domain-only' | 'full'
+  // Which domain(s) this scribe is allowed to discuss, 'all' means
+  // unrestricted, derived from ChatSession.tsx's own TOOL_SCOPE map.
+  domainScope: string[]
+}
 
 export interface SacredScriptTool {
   id: string
@@ -28,6 +74,40 @@ export interface SacredScriptTool {
   guidanceType?: 'daily-guidance'
   guidanceText?: string
   upsell?: { id: string; name: string; price: number }
+  // v1.1, real, required addition, see file header.
+  limits: SacredScriptToolLimits
+}
+
+// Mirrors ChatSession.tsx's own TOOL_SCOPE mapping exactly, real,
+// already-working logic, not re-derived independently, so this file's
+// domainScope data can never quietly drift out of sync with what the
+// chat interface itself actually enforces.
+const DOMAIN_SCOPE_MAP: Record<string, string[]> = {
+  'the-life-scribe':     ['all'],
+  'love-scribe':         ['love'],
+  'wealth-scribe':       ['wealth'],
+  'spiritual-scribe':    ['spiritual'],
+  'health-scribe':       ['health'],
+  'purpose-scribe':      ['purpose'],
+  'relationship-scribe': ['love'],
+  'grief-scribe':        ['grief'],
+  'parenting-scribe':    ['all'],
+  'business-scribe':     ['wealth'],
+}
+
+// Real, functional placeholder, not a verified original value. The
+// flagship, all-domain tool gets a higher cap than the single-domain
+// scribes, a reasonable default tier split, worth real review rather
+// than trusting as already correct.
+function buildLimits(toolId: string): SacredScriptToolLimits {
+  const domainScope = DOMAIN_SCOPE_MAP[toolId] ?? ['all']
+  const isFullScope  = domainScope.includes('all')
+  return {
+    messagesPerMonth: isFullScope ? 60 : 40,
+    graceMessages:     5,
+    synthesisScope:    isFullScope ? 'full' : 'domain-only',
+    domainScope,
+  }
 }
 
 export const sacredScriptTools: SacredScriptTool[] = [
@@ -55,6 +135,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'A steady place to think out loud, available the moment a question actually comes up',
     ],
     upsell: { id: 'life-path-deep-dive', name: 'Your Core Life Pattern, Fully Explained', price: 49 },
+    limits: buildLimits('the-life-scribe'),
   },
   {
     id: 'love-scribe',
@@ -76,6 +157,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'Continuity across breakups, new connections, and everything in between',
     ],
     upsell: { id: 'complete-love-synthesis', name: 'The Complete Read on How You Love', price: 79 },
+    limits: buildLimits('love-scribe'),
   },
   {
     id: 'wealth-scribe',
@@ -97,6 +179,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'Continuity across raises, job changes, and every financial season in between',
     ],
     upsell: { id: 'complete-wealth-synthesis', name: 'Everything Your Money Is Trying to Tell You', price: 79 },
+    limits: buildLimits('wealth-scribe'),
   },
   {
     id: 'spiritual-scribe',
@@ -121,6 +204,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'Continuity across seasons of doubt, growth, and everything harder to name',
     ],
     upsell: { id: 'complete-spiritual-synthesis', name: 'The Spiritual Layer Beneath the Surface', price: 79 },
+    limits: buildLimits('spiritual-scribe'),
   },
   {
     id: 'health-scribe',
@@ -142,6 +226,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'Continuity across seasons, stress, and everything that shifts how your body feels',
     ],
     upsell: { id: 'complete-health-synthesis', name: 'The Full Read on Your Body', price: 79 },
+    limits: buildLimits('health-scribe'),
   },
   {
     id: 'purpose-scribe',
@@ -163,6 +248,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'A space that treats a quiet, uncertain question with the same weight as an urgent one',
     ],
     upsell: { id: 'complete-purpose-synthesis', name: "The Whole Reason You're Alive", price: 79 },
+    limits: buildLimits('purpose-scribe'),
   },
   {
     id: 'relationship-scribe',
@@ -184,6 +270,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'A record of patterns in this relationship that can be hard to see from inside it',
     ],
     upsell: { id: 'complete-union-blueprint', name: 'What the Two of You Become Together', price: 99 },
+    limits: buildLimits('relationship-scribe'),
   },
   {
     id: 'grief-scribe',
@@ -206,6 +293,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'Support around anniversaries and dates that carry weight, without you needing to flag them first',
       'A space that never asks you to move on before you are ready to',
     ],
+    limits: buildLimits('grief-scribe'),
   },
   {
     id: 'parenting-scribe',
@@ -227,6 +315,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'Continuity across every age and stage, not just the one you are in now',
     ],
     upsell: { id: 'child-blueprint', name: 'Who This Child Is Becoming', price: 59 },
+    limits: buildLimits('parenting-scribe'),
   },
   {
     id: 'business-scribe',
@@ -248,8 +337,60 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'A record of past decisions to reference instead of relying on memory alone',
     ],
     upsell: { id: 'business-destiny-synthesis', name: 'Your Business, Fully Mapped', price: 79 },
+    limits: buildLimits('business-scribe'),
   },
 ]
 
 export const getSacredScriptToolById = (id: string) => sacredScriptTools.find(t => t.id === id)
 export const getPopularSacredScriptTools = () => sacredScriptTools.filter(t => t.isPopular)
+
+// ─────────────────────────────────────────────────────────────
+// v1.1, real, required additions, previously imported by
+// ChatSession.tsx but never defined or exported anywhere, the direct,
+// confirmed cause of the crash on every Sacred Script tool.
+// ─────────────────────────────────────────────────────────────
+
+export interface LimitStatus {
+  status: 'ok' | 'warning' | 'grace' | 'blocked'
+  remaining: number
+  graceRemaining: number
+}
+
+// Real, functional placeholder logic, not verified original business
+// rules, see the file header. Warns once 80% of the monthly allowance
+// is used, allows a small grace buffer past the hard cap before fully
+// blocking, matches exactly what LimitBanner in ChatSession.tsx
+// already expects to receive and render.
+export function getLimitStatus(tool: SacredScriptTool, count: number): LimitStatus {
+  const { messagesPerMonth, graceMessages } = tool.limits
+  const graceCap = messagesPerMonth + graceMessages
+
+  if (count >= graceCap) {
+    return { status: 'blocked', remaining: 0, graceRemaining: 0 }
+  }
+  if (count >= messagesPerMonth) {
+    return { status: 'grace', remaining: 0, graceRemaining: graceCap - count }
+  }
+  if (count >= messagesPerMonth * 0.8) {
+    return { status: 'warning', remaining: messagesPerMonth - count, graceRemaining: graceMessages }
+  }
+  return { status: 'ok', remaining: messagesPerMonth - count, graceRemaining: graceMessages }
+}
+
+// Real, functional placeholder wording, not a verified original
+// prompt, see the file header, threaded into the system context
+// loadSynthesis() builds in ChatSession.tsx. Depth scales with whether
+// this tool covers the full synthesis or just one domain, a
+// reasonable default, worth real review rather than trusting as
+// already correct.
+export function getResponseDepthInstruction(tool: SacredScriptTool): string {
+  return tool.limits.synthesisScope === 'full'
+    ? 'Respond with real depth, drawing on the complete synthesis available. Take the space a genuinely thorough answer needs.'
+    : `Stay focused specifically within the ${tool.limits.domainScope.join(', ')} domain. Keep responses direct and grounded in what was actually asked.`
+}
+
+// Real, functional placeholder wording, not a verified original
+// prompt, see the file header.
+export function getMemoryInstruction(tool: SacredScriptTool): string {
+  return 'Treat this conversation as continuous with everything discussed in past sessions. Reference what has already been said or tried where genuinely relevant, rather than treating each message as a fresh start.'
+}

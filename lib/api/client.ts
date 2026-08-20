@@ -1,6 +1,13 @@
 import axios from 'axios'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+// v1.1, real bug fix, the fallback below pointed at 127.0.0.1, your
+// own local machine, not the real, public backend, the same category
+// of bug already found and fixed across lib/api.ts, context.ts, and
+// several component files tonight. Now that .env.local correctly sets
+// NEXT_PUBLIC_API_URL, this should never actually trigger in
+// production, fixed anyway to match the same safe pattern used
+// consistently everywhere else.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.kayalsoulpath.com'
 
 export const api = axios.create({
   baseURL: API_BASE,

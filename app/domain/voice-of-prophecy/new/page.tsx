@@ -1,13 +1,18 @@
 'use client'
-
 /**
  * app/domain/voice-of-prophecy/new/page.tsx
  *
  * Shows only the Voice of Prophecy tools the user has purchased.
  * Has nothing to do with Sacred Script.
  * Routes to /domain/voice-of-prophecy/[toolId]
+ *
+ * v1.1, real bug fix, the fallback below pointed at localhost, the
+ * same category of bug already found and fixed across several files
+ * tonight. The actual endpoint call in this file,
+ * /api/subscription/tier, was already checked directly against
+ * main.py's real, current routes and confirmed an exact match,
+ * nothing else needed changing.
  */
-
 import { useState, useEffect } from 'react'
 import { useRouter }           from 'next/navigation'
 import { useAuth }             from '@/lib/hooks/useAuth'
@@ -15,7 +20,7 @@ import { voiceTools }          from '@/lib/constants/voice-tools'
 import { ChevronRight, Clock, Star, ArrowLeft } from 'lucide-react'
 
 const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+  process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com'
 ).replace(/\/$/, '')
 
 const DOMAIN_ACCENT: Record<string, string> = {
@@ -23,7 +28,6 @@ const DOMAIN_ACCENT: Record<string, string> = {
   health:'#7aaa8a', purpose:'#7a9ac4', timing:'#a0c49a',
   grief:'#8a9aaa', all:'#c9a96e',
 }
-
 const TOOL_DOMAIN: Record<string, string> = {
   'oracle-voice-session':'all','oracle-deep-dive-session':'all',
   'love-oracle-session':'love','wealth-oracle-session':'wealth',
@@ -121,7 +125,6 @@ export default function NewVoiceSessionPage() {
           </div>
         </div>
       </div>
-
       {/* Tool list */}
       <div style={{ padding:'16px 16px 0' }}>
         {tools.map(tool => {

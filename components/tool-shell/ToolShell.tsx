@@ -31,6 +31,19 @@
  *
  * The canvas is always behind content.
  * Everything else (panel, top bar, bubbles) is frosted glass over it.
+ *
+ * v3.1, two real bug fixes, confirmed directly against main.py's
+ * actual, current route list:
+ *   1. The fallback API address still pointed at localhost, the same
+ *      category of bug already found and fixed across lib/api.ts,
+ *      lib/synthesis/context.ts, and several other files tonight.
+ *   2. Both calls to the conversation-history endpoint were missing
+ *      the /api prefix main.py's real route actually uses,
+ *      /api/user/{token}/conversations exists, /user/{token}/
+ *      conversations doesn't. Without it, loading past sessions in
+ *      the sidebar would silently 404, wrapped in an existing
+ *      try/catch, so it never crashed loudly, it just quietly showed
+ *      an empty session list instead of real history.
  */
 
 import {
@@ -71,7 +84,6 @@ export interface ToolShellCtx {
   setLoadedHistory:(h: HistoryTurn[]) => void
   isDark:          boolean
 }
-
 export type AmbientState = 'idle'|'listening'|'thinking'|'speaking'|'typing'
 export interface HistoryTurn { role:'user'|'assistant'; content:string }
 
@@ -86,13 +98,12 @@ export interface ToolMeta {
   id:string; name:string; emoji:string; tagline:string;
   domain:string; type:'chat'|'voice'; price:number;
 }
-
 interface Session {
   session_id:string; last_message:string;
   message_count:number; updated_at:string;
 }
 
-const API = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+const API = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 
 function ago(ts:string):string {
   const m=Math.floor((Date.now()-new Date(ts).getTime())/60000)
@@ -115,7 +126,6 @@ const DOMAIN_CFG: Record<string,{darkBg:string;lightBg:string;accent:[number,num
   all:      { darkBg:'#0d0b0f', lightBg:'#f5f0e8', accent:[201,169,110] },
   voice:    { darkBg:'#0f0c07', lightBg:'#f7f0e0', accent:[201,169,110] },
 }
-
 function getDomainCfg(domain:string) {
   return DOMAIN_CFG[domain] ?? DOMAIN_CFG['all']
 }
@@ -128,7 +138,6 @@ interface DomainCanvasProps {
   state:     AmbientState
   isDark:    boolean
 }
-
 function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
   const ref    = useRef<HTMLCanvasElement>(null)
   const frameR = useRef(0)
@@ -203,9 +212,7 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
         state === 'listening' ? (isDark ? .17 : .10) :
         state === 'thinking'  ? (isDark ? .15 : .09) :
         (isDark ? .10 : .07)
-
       const glowSize = state === 'speaking' ? W*.95 : state === 'listening' ? W*.85 : W*.75
-
       const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowSize)
       g1.addColorStop(0,   `rgba(${ar},${ag},${ab},${glowIntensity * 1.8})`)
       g1.addColorStop(.35, `rgba(${ar},${ag},${ab},${glowIntensity})`)
@@ -275,7 +282,6 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
       ctx.save()
       ctx.translate(cx, cy)
       ctx.rotate(rot)
-
       const symOp = (.12 - (state === 'speaking' ? .04 : 0)) * baseOpacity
       ctx.strokeStyle = `rgba(${ar},${ag},${ab},${symOp})`
       ctx.lineWidth = .6
@@ -285,7 +291,6 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
         const r2 = W * .14
         ctx.beginPath(); ctx.arc(-r2*.48, 0, r2, 0, Math.PI*2); ctx.stroke()
         ctx.beginPath(); ctx.arc( r2*.48, 0, r2, 0, Math.PI*2); ctx.stroke()
-
       } else if (domain === 'wealth') {
         // Fibonacci spiral — arcs
         const sizes = [W*.03,W*.05,W*.08,W*.13,W*.21,W*.34]
@@ -297,7 +302,6 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
           const a = ((i%4)+1)*(Math.PI*.5)
           ox += Math.cos(a)*r2; oy += Math.sin(a)*r2
         })
-
       } else if (domain === 'spiritual') {
         // Star of David — two interlocking triangles
         const R = W * .15
@@ -310,7 +314,6 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
           }
           ctx.closePath(); ctx.stroke()
         }
-
       } else if (domain === 'health') {
         // Caduceus circles — two interweaving loops
         const R = W * .1
@@ -320,7 +323,6 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
           ctx.arc(Math.cos(a)*R*.6, Math.sin(a)*R*.6, R*.55, 0, Math.PI*2)
           ctx.stroke()
         }
-
       } else if (domain === 'purpose') {
         // Compass rose — 8 directional spokes with circles at tips
         const R = W * .15
@@ -334,13 +336,11 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
           ctx.arc(Math.cos(a)*R, Math.sin(a)*R, W*.02, 0, Math.PI*2)
           ctx.stroke()
         }
-
       } else if (domain === 'grief') {
         // Crescent — two offset circles
         const R = W * .13
         ctx.beginPath(); ctx.arc(0, 0, R, -Math.PI*.65, Math.PI*.65); ctx.stroke()
         ctx.beginPath(); ctx.arc(R*.38, 0, R*.8, Math.PI*.4, Math.PI*1.6); ctx.stroke()
-
       } else if (domain === 'timing') {
         // Sun wheel — 8 rays with outer ring
         const R = W * .14, innerR = W * .05
@@ -352,7 +352,6 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
           ctx.lineTo(Math.cos(a)*R, Math.sin(a)*R)
           ctx.stroke()
         }
-
       } else {
         // All/voice — concentric mandala with 6-fold symmetry
         const R = W * .13
@@ -363,7 +362,6 @@ function DomainCanvas({ domain, state, isDark }: DomainCanvasProps) {
           ctx.stroke()
         }
       }
-
       ctx.restore()
 
       // 7. Twinkling stars — dark mode only
@@ -448,7 +446,6 @@ function Panel({
       backdropFilter: 'blur(32px)', WebkitBackdropFilter:'blur(32px)',
       borderRight:    `1px solid ${d('rgba(0,0,0,0.1)',`${accent}18`)}`,
     }}>
-
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'18px 14px 14px', borderBottom:`1px solid ${d('rgba(0,0,0,0.08)',`${accent}14`)}`, flexShrink:0 }}>
         <div style={{ width:46,height:46,borderRadius:'50%',background:`${accent}14`,border:`1.5px solid ${accent}28`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',flexShrink:0 }}>
@@ -557,12 +554,10 @@ interface Props {
   tool:ToolMeta; children:React.ReactNode; isVoice?:boolean;
   onSessionChange?:(id:string,history:HistoryTurn[])=>void; onNewSession?:()=>void;
 }
-
 export default function ToolShell({ tool, children, isVoice=false, onSessionChange, onNewSession }: Props) {
   const router           = useRouter()
   const { user }         = useAuth()
   const { isDark, toggle } = useThemeMode()
-
   const domain = (TOOL_DOMAIN_MAP[tool.id] ?? 'all') as string
   const accent = getDomainAccent(domain)
 
@@ -587,7 +582,7 @@ export default function ToolShell({ tool, children, isVoice=false, onSessionChan
     if (!user?.id) return
     const load = async () => {
       try {
-        const res=await fetch(`${API}/user/${user.id}/conversations`); if(!res.ok) return
+        const res=await fetch(`${API}/api/user/${user.id}/conversations`); if(!res.ok) return
         const data=await res.json()
         const map: Record<string,any>={}
         for (const msg of (data.conversations??[])) {
@@ -618,7 +613,7 @@ export default function ToolShell({ tool, children, isVoice=false, onSessionChan
     setSessionId(sid); if(isMobile) setPanelOpen(false)
     if(onSessionChange&&user?.id){
       try{
-        const res=await fetch(`${API}/user/${user.id}/conversations?session_id=${sid}`)
+        const res=await fetch(`${API}/api/user/${user.id}/conversations?session_id=${sid}`)
         if(res.ok){const data=await res.json();const hist=(data.conversations??[]).map((c:any)=>({role:c.role==='user'?'user':'assistant',content:c.content??''}));setLoadedHistory(hist);onSessionChange(sid,hist)}
       }catch{/**/}
     }
@@ -637,12 +632,10 @@ export default function ToolShell({ tool, children, isVoice=false, onSessionChan
   }
 
   const d = (l:string,dk:string) => isDark?dk:l
-
   const dotColour =
     ambientState==='speaking' ?accent:ambientState==='thinking'?'#8b7cc8':
     ambientState==='listening'?'#4a9b8e':ambientState==='typing'?accent:
     d('rgba(0,0,0,0.2)','rgba(255,255,255,0.2)')
-
   const stateLabel =
     ambientState==='idle'?'Ready':ambientState==='listening'?'Listening…':
     ambientState==='thinking'?'Thinking…':ambientState==='speaking'?'Speaking':
@@ -658,7 +651,6 @@ export default function ToolShell({ tool, children, isVoice=false, onSessionChan
         transition:'opacity 0.3s ease',
         position:'relative',
       }}>
-
         {/* ── Domain background canvas ── */}
         <div style={{ position:'absolute', inset:0, zIndex:0, pointerEvents:'none' }}>
           <DomainCanvas domain={domain} state={ambientState} isDark={isDark}/>
@@ -689,7 +681,6 @@ export default function ToolShell({ tool, children, isVoice=false, onSessionChan
 
         {/* ── Main content ── */}
         <div style={{ flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0,position:'relative',zIndex:1 }}>
-
           {/* Top bar — frosted glass */}
           <div style={{
             display:'flex',alignItems:'center',gap:'10px',padding:'10px 14px',
@@ -698,7 +689,6 @@ export default function ToolShell({ tool, children, isVoice=false, onSessionChan
             borderBottom: `1px solid ${d('rgba(0,0,0,0.08)',`${accent}14`)}`,
             flexShrink:0,
           }}>
-
             {/* Panel toggle */}
             <button onClick={()=>setPanelOpen(p=>!p)}
               style={{ width:34,height:34,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',background:`${accent}14`,border:`1.5px solid ${accent}28`,cursor:'pointer',flexShrink:0,transition:'all 0.15s' }}
