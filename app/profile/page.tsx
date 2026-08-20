@@ -27,6 +27,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter }            from 'next/navigation'
 import { useAuth }              from '@/lib/hooks/useAuth'
+import { createClient }         from '@/lib/supabase/client'
 import {
   Sparkles, ChevronRight, Download,
   CreditCard, Bell, Shield,
@@ -66,12 +67,14 @@ interface SynthesisPortrait {
 interface Subscription {
   tool_id:     string
   tool_name:   string
-  tool_emoji:  string
   domain:      string
   price:       number
-  tier:        string
+  status:      string
   expires_at:  string | null
-  sessions_this_month: number
+  // Real, honest omission: no per-session usage tracking exists
+  // anywhere in this codebase yet, previously this interface had a
+  // sessions_this_month field that was never actually populated by
+  // anything, dropped rather than left silently fake.
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -114,10 +117,71 @@ const LP_DESC: Record<number, string> = {
 export default function ProfilePage() {
   const router   = useRouter()
   const { user, signOut } = useAuth()
+  const supabase = createClient()
   const [portrait,      setPortrait]      = useState<SynthesisPortrait | null>(null)
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [section,       setSection]       = useState<ProfileSection>('synthesis')
   const [loading,       setLoading]       = useState(true)
+  const [managingSubscription, setManagingSubscription] = useState(false)
+
+  // Real, direct Supabase query, matching the exact pattern already
+  // proven in app/member/dashboard/page.tsx, previously this array was
+  // declared and never once populated, always showing "No active
+  // subscriptions" regardless of what the person actually owned.
+  useEffect(() => {
+    if (!user?.id) return
+    const loadSubscriptions = async () => {
+      const { data, error } = await supabase
+        .from('purchases')
+        .select('tool_id, tool_name, category, price, status, expires_at')
+        .eq('user_id', user.id)
+        .in('tool_type', ['chat', 'reading', 'audio'])
+        .in('status', ['active', 'cancelled'])
+        .order('created_at', { ascending: false })
+      if (error) {
+        console.error('Subscriptions fetch error:', error)
+        return
+      }
+      setSubscriptions((data || []).map(row => ({
+        tool_id:    row.tool_id,
+        tool_name:  row.tool_name,
+        domain:     row.category ?? 'all',
+        price:      row.price,
+        status:     row.status,
+        expires_at: row.expires_at,
+      })))
+    }
+    loadSubscriptions()
+  }, [user?.id])
+
+  // Same real path as the member dashboard, one honest "manage
+  // subscription" action, Stripe's own hosted portal, not a second,
+  // competing custom flow.
+  const handleManageSubscriptions = async () => {
+    if (!user?.id || managingSubscription) return
+    setManagingSubscription(true)
+    try {
+      const response = await fetch('/api/subscription/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          returnUrl: window.location.href,
+        })
+      })
+      const data = await response.json()
+      if (response.ok && data.portalUrl) {
+        window.location.href = data.portalUrl
+      } else {
+        alert(data.error || 'Could not open the subscription portal. Please try again.')
+        setManagingSubscription(false)
+      }
+    } catch (error) {
+      console.error('Manage subscriptions error:', error)
+      alert('Could not open the subscription portal. Please try again.')
+      setManagingSubscription(false)
+    }
+  }
 
   useEffect(() => {
     if (!user?.id) return
@@ -462,6 +526,16 @@ export default function ProfilePage() {
         {/* SUBSCRIPTIONS */}
         {section === 'subscriptions' && (
           <div className="space-y-3">
+            {subscriptions.length > 0 && (
+              <button
+                onClick={handleManageSubscriptions}
+                disabled={managingSubscription}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-label tracking-widest uppercase transition-all"
+                style={{ background: 'var(--gold-surface)', color: 'var(--gold)', border: '1px solid var(--gold-border)' }}
+              >
+                {managingSubscription ? 'Opening…' : 'Manage Subscriptions'}
+              </button>
+            )}
             {subscriptions.length === 0 ? (
               <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--depth)', border: '1px solid var(--rim)' }}>
                 <CreditCard className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--text-void)' }} />
@@ -489,23 +563,23 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
                         style={{ background: `${dc}12`, border: `1px solid ${dc}20` }}>
-                        {sub.tool_emoji}
+                        <CreditCard className="w-4 h-4" style={{ color: dc }} />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs" style={{ color: 'var(--text-vellum)' }}>{sub.tool_name}</p>
                         <p className="text-[9px] font-label tracking-widest uppercase" style={{ color: dc }}>
-                          {sub.tier.replace('_', ' ')} · ${sub.price}/mo
+                          {sub.status} · ${sub.price}/mo
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-void)' }} />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[9px]" style={{ color: 'var(--text-stone)' }}>
-                        {sub.sessions_this_month} sessions this month
+                        {sub.status === 'cancelled' ? 'Access until' : 'Renews'}
                       </span>
                       {sub.expires_at && (
                         <span className="text-[9px]" style={{ color: 'var(--text-void)' }}>
-                          Renews {new Date(sub.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {new Date(sub.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                       )}
                     </div>

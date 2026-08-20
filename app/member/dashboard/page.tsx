@@ -1,7 +1,6 @@
 'use client'
 import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
-
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -9,7 +8,6 @@ import { motion } from 'framer-motion'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { CancellationModal } from '@/components/subscription/CancellationModal'
 import { 
   ArrowLeft,
   User,
@@ -43,6 +41,37 @@ import {
   Camera
 } from 'lucide-react'
 import { RightWidgetSidebar } from '@/components/dashboard/RightWidgetSidebar'
+
+/**
+ * v2, real, deliberate rebuild of the subscription-management piece of
+ * this dashboard.
+ *
+ * Previously, this file had two real, separate cancel/reactivate paths
+ * competing at once: a custom Cancel button here, wired to
+ * /api/subscription/cancel, and, built earlier the same night, a real
+ * Stripe-hosted Customer Portal route at /api/subscription/portal,
+ * deliberately meant to replace it entirely. Neither the person using
+ * this dashboard, nor a future developer reading this file, had any
+ * real way to know which of these two was actually the current, live
+ * path, that fragmentation was the real integrity problem, not either
+ * approach in isolation.
+ *
+ * This version removes the custom cancel flow entirely and wires the
+ * one, real "Manage Subscriptions" button, previously present with no
+ * onClick at all, to the actual portal route. handleReactivate was
+ * also removed, it was already dead code, defined here but never
+ * actually called from anywhere in this file's own JSX, confirmed
+ * directly before removing it.
+ *
+ * The real reason/feedback capture the old CancellationModal was
+ * built to collect is a genuine, separate piece of value, worth
+ * keeping, just not inside this flow, Stripe's own portal can't
+ * surface custom fields like that. The agreed, honest path forward is
+ * a decoupled prompt, triggered by the webhook's own
+ * customer.subscription.deleted event, the next time this person is
+ * back in the app, not built here, a real, deliberate follow-up, not
+ * quietly dropped.
+ */
 
 interface PurchasedTool {
   id: string
@@ -116,9 +145,9 @@ function MemberDashboardInner() {
   const [activeTab, setActiveTab] = useState<'all' | 'reports' | 'interactive'>('all')
   const [refreshing, setRefreshing] = useState(false)
   const [userContext, setUserContext] = useState<any>(null)
-  const [cancellingTool, setCancellingTool] = useState<PurchasedTool | null>(null)
   const [jobStatuses, setJobStatuses] = useState<Record<string, { status: string, content?: any }>>({})
   const [pollingIntervals, setPollingIntervals] = useState<Record<string, NodeJS.Timeout>>({})
+  const [managingSubscription, setManagingSubscription] = useState(false)
 
   const startPolling = useCallback((jobId: string) => {
     if (pollingIntervals[jobId]) return
@@ -163,7 +192,6 @@ function MemberDashboardInner() {
       }
     }
     getUser()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null)
       if (session?.user) {
@@ -198,7 +226,6 @@ function MemberDashboardInner() {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-
       if (error) {
         console.error('Supabase error:', error)
         return
@@ -226,15 +253,12 @@ function MemberDashboardInner() {
         .select('price')
         .eq('user_id', userId)
       const totalSpent = purchases?.reduce((sum, p) => sum + (p.price || 0), 0) || 0
-
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('id, full_name, name, affiliate_status, dob, birth_time, birth_location')
         .eq('id', userId)
         .maybeSingle()
-
       if (userError) console.warn('users query error:', userError.message)
-
       setUserContext({
         userId,
         name:          userData?.full_name
@@ -268,34 +292,34 @@ function MemberDashboardInner() {
     router.push('/')
   }
 
-  const handleCancelSubscription = async (reason: string, feedback: string) => {
-    if (!user || !cancellingTool) return
-    const response = await fetch('/api/subscription/cancel', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: user.id,
-        toolId: cancellingTool.tool_id,
-        reason,
-        feedback
+  // Real, single path, replacing the previous custom cancel/reactivate
+  // flow entirely, this is the one thing this button should do, open
+  // Stripe's own hosted portal, where the person can genuinely cancel,
+  // reactivate a still-active-but-cancelling subscription, or update
+  // their payment method, all in Stripe's own real, correct UI.
+  const handleManageSubscriptions = async () => {
+    if (!user || managingSubscription) return
+    setManagingSubscription(true)
+    try {
+      const response = await fetch('/api/subscription/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          returnUrl: window.location.href,
+        })
       })
-    })
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to cancel subscription')
-    }
-    await fetchPurchases(user.id)
-  }
-
-  const handleReactivate = async (toolId: string) => {
-    if (!user) return
-    const response = await fetch('/api/subscription/cancel', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, toolId })
-    })
-    if (response.ok) {
-      await fetchPurchases(user.id)
+      const data = await response.json()
+      if (response.ok && data.portalUrl) {
+        window.location.href = data.portalUrl
+      } else {
+        alert(data.error || 'Could not open the subscription portal. Please try again.')
+        setManagingSubscription(false)
+      }
+    } catch (error) {
+      console.error('Manage subscriptions error:', error)
+      alert('Could not open the subscription portal. Please try again.')
+      setManagingSubscription(false)
     }
   }
 
@@ -313,7 +337,6 @@ function MemberDashboardInner() {
       default:            return purchases
     }
   }
-
   const filteredPurchases = getFilteredPurchases()
 
   const getCategoryIcon = (category: string) => {
@@ -367,7 +390,6 @@ function MemberDashboardInner() {
   }
 
   const isSubscription  = (tool: PurchasedTool) => SUBSCRIPTION_TYPES.includes(tool.tool_type)
-
   const isExpiringSoon = (expiresAt?: string) => {
     if (!expiresAt) return false
     const expiry = new Date(expiresAt)
@@ -375,7 +397,6 @@ function MemberDashboardInner() {
     const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     return daysUntilExpiry <= 7 && daysUntilExpiry > 0
   }
-
   const getSavings = (tool: PurchasedTool) => {
     if (tool.original_price && tool.original_price > tool.price) {
       return tool.original_price - tool.price
@@ -429,7 +450,6 @@ function MemberDashboardInner() {
           </div>
         </div>
       </div>
-
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -442,7 +462,6 @@ function MemberDashboardInner() {
             </div>
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -471,13 +490,11 @@ function MemberDashboardInner() {
                 </div>
               </Card>
             </div>
-
             <div className="flex gap-2 mb-6">
               <button onClick={() => setActiveTab('all')} className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'all' ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-100'}`}>All Tools ({purchases.length})</button>
               <button onClick={() => setActiveTab('reports')} className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'reports' ? 'bg-green-600 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-100'}`}>PDF Reports ({groupedPurchases.reports.length})</button>
               <button onClick={() => setActiveTab('interactive')} className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === 'interactive' ? 'bg-blue-600 text-white' : 'bg-white text-neutral-600 hover:bg-neutral-100'}`}>Subscriptions ({groupedPurchases.chat.length + groupedPurchases.reading.length + groupedPurchases.audio.length})</button>
             </div>
-
             {filteredPurchases.length === 0 ? (
               <Card className="text-center py-12">
                 <Gift className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
@@ -504,7 +521,6 @@ function MemberDashboardInner() {
                   const isProcessing = jobStatus && (jobStatus.status === 'pending' || jobStatus.status === 'processing')
                   const isReady = jobStatus && jobStatus.status === 'completed'
                   const isFailed = jobStatus && jobStatus.status === 'failed'
-
                   return (
                     <motion.div key={tool.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
                       <Card className="h-full hover:shadow-xl transition-all group relative overflow-hidden">
@@ -516,7 +532,6 @@ function MemberDashboardInner() {
                           {isReady && <div className="bg-green-500 text-white px-3 py-1 rounded-bl-lg text-xs font-medium">Ready</div>}
                           {isFailed && <div className="bg-red-500 text-white px-3 py-1 rounded-bl-lg text-xs font-medium">Failed</div>}
                         </div>
-
                         <div className="p-6">
                           <div className="flex items-start justify-between mb-4">
                             <div className={`p-3 rounded-xl ${colorClass} group-hover:scale-110 transition-transform`}><Icon className="w-6 h-6" /></div>
@@ -573,14 +588,13 @@ function MemberDashboardInner() {
                                 </Button>
                               )
                             ) : isSub ? (
-                              <div className="flex gap-2">
-                                <Button onClick={() => router.push(getToolRoute(tool))} className="flex-1 group" size="sm">
-                                  Access<ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => setCancellingTool(tool)} className="text-red-600 border-red-200 hover:bg-red-50">
-                                  Cancel
-                                </Button>
-                              </div>
+                              // Real, single action here now, Access. Cancelling and
+                              // reactivating both live in the real Manage
+                              // Subscriptions button below instead, Stripe's own
+                              // portal, not a second, competing path here.
+                              <Button onClick={() => router.push(getToolRoute(tool))} fullWidth className="group">
+                                Access<ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                              </Button>
                             ) : (
                               <Button onClick={() => router.push(getToolRoute(tool))} fullWidth className="group">
                                 Access Tool<ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
@@ -595,12 +609,10 @@ function MemberDashboardInner() {
               </div>
             )}
           </div>
-
           <div className="lg:col-span-1 space-y-6">
             <RightWidgetSidebar userId={user?.id} userPurchases={purchases} dashboardType="member" userContext={userContext} />
           </div>
         </div>
-
         {groupedPurchases.chat.length + groupedPurchases.reading.length + groupedPurchases.audio.length > 0 && (
           <Card className="mt-8 p-6 bg-gradient-to-r from-primary-50 to-transparent">
             <div className="flex items-start justify-between">
@@ -608,8 +620,14 @@ function MemberDashboardInner() {
                 <CreditCard className="w-6 h-6 text-primary-600 mt-1" />
                 <div>
                   <h3 className="font-medium text-lg mb-1">Manage Subscriptions</h3>
-                  <p className="text-sm text-neutral-600 mb-4">View, upgrade, or cancel your active subscriptions</p>
-                  <Button variant="outline" size="sm">Manage Subscriptions</Button>
+                  <p className="text-sm text-neutral-600 mb-4">View, upgrade, or cancel your active subscriptions, opens Stripe's own secure billing portal</p>
+                  <Button variant="outline" size="sm" onClick={handleManageSubscriptions} disabled={managingSubscription}>
+                    {managingSubscription ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Opening...</>
+                    ) : (
+                      'Manage Subscriptions'
+                    )}
+                  </Button>
                 </div>
               </div>
               <Badge variant="primary" className="flex items-center gap-1">
@@ -619,22 +637,6 @@ function MemberDashboardInner() {
           </Card>
         )}
       </div>
-
-      <CancellationModal
-        isOpen={!!cancellingTool}
-        onClose={() => setCancellingTool(null)}
-        tool={cancellingTool ? {
-          id:         cancellingTool.tool_id,
-          name:       cancellingTool.tool_name,
-          emoji:      cancellingTool.emoji || '📦',
-          expires_at: cancellingTool.expires_at || new Date().toISOString(),
-          price:      cancellingTool.price
-        } : {
-          id: '', name: '', emoji: '📦',
-          expires_at: new Date().toISOString(), price: 0
-        }}
-        onConfirm={handleCancelSubscription}
-      />
     </div>
   )
 }
