@@ -222,7 +222,17 @@ export default function PurchasePage() {
       // point in the component when this effect first runs, so the
       // check is repeated here against the tool object directly,
       // matching the same real property isSub itself reads from.
-      const isSubTool = !!(tool?.isSubscription || tool?.is_subscription)
+      // v1.2, the real, confirmed root cause, one level beneath the
+      // previous fix. Neither sacred-script-tools.ts nor
+      // voice-tools.ts, checked directly, ever actually set
+      // isSubscription or is_subscription on any entry, every real
+      // subscription tool in both catalogs uses subscriptionPeriod
+      // instead, a different property name entirely. The previous fix
+      // correctly sent whatever isSub computed to the backend, but
+      // isSub itself was always false to begin with, checking a
+      // property that never existed in the real data. Now checks the
+      // property that's actually there.
+      const isSubTool = !!(tool?.isSubscription || tool?.is_subscription || tool?.subscriptionPeriod)
       if (!user) {
         // Guest, checked against reading_jobs, not purchases,
         // purchases.user_id is a real, UUID-typed column, a device id
@@ -310,7 +320,10 @@ export default function PurchasePage() {
   const requiresImages = !!requiresImage
   const domain         = tool.domain || tool.category || 'oracle-temple'
   const destination    = domainDestinations[domain] || 'report'
-  const isSub          = !!(tool.isSubscription || tool.is_subscription)
+  // v1.2, same real fix as isSubTool above, see that comment for the
+  // full, confirmed explanation, this is the one that actually feeds
+  // the checkout request body below.
+  const isSub          = !!(tool.isSubscription || tool.is_subscription || tool.subscriptionPeriod)
   const categoryColor  = categoryColors[domain]    || 'text-indigo-600 bg-indigo-50'
   const categoryGrad   = categoryGradients[domain] || 'from-indigo-500 to-purple-600'
   const CategoryIcon   = categoryIcons[domain]     || Crown
