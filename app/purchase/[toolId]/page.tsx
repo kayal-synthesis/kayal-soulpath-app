@@ -765,9 +765,9 @@ export default function PurchasePage() {
             >
               <div className="space-y-4">
                 {/* Order Summary Card */}
-                <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
-                  <h2 className="text-lg font-serif text-neutral-900 mb-4">Order Summary</h2>
-                  <div className="flex items-start gap-4 mb-4">
+                <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                  <h2 className="text-base font-serif text-neutral-900 mb-3">Order Summary</h2>
+                  <div className="flex items-start gap-3 mb-3">
                     <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${categoryColor}`}>
                       {tool.emoji || '📦'}
                     </div>
@@ -843,7 +843,7 @@ export default function PurchasePage() {
                     fallback (see stripe/webhook and reading/submit
                     routes) picks that up from there automatically. */}
                 {/* Coupon Code */}
-                <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
+                <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
                   {appliedCoupon ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -916,22 +916,23 @@ export default function PurchasePage() {
                     </div>
                   )}
                 </div>
-                {/* Trust Signals */}
-                <div className="grid grid-cols-3 gap-3">
+                {/* Trust Signals, single compact row, real vertical space
+                    saving over three separate stacked cards, same real
+                    information, far shorter. */}
+                <div className="bg-white rounded-xl border border-neutral-100 py-2.5 px-3 shadow-sm flex items-center justify-center gap-4 flex-wrap">
                   {[
-                    { icon: Shield,   text: '256-bit SSL', sub: 'Encrypted'  },
-                    { icon: Lock,     text: 'Private',     sub: 'Only you'   },
-                    { icon: Sparkles, text: '7-day',       sub: 'Money back' },
-                  ].map(({ icon: Icon, text, sub }) => (
-                    <div key={text} className="bg-white rounded-xl border border-neutral-100 p-3 text-center shadow-sm">
-                      <Icon className="w-4 h-4 text-green-500 mx-auto mb-1" />
-                      <p className="text-xs font-semibold text-neutral-700">{text}</p>
-                      <p className="text-xs text-neutral-400">{sub}</p>
+                    { icon: Shield,   label: '256-bit SSL' },
+                    { icon: Lock,     label: 'Private'     },
+                    { icon: Sparkles, label: '7-day money back' },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} className="flex items-center gap-1.5">
+                      <Icon className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                      <span className="text-xs font-medium text-neutral-600">{label}</span>
                     </div>
                   ))}
                 </div>
                 {/* Terms */}
-                <label className="flex items-start gap-3 cursor-pointer bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
+                <label className="flex items-start gap-3 cursor-pointer bg-white rounded-2xl border border-neutral-100 shadow-sm p-3">
                   <input
                     type="checkbox"
                     checked={agreedToTerms}
@@ -969,9 +970,11 @@ export default function PurchasePage() {
                     <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase {formatPrice(finalPrice)}{isSub ? '/mo' : ''}</>
                   )}
                 </Button>
-                <p className="text-xs text-center text-neutral-400 pb-2">
-                  Your reading will be ready in approximately {tool.deliveryMinutes || 20} minutes after payment.
-                </p>
+                {!isSub && (
+                  <p className="text-xs text-center text-neutral-400 pb-2">
+                    Your reading will be ready in approximately {tool.deliveryMinutes || 20} minutes after payment.
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
