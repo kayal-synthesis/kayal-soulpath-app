@@ -1,6 +1,5 @@
 'use client'
 export const dynamic = 'force-dynamic'
-
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAnonymousStore } from '@/lib/store/anonymousStore'
@@ -14,7 +13,6 @@ import {
   Tag, X, Heart, TrendingUp, Moon, ChevronDown, ChevronUp,
   Check, Lock, Sparkles, User,
 } from 'lucide-react'
-
 import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
 import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
 import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
@@ -37,21 +35,18 @@ const domainDestinations: Record<string, string> = {
   'love': 'report', 'wealth': 'report', 'wellness': 'report',
   'life-path': 'report', 'sacred-script': 'chat',
 }
-
 const categoryColors: Record<string, string> = {
   'love': 'text-red-600 bg-red-50', 'wealth': 'text-green-600 bg-green-50',
   'wellness': 'text-purple-600 bg-purple-50', 'life-path': 'text-orange-600 bg-orange-50',
   'oracle-temple': 'text-indigo-600 bg-indigo-50', 'time-keeper': 'text-teal-600 bg-teal-50',
   'voice': 'text-violet-600 bg-violet-50', 'sacred-script': 'text-amber-600 bg-amber-50',
 }
-
 const categoryGradients: Record<string, string> = {
   'love': 'from-red-500 to-pink-600', 'wealth': 'from-green-500 to-emerald-600',
   'wellness': 'from-purple-500 to-violet-600', 'life-path': 'from-orange-500 to-amber-600',
   'oracle-temple': 'from-indigo-500 to-purple-600', 'time-keeper': 'from-teal-500 to-cyan-600',
   'voice': 'from-violet-500 to-purple-600', 'sacred-script': 'from-amber-500 to-orange-600',
 }
-
 const categoryIcons: Record<string, any> = {
   'love': Heart, 'wealth': TrendingUp, 'wellness': Moon, 'life-path': Star,
   'oracle-temple': Crown, 'time-keeper': Clock, 'voice': Mic, 'sacred-script': BookOpen,
@@ -127,12 +122,15 @@ export default function PurchasePage() {
   // Real, deliberate ownership gate, not a UX nicety. These are
   // personalized readings built from birth data that doesn't change,
   // repurchasing the same static tool means paying again for output
-  // that comes back nearly identical. time-keeper tools are the one
-  // genuine exception, matching exactly the same rule enforced
-  // server-side in app/api/checkout/initiate/route.ts, this is the
-  // early, friendly version of that same check, so a returning
-  // customer sees a clear message immediately rather than clicking
-  // through the whole flow only to be rejected at the very last step.
+  // that comes back nearly identical. time-keeper tools are one real
+  // exception, timing content legitimately changes. Subscription
+  // tools are the other, a genuine renewal isn't the same thing as an
+  // accidental repurchase, this exemption now matches exactly the
+  // same rule enforced server-side in
+  // app/api/checkout/initiate/route.ts, this is the early, friendly
+  // version of that same check, so a returning customer sees a clear
+  // message immediately rather than clicking through the whole flow
+  // only to be rejected at the very last step.
   // Guests, no logged-in account yet, have no stable identity to check
   // this against, same honest limitation as the backend check, this
   // only protects a real, logged-in account.
@@ -211,13 +209,20 @@ export default function PurchasePage() {
 
   useEffect(() => {
     let cancelled = false
-
     const checkAuthAndOwnership = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (cancelled) return
-
       const domain = tool?.domain || tool?.category || 'oracle-temple'
-
+      // v1.1, real fix, this exemption previously only checked
+      // domain === 'time-keeper', a subscription tool's own genuine
+      // monthly renewal would have been shown this same "you already
+      // own this" gate, indistinguishable from an accidental
+      // repurchase. Confirmed directly, this file's own isSub
+      // constant, computed further below, wasn't yet defined at this
+      // point in the component when this effect first runs, so the
+      // check is repeated here against the tool object directly,
+      // matching the same real property isSub itself reads from.
+      const isSubTool = !!(tool?.isSubscription || tool?.is_subscription)
       if (!user) {
         // Guest, checked against reading_jobs, not purchases,
         // purchases.user_id is a real, UUID-typed column, a device id
@@ -231,11 +236,10 @@ export default function PurchasePage() {
         // exists, app/api/checkout/initiate/route.ts's own server-side
         // check, using the service role key, is what actually,
         // reliably prevents the charge either way.
-        if (!tool || domain === 'time-keeper') {
+        if (!tool || domain === 'time-keeper' || isSubTool) {
           setCheckingOwnership(false)
           return
         }
-
         const deviceId = getDeviceId()
         const { data: existingJob } = await supabase
           .from('reading_jobs')
@@ -244,9 +248,7 @@ export default function PurchasePage() {
           .eq('tool_id', tool.id)
           .eq('status', 'completed')
           .maybeSingle()
-
         if (cancelled) return
-
         if (existingJob) {
           setAlreadyOwned(true)
           setExistingJobId(existingJob.id || null)
@@ -254,15 +256,12 @@ export default function PurchasePage() {
         setCheckingOwnership(false)
         return
       }
-
       setLoggedInUser(user)
       setEmail(user.email || '')
-
-      if (!tool || domain === 'time-keeper') {
+      if (!tool || domain === 'time-keeper' || isSubTool) {
         setCheckingOwnership(false)
         return
       }
-
       const { data: existing } = await supabase
         .from('purchases')
         .select('job_id')
@@ -270,16 +269,13 @@ export default function PurchasePage() {
         .eq('tool_id', tool.id)
         .eq('status', 'active')
         .maybeSingle()
-
       if (cancelled) return
-
       if (existing) {
         setAlreadyOwned(true)
         setExistingJobId(existing.job_id || null)
       }
       setCheckingOwnership(false)
     }
-
     checkAuthAndOwnership()
     return () => { cancelled = true }
   }, [tool?.id])
@@ -318,7 +314,6 @@ export default function PurchasePage() {
   const categoryColor  = categoryColors[domain]    || 'text-indigo-600 bg-indigo-50'
   const categoryGrad   = categoryGradients[domain] || 'from-indigo-500 to-purple-600'
   const CategoryIcon   = categoryIcons[domain]     || Crown
-
   const savings        = originalPrice - finalPrice
   const hasDiscount    = savings > 0
 
@@ -390,7 +385,6 @@ export default function PurchasePage() {
     if (uploadedImages['palm-left'])   form.append('palm_image_left',  uploadedImages['palm-left'])
     if (uploadedImages['palm-right'])  form.append('palm_image_right', uploadedImages['palm-right'])
     if (uploadedImages['palm-left'] || uploadedImages['palm-right']) form.append('dominant_hand', dominantHand)
-
     const res = await fetch('/api/reading/submit', { method: 'POST', body: form })
     if (!res.ok) throw new Error(`Submission failed: ${res.status}`)
     const data = await res.json()
@@ -423,16 +417,13 @@ export default function PurchasePage() {
 
   const handlePurchase = async () => {
     setPurchaseError('')
-
     if (!agreedToTerms) {
       setPurchaseError('Please agree to the Terms of Service to continue.')
       return
     }
-
     setIsProcessing(true)
     try {
       const newJobId = await submitReadingJob()
-
       // This no longer creates the purchase or credits anything, it only
       // starts a real Stripe checkout session. The purchase itself
       // only gets created once Stripe's webhook confirms the charge
@@ -453,11 +444,19 @@ export default function PurchasePage() {
           usdEquivalent: finalPriceUsd,   // the true USD reference, what commission math actually uses
           refCode:       getRefCode(),
           jobId:         newJobId,
+          // v1.1, the real, confirmed root cause of every subscription
+          // tonight coming through as a one-time charge instead of a
+          // real, genuine Stripe subscription: isSub was already being
+          // computed correctly above, it was simply never actually
+          // included in this request body. checkout_initiate_route.ts
+          // received no subscription flag at all, defaulted to false,
+          // and correctly, honestly created a one-time payment session
+          // with the information it was given, that file was never the
+          // bug, this missing line was.
+          isSubscription: isSub,
         }),
       })
-
       const initData = await initResponse.json()
-
       if (!initResponse.ok || !initData.paymentLink) {
         // Real, specific message if the backend's own ownership check
         // caught this, matching app/api/checkout/initiate/route.ts's
@@ -471,7 +470,6 @@ export default function PurchasePage() {
         }
         throw new Error(initData.error || 'Could not start checkout, please try again.')
       }
-
       // Real redirect to Stripe's hosted payment page, this is
       // where the customer actually enters payment details, never on
       // this site.
@@ -548,7 +546,6 @@ export default function PurchasePage() {
           </div>
         </div>
       </div>
-
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Progress Steps */}
         {steps.length > 1 && (
@@ -581,7 +578,6 @@ export default function PurchasePage() {
             ))}
           </div>
         )}
-
         {/* Mobile collapsible order summary */}
         <div className="mb-5">
           <button
@@ -608,7 +604,6 @@ export default function PurchasePage() {
                 : <ChevronDown className="w-4 h-4 text-neutral-400" />}
             </div>
           </button>
-
           <AnimatePresence>
             {showSummary && (
               <motion.div
@@ -644,7 +639,6 @@ export default function PurchasePage() {
             )}
           </AnimatePresence>
         </div>
-
         {/* Step Content */}
         <AnimatePresence mode="wait">
           {/* STEP 1, Image Upload */}
@@ -673,7 +667,6 @@ export default function PurchasePage() {
                     </p>
                   </div>
                 </div>
-
                 {(requiresImage?.type === 'palm' || requiresImage?.type === 'both') && (
                   <div className="mb-5">
                     <p className="text-sm font-medium text-neutral-700 mb-2">Which hand is your dominant hand?</p>
@@ -709,13 +702,11 @@ export default function PurchasePage() {
                     </div>
                   </div>
                 )}
-
                 <ImageUploader
                   type={requiresImage?.type || 'face'}
                   onCapture={handleImageCapture}
                   instructions={requiresImage?.instructions}
                 />
-
                 {(facePreview || palmRightPreview || palmLeftPreview) && (
                   <div className="grid grid-cols-3 gap-2 mt-5">
                     {facePreview && (
@@ -738,7 +729,6 @@ export default function PurchasePage() {
                     )}
                   </div>
                 )}
-
                 <Button
                   onClick={() => setCurrentStep('payment')}
                   disabled={!checkUploadsComplete()}
@@ -751,7 +741,6 @@ export default function PurchasePage() {
               </div>
             </motion.div>
           )}
-
           {/* STEP 2, Payment */}
           {currentStep === 'payment' && (
             <motion.div
@@ -786,7 +775,6 @@ export default function PurchasePage() {
                       )}
                     </div>
                   </div>
-
                   <div className="border-t border-neutral-100 pt-3 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-neutral-500">Price</span>
@@ -808,7 +796,6 @@ export default function PurchasePage() {
                     </div>
                   </div>
                 </div>
-
                 {/* Candidate cities, relocation-power-map only, entirely
                     optional. Without these the reading still evaluates the
                     person's current location, this just lets the reading
@@ -837,13 +824,11 @@ export default function PurchasePage() {
                     />
                   </div>
                 )}
-
                 {/* No email field here at all, guests aren't asked, Stripe's
                     own checkout page collects one as a normal part of
                     paying regardless, and the webhook + reading-submit
                     fallback (see stripe/webhook and reading/submit
                     routes) picks that up from there automatically. */}
-
                 {/* Coupon Code */}
                 <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5">
                   {appliedCoupon ? (
@@ -918,7 +903,6 @@ export default function PurchasePage() {
                     </div>
                   )}
                 </div>
-
                 {/* Trust Signals */}
                 <div className="grid grid-cols-3 gap-3">
                   {[
@@ -933,7 +917,6 @@ export default function PurchasePage() {
                     </div>
                   ))}
                 </div>
-
                 {/* Terms */}
                 <label className="flex items-start gap-3 cursor-pointer bg-white rounded-2xl border border-neutral-100 shadow-sm p-4">
                   <input
@@ -954,13 +937,11 @@ export default function PurchasePage() {
                     . I understand this is a demo purchase.
                   </span>
                 </label>
-
                 {purchaseError && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{purchaseError}
                   </div>
                 )}
-
                 {/* Pay Button */}
                 <Button
                   onClick={handlePurchase}
@@ -975,7 +956,6 @@ export default function PurchasePage() {
                     <><CreditCard className="w-5 h-5 mr-2" />Complete Purchase {formatPrice(finalPrice)}{isSub ? '/mo' : ''}</>
                   )}
                 </Button>
-
                 <p className="text-xs text-center text-neutral-400 pb-2">
                   Your reading will be ready in approximately {tool.deliveryMinutes || 20} minutes after payment.
                 </p>
