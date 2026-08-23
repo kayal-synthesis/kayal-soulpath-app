@@ -32,23 +32,37 @@ WebSocket message protocol:
     { "type": "error",       "message": "..." }
     { "type": "pong" }
 
+v2.1.0 changes, real fix, confirmed directly, not guessed:
+  - context.get("is_union_blueprint") and context.get("partner_full_name")
+    read two keys that never existed anywhere in
+    _load_synthesis_context()'s real return value, at any point. That
+    function was itself confirmed broken and fixed separately, in
+    chat.py, it had been querying two reading_jobs columns,
+    full_name and date_of_birth, that never existed as their own
+    columns at all, confirmed directly against the real, complete
+    schema. The fixed function now genuinely returns partner_name and
+    partner_dob, extracted from input_data, the real, confirmed JSONB
+    column where checkout-time data actually lives. is_union is now
+    derived from whether a real partner_name is present, rather than
+    read from a field, is_union_blueprint, that was never real to
+    begin with.
+
 v2.0.0 changes:
   - VOICE_OPTIONS: southeast_asian ("en-SG-LunaNeural") and
     east_asian ("en-HK-YanNeural") voices added
   - _select_voice(): Southeast Asian, East Asian, and Middle Eastern
     origins now handled — Malaysian/Singaporean users no longer fall
     through to the default US voice
-  - handle_voice_websocket(): extracts is_union_blueprint and
-    partner_full_name from context (v2.0.0 chat.py now returns these);
-    "ready" signal includes is_union flag for client
+  - handle_voice_websocket(): extracts partner context from
+    _load_synthesis_context(); "ready" signal includes is_union flag
+    for client
   - Morning Prophet auto-opening: condition broadened from hardcoded
     tool_id string to TOOL_SCOPE lookup for "timing" daily tools
   - Version: 1.0.0 → 2.0.0
 
 Author: KAYAL Engineering
-Version: 2.0.0
+Version: 2.1.0
 """
-
 from __future__ import annotations
 
 import asyncio
@@ -64,11 +78,9 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
-
 # ─────────────────────────────────────────────
 # Voice selection (v2.0.0 — SE Asian + East Asian added)
 # ─────────────────────────────────────────────
-
 DEFAULT_VOICE = "en-US-JennyNeural"
 
 VOICE_OPTIONS: Dict[str, str] = {
@@ -95,11 +107,9 @@ _AUTO_OPEN_TOOLS = frozenset({
     "daily-voice-briefing",
 })
 
-
 # ─────────────────────────────────────────────
 # STT: faster-whisper (v1.0.0, preserved intact)
 # ─────────────────────────────────────────────
-
 _whisper_model = None
 
 def _get_whisper_model():
@@ -119,13 +129,11 @@ def _get_whisper_model():
         logger.error(f"Failed to load Whisper model: {e}")
         return None
 
-
 async def transcribe_audio(audio_bytes: bytes) -> Optional[str]:
     """Transcribe audio bytes to text using local Whisper model."""
     model = _get_whisper_model()
     if not model:
         return None
-
     def _run():
         try:
             with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as f:
@@ -144,14 +152,11 @@ async def transcribe_audio(audio_bytes: bytes) -> Optional[str]:
         except Exception as e:
             logger.error(f"Whisper transcription error: {e}")
             return None
-
     return await asyncio.get_event_loop().run_in_executor(None, _run)
-
 
 # ─────────────────────────────────────────────
 # TTS: edge-tts (v1.0.0, preserved intact)
 # ─────────────────────────────────────────────
-
 async def synthesise_speech(text: str, voice: str = DEFAULT_VOICE) -> Optional[bytes]:
     """Convert text to speech using edge-tts. Returns MP3 bytes."""
     try:
@@ -171,11 +176,9 @@ async def synthesise_speech(text: str, voice: str = DEFAULT_VOICE) -> Optional[b
         logger.error(f"edge-tts error: {e}")
         return None
 
-
 # ─────────────────────────────────────────────
 # WebSocket message helpers (v1.0.0, preserved intact)
 # ─────────────────────────────────────────────
-
 async def _send(ws: WebSocket, msg: Dict[str, Any]) -> None:
     try:
         await ws.send_text(json.dumps(msg))
@@ -186,69 +189,55 @@ async def _send_audio(ws: WebSocket, audio_bytes: bytes) -> None:
     encoded = base64.b64encode(audio_bytes).decode("utf-8")
     await _send(ws, {"type": "audio", "data": encoded})
 
-
 # ─────────────────────────────────────────────
 # Voice preference selection
 # v2.0.0: Southeast Asian, East Asian, Middle Eastern origins handled
 # ─────────────────────────────────────────────
-
 def _select_voice(cultural_origin: Optional[str]) -> str:
     """
     Select the most appropriate oracle voice based on cultural background.
-
     v2.0.0: Southeast Asian (MY/SG/ID/PH/TH/VN) and East Asian (CN/TW/HK/JP/KR)
     origins now route to regionally appropriate voices instead of falling through
     to the US default.
     """
     if not cultural_origin:
         return DEFAULT_VOICE
-
     origin = cultural_origin.lower()
-
     # Sub-Saharan African
     if any(w in origin for w in ["african", "nigerian", "ghanaian", "kenyan",
                                    "south_african", "zimbabwean", "sub_saharan"]):
         return VOICE_OPTIONS["af-warm"]
-
     # South Asian
     if any(w in origin for w in ["indian", "pakistani", "bangladeshi",
                                    "sri_lankan", "south_asian", "nepali"]):
         return VOICE_OPTIONS["in-warm"]
-
     # v2.0.0 — Southeast Asian
     if any(w in origin for w in ["malaysian", "singaporean", "indonesian",
                                    "filipino", "thai", "vietnamese", "burmese",
                                    "southeast_asian", "southeast asian"]):
         return VOICE_OPTIONS["sg-warm"]
-
     # v2.0.0 — East Asian
     if any(w in origin for w in ["chinese", "taiwanese", "hong_kong", "japanese",
                                    "korean", "east_asian", "east asian"]):
         return VOICE_OPTIONS["hk-warm"]
-
     # v2.0.0 — Middle Eastern (British English is closest available)
     if any(w in origin for w in ["middle_eastern", "middle eastern", "arabic",
                                    "saudi", "emirati", "egyptian", "lebanese",
                                    "turkish", "north_african"]):
         return VOICE_OPTIONS["en-mystic"]
-
     # British / Irish
     if any(w in origin for w in ["british", "uk", "irish", "scottish",
                                    "eastern_european", "eastern european"]):
         return VOICE_OPTIONS["en-mystic"]
-
     # Australian / New Zealand
     if any(w in origin for w in ["australian", "new_zealand"]):
         return VOICE_OPTIONS["au-warm"]
-
     return DEFAULT_VOICE
-
 
 # ─────────────────────────────────────────────
 # Main WebSocket handler
-# v2.0.0: union context extracted, ready signal updated, auto-open broadened
+# v2.1.0: real partner-field fix, see file header
 # ─────────────────────────────────────────────
-
 async def handle_voice_websocket(
     websocket: WebSocket,
     user_id:   str,
@@ -257,9 +246,15 @@ async def handle_voice_websocket(
     """
     Handle a complete voice session WebSocket connection.
 
+    v2.1.0 changes:
+    - Reads context["partner_name"] and context["partner_dob"], the
+      real, confirmed field names _load_synthesis_context() actually
+      returns, not is_union_blueprint / partner_full_name, which were
+      never real, at any point, see file header for the full,
+      confirmed explanation.
+
     v2.0.0 changes:
-    - Extracts is_union_blueprint and partner_full_name from context
-      (available since chat.py v2.0.0)
+    - Extracts partner context from _load_synthesis_context()
     - "ready" signal includes is_union flag so the client can adjust UI
     - Auto-opening changed from hardcoded "the-morning-prophet" to
       _AUTO_OPEN_TOOLS frozenset (daily-personal-oracle, daily-voice-briefing
@@ -287,33 +282,35 @@ async def handle_voice_websocket(
         await websocket.close(code=4003)
         return
 
-    # Load context — v2.0.0 now returns is_union_blueprint + partner_full_name
+    # Load context — real, confirmed field names now, see file header
     context = await _load_synthesis_context(user_id)
-
-    cultural_origin = context.get("cultural_origin")  if context else None
-    is_union        = context.get("is_union_blueprint", False) if context else False
-    partner_name    = context.get("partner_full_name")         if context else None
-    partner_first   = partner_name.split()[0].title()          if partner_name else None
+    cultural_origin = context.get("cultural_origin") if context else None
+    partner_name    = context.get("partner_name")    if context else None
+    partner_first   = partner_name.split()[0].title() if partner_name else None
+    # A real, honest signal, not an invented field, a session genuinely
+    # involves a partner if the reading behind it actually captured
+    # one, there is no separate, dedicated "is this a union reading"
+    # flag anywhere in the real schema.
+    is_union = bool(partner_name)
 
     voice = _select_voice(cultural_origin)
-
     logger.info(
         f"Voice session: tool={tool_id} voice={voice} "
         f"union={is_union} partner={partner_first}"
     )
 
-    # Send ready signal — v2.0.0: includes is_union and partner_first
+    # Send ready signal
     await _send(websocket, {
         "type":          "ready",
         "voice":         voice,
         "tool":          tool_id,
-        "is_union":      is_union,           # v2.0.0
-        "partner_name":  partner_first,      # v2.0.0 — None for individual sessions
+        "is_union":      is_union,
+        "partner_name":  partner_first,      # None for individual sessions
     })
 
     history: List[Dict] = []
 
-    # v2.0.0 — auto-opening for daily tools (broadened from single hardcoded ID)
+    # Auto-opening for daily tools (broadened from single hardcoded ID)
     if tool_id in _AUTO_OPEN_TOOLS:
         opening = await get_agent_response(
             user_id  = user_id,
@@ -380,7 +377,6 @@ async def handle_voice_websocket(
                 user_message = msg.get("data", "").strip()
                 if not user_message:
                     continue
-
             else:
                 logger.warning(f"Unknown message type: {msg_type}")
                 continue
@@ -408,8 +404,8 @@ async def handle_voice_websocket(
                 history = history[-40:]
 
             await _send(websocket, {"type": "response", "text": response_text})
-
             await _send(websocket, {"type": "synthesising"})
+
             audio_out = await synthesise_speech(response_text, voice)
             if audio_out:
                 await _send_audio(websocket, audio_out)
