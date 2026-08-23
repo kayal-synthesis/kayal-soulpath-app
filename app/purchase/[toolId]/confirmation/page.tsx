@@ -572,7 +572,11 @@ function LiveSessionReadyCard({
     return `${m}:${sec.toString().padStart(2, '0')}`
   }
 
-  const destination = domainDestinations[(tool as any).domain || (tool as any).category || ''] || 'chat'
+  // v1.2, same real fix as above, category is the short, machine-
+  // readable id this lookup table's keys actually match, domain is a
+  // human-readable display string, checking it first silently missed
+  // every real match.
+  const destination = domainDestinations[(tool as any).category || ''] || 'chat'
   const sessionRoute = destination === 'audio'
     ? `/domain/voice-of-prophecy/${tool.id}`
     : `/domain/sacred-script/${tool.id}`
@@ -731,8 +735,16 @@ export default function PurchaseConfirmationPage() {
       const fallback = allTools.find(t => t.isPopular && t.id !== toolId)
       setUpsellTool(fallback ?? null)
     }
-    const domain = (t as any)?.domain || (t as any)?.category || ''
-    setIsLiveSessionTool(domainDestinations[domain] === 'chat' || domainDestinations[domain] === 'audio')
+    // v1.2, real, confirmed fix, checked directly against
+    // lib/tools/all-tools-index.ts's own, real Tool interface. That
+    // file's own comment says it plainly: category is "domain id for
+    // icon/colour lookups", domain is "human-readable domain name".
+    // I had them backwards, checking domain first, a display string
+    // like "Voice of Prophecy", which domainDestinations has no entry
+    // for at all, category alone is the real, short id, 'voice',
+    // 'sacred-script', that actually matches this lookup table's keys.
+    const category = (t as any)?.category || ''
+    setIsLiveSessionTool(domainDestinations[category] === 'chat' || domainDestinations[category] === 'audio')
   }, [toolId])
 
   useEffect(() => {
