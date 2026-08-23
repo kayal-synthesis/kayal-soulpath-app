@@ -1,5 +1,4 @@
 'use client'
-
 import {
   useState, useEffect, useRef, useCallback
 } from 'react'
@@ -17,7 +16,16 @@ import {
   Mic, MicOff, PhoneOff, Volume2, VolumeX, Sparkles,
 } from 'lucide-react'
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+// v1.1, real bug fix, the fallback below pointed at localhost, the
+// same category of bug already found and fixed across several files
+// tonight. Both actual endpoint calls in this file, /api/reading/job/
+// latest and the /agency/voice websocket route, were already checked
+// directly against main.py's real, current routes and confirmed
+// exact matches, nothing else needed changing. WS_BASE derives
+// correctly from API_BASE below, http becomes ws, https becomes wss,
+// automatically correct once the fallback itself points at the real
+// address.
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 const WS_BASE  = API_BASE.replace(/^http/, 'ws')
 
 const TOOL_DOMAIN: Record<string,string> = {
@@ -27,7 +35,6 @@ const TOOL_DOMAIN: Record<string,string> = {
   'relationship-oracle-session':'love','spiritual-oracle-session':'spiritual',
   'crisis-oracle-session':'all','oracle-voice-unlimited':'all',
 }
-
 const DOMAIN_ACCENT: Record<string,string> = {
   love:'#d4856a',wealth:'#c9a96e',spiritual:'#a48ac4',
   health:'#7aaa8a',purpose:'#7a9ac4',timing:'#a0c49a',
@@ -35,7 +42,6 @@ const DOMAIN_ACCENT: Record<string,string> = {
 }
 
 type Phase = 'idle'|'checking'|'loading'|'connecting'|'ready'|'listening'|'thinking'|'speaking'|'ended'
-
 interface Turn { id:string; role:'user'|'oracle'; text:string; timestamp:Date }
 interface SynthCtx {
   first_name:string; full_name:string; birth_location:string|null;
@@ -108,7 +114,6 @@ function Waveform({ accent, state }: { accent:string; state:AmbientState }) {
 
 function OracleOrb({ emoji, accent, phase, isDark }: { emoji:string;accent:string;phase:Phase;isDark:boolean }) {
   const state: AmbientState = phase==='speaking'?'speaking':phase==='thinking'?'thinking':phase==='listening'?'listening':'idle'
-
   const orbBg =
     phase==='speaking'  ? `radial-gradient(circle at 35% 30%, ${accent}30, ${accent}08)` :
     phase==='thinking'  ? 'radial-gradient(circle at 35% 30%, rgba(139,124,200,0.28), rgba(139,124,200,0.06))' :
@@ -116,19 +121,16 @@ function OracleOrb({ emoji, accent, phase, isDark }: { emoji:string;accent:strin
     isDark
       ? `radial-gradient(circle at 35% 30%, ${accent}18, ${accent}05)`
       : `radial-gradient(circle at 35% 30%, ${accent}12, ${accent}03)`
-
   const borderCol =
     phase==='speaking'  ? `${accent}55` :
     phase==='thinking'  ? 'rgba(139,124,200,0.5)' :
     phase==='listening' ? 'rgba(74,155,142,0.5)' :
     `${accent}35`
-
   const shadow =
     phase==='speaking'  ? `0 0 60px ${accent}28, 0 0 120px ${accent}12` :
     phase==='thinking'  ? '0 0 50px rgba(139,124,200,0.22)' :
     phase==='listening' ? '0 0 40px rgba(74,155,142,0.2)' :
     isDark ? `0 0 30px ${accent}14` : 'none'
-
   return (
     <div style={{position:'relative',width:240,height:240,display:'flex',alignItems:'center',justifyContent:'center'}}>
       <Waveform accent={accent} state={state}/>
@@ -194,21 +196,17 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
   useEffect(()=>{phaseRef.current=phase},[phase])
   useEffect(()=>{turnsRef.current=turns},[turns])
   useEffect(()=>{synthRef.current=synthesis},[synthesis])
-
   useEffect(()=>{
     const map:Record<Phase,AmbientState>={idle:'idle',checking:'idle',loading:'idle',connecting:'idle',ready:'idle',listening:'listening',thinking:'thinking',speaking:'speaking',ended:'idle'}
     shell.setAmbientState(map[phase]??'idle')
   },[phase])
-
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'})},[turns])
-
   useEffect(()=>{
     if(!user?.id) return
     const ctrl=new AbortController(); let cancelled=false
     loadSynthesis(user.id,domain,ctrl.signal).then(s=>{if(!cancelled)setSynthesis(s)}).catch(()=>{})
     return()=>{cancelled=true;ctrl.abort()}
   },[user?.id,domain])
-
   useEffect(()=>{
     const active=['ready','listening','thinking','speaking'].includes(phase)
     if(!active) return
@@ -224,7 +222,6 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
     },1000)
     return()=>{if(timerRef.current)clearInterval(timerRef.current)}
   },[phase])
-
   useEffect(()=>()=>cleanupAll(),[])
 
   const cleanupAll=useCallback(()=>{
@@ -280,7 +277,6 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
   },[])
 
   const stopRecording=useCallback(()=>{if(recorderRef.current?.state==='recording')recorderRef.current.stop()},[])
-
   const handlePTTStart=useCallback(()=>{const p=phaseRef.current;if(p==='ready'||p==='listening')startRecording()},[startRecording])
   const handlePTTEnd=useCallback(()=>{if(isRecRef.current)stopRecording()},[stopRecording])
 
@@ -346,9 +342,7 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
   const limitSecs=(tool.sessionDurationMinutes??20)*60
   const limitPct=isUnlimited?0:Math.min((elapsed/limitSecs)*100,100)
   const remaining=isUnlimited?null:Math.max(limitSecs-elapsed,0)
-
   const dotColour=phase==='speaking'?accent:phase==='thinking'?'#8b7cc8':phase==='listening'?'#4a9b8e':d('rgba(0,0,0,0.2)','rgba(255,255,255,0.2)')
-
   const phaseLabel:Record<Phase,string>={
     idle:'Ready to begin',checking:'Checking',loading:'Loading your synthesis',
     connecting:'Connecting to oracle',ready:'Hold to speak',listening:'Listening',
@@ -405,14 +399,12 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
           </div>
         )}
       </div>
-
       <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 24px',gap:14,minHeight:0}}>
         <OracleOrb emoji={tool.emoji} accent={accent} phase={phase} isDark={isDark}/>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <span style={{width:7,height:7,borderRadius:'50%',background:dotColour,boxShadow:isActive?`0 0 7px ${dotColour}`:'none',transition:'all 0.4s',flexShrink:0}}/>
           <span style={{fontSize:14,letterSpacing:'0.05em',textTransform:'uppercase',color:d('rgba(0,0,0,0.4)','rgba(255,255,255,0.38)')}}>{phaseLabel[phase]}</span>
         </div>
-
         {isActive&&!isUnlimited&&(
           <div style={{width:'100%',maxWidth:320}}>
             <div style={{height:2,borderRadius:1,overflow:'hidden',background:d('rgba(0,0,0,0.1)','rgba(255,255,255,0.08)'),marginBottom:5}}>
@@ -425,7 +417,6 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
             </div>
           </div>
         )}
-
         {turns.length>0&&(
           <div style={{width:'100%',maxWidth:440,maxHeight:130,overflowY:'auto',scrollbarWidth:'none',display:'flex',flexDirection:'column',gap:8}}>
             {turns.map(t_=>(
@@ -450,18 +441,15 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
             <div ref={bottomRef}/>
           </div>
         )}
-
         {phase==='idle'&&!errorMsg&&turns.length===0&&(
           <p style={{fontSize:15,lineHeight:1.7,textAlign:'center',maxWidth:380,color:d('rgba(80,65,45,0.65)','rgba(154,140,122,0.68)'),fontFamily:"'EB Garamond',Georgia,serif"}}>{tool.hook}</p>
         )}
       </div>
-
       {errorMsg&&(
         <div style={{margin:'0 16px 8px',padding:'10px 16px',borderRadius:14,background:'rgba(180,84,84,0.09)',border:'1px solid rgba(180,84,84,0.22)',color:'rgba(180,84,84,0.88)',fontSize:14,textAlign:'center',flexShrink:0,backdropFilter:'blur(8px)'}}>
           {errorMsg}
         </div>
       )}
-
       <div style={{padding:'0 24px 32px',flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
         {phase==='idle'&&(
           <button onClick={startSession} style={{width:'100%',maxWidth:380,padding:'16px',borderRadius:22,fontSize:16,fontWeight:600,cursor:'pointer',background:`linear-gradient(135deg,${accent}ee,${accent}99)`,border:'none',color:isDark?'#1a1200':'#2a1800',letterSpacing:'0.06em',fontFamily:"'Cormorant Garamond',Georgia,serif",boxShadow:`0 6px 32px ${accent}28`,transition:'all 0.2s'}}
@@ -470,20 +458,17 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
             Begin Session
           </button>
         )}
-
         {['checking','loading','connecting'].includes(phase)&&(
           <p style={{fontSize:13,letterSpacing:'0.08em',textTransform:'uppercase',color:d('rgba(0,0,0,0.38)','rgba(255,255,255,0.35)')}}>
             {phaseLabel[phase as Phase]}
           </p>
         )}
-
         {isActive&&(
           <>
             <div style={{display:'flex',alignItems:'center',gap:28}}>
               <button onClick={toggleMute} style={{width:50,height:50,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.15s',background:isMuted?'rgba(180,84,84,0.14)':d('rgba(0,0,0,0.08)','rgba(255,255,255,0.08)'),border:`1.5px solid ${isMuted?'rgba(180,84,84,0.35)':d('rgba(0,0,0,0.14)','rgba(255,255,255,0.14)')}`,backdropFilter:'blur(10px)'}}>
                 {isMuted?<MicOff style={{width:19,height:19,color:'rgba(180,84,84,0.8)'}}/>:<Mic style={{width:19,height:19,color:d('rgba(0,0,0,0.45)','rgba(255,255,255,0.5)')}}/>}
               </button>
-
               <button
                 onPointerDown={e=>{e.preventDefault();handlePTTStart()}}
                 onPointerUp={e=>{e.preventDefault();handlePTTEnd()}}
@@ -492,14 +477,12 @@ function VoiceInner({ toolId, tool }: { toolId:string; tool:VoiceTool }) {
                 style={{width:76,height:76,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.25s',background:phase==='listening'?'radial-gradient(circle at 35% 30%,rgba(74,155,142,0.28),rgba(74,155,142,0.07))':phase==='thinking'?d('rgba(0,0,0,0.07)','rgba(255,255,255,0.05)'):phase==='speaking'?`radial-gradient(circle at 35% 30%,${accent}22,${accent}06)`:d('rgba(0,0,0,0.07)','rgba(255,255,255,0.07)'),border:`2px solid ${phase==='listening'?'#4a9b8e':phase==='thinking'?'#8b7cc8':phase==='speaking'?accent:d('rgba(0,0,0,0.18)','rgba(255,255,255,0.18)')}`,boxShadow:phase==='listening'?'0 0 32px rgba(74,155,142,0.25)':phase==='speaking'?`0 0 32px ${accent}22`:'none',opacity:(isMuted||phase==='thinking'||phase==='speaking')?0.32:1,cursor:(isMuted||phase==='thinking'||phase==='speaking')?'not-allowed':'pointer',backdropFilter:'blur(12px)'}}>
                 <Mic style={{width:28,height:28,color:phase==='listening'?'#4a9b8e':phase==='thinking'?'#8b7cc8':phase==='speaking'?accent:d('rgba(0,0,0,0.5)','rgba(255,255,255,0.55)'),transition:'color 0.25s'}}/>
               </button>
-
               <button onClick={endSession} style={{width:50,height:50,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',background:'rgba(180,84,84,0.12)',border:'1.5px solid rgba(180,84,84,0.3)',backdropFilter:'blur(10px)',transition:'all 0.15s'}}
               onMouseEnter={e=>(e.currentTarget.style.background='rgba(180,84,84,0.2)')}
               onMouseLeave={e=>(e.currentTarget.style.background='rgba(180,84,84,0.12)')}>
                 <PhoneOff style={{width:19,height:19,color:'rgba(180,84,84,0.78)'}}/>
               </button>
             </div>
-
             <p style={{fontSize:13,letterSpacing:'0.05em',textTransform:'uppercase',color:phase==='listening'?'#4a9b8e':phase==='thinking'?'#8b7cc8':phase==='speaking'?accent:d('rgba(0,0,0,0.32)','rgba(255,255,255,0.32)'),transition:'color 0.4s'}}>
               {phase==='listening'?'Recording release when done':phase==='thinking'?'Oracle is responding':phase==='speaking'?'Oracle is speaking':'Hold to speak release to send'}
             </p>
@@ -514,18 +497,15 @@ export default function VoiceSession() {
   const params = useParams()
   const toolId = params.toolId as string
   const tool   = getVoiceToolById(toolId)
-
   if(!tool) return(
     <div style={{minHeight:'100vh',background:'#0d0b0f',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(154,140,122,0.5)',fontFamily:'Georgia,serif'}}>
       <p>Tool not found: <strong>{toolId}</strong></p>
     </div>
   )
-
   const toolMeta: ToolMeta = {
     id:tool.id, name:tool.name, emoji:tool.emoji, tagline:tool.tagline,
     domain:TOOL_DOMAIN[toolId]??'all', type:'voice', price:tool.price,
   }
-
   return(
     <ToolShell tool={toolMeta} isVoice={true}>
       <VoiceInner toolId={toolId} tool={tool as VoiceTool}/>

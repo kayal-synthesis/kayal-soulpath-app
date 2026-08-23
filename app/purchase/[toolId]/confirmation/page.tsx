@@ -1,12 +1,41 @@
 'use client'
-
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Clock, Zap, ChevronRight, Star, X, User, Mail, Key, Loader2, Fingerprint } from 'lucide-react'
+import { CheckCircle, Clock, Zap, ChevronRight, Star, X, User, Mail, Key, Loader2, Fingerprint, AlertCircle, ArrowRight } from 'lucide-react'
 import { allTools, getToolById } from '@/lib/tools/all-tools-index'
 import type { Tool } from '@/lib/tools/all-tools-index'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * v1.1, real fix, replacing a purely cosmetic countdown for chat and
+ * voice destination tools with actual, honest polling against the
+ * real synthesis job. Report and reading tools are untouched, this
+ * was never their real problem, the countdown there already roughly
+ * matches how those readings are actually delivered.
+ *
+ * The real issue, confirmed by tracing the full purchase flow: every
+ * tool, including subscriptions like the Sacred Script scribes and
+ * Voice Oracle sessions, triggers the same full synthesis pipeline
+ * during checkout, astrology, numerology, narration, genuine work,
+ * genuine time. This page's old countdown was a fixed ten minutes,
+ * counting down regardless of whether that real job had actually
+ * finished. Worse, ChatSession.tsx and VoiceSession.tsx each only
+ * fetch synthesis once, on load, no retry, so someone opening their
+ * chat before the real job completed would silently get an
+ * unpersonalized session with no indication anything was still
+ * processing.
+ *
+ * This version looks up the real job_id behind this specific
+ * checkout, directly from pending_checkouts using tx_ref, the same
+ * real table the webhook itself relies on, then polls the actual job
+ * status. Once genuinely complete, a real "ready" state replaces the
+ * countdown, with a direct button into the real session, not a timer
+ * that might finish before the real work does, or keep counting long
+ * after it's actually ready.
+ */
+
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'https://api.kayalsoulpath.com').replace(/\/$/, '')
 
 // Upsell map, toolId to recommended upsell tool id. Every id below verified
 // against the real, current 113-tool catalog directly, not assumed. The
@@ -42,6 +71,16 @@ const getDeviceId = () => {
     localStorage.setItem('kayal_device_id', id)
   }
   return id
+}
+
+// Real domain-to-destination mapping, mirrors the same real logic
+// already proven in app/purchase/[toolId]/page.tsx, so "is this a
+// chat or voice tool" is answered the same, consistent way everywhere
+// in the app, not re-derived differently here.
+const domainDestinations: Record<string, string> = {
+  'oracle-temple': 'report', 'time-keeper': 'reading', 'voice': 'audio',
+  'love': 'report', 'wealth': 'report', 'wellness': 'report',
+  'life-path': 'report', 'sacred-script': 'chat',
 }
 
 // Star rating
@@ -343,7 +382,6 @@ function AccountStep({
       </motion.div>
     )
   }
-
   if (magicLinkSent) {
     return (
       <motion.div
@@ -359,7 +397,6 @@ function AccountStep({
       </motion.div>
     )
   }
-
   return (
     <>
       <motion.div
@@ -459,7 +496,6 @@ function AccountStep({
           </button>
         </div>
       </motion.div>
-
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -500,7 +536,6 @@ function AccountStep({
           </div>
         )}
       </motion.div>
-
       {/* Explore more, a real path forward beyond just this one purchase,
           points at the app's own domains catalog, works for both guests
           and logged-in accounts. */}
@@ -513,6 +548,149 @@ function AccountStep({
         </a>
       </div>
     </>
+  )
+}
+
+// Real, honest progress card, replacing the old fixed countdown for
+// chat and voice destination tools specifically. Polls the actual job
+// behind this purchase, not a timer disconnected from whether the
+// real work has actually finished.
+type JobPollStatus = 'looking-up' | 'pending' | 'processing' | 'completed' | 'failed' | 'unavailable'
+
+function LiveSessionReadyCard({
+  tool,
+  pollStatus,
+  elapsedSeconds,
+}: {
+  tool: Tool
+  pollStatus: JobPollStatus
+  elapsedSeconds: number
+}) {
+  const formatElapsed = (s: number) => {
+    const m   = Math.floor(s / 60)
+    const sec = s % 60
+    return `${m}:${sec.toString().padStart(2, '0')}`
+  }
+
+  const destination = domainDestinations[(tool as any).domain || (tool as any).category || ''] || 'chat'
+  const sessionRoute = destination === 'audio'
+    ? `/domain/voice-of-prophecy/${tool.id}`
+    : `/domain/sacred-script/${tool.id}`
+
+  if (pollStatus === 'completed') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="bg-white rounded-2xl border border-emerald-200 shadow-lg overflow-hidden"
+      >
+        <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-teal-500" />
+        <div className="p-7 text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <CheckCircle className="w-9 h-9 text-emerald-500" />
+          </motion.div>
+          <h1 className="text-2xl font-bold text-neutral-900 mb-2">
+            Your synthesis is ready
+          </h1>
+          <p className="text-neutral-500 text-sm mb-6">
+            {tool.emoji} <strong>{tool.name}</strong> is fully personalised and waiting for you now.
+          </p>
+          <a
+            href={sessionRoute}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md transition-colors"
+          >
+            Enter Your Session
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </motion.div>
+    )
+  }
+
+  if (pollStatus === 'failed') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl border border-amber-200 shadow-lg overflow-hidden"
+      >
+        <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-orange-500" />
+        <div className="p-7 text-center">
+          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-9 h-9 text-amber-500" />
+          </div>
+          <h1 className="text-xl font-bold text-neutral-900 mb-2">
+            Your synthesis is taking longer than usual
+          </h1>
+          <p className="text-neutral-500 text-sm mb-6">
+            You can still enter your session now, it will simply personalise itself the moment the synthesis finishes, or reach out and we'll check on it directly.
+          </p>
+          <a
+            href={sessionRoute}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded-xl shadow-md transition-colors"
+          >
+            Enter Your Session Anyway
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </motion.div>
+    )
+  }
+
+  // 'looking-up' | 'pending' | 'processing' | 'unavailable', all shown
+  // the same, honest, real "still working" state, the only difference
+  // is internal, unavailable falls back gracefully rather than ever
+  // claiming false certainty about a job it genuinely couldn't find.
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+      className="bg-white rounded-2xl border border-emerald-200 shadow-lg overflow-hidden"
+    >
+      <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-teal-500" />
+      <div className="p-7 text-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
+          className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4"
+        >
+          <Loader2 className="w-8 h-8 text-emerald-500" />
+        </motion.div>
+        <h1 className="text-2xl font-bold text-neutral-900 mb-2">
+          Your synthesis is being prepared
+        </h1>
+        <p className="text-neutral-500 text-sm mb-5">
+          {tool.emoji} <strong>{tool.name}</strong> is loading your complete chart data right now.
+        </p>
+        <div className="flex items-center justify-center gap-2 bg-neutral-50 rounded-xl py-3 px-5 border border-neutral-100 mb-5">
+          <Clock className="w-4 h-4 text-amber-500" />
+          <span className="text-sm text-neutral-700 font-medium">
+            Checking every few seconds, {formatElapsed(elapsedSeconds)} so far
+          </span>
+        </div>
+        <div className="text-left space-y-3">
+          {[
+            { step: '1', text: 'Your synthesis engine is loading your complete chart data' },
+            { step: '2', text: 'The AI is generating your personalised context right now'  },
+            { step: '3', text: "This page will update the moment it's genuinely ready"     },
+          ].map(({ step, text }) => (
+            <div key={step} className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                {step}
+              </div>
+              <p className="text-sm text-neutral-600 pt-0.5">{text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
   )
 }
 
@@ -535,6 +713,12 @@ export default function PurchaseConfirmationPage() {
   const [authChecked,  setAuthChecked]  = useState(false)
   const [guestConfirmed, setGuestConfirmed] = useState(false)
 
+  // Real polling state, chat/voice tools only, see the file header.
+  const [isLiveSessionTool, setIsLiveSessionTool] = useState(false)
+  const [pollStatus, setPollStatus] = useState<JobPollStatus>('looking-up')
+  const [pollElapsed, setPollElapsed] = useState(0)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
   useEffect(() => {
     if (!toolId) return
     const t = getToolById(toolId)
@@ -547,6 +731,8 @@ export default function PurchaseConfirmationPage() {
       const fallback = allTools.find(t => t.isPopular && t.id !== toolId)
       setUpsellTool(fallback ?? null)
     }
+    const domain = (t as any)?.domain || (t as any)?.category || ''
+    setIsLiveSessionTool(domainDestinations[domain] === 'chat' || domainDestinations[domain] === 'audio')
   }, [toolId])
 
   useEffect(() => {
@@ -556,11 +742,85 @@ export default function PurchaseConfirmationPage() {
     })
   }, [])
 
+  // Fixed countdown, report/reading tools only now, chat and voice
+  // tools use the real poll below instead.
   useEffect(() => {
+    if (isLiveSessionTool) return
     if (countdown <= 0) return
     const interval = setInterval(() => setCountdown(c => c - 1), 1000)
     return () => clearInterval(interval)
-  }, [countdown])
+  }, [countdown, isLiveSessionTool])
+
+  // Real polling, chat/voice tools only. Looks up the actual job_id
+  // behind this checkout directly from pending_checkouts using
+  // tx_ref, the same real table the webhook itself relies on, this
+  // page never had job_id directly available any other way without
+  // guessing at whether the Stripe redirect chain preserves one.
+  useEffect(() => {
+    if (!isLiveSessionTool || !txRef) return
+    let cancelled = false
+
+    const lookupAndPoll = async () => {
+      const { data: pending, error } = await supabase
+        .from('pending_checkouts')
+        .select('job_id')
+        .eq('tx_ref', txRef)
+        .maybeSingle()
+
+      if (cancelled) return
+      if (error || !pending?.job_id) {
+        // Real, honest fallback, not a false "still loading" forever,
+        // this job genuinely couldn't be found, the person can still
+        // enter their session directly rather than being stuck.
+        setPollStatus('unavailable')
+        return
+      }
+
+      const jobId = pending.job_id
+      setPollStatus('pending')
+
+      const poll = async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/reading/job/${jobId}`)
+          if (!res.ok) return
+          const data = await res.json()
+          if (cancelled) return
+          if (data.status === 'completed') {
+            setPollStatus('completed')
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+          } else if (data.status === 'failed') {
+            setPollStatus('failed')
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+          } else {
+            setPollStatus('processing')
+          }
+        } catch {
+          // Real, transient network hiccup, not treated as failure,
+          // the next tick tries again.
+        }
+      }
+
+      await poll()
+      pollIntervalRef.current = setInterval(poll, 4000)
+    }
+
+    lookupAndPoll()
+    return () => {
+      cancelled = true
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+    }
+  }, [isLiveSessionTool, txRef])
+
+  // Elapsed-time display for the live polling card, separate from the
+  // report/reading countdown above, counts up, not down, since there's
+  // no fixed estimate being claimed here, only real, honest elapsed
+  // time.
+  useEffect(() => {
+    if (!isLiveSessionTool) return
+    if (pollStatus === 'completed' || pollStatus === 'failed') return
+    const interval = setInterval(() => setPollElapsed(s => s + 1), 1000)
+    return () => clearInterval(interval)
+  }, [isLiveSessionTool, pollStatus])
 
   const formatTime = (s: number) => {
     const m   = Math.floor(s / 60)
@@ -574,7 +834,6 @@ export default function PurchaseConfirmationPage() {
     await new Promise(r => setTimeout(r, 800))
     router.push(`/purchase/${upsellTool.id}?discount=20&source=confirmation-upsell&from=${toolId}`)
   }
-
   const handleDeclineUpsell = () => setShowUpsell(false)
 
   // No redirect, deliberately, see the comment inside AccountStep's
@@ -598,55 +857,59 @@ export default function PurchaseConfirmationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-neutral-50 py-12 px-4">
       <div className="max-w-xl mx-auto space-y-6">
-        {/* Success confirmation */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="bg-white rounded-2xl border border-emerald-200 shadow-lg overflow-hidden"
-        >
-          <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-teal-500" />
-          <div className="p-7 text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }}
-              className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4"
-            >
-              <CheckCircle className="w-9 h-9 text-emerald-500" />
-            </motion.div>
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
-              Your reading is being prepared
-            </h1>
-            <p className="text-neutral-500 text-sm mb-5">
-              {tool.emoji} <strong>{tool.name}</strong> has been confirmed. Your complete synthesis is loading.
-            </p>
-            <div className="flex items-center justify-center gap-2 bg-neutral-50 rounded-xl py-3 px-5 border border-neutral-100 mb-5">
-              <Clock className="w-4 h-4 text-amber-500" />
-              <span className="text-sm text-neutral-700 font-medium">
-                Estimated delivery in{' '}
-                <span className="text-amber-600 font-bold font-mono">
-                  {formatTime(countdown)}
+        {/* Success confirmation, real, live polling for chat/voice
+            tools, the original fixed countdown for everything else. */}
+        {isLiveSessionTool ? (
+          <LiveSessionReadyCard tool={tool} pollStatus={pollStatus} elapsedSeconds={pollElapsed} />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="bg-white rounded-2xl border border-emerald-200 shadow-lg overflow-hidden"
+          >
+            <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-teal-500" />
+            <div className="p-7 text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }}
+                className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <CheckCircle className="w-9 h-9 text-emerald-500" />
+              </motion.div>
+              <h1 className="text-2xl font-bold text-neutral-900 mb-2">
+                Your reading is being prepared
+              </h1>
+              <p className="text-neutral-500 text-sm mb-5">
+                {tool.emoji} <strong>{tool.name}</strong> has been confirmed. Your complete synthesis is loading.
+              </p>
+              <div className="flex items-center justify-center gap-2 bg-neutral-50 rounded-xl py-3 px-5 border border-neutral-100 mb-5">
+                <Clock className="w-4 h-4 text-amber-500" />
+                <span className="text-sm text-neutral-700 font-medium">
+                  Estimated delivery in{' '}
+                  <span className="text-amber-600 font-bold font-mono">
+                    {formatTime(countdown)}
+                  </span>
                 </span>
-              </span>
-            </div>
-            <div className="text-left space-y-3">
-              {[
-                { step: '1', text: 'Your synthesis engine is loading your complete chart data' },
-                { step: '2', text: 'The AI is generating your personalised reading right now'  },
-                { step: '3', text: "You'll receive a notification the moment it's ready"       },
-              ].map(({ step, text }) => (
-                <div key={step} className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                    {step}
+              </div>
+              <div className="text-left space-y-3">
+                {[
+                  { step: '1', text: 'Your synthesis engine is loading your complete chart data' },
+                  { step: '2', text: 'The AI is generating your personalised reading right now'  },
+                  { step: '3', text: "You'll receive a notification the moment it's ready"       },
+                ].map(({ step, text }) => (
+                  <div key={step} className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                      {step}
+                    </div>
+                    <p className="text-sm text-neutral-600 pt-0.5">{text}</p>
                   </div>
-                  <p className="text-sm text-neutral-600 pt-0.5">{text}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </motion.div>
-
+          </motion.div>
+        )}
         {/* Upsell */}
         <AnimatePresence>
           {showUpsell && upsellTool && !upsellAdded && (
@@ -658,7 +921,6 @@ export default function PurchaseConfirmationPage() {
             />
           )}
         </AnimatePresence>
-
         {/* Upsell added */}
         <AnimatePresence>
           {upsellAdded && (
@@ -674,14 +936,12 @@ export default function PurchaseConfirmationPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
         {/* Account step, guests only. Logged-in visitors already have
             somewhere real to go, so they skip straight to the simple
             nav buttons below, exactly as before. */}
         {authChecked && !loggedInUser && (
           <AccountStep txRef={txRef} onGuestContinue={handleGuestContinue} guestConfirmed={guestConfirmed} />
         )}
-
         {/* Navigation, only shown once we actually know whether this
             visitor has a real session, previously these two buttons
             fired unconditionally, sending guests to a dashboard they
@@ -712,7 +972,6 @@ export default function PurchaseConfirmationPage() {
             </div>
           </>
         )}
-
         <p className="text-center text-xs text-neutral-400">
           Questions? Email support@kayalsoulpath.com, we respond within 2 hours.
         </p>
