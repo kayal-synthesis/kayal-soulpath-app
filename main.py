@@ -52,6 +52,7 @@ guessed at:
 Author: KAYAL Engineering
 Version: 8.2.1
 """
+
 # ─────────────────────────────────────────────
 # Stdlib
 # ─────────────────────────────────────────────
@@ -181,10 +182,19 @@ except ImportError as _geo_err:
 
 try:
     from api.welcome import generate_welcome_reading
-    from api.tool_teaser import generate_tool_teaser
     _WELCOME_AVAILABLE = True
 except ImportError:
     _WELCOME_AVAILABLE = False
+
+try:
+    # Real, separate availability flag, deliberately not sharing
+    # _WELCOME_AVAILABLE with api.welcome, an import failure in one
+    # module should never silently disable a completely unrelated
+    # endpoint.
+    from api.tool_teaser import generate_tool_teaser, generate_chat_teaser_reply, is_chat_or_voice_tool
+    _TOOL_TEASER_AVAILABLE = True
+except ImportError:
+    _TOOL_TEASER_AVAILABLE = False
 
 try:
     # v8.2.0: updated to import new handler names from api.daily.daily_card
@@ -281,6 +291,7 @@ def _get_supabase():
 def init_db():
     conn = get_db_connection()
     cur  = conn.cursor()
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id      SERIAL PRIMARY KEY,
@@ -291,6 +302,7 @@ def init_db():
             created TEXT
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS analyses (
             id               SERIAL PRIMARY KEY,
@@ -316,6 +328,7 @@ def init_db():
             timestamp        TEXT
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS palm_analyses (
             id                  SERIAL PRIMARY KEY,
@@ -335,6 +348,7 @@ def init_db():
             timestamp           TEXT
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS conversations (
             id         SERIAL PRIMARY KEY,
@@ -347,6 +361,7 @@ def init_db():
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_conversations_token   ON conversations(token)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_conversations_session ON conversations(session_id)")
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS chat_history (
             id        SERIAL PRIMARY KEY,
@@ -356,6 +371,7 @@ def init_db():
             timestamp TEXT
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS narrative_sessions (
             id         SERIAL PRIMARY KEY,
@@ -366,6 +382,7 @@ def init_db():
             timestamp  TEXT
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS palm_images (
             id              SERIAL PRIMARY KEY,
@@ -376,6 +393,7 @@ def init_db():
             uploaded_at     TEXT
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS face_images (
             id              SERIAL PRIMARY KEY,
@@ -386,6 +404,7 @@ def init_db():
             uploaded_at     TEXT
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS domains (
             id        SERIAL PRIMARY KEY,
@@ -395,6 +414,7 @@ def init_db():
             UNIQUE (token, domain_id)
         )
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS jobs (
             id           TEXT PRIMARY KEY,
@@ -409,6 +429,7 @@ def init_db():
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_user_token ON jobs(user_token)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status     ON jobs(status)")
+
     conn.commit()
     cur.close()
     conn.close()
@@ -430,7 +451,9 @@ async def lifespan(app: FastAPI):
     print(f"  Astrology        : {'✅' if _ASTROLOGY_AVAILABLE else '❌ (check EPHE_PATH + .se1 files)'}")
     print(f"  Logic layer      : {'✅' if _LOGIC_AVAILABLE else '❌'}")
     print(f"  LLM narrator     : {'✅' if _NARRATOR_AVAILABLE else '❌ (check ANTHROPIC_API_KEY)'}")
+
     init_db()
+
     sb = _get_supabase()
     if sb:
         try:
@@ -440,6 +463,7 @@ async def lifespan(app: FastAPI):
             print(f"  Supabase         : ⚠️  {e}")
     else:
         print("  Supabase         : ⚠️  not configured (set SUPABASE_URL + SUPABASE_SERVICE_KEY)")
+
     print(f"{'='*70}\n")
     yield
     print("KAYAL API shutting down")
@@ -497,7 +521,6 @@ for _dir in [UPLOAD_DIR, PALM_DIR, FACE_DIR, THUMBNAIL_DIR]:
     _dir.mkdir(parents=True, exist_ok=True)
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 os.makedirs("static/audio", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -529,6 +552,7 @@ async def text_to_speech(text: str, use_edge: bool = True) -> Optional[bytes]:
             pass
         except Exception as e:
             print(f"⚠️ edge-tts error: {e} — falling back to gTTS")
+
     try:
         from gtts import gTTS
         tts = gTTS(text=text, lang="en", slow=False)
@@ -632,10 +656,12 @@ async def get_jenny_response(text: str, session_id: str = None) -> str:
         health_check = requests.get("http://localhost:11434/api/tags", timeout=1)
         if health_check.status_code != 200:
             return random.choice(FAST_RESPONSES)
+
         models  = [m["name"] for m in health_check.json().get("models", [])]
         model   = "tinyllama:1.1b" if "tinyllama:1.1b" in models else (
                   "tinyllama:latest" if "tinyllama:latest" in models else "llama2:latest")
         timeout = 2 if "tinyllama" in model else 5
+
         text_lower = text.lower()
         if any(w in text_lower for w in ["hello", "hi", "hey", "howdy"]):
             return random.choice(GREETING_RESPONSES)
@@ -647,6 +673,7 @@ async def get_jenny_response(text: str, session_id: str = None) -> str:
             return random.choice(["You're welcome!", "Anytime!", "Happy to help!", "My pleasure!", "Of course!"])
         if any(w in text_lower for w in ["bye", "goodbye", "see you", "later"]):
             return random.choice(["Goodbye! Come back soon!", "See you later!", "Take care!", "Bye for now!", "Talk soon!"])
+
         prompt = f"User: {text}\nJenny (short reply, 5-10 words):"
         try:
             response = requests.post(OLLAMA_URL, json={
@@ -783,6 +810,7 @@ def calculate_full_numerology(
     chal = calculate_challenges(birth_month, birth_day, birth_year)
     karm = calculate_karmic_lessons(name)
     bday = calculate_birthday_gift_challenge(birth_day)
+
     return {
         "core":        {"life_path": lp, "expression": expr, "soul_urge": su, "personality": pers},
         "time_cycles": {"personal_year": py, "personal_month": pm, "personal_day": pd},
@@ -807,23 +835,28 @@ def _analyze_face_opencv(image_bytes: bytes) -> dict:
         if img is None:
             pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
             img = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
+
         gray       = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         brightness = int(np.mean(gray))
         contrast   = int(np.std(gray))
+
         face_cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         )
         faces = face_cascade.detectMultiScale(gray, 1.1, 4, minSize=(50, 50))
+
         face_shape = "oval"; archetype = "The Leader"; traits = ["balanced", "adaptable", "strategic"]
         symmetry = 75; face_detected = False; face_position = None; face_count = 0
         forehead_lines = 0; brow_tension = False; jaw_tension = False; nasolabial_folds = False
         eye_depth = "almond"; nose_bridge = "straight"; lip_fullness = "full"
         chin_type = "rounded"; cheekbone_prominence = "moderate"
+
         if len(faces) > 0:
             face = max(faces, key=lambda f: f[2] * f[3])
             x, y, w, h = face
             face_count = len(faces); face_position = {"x": int(x), "y": int(y), "width": int(w), "height": int(h)}
             face_detected = True; ar = w / h
+
             if ar > 0.95:
                 face_shape, archetype, traits = "round", "The Harmonizer", ["approachable", "empathetic", "communicative"]
                 cheekbone_prominence = "low"
@@ -833,6 +866,7 @@ def _analyze_face_opencv(image_bytes: bytes) -> dict:
             else:
                 face_shape, archetype, traits = "oblong", "The Thinker", ["analytical", "focused", "methodical"]
                 cheekbone_prominence = "high"
+
             symmetry = min(90, 70 + (brightness % 20))
             roi = gray[y:y+h, x:x+w]
             if roi.shape[0] > 10 and roi.shape[1] > 10:
@@ -840,9 +874,11 @@ def _analyze_face_opencv(image_bytes: bytes) -> dict:
                 if w > 200:
                     forehead_lines = min(3, int(brightness / 50))
                     jaw_tension = True; nasolabial_folds = True
+
             eye_depth = "deep_set" if symmetry > 80 else "almond"
             lip_fullness = "full" if brightness > 100 else "thin"
             chin_type = "rounded" if face_shape == "oval" else "square"
+
         element_map = {"round": "earth", "square": "earth", "oval": "air", "oblong": "air", "heart": "fire"}
         return {
             "face_detected": face_detected, "face_count": face_count, "face_position": face_position,
@@ -955,20 +991,25 @@ def _face_summary_from_features(features, face_reading=None) -> dict:
     skin  = getattr(features, "skin",        None)
     expr  = getattr(features, "expression",  None)
     aging = getattr(features, "aging_markers", None)
+
     def fv(obj, *attrs, default=None):
         for a in attrs:
             if obj is None: return default
             obj = getattr(obj, a, None)
         return obj if obj is not None else default
+
     def rv(obj, *attrs, default=0.0):
         val = fv(obj, *attrs, default=default)
         try: return round(float(val), 4)
         except: return default
+
     def sv(obj, *attrs):
         val = fv(obj, *attrs)
         if val is None: return None
         return val.value if hasattr(val, "value") else val
+
     shape_str = sv(features, "face_shape")
+
     summary = {
         "face_shape":        shape_str,
         "confidence":        rv(features, "confidence"),
@@ -1019,9 +1060,11 @@ def _face_summary_from_features(features, face_reading=None) -> dict:
         "jaw_openness":    rv(expr,   "jaw_openness"),
         "raw_ratios":      fv(features, "raw_ratios", default={}),
     }
+
     if face_reading:
         _fs = getattr(face_reading, "face_shape", None)
         shape_val = sv(_fs, "shape") or shape_str or "unclear"
+
         summary["element"]            = fv(_fs, "element")
         summary["archetype"]          = _FACE_ARCHETYPE.get(shape_val, "The Seeker")
         summary["character_core"]     = fv(_fs, "character_core")
@@ -1032,6 +1075,7 @@ def _face_summary_from_features(features, face_reading=None) -> dict:
         summary["dominant_themes"]    = fv(face_reading, "dominant_themes", default=[])
         summary["life_period_map"]    = fv(face_reading, "life_period_map", default={})
         summary["reading_confidence"] = round(float(getattr(face_reading, "overall_confidence", 0) or 0), 4)
+
     return summary
 
 def _get_sun_sign(day: int, month: int) -> str:
@@ -1064,6 +1108,7 @@ def _calculate_midpoints_and_antiscia(day: int, month: int, year: int, hour: flo
     astrology_engine.py's existing public API.
     """
     from synthesis.astrology_engine import _julian_day, _calculate_positions, _degree_to_sign
+
     try:
         birth_jd = _julian_day(year, month, day, hour, utc_offset)
         positions = _calculate_positions(birth_jd, use_sidereal=False)
@@ -1136,13 +1181,16 @@ _ASTEROID_IDS = {"Chiron": 15, "Ceres": 17, "Pallas": 18, "Juno": 19, "Vesta": 2
 def _calculate_asteroids(day: int, month: int, year: int, hour: float, utc_offset: float) -> Dict:
     if not _ASTROLOGY_AVAILABLE:
         return {}
+
     import swisseph as swe
     from synthesis.astrology_engine import _julian_day, _degree_to_sign
+
     try:
         jd = _julian_day(year, month, day, hour, utc_offset)
     except Exception as e:
         print(f"⚠️ Asteroid calculation failed at Julian Day step: {e}")
         return {}
+
     asteroids = {}
     for name, body_id in _ASTEROID_IDS.items():
         try:
@@ -1152,6 +1200,7 @@ def _calculate_asteroids(day: int, month: int, year: int, hour: float, utc_offse
             asteroids[name] = {"sign": sign, "degree": round(deg, 2), "retrograde": result[3] < 0}
         except Exception as e:
             print(f"⚠️ {name} calculation failed (likely missing seas_18.se1 on this server): {e}")
+
     return asteroids
 
 def _build_geo_location(raw) -> "GeoLocation":
@@ -1355,12 +1404,16 @@ async def voice_chat(
                 user_token = user_token or body.get("user_token")
             except Exception:
                 text = ""
+
         text       = (text or "").strip()
         session_id = session_id or str(uuid.uuid4())
         token      = user_token
+
         if not text:
             return JSONResponse(status_code=400, content={"error": "No text provided"})
+
         response_text = await get_jenny_response(text, session_id)
+
         if token:
             try:
                 conn = get_db_connection(); cur = conn.cursor()
@@ -1375,10 +1428,12 @@ async def voice_chat(
                 conn.commit(); cur.close(); conn.close()
             except Exception as save_err:
                 logger.warning(f"voice/chat save failed (non-fatal): {save_err}")
+
         audio_data = await text_to_speech(response_text)
         if audio_data:
             return Response(content=audio_data, media_type="audio/mpeg",
                             headers={"X-Response-Text": response_text, "X-Session-ID": session_id})
+
         return JSONResponse(status_code=200, content={"response": response_text, "audio": False})
     except Exception as e:
         print(f"❌ Voice chat error: {e}")
@@ -1389,16 +1444,19 @@ async def websocket_transcribe(websocket: WebSocket):
     await websocket.accept()
     session_id = str(uuid.uuid4())
     audio_buffer = bytearray()
+
     try:
         await websocket.send_json({"type": "ready", "message": "Jenny is ready...", "session_id": session_id})
     except WebSocketDisconnect:
         return
+
     try:
         while True:
             try:
                 message = await websocket.receive()
             except WebSocketDisconnect:
                 return
+
             if "bytes" in message:
                 audio_buffer.extend(message["bytes"])
                 if len(audio_buffer) > 24000:
@@ -1406,6 +1464,7 @@ async def websocket_transcribe(websocket: WebSocket):
                         with wave.open(f.name, "wb") as wav:
                             wav.setnchannels(1); wav.setsampwidth(2)
                             wav.setframerate(16000); wav.writeframes(audio_buffer)
+
                     try:
                         segs, _ = whisper_model.transcribe(f.name, beam_size=1, language="en", vad_filter=True)
                         text    = " ".join(s.text for s in segs).strip()
@@ -1419,6 +1478,7 @@ async def websocket_transcribe(websocket: WebSocket):
                     finally:
                         os.unlink(f.name)
                     audio_buffer = bytearray()
+
             elif "text" in message:
                 try:
                     json_data = json.loads(message["text"])
@@ -1434,6 +1494,7 @@ async def websocket_transcribe(websocket: WebSocket):
 @app.post("/detect-face")
 async def detect_face(image: UploadFile = File(...)):
     image_bytes = await image.read()
+
     if not _FACE_ENGINE_AVAILABLE:
         return JSONResponse(
             status_code=503,
@@ -1443,6 +1504,7 @@ async def detect_face(image: UploadFile = File(...)):
                 "fix":     "bash install_missing.sh",
             }
         )
+
     features      = None
     extract_error = None
     try:
@@ -1476,6 +1538,7 @@ async def detect_face(image: UploadFile = File(...)):
                 ),
             }
         )
+
     reading      = None
     reader_error = None
     try:
@@ -1483,11 +1546,13 @@ async def detect_face(image: UploadFile = File(...)):
     except Exception as e:
         reader_error = str(e)
         logger.warning(f"FaceReader.read failed: {e}")
+
     try:
         face_data = _face_summary_from_features(features, reading if not reader_error else None)
         face_data["face_detected"] = True
     except Exception as e:
         face_data = {"face_detected": True, "build_error": str(e), "raw": _safe(features)}
+
     physiognomy = None
     if reading and not reader_error:
         try:
@@ -1499,7 +1564,9 @@ async def detect_face(image: UploadFile = File(...)):
             _chk  = getattr(reading, "cheeks",     None)
             _sym  = getattr(reading, "symmetry",   None)
             _age  = getattr(reading, "aging_markers", None)
+
             _shape_val = getattr(getattr(_fs, "shape", None), "value", "unclear")
+
             physiognomy = {
                 "element":          getattr(_fs, "element",        None),
                 "archetype":        _FACE_ARCHETYPE.get(_shape_val, "The Seeker"),
@@ -1525,6 +1592,7 @@ async def detect_face(image: UploadFile = File(...)):
             }
         except Exception as e:
             physiognomy = {"build_error": str(e)}
+
     return {
         "success":       True,
         "face_features": face_data,
@@ -1540,29 +1608,35 @@ async def palm_diagnostic(palm_image: UploadFile = File(...), hand: str = Form("
             status_code=503,
             content={"success": False, "error": "MediaPipe not installed. Run: pip install mediapipe"}
         )
+
     try:
         image_bytes = await palm_image.read()
         pe    = PalmEngine()
         feats = pe.extract(image_bytes, hand_label=hand)
+
         if feats.error:
             return JSONResponse(status_code=422, content={
                 "success": False,
                 "error":   feats.error,
                 "tip":     "Upload a clear, well-lit photo of an open palm, fingers together.",
             })
+
         reading = None
         reader_error = None
         try:
             reading = PalmReader().read(feats)
         except Exception as re:
             reader_error = str(re)
+
         def _gf(obj, attr, default=None):
             v = getattr(obj, attr, default)
             return v if v is not None else default
+
         def _rf(obj, attr, default=0.0):
             v = getattr(obj, attr, None)
             try: return round(float(v), 4) if v is not None else default
             except: return default
+
         try:
             features_data = {
                 "hand_label":    _gf(feats, "hand_label", hand),
@@ -1581,6 +1655,7 @@ async def palm_diagnostic(palm_image: UploadFile = File(...), hand: str = Form("
             }
         except Exception as fe:
             features_data = {"build_error": str(fe), "raw": _safe(feats)}
+
         reading_data = None
         if reading and not reader_error:
             try:
@@ -1598,6 +1673,7 @@ async def palm_diagnostic(palm_image: UploadFile = File(...), hand: str = Form("
                 }
             except Exception as re2:
                 reading_data = {"build_error": str(re2)}
+
         return {
             "success":       True,
             "palm_features": features_data,
@@ -1623,13 +1699,16 @@ async def analyze_palm_endpoint(
 ):
     if hand not in ["left", "right", "dominant"]:
         return JSONResponse(status_code=400, content={"success": False, "error": f"Invalid hand: {hand}"})
+
     if not _PALM_ENGINE_AVAILABLE:
         return JSONResponse(
             status_code=503,
             content={"success": False, "error": "MediaPipe not installed. Run: pip install mediapipe"}
         )
+
     try:
         conn = get_db_connection(); cur = conn.cursor()
+
         if token and token not in ("0", "null", "undefined"):
             cur.execute("SELECT token, name FROM users WHERE token = %s", (token,))
             user = cur.fetchone()
@@ -1643,23 +1722,29 @@ async def analyze_palm_endpoint(
             cur.execute("INSERT INTO users (token, name, created) VALUES (%s,%s,%s)",
                         (token, f"User_{token[-6:]}", datetime.now().isoformat()))
             conn.commit()
+
         image_bytes = await palm_image.read()
         if len(image_bytes) < 100:
             cur.close(); conn.close()
             return JSONResponse(status_code=400, content={"success": False, "error": "Image too small"})
+
         pe    = PalmEngine()
         feats = pe.extract(image_bytes, hand_label=hand)
+
         if feats.error:
             cur.close(); conn.close()
             return JSONResponse(status_code=422, content={"success": False, "error": feats.error})
+
         reading  = PalmReader().read(feats)
         analysis = _safe(feats)
         report   = _safe(reading)
+
         _a   = analysis if isinstance(analysis, dict) else {}
         _hs  = _a.get("hand_shape") or {}
         hs   = _hs
         ln   = _a
         _hs_str = _hs.get("type", _hs.get("shape", str(_hs))) if isinstance(_hs, dict) else str(_hs or "unknown")
+
         cur.execute("""
             INSERT INTO palm_analyses
             (token, hand_shape, hand_element, ruling_planet,
@@ -1684,6 +1769,7 @@ async def analyze_palm_endpoint(
             datetime.now().isoformat(),
         ))
         conn.commit(); cur.close(); conn.close()
+
         return {"success": True, "analysis": analysis, "report": report, "token": token, "hand": hand}
     except Exception as e:
         print(f"❌ Palm endpoint error: {e}")
@@ -1702,12 +1788,15 @@ async def predict(
 ):
     errors   = []
     warnings = []
+
     try:
         bd = parser.parse(date_of_birth)
     except Exception:
         raise HTTPException(status_code=400, detail=f"Invalid date_of_birth: '{date_of_birth}'. Use YYYY-MM-DD.")
+
     birth_day = bd.day; birth_month = bd.month; birth_year = bd.year
     age       = calculate_age(bd)
+
     birth_hour = None; birth_minute = None; birth_hour_known = False
     if birth_time:
         try:
@@ -1715,13 +1804,16 @@ async def predict(
             birth_hour = bt.hour; birth_minute = bt.minute; birth_hour_known = True
         except Exception:
             warnings.append(f"Could not parse birth_time '{birth_time}' — proceeding without it.")
+
     face_bytes = await facial_image.read() if facial_image else None
     palm_bytes = await palm_image.read()   if palm_image   else None
+
     if not _LOGIC_AVAILABLE:
         raise HTTPException(
             status_code=503,
             detail="Logic layer not available. Check /health for import errors."
         )
+
     birth_geo = None
     if _GEO_AVAILABLE and birth_location:
         try:
@@ -1733,6 +1825,7 @@ async def predict(
         birth_geo = _build_geo_location(
             _fallback_geo(birth_location or "Unknown") if _GEO_AVAILABLE else None
         )
+
     birth_data = BirthData(
         full_name        = full_name,
         day              = birth_day,
@@ -1744,6 +1837,7 @@ async def predict(
         birth_place      = birth_geo,
         present_location = birth_geo,
     )
+
     face_reading = None
     face_summary = None
     if face_bytes and _FACE_ENGINE_AVAILABLE:
@@ -1759,6 +1853,7 @@ async def predict(
             warnings.append(f"Face analysis failed: {e}")
     elif face_bytes and not _FACE_ENGINE_AVAILABLE:
         warnings.append("MediaPipe not installed — face analysis skipped. Run: pip install mediapipe")
+
     palm_reading = None
     palm_summary = None
     if palm_bytes and _PALM_ENGINE_AVAILABLE:
@@ -1800,6 +1895,7 @@ async def predict(
             warnings.append(f"Palm analysis failed: {e}")
     elif palm_bytes and not _PALM_ENGINE_AVAILABLE:
         warnings.append("MediaPipe not installed — palm analysis skipped. Run: pip install mediapipe")
+
     user_input = UserInput(
         birth_data         = birth_data,
         face_reading       = face_reading,
@@ -1810,6 +1906,7 @@ async def predict(
         include_remedies   = True,
         session_id         = f"PRED{datetime.now().strftime('%y%m%d%H%M%S')}",
     )
+
     num_profile = None
     num_signals = None
     if _NUMEROLOGY_AVAILABLE:
@@ -1823,6 +1920,7 @@ async def predict(
             }
         except Exception as e:
             errors.append(f"Numerology failed: {e}")
+
     astro_primary = None
     astro_timing  = None
     if _ASTROLOGY_AVAILABLE:
@@ -1840,6 +1938,7 @@ async def predict(
             )
     else:
         warnings.append("Astrology engine not available — numerology-only reading.")
+
     llm_payload = None
     try:
         logic_result = run_logic_engine(
@@ -1866,6 +1965,7 @@ async def predict(
             llm_payload = logic_result.to_dict()
     except Exception as e:
         errors.append(f"Logic engine failed: {e}")
+
     narration_text  = None
     domain_sections = {}
     if llm_payload and _NARRATOR_AVAILABLE:
@@ -1877,6 +1977,7 @@ async def predict(
             errors.append(f"Narration failed: {e}")
     elif not _NARRATOR_AVAILABLE:
         errors.append("LLM narrator not importable — check ANTHROPIC_API_KEY and llm_narrator.py")
+
     if not narration_text and num_profile:
         first_name = full_name.strip().split()[0] if full_name else "Seeker"
         lp         = num_profile.life_path
@@ -1888,6 +1989,7 @@ async def predict(
         face_el    = face_summary.get("element") if face_summary else None
         palm_el    = palm_summary.get("element") if palm_summary else None
         multi_modal = f" Your face carries the {face_el} element. Your palm reveals the {palm_el} element." if face_el and palm_el else ""
+
         narration_text = (
             f"Dear {first_name},\n\n"
             f"Your Life Path {lp} marks you as someone whose path is defined by "
@@ -1902,6 +2004,7 @@ async def predict(
             f", has been prepared. Add API credits at console.anthropic.com to receive the full narrated reading."
         )
         warnings.append("Narration used local fallback — add Anthropic credits for full Claude reading")
+
     token = f"K{datetime.now().strftime('%y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
     try:
         conn = get_db_connection(); cur = conn.cursor()
@@ -1934,6 +2037,7 @@ async def predict(
         conn.commit(); cur.close(); conn.close()
     except Exception as e:
         warnings.append(f"DB save warning: {e}")
+
     num_summary = None
     if num_profile:
         _cp = num_profile.current_pinnacle
@@ -1982,6 +2086,7 @@ async def predict(
             },
             "karmic_debts": [_safe(k) for k in (num_profile.karmic_debts or [])],
         }
+
     astro_summary = None
     if astro_primary and isinstance(astro_primary, dict):
         signals = astro_primary.get("signals", [])
@@ -1998,6 +2103,7 @@ async def predict(
             if isinstance(s, dict) and s.get("feature")
         }
         astro_summary = {"system": astro_primary.get("system", "western"), "planets": planets}
+
     return {
         "success":    not bool(errors),
         "user_token": token,
@@ -2034,10 +2140,12 @@ def _get_tool_catalog_data(tool_id: str) -> Dict[str, Any]:
     """
     if not _TOOL_REGISTRY_AVAILABLE:
         return {"name": tool_id, "tagline": "", "price": 29, "what_you_get": []}
+
     tool = tool_registry.get_tool_by_id(tool_id)
     if not tool:
         print(f"⚠️  tool_id '{tool_id}' not found in tool_registry — falling back to generic narration")
         return {"name": tool_id, "tagline": "", "price": 29, "what_you_get": []}
+
     return {
         "name":         tool.get("name", tool_id),
         "tagline":      tool.get("tagline", ""),
@@ -2067,12 +2175,16 @@ def process_reading_job(
 ):
     print(f"🚀 Starting job {job_id} for tool '{tool_id}'")
     conn = get_db_connection(); cur = conn.cursor()
+
     try:
         cur.execute("UPDATE jobs SET status='processing' WHERE id=%s", (job_id,))
         conn.commit()
+
         from datetime import date as date_cls
         from dateutil import parser as dparser
+
         bd = dparser.parse(dob)
+
         geo_raw = None
         if _GEO_AVAILABLE and birth_location:
             try:
@@ -2082,6 +2194,7 @@ def process_reading_job(
         birth_geo = _build_geo_location(
             geo_raw if geo_raw else (_fallback_geo(birth_location or "Unknown") if _GEO_AVAILABLE else None)
         )
+
         present_geo = birth_geo
         if _GEO_AVAILABLE and current_location:
             try:
@@ -2097,6 +2210,7 @@ def process_reading_job(
                 )
             except Exception:
                 pass
+
         birth_data = BirthData(
             full_name        = full_name,
             day              = bd.day,
@@ -2108,6 +2222,7 @@ def process_reading_job(
             birth_place      = birth_geo,
             present_location = present_geo,
         )
+
         face_reading = None
         if face_bytes and _FACE_ENGINE_AVAILABLE:
             try:
@@ -2117,6 +2232,7 @@ def process_reading_job(
                     face_reading = FaceReader().read(feats)
             except Exception as e:
                 print(f"⚠️ Job {job_id}: face analysis failed: {e}")
+
         # Dual-palm path (palm_image_left / palm_image_right from the frontend) takes priority
         # over the older single palm_bytes param, which is kept only for any other caller still
         # sending just one palm. Which palm is "dominant" now comes from dominant_hand — matching
@@ -2128,15 +2244,18 @@ def process_reading_job(
         dominant_hand_norm = (dominant_hand or "right").strip().lower()
         dominant_palm     = None
         non_dominant_palm = None
+
         if (palm_bytes_left or palm_bytes_right) and _PALM_ENGINE_AVAILABLE:
             try:
                 pe = PalmEngine()
                 dom_bytes = palm_bytes_right if dominant_hand_norm == "right" else palm_bytes_left
                 pas_bytes = palm_bytes_left  if dominant_hand_norm == "right" else palm_bytes_right
+
                 if dom_bytes:
                     dfeats = pe.extract(dom_bytes, hand_label=dominant_hand_norm)
                     if not dfeats.error:
                         dominant_palm = PalmReader().read(dfeats)
+
                 if pas_bytes:
                     pas_hand = "left" if dominant_hand_norm == "right" else "right"
                     pfeats = pe.extract(pas_bytes, hand_label=pas_hand)
@@ -2152,15 +2271,19 @@ def process_reading_job(
                     dominant_palm = PalmReader().read(pfeats)
             except Exception as e:
                 print(f"⚠️ Job {job_id}: palm analysis failed: {e}")
+
         num_profile  = compute_numerology_profile(birth_data, date_cls.today())
         num_reading  = read_numerology(num_profile, bd.day)
         num_signals  = {"system": "pythagorean", "signals": num_reading.to_signal_list()}
+
         hour = birth_data.birth_datetime.hour + birth_data.birth_datetime.minute / 60.0
+
         # NEW: pick Western-only vs. Western+Vedic based on birth/present country —
         # see select_astrology_system()'s docstring for the rule and why this was missing.
         astrology_system = select_astrology_system(
             getattr(birth_geo, "country_code", ""), getattr(present_geo, "country_code", "")
         )
+
         if astrology_system == "both" and _ASTROLOGY_AVAILABLE:
             try:
                 from synthesis.astrology_engine import compute_both
@@ -2186,6 +2309,7 @@ def process_reading_job(
                 birth_geo.latitude, birth_geo.longitude, birth_geo.utc_offset,
                 current_year=datetime.now().year,
             )
+
         # ── Union Blueprint / partner path ──────────────────────────────────────────
         # partner_name + partner_dob present (sent by the frontend for requires_partner
         # tools, e.g. complete-union-blueprint) → run two-person synastry instead of the
@@ -2205,6 +2329,7 @@ def process_reading_job(
                 )
                 partner_num_profile = compute_numerology_profile(partner_birth_data, date_cls.today())
                 partner_hour = partner_birth_data.birth_datetime.hour + partner_birth_data.birth_datetime.minute / 60.0
+
                 synastry_profile = compute_synastry_profile(
                     day_a=bd.day, month_a=bd.month, year_a=bd.year, hour_a=hour,
                     lat_a=birth_geo.latitude, lon_a=birth_geo.longitude, utc_a=birth_geo.utc_offset,
@@ -2215,6 +2340,7 @@ def process_reading_job(
                     numerology_lp_a=num_profile.life_path, numerology_lp_b=partner_num_profile.life_path,
                 )
                 synastry_reading = read_synastry(synastry_profile)
+
                 tool_catalog_data = _get_tool_catalog_data(tool_id)
                 tool_payload = {
                     **synastry_reading.to_dict(),
@@ -2224,6 +2350,7 @@ def process_reading_job(
                     "what_you_get": tool_catalog_data["what_you_get"],
                 }
                 narration = narrate_tool(tool_payload, use_opus=False)
+
                 result = {
                     "reading":         narration.full_text,
                     "domain_sections": narration.domain_sections,
@@ -2262,6 +2389,7 @@ def process_reading_job(
                 print(f"⚠️ Job {job_id}: synastry path failed, falling back to individual reading: {e}")
                 # Falls through to the individual-reading path below rather than failing the
                 # whole job — a degraded single-person reading beats no reading at all.
+
         # ── Individual reading path (unchanged) ─────────────────────────────────────
         user_input = UserInput(
             birth_data         = birth_data,
@@ -2273,6 +2401,7 @@ def process_reading_job(
             include_remedies   = True,
             session_id         = job_id,
         )
+
         logic_result = run_logic_engine(
             user_input         = user_input,
             astrology_primary  = astro_primary,
@@ -2291,8 +2420,10 @@ def process_reading_job(
             vedic_chart        = vedic_chart,
             current_year       = datetime.now().year,
         )
+
         if hasattr(logic_result, "error"):
             raise RuntimeError(f"Logic engine error: {logic_result.error}")
+
         # ── Astrocartography, relocation-power-map only ──────────────────────────────
         # present_geo falls back to birth_geo when IP-based geolocation was
         # unavailable or failed (see the current_location handling earlier in
@@ -2325,6 +2456,7 @@ def process_reading_job(
                 astro_lines = compute_astrocartography(
                     bd.day, bd.month, bd.year, hour, birth_geo.utc_offset,
                 )
+
                 current_active = None
                 same_point = (
                     round(present_geo.latitude, 4)  == round(birth_geo.latitude, 4) and
@@ -2337,6 +2469,7 @@ def process_reading_job(
                     )
                 else:
                     print(f"⚠️ Job {job_id}: no distinct current location captured, skipping current-location evaluation")
+
                 candidates_active = []
                 for candidate_name in [candidate_city_1, candidate_city_2]:
                     if not candidate_name:
@@ -2356,6 +2489,7 @@ def process_reading_job(
                         })
                     except Exception as e:
                         print(f"⚠️ Job {job_id}: geocoding/evaluation failed for candidate '{candidate_name}': {e}")
+
                 if current_active is not None or candidates_active:
                     astrocartography_data = {
                         "current_city":  present_geo.city or present_geo.place_name,
@@ -2364,6 +2498,7 @@ def process_reading_job(
                     }
             except Exception as e:
                 print(f"⚠️ Job {job_id}: astrocartography computation failed: {e}")
+
         tool_catalog_data = _get_tool_catalog_data(tool_id)
         tool_payload = {
             **logic_result.to_dict(),
@@ -2374,12 +2509,14 @@ def process_reading_job(
             "astrocartography":   astrocartography_data,
         }
         narration = narrate_tool(tool_payload, use_opus=False)
+
         # astro_timing already contains transits/arabic_parts/progressions/stelliums —
         # compute_western() computes all four on every call, but until now nothing ever
         # stored them past this point. Surfacing what's already correctly computed here,
         # not adding new astronomical calculations.
         midpoint_data = _calculate_midpoints_and_antiscia(bd.day, bd.month, bd.year, hour, birth_geo.utc_offset)
         asteroids = _calculate_asteroids(bd.day, bd.month, bd.year, hour, birth_geo.utc_offset)
+
         result = {
             "reading":          narration.full_text,
             "domain_sections":  narration.domain_sections,
@@ -2423,12 +2560,14 @@ def process_reading_job(
             # if that file isn't present on this server, not an error.
             "asteroids":        asteroids,
         }
+
         cur.execute(
             "UPDATE jobs SET status='completed', result=%s, completed_at=NOW() WHERE id=%s",
             (json.dumps(result), job_id)
         )
         conn.commit()
         print(f"✅ Job {job_id} completed")
+
     except Exception as e:
         print(f"❌ Job {job_id} failed: {e}")
         import traceback; traceback.print_exc()
@@ -2461,19 +2600,23 @@ async def submit_reading(
 ):
     client_ip        = get_client_ip(request)
     current_location = geolocate_ip(client_ip)
+
     face_bytes       = await facial_image.read()     if facial_image     else None
     palm_bytes       = await palm_image.read()       if palm_image       else None
     palm_bytes_left  = await palm_image_left.read()  if palm_image_left  else None
     palm_bytes_right = await palm_image_right.read() if palm_image_right else None
+
     job_id = hashlib.md5(
         f"{full_name}{date_of_birth}{tool_id}{datetime.now().isoformat()}".encode()
     ).hexdigest()[:16]
+
     conn = get_db_connection(); cur = conn.cursor()
     cur.execute(
         "INSERT INTO jobs (id, user_token, tool_id, status, created_at) VALUES (%s,%s,%s,%s,NOW())",
         (job_id, user_token, tool_id, "pending")
     )
     conn.commit(); cur.close(); conn.close()
+
     background_tasks.add_task(
         process_reading_job,
         job_id            = job_id,
@@ -2495,6 +2638,7 @@ async def submit_reading(
         candidate_city_1  = candidate_city_1,
         candidate_city_2  = candidate_city_2,
     )
+
     return {"job_id": job_id, "status": "pending"}
 
 @app.get("/api/reading/job/{job_id}")
@@ -2503,14 +2647,17 @@ async def get_job_status(job_id: str):
     cur.execute("SELECT status, result, error FROM jobs WHERE id=%s", (job_id,))
     job = cur.fetchone()
     cur.close(); conn.close()
+
     if not job:
         return JSONResponse(status_code=404, content={"error": "Job not found"})
+
     response: Dict[str, Any] = {"status": job["status"]}
     if job["status"] == "completed":
         try:    response["result"] = json.loads(job["result"])
         except: response["result"] = job["result"]
     if job["status"] == "failed" and job["error"]:
         response["error"] = job["error"]
+
     return response
 
 # ─────────────────────────────────────────────────────────────
@@ -2528,9 +2675,11 @@ async def get_latest_job(user_id: str):
             status_code=400,
             content={"error": "user_id is required"}
         )
+
     try:
         conn = get_db_connection()
         cur  = conn.cursor()
+
         # Primary: jobs table (new synthesis pipeline)
         cur.execute(
             """
@@ -2545,11 +2694,13 @@ async def get_latest_job(user_id: str):
             (user_id,)
         )
         job = cur.fetchone()
+
         if job:
             try:
                 result = json.loads(job["result"]) if job["result"] else {}
             except Exception:
                 result = {}
+
             # Enrich with analyses table
             analysis  = None
             palm_data = None
@@ -2570,6 +2721,7 @@ async def get_latest_job(user_id: str):
                 analysis = cur.fetchone()
             except Exception as e:
                 logger.warning(f"analyses fetch (non-fatal): {e}")
+
             try:
                 cur.execute(
                     """
@@ -2585,8 +2737,10 @@ async def get_latest_job(user_id: str):
                 palm_data = cur.fetchone()
             except Exception as e:
                 logger.warning(f"palm_analyses fetch (non-fatal): {e}")
+
             cur.close()
             conn.close()
+
             # Merge — setdefault keeps job result values primary
             if analysis:
                 result.setdefault("life_path",      analysis["life_path"])
@@ -2596,9 +2750,11 @@ async def get_latest_job(user_id: str):
                 result.setdefault("personal_day",   analysis["personal_day"])
                 result.setdefault("sun_sign",       analysis["sun_sign"])
                 result.setdefault("face_archetype", analysis["face_archetype"])
+
             if palm_data:
                 result.setdefault("palm_element", palm_data["hand_element"])
                 result.setdefault("palm_shape",   palm_data["hand_shape"])
+
             return {
                 "id":           job["id"],
                 "tool_id":      job["tool_id"],
@@ -2606,6 +2762,7 @@ async def get_latest_job(user_id: str):
                 "result":       result,
                 "completed_at": str(job["completed_at"]) if job["completed_at"] else None,
             }
+
         # Fallback: legacy analyses table
         cur.execute(
             """
@@ -2623,6 +2780,7 @@ async def get_latest_job(user_id: str):
         legacy = cur.fetchone()
         cur.close()
         conn.close()
+
         if legacy:
             return {
                 "id":      None,
@@ -2639,6 +2797,7 @@ async def get_latest_job(user_id: str):
                 },
                 "completed_at": legacy["timestamp"],
             }
+
         return JSONResponse(
             status_code=404,
             content={"error": "No completed synthesis found for this user"}
@@ -2658,12 +2817,14 @@ async def get_subscription_tier(user_id: str, tool_id: str):
     """
     if not user_id or not tool_id:
         return {"tier": "free", "active": False, "expires_at": None}
+
     try:
         sb = _get_supabase()
         if not sb:
             if not IS_PRODUCTION:
                 return {"tier": "voice_access", "active": True, "expires_at": None}
             return {"tier": "free", "active": False, "expires_at": None}
+
         resp = (
             sb.table("purchases")
             .select("id, status, expires_at, subscription_tier, tool_id")
@@ -2675,10 +2836,13 @@ async def get_subscription_tier(user_id: str, tool_id: str):
             .execute()
         )
         purchases = resp.data or []
+
         if not purchases:
             return {"tier": "free", "active": False, "expires_at": None}
+
         purchase   = purchases[0]
         expires_at = purchase.get("expires_at")
+
         if expires_at:
             try:
                 expiry = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
@@ -2686,6 +2850,7 @@ async def get_subscription_tier(user_id: str, tool_id: str):
                     return {"tier": "free", "active": False, "expires_at": expires_at}
             except Exception:
                 pass
+
         tier = purchase.get("subscription_tier") or "voice_access"
         return {"tier": tier, "active": True, "expires_at": expires_at}
     except Exception as e:
@@ -2714,19 +2879,23 @@ async def create_reading(
 ):
     client_ip        = get_client_ip(request)
     current_location = geolocate_ip(client_ip)
+
     face_bytes       = await facial_image.read()     if facial_image     else None
     palm_bytes       = await palm_image.read()       if palm_image       else None
     palm_bytes_left  = await palm_image_left.read()  if palm_image_left  else None
     palm_bytes_right = await palm_image_right.read() if palm_image_right else None
+
     job_id = hashlib.md5(
         f"{full_name}{date_of_birth}{tool_id}{datetime.now().isoformat()}".encode()
     ).hexdigest()[:16]
+
     conn = get_db_connection(); cur = conn.cursor()
     cur.execute(
         "INSERT INTO jobs (id, user_token, tool_id, status, created_at) VALUES (%s,%s,%s,%s,NOW())",
         (job_id, "sync_user", tool_id, "pending")
     )
     conn.commit(); cur.close(); conn.close()
+
     process_reading_job(
         job_id=job_id, full_name=full_name, dob=date_of_birth,
         birth_time=birth_time, birth_location=birth_location,
@@ -2737,9 +2906,11 @@ async def create_reading(
         palm_bytes_left=palm_bytes_left, palm_bytes_right=palm_bytes_right,
         dominant_hand=dominant_hand,
     )
+
     conn2 = get_db_connection(); cur2 = conn2.cursor()
     cur2.execute("SELECT status, result, error FROM jobs WHERE id=%s", (job_id,))
     job = cur2.fetchone(); cur2.close(); conn2.close()
+
     if job and job["status"] == "completed" and job["result"]:
         try:    return json.loads(job["result"])
         except: return {"reading": job["result"]}
@@ -2751,17 +2922,21 @@ async def create_reading(
 async def reading_pdf(job_id: str):
     if not _PDF_AVAILABLE:
         raise HTTPException(status_code=501, detail="PDF formatter not yet built (delivery/pdf_formatter.py)")
+
     conn = get_db_connection(); cur = conn.cursor()
     cur.execute("SELECT status, result FROM jobs WHERE id=%s", (job_id,))
     job = cur.fetchone(); cur.close(); conn.close()
+
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     if job["status"] != "completed":
         raise HTTPException(status_code=404, detail="Reading not yet complete")
+
     try:
         result = json.loads(job["result"])
     except Exception:
         raise HTTPException(status_code=500, detail="Could not parse reading result")
+
     try:
         # New-format jobs (post-narrate_tool()) have real section_texts and
         # what_you_get, built specifically for this reading. Older jobs
@@ -2791,6 +2966,7 @@ async def reading_pdf(job_id: str):
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
+
     filename = f"KAYAL_Reading_{job_id[:8]}.pdf"
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
@@ -2803,21 +2979,25 @@ async def upload_palm_image(token: str = Form(...), image: UploadFile = File(...
     try:
         if hand not in ["left", "right", "dominant"]:
             return JSONResponse(status_code=400, content={"success": False, "error": "Invalid hand"})
+
         conn = get_db_connection(); cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE token=%s", (token,))
         if not cur.fetchone():
             cur.close(); conn.close()
             return JSONResponse(status_code=404, content={"success": False, "error": "User not found"})
+
         image_bytes = await image.read()
         if len(image_bytes) > 10 * 1024 * 1024:
             cur.close(); conn.close()
             return JSONResponse(status_code=400, content={"success": False, "error": "Image too large (max 10MB)"})
+
         file_hash = generate_file_hash(image_bytes)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename  = f"{token}_{hand}_{timestamp}_{file_hash}.jpg"
         file_path = PALM_DIR / filename
         file_path.write_bytes(image_bytes)
         thumb     = create_thumbnail(file_path)
+
         cur.execute("SELECT id FROM palm_images WHERE token=%s", (token,))
         if cur.fetchone():
             cur.execute("UPDATE palm_images SET image_path=%s,thumbnail_path=%s,hand=%s,uploaded_at=%s WHERE token=%s",
@@ -2825,7 +3005,9 @@ async def upload_palm_image(token: str = Form(...), image: UploadFile = File(...
         else:
             cur.execute("INSERT INTO palm_images (token,image_path,thumbnail_path,hand,uploaded_at) VALUES (%s,%s,%s,%s,%s)",
                         (token, str(file_path), str(thumb), hand, datetime.now().isoformat()))
+
         conn.commit(); cur.close(); conn.close()
+
         return {"success": True, "data": {"image_url": f"/uploads/palm/{filename}",
                 "thumbnail_url": f"/uploads/thumbnails/{thumb.name}", "hand": hand}}
     except Exception as e:
@@ -2836,21 +3018,25 @@ async def upload_face_image(token: str = Form(...), image: UploadFile = File(...
     try:
         if angle not in ["front", "left", "right", "profile"]:
             return JSONResponse(status_code=400, content={"success": False, "error": "Invalid angle"})
+
         conn = get_db_connection(); cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE token=%s", (token,))
         if not cur.fetchone():
             cur.close(); conn.close()
             return JSONResponse(status_code=404, content={"success": False, "error": "User not found"})
+
         image_bytes = await image.read()
         if len(image_bytes) > 10 * 1024 * 1024:
             cur.close(); conn.close()
             return JSONResponse(status_code=400, content={"success": False, "error": "Image too large (max 10MB)"})
+
         file_hash = generate_file_hash(image_bytes)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename  = f"{token}_{angle}_{timestamp}_{file_hash}.jpg"
         file_path = FACE_DIR / filename
         file_path.write_bytes(image_bytes)
         thumb     = create_thumbnail(file_path)
+
         cur.execute("SELECT id FROM face_images WHERE token=%s", (token,))
         if cur.fetchone():
             cur.execute("UPDATE face_images SET image_path=%s,thumbnail_path=%s,angle=%s,uploaded_at=%s WHERE token=%s",
@@ -2858,7 +3044,9 @@ async def upload_face_image(token: str = Form(...), image: UploadFile = File(...
         else:
             cur.execute("INSERT INTO face_images (token,image_path,thumbnail_path,angle,uploaded_at) VALUES (%s,%s,%s,%s,%s)",
                         (token, str(file_path), str(thumb), angle, datetime.now().isoformat()))
+
         conn.commit(); cur.close(); conn.close()
+
         return {"success": True, "data": {"image_url": f"/uploads/face/{filename}",
                 "thumbnail_url": f"/uploads/thumbnails/{thumb.name}", "angle": angle}}
     except Exception as e:
@@ -2873,6 +3061,7 @@ async def get_user_images(token: str):
         cur.execute("SELECT image_path,thumbnail_path,angle,uploaded_at FROM face_images WHERE token=%s", (token,))
         face = cur.fetchone()
         cur.close(); conn.close()
+
         return {
             "success": True,
             "palm": {"url": f"/uploads/palm/{Path(palm['image_path']).name}",
@@ -2889,11 +3078,13 @@ async def get_user_images(token: str):
 async def delete_user_image(token: str, image_type: str):
     if image_type not in ["palm", "face"]:
         return JSONResponse(status_code=400, content={"success": False, "error": "Must be 'palm' or 'face'"})
+
     try:
         table = f"{image_type}_images"
         conn = get_db_connection(); cur = conn.cursor()
         cur.execute(f"SELECT image_path,thumbnail_path FROM {table} WHERE token=%s", (token,))
         row = cur.fetchone()
+
         if row:
             for p in [row["image_path"], row["thumbnail_path"]]:
                 try:
@@ -2901,6 +3092,7 @@ async def delete_user_image(token: str, image_type: str):
                 except Exception: pass
             cur.execute(f"DELETE FROM {table} WHERE token=%s", (token,))
             conn.commit()
+
         cur.close(); conn.close()
         return {"success": True}
     except Exception as e:
@@ -2913,10 +3105,12 @@ async def chat_message(message: str = Form(...), userId: str = Form(...), audio:
         analysis = None
         palm     = None
         history  = []
+
         try:
             conn = get_db_connection(); cur = conn.cursor()
             cur.execute("SELECT * FROM users WHERE token=%s", (userId,))
             user = cur.fetchone()
+
             if user:
                 name = user["name"].split()[0] if user.get("name") else "there"
                 try:
@@ -2928,19 +3122,23 @@ async def chat_message(message: str = Form(...), userId: str = Form(...), audio:
                     analysis = cur.fetchone()
                 except Exception:
                     pass
+
                 try:
                     cur.execute("SELECT hand_shape,hand_element,ruling_planet FROM palm_analyses WHERE token=%s ORDER BY timestamp DESC LIMIT 1", (userId,))
                     palm = cur.fetchone()
                 except Exception:
                     pass
+
                 try:
                     cur.execute("SELECT role,content FROM conversations WHERE token=%s ORDER BY timestamp DESC LIMIT 5", (userId,))
                     history = cur.fetchall() or []
                 except Exception:
                     pass
+
             cur.close(); conn.close()
         except Exception as db_err:
             logger.warning(f"Chat: DB lookup failed for {userId}: {db_err}")
+
         transcribed_text = message
         if audio:
             audio_bytes = await audio.read()
@@ -2949,6 +3147,7 @@ async def chat_message(message: str = Form(...), userId: str = Form(...), audio:
             segs, _ = whisper_model.transcribe(tmp_path, beam_size=1, language="en", vad_filter=True)
             transcribed_text = " ".join(s.text for s in segs).strip() or message
             os.unlink(tmp_path)
+
         history_text = "\n".join(f"{h['role']}: {h['content']}" for h in reversed(history))
         ctx_parts    = [f"User's name: {name}"]
         if analysis:
@@ -2958,7 +3157,9 @@ async def chat_message(message: str = Form(...), userId: str = Form(...), audio:
             for k, v in palm.items():
                 if v and k not in ("id", "token", "timestamp"): ctx_parts.append(f"{k}: {v}")
         context = ". ".join(ctx_parts) + "."
+
         prompt  = f"Context: {context}\nPrevious:\n{history_text}\nUser: {transcribed_text}\nJenny (friendly, wise, short):"
+
         try:
             response = requests.post(OLLAMA_URL, json={
                 "model": "tinyllama:1.1b", "prompt": prompt, "stream": False,
@@ -2967,6 +3168,7 @@ async def chat_message(message: str = Form(...), userId: str = Form(...), audio:
             ai_response = response.json().get("response", "").strip() if response.status_code == 200 else random.choice(FAST_RESPONSES)
         except Exception:
             ai_response = random.choice(FAST_RESPONSES)
+
         audio_url = None
         if len(ai_response) > 20:
             audio_data = await text_to_speech(ai_response)
@@ -2975,6 +3177,7 @@ async def chat_message(message: str = Form(...), userId: str = Form(...), audio:
                 audio_path = f"static/audio/{audio_filename}"
                 with open(audio_path, "wb") as f: f.write(audio_data)
                 audio_url = f"/static/audio/{audio_filename}"
+
         session_id = f"CHAT{datetime.now().strftime('%y%m%d%H%M%S')}{uuid.uuid4().hex[:6].upper()}"
         try:
             conn2 = get_db_connection(); cur2 = conn2.cursor()
@@ -2994,6 +3197,7 @@ async def chat_message(message: str = Form(...), userId: str = Form(...), audio:
             conn2.commit(); cur2.close(); conn2.close()
         except Exception as save_err:
             logger.warning(f"Chat: conversation save failed (non-fatal): {save_err}")
+
         return {"success": True, "message": ai_response, "audioUrl": audio_url,
                 "transcribedText": transcribed_text if audio else None, "session_id": session_id}
     except Exception as e:
@@ -3007,9 +3211,11 @@ async def get_chat_history(userId: str, limit: int = 50):
     cur.execute("SELECT * FROM conversations WHERE token=%s ORDER BY timestamp DESC LIMIT %s", (userId, limit))
     convs = cur.fetchall()
     cur.close(); conn.close()
+
     messages = [{"id": c["id"], "content": c["content"],
                  "sender": "user" if c["role"] == "user" else "ai",
                  "timestamp": c["timestamp"]} for c in reversed(convs)]
+
     return {"success": True, "messages": messages}
 
 @app.post("/api/chat/stream")
@@ -3017,10 +3223,12 @@ async def stream_chat(data: dict):
     message = data.get("message"); userId = data.get("userId")
     if not message or not userId:
         return JSONResponse(status_code=400, content={"error": "Missing message or userId"})
+
     conn = get_db_connection(); cur = conn.cursor()
     cur.execute("SELECT * FROM users WHERE token=%s", (userId,))
     user = cur.fetchone(); cur.close(); conn.close()
     name = user["name"].split()[0] if user and user["name"] else "there"
+
     async def generate():
         prompt = f"User {name} says: {message}\nJenny (short, friendly response):"
         try:
@@ -3036,6 +3244,7 @@ async def stream_chat(data: dict):
                     except Exception: continue
         except Exception:
             yield f" {random.choice(FAST_RESPONSES)}"
+
     return StreamingResponse(generate(), media_type="text/plain")
 
 @app.delete("/api/chat/history")
@@ -3043,24 +3252,32 @@ async def clear_chat_history(data: dict):
     userId = data.get("userId")
     if not userId:
         return JSONResponse(status_code=400, content={"error": "Missing userId"})
+
     conn = get_db_connection(); cur = conn.cursor()
     cur.execute("DELETE FROM conversations WHERE token=%s", (userId,))
     cur.execute("DELETE FROM chat_history WHERE token=%s", (userId,))
     conn.commit(); cur.close(); conn.close()
+
     return {"success": True}
 
 @app.get("/user/{token}/history")
 async def get_user_history(token: str):
     conn = get_db_connection(); cur = conn.cursor()
+
     cur.execute("SELECT * FROM users WHERE token=%s", (token,))
     user = cur.fetchone()
+
     cur.execute("SELECT * FROM analyses WHERE token=%s ORDER BY timestamp DESC", (token,))
     analyses = cur.fetchall()
+
     cur.execute("SELECT * FROM palm_analyses WHERE token=%s ORDER BY timestamp DESC", (token,))
     palm_analyses = cur.fetchall()
+
     cur.execute("SELECT * FROM narrative_sessions WHERE token=%s ORDER BY timestamp DESC", (token,))
     narrative_sessions = cur.fetchall()
+
     cur.close(); conn.close()
+
     analyses_list = []
     for a in analyses:
         a_dict = dict(a)
@@ -3068,6 +3285,7 @@ async def get_user_history(token: str):
             try:    a_dict["face_traits"] = json.loads(a_dict["face_traits"])
             except: a_dict["face_traits"] = ["balanced", "adaptable", "strategic"]
         analyses_list.append(a_dict)
+
     return {
         "success":            True,
         "user":               dict(user) if user else None,
@@ -3079,17 +3297,21 @@ async def get_user_history(token: str):
 @app.get("/user/{token}/conversations")
 async def get_conversations(token: str, session_id: Optional[str] = None):
     conn = get_db_connection(); cur = conn.cursor()
+
     if session_id:
         cur.execute("SELECT * FROM conversations WHERE token=%s AND session_id=%s ORDER BY timestamp ASC", (token, session_id))
     else:
         cur.execute("SELECT * FROM conversations WHERE token=%s ORDER BY timestamp DESC LIMIT 50", (token,))
+
     chats = cur.fetchall()
     cur.close(); conn.close()
+
     return {"success": True, "conversations": [dict(c) for c in chats]}
 
 @app.post("/domain/{domain_id}/unlock")
 async def unlock_domain(domain_id: int, data: dict):
     token = data.get("user_token")
+
     if token and domain_id in [2, 3, 4, 5]:
         conn = get_db_connection(); cur = conn.cursor()
         cur.execute(
@@ -3098,14 +3320,17 @@ async def unlock_domain(domain_id: int, data: dict):
             (token, domain_id)
         )
         conn.commit(); cur.close(); conn.close()
+
         domain_names = {2: "Energy & Health", 3: "Work & Wealth", 4: "Relationships", 5: "Time & Cycles"}
         return {"success": True, "domain_id": domain_id,
                 "domain_title": domain_names.get(domain_id, f"Domain {domain_id}"), "unlocked": True}
+
     return {"success": False}
 
 @app.post("/payment/premium")
 async def premium(data: dict):
     token = data.get("user_token")
+
     if token:
         conn = get_db_connection(); cur = conn.cursor()
         for d in [2, 3, 4, 5]:
@@ -3115,8 +3340,10 @@ async def premium(data: dict):
                 (token, d)
             )
         conn.commit(); cur.close(); conn.close()
+
         return {"success": True, "tier": "premium", "unlocked_domains": [2, 3, 4, 5],
                 "message": "Premium activated! All domains unlocked."}
+
     return {"success": False}
 
 # ══════════════════════════════════════════════
@@ -3155,6 +3382,8 @@ async def tool_teaser_endpoint(
     partner_name:   Optional[str] = Form(None),   # v8.2.0
     session_id:     str           = Form("0"),
 ):
+    if not _TOOL_TEASER_AVAILABLE:
+        raise HTTPException(status_code=503, detail="api.tool_teaser not available")
     result = await generate_tool_teaser(
         name           = name,
         dob            = dob,
@@ -3164,6 +3393,41 @@ async def tool_teaser_endpoint(
         partner_name   = partner_name,   # v8.2.0
         session_id     = session_id,
     )
+    return result
+
+class ChatTeaserRequest(BaseModel):
+    name:           str
+    dob:            str
+    tool_id:        str
+    message:        str
+    birth_time:     Optional[str] = None
+    birth_location: Optional[str] = None
+
+@app.post("/tool-teaser/chat")
+async def tool_teaser_chat_endpoint(body: ChatTeaserRequest):
+    """
+    Real, single-exchange preview for a chat or voice subscription
+    tool. Delegates entirely to api.tool_teaser.generate_chat_teaser_reply(),
+    which itself calls DeepSeek via api.agency.chat's own, already-fixed
+    _call_deepseek(), the same real pipeline the actual, live product uses.
+    """
+    if not _TOOL_TEASER_AVAILABLE:
+        raise HTTPException(status_code=503, detail="api.tool_teaser not available")
+    if not is_chat_or_voice_tool(body.tool_id):
+        raise HTTPException(
+            status_code=400,
+            detail="This endpoint is only for chat and voice subscription tools.",
+        )
+    result = await generate_chat_teaser_reply(
+        name           = body.name,
+        dob            = body.dob,
+        tool_id        = body.tool_id,
+        message        = body.message,
+        birth_time     = body.birth_time,
+        birth_location = body.birth_location,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result.get("message", result["error"]))
     return result
 
 # ─────────────────────────────────────────────

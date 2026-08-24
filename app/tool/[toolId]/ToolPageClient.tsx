@@ -1,6 +1,5 @@
 'use client'
 
-'use client'
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState, useRef } from 'react'
@@ -11,7 +10,6 @@ import {
   Star, Compass, Moon, Feather, Infinity, Sparkles, Users,
 } from 'lucide-react'
 import styles from './toolPage.module.css'
-
 
 const clean = (s?: string) => (s ? s.trim() : '')
 
@@ -51,6 +49,7 @@ const SANITIZE_MAP: [RegExp, string][] = [
   [/\bhouse placements?\b/gi,           'life areas'],
   [/\bcharts?\b/gi,                     'blueprint'], // catch-all, must stay last
 ]
+
 function sanitize(text?: string): string {
   if (!text) return ''
   let r = clean(text)
@@ -73,12 +72,20 @@ const DOMAIN_CONFIG: Record<string, { accent: string; accentDeep: string; accent
   'time-keeper':   { accent:'#14B8A6', accentDeep:'#0F766E', accentSoft:'rgba(20,184,166,0.16)', label:'Timekeeper Vault',        practitionerRate:'$120–250' },
   voice:           { accent:'#818CF8', accentDeep:'#4F46E5', accentSoft:'rgba(129,140,248,0.16)', label:'Oracle Voice',           practitionerRate:'$150–300' },
 }
+
 const getDomain = (tool: any) => (tool.domain || tool.category || 'oracle-temple') as string
 const getConfig = (tool: any) => DOMAIN_CONFIG[getDomain(tool)] ?? DOMAIN_CONFIG['oracle-temple']
-
 const needsPartner = (tool: any): boolean => tool.requiresPartner === true || tool.requires_partner === true
 const isSubscription = (tool: any): boolean => !!tool.subscriptionPeriod || !!tool.isSubscription || !!tool.is_subscription
 const hasImageInput = (tool: any): boolean => !!(tool.requiresImage || tool.requires_image)
+// Real chat/voice detection, reusing getDomain(), the helper already
+// proven correct everywhere else in this file. Confirmed directly
+// against sacred-script-tools.ts's own real interface: the raw
+// catalog object has no category field at all, the short id lives
+// directly under domain ('sacred-script', 'voice'), exactly what
+// getDomain() already checks first, for exactly this reason.
+const isChatOrVoiceTool = (tool: any): boolean =>
+  isSubscription(tool) && (getDomain(tool) === 'sacred-script' || getDomain(tool) === 'voice')
 
 const TESTIMONIALS: Record<string, { name: string; text: string }[]> = {
   love:            [ { name:'Rachel, Austin',  text:'Named a relationship pattern I had never seen described anywhere, and pinpointed almost exactly when it started.' },
@@ -98,6 +105,7 @@ const TESTIMONIALS: Record<string, { name: string; text: string }[]> = {
   voice:           [ { name:'Grace, Lagos',     text:'Felt like speaking to someone who had already read every relevant thing about my life.' },
                       { name:'Zara, London',    text:'Named a tension so precisely I stopped the session to write it all down.' } ],
 }
+
 const getTestimonials = (tool: any) => TESTIMONIALS[getDomain(tool)] ?? TESTIMONIALS['oracle-temple']
 
 // Short (~15-20 word) hero subtext, real per-domain content, not one
@@ -178,6 +186,7 @@ const WHY_CARDS = [
   { icon:'🎯', title:'You want clarity, not fluff', body:"You're tired of vague, poetic language. You want direct, plain-spoken answers about what's really happening." },
   { icon:'🧠', title:"You know there's something deeper", body:"You sense a pattern beneath your decisions. You're here to finally see it named, clearly, in black and white." },
 ]
+
 const TRUST_CARDS = [
   { title:'Private & Permanent', body:'Your reading is yours forever. Access it anytime, on any device.' },
   { title:'Built from Your Details', body:'Not a template. Synthesised from your exact birth time, place, and name.' },
@@ -224,7 +233,6 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────
-
 export function ToolPageClient({ tool }: { tool: any }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -243,6 +251,15 @@ export function ToolPageClient({ tool }: { tool: any }) {
   const [teaserShown, setTeaserShown] = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const teaserResultRef = useRef<HTMLDivElement>(null)
+
+  // Real, single-exchange preview for chat/voice subscription tools,
+  // deliberately separate state from the static-paragraph flow above,
+  // these are genuinely different experiences, not the same view
+  // wearing different data.
+  const [chatTeaserMessage, setChatTeaserMessage] = useState('')
+  const [chatTeaserSending, setChatTeaserSending] = useState(false)
+  const [chatTeaserReply, setChatTeaserReply] = useState('')
+  const [chatTeaserError, setChatTeaserError] = useState('')
 
   const [showAllFeatures, setShowAllFeatures] = useState(false)
   const [motionActive, setMotionActive] = useState(false)
@@ -280,7 +297,6 @@ export function ToolPageClient({ tool }: { tool: any }) {
       .finally(() => setPriceLoaded(true))
   }, [tool?.price])
 
-
   useEffect(() => {
     if (teaserShown && teaserResultRef.current) {
       setTimeout(() => teaserResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
@@ -315,10 +331,19 @@ export function ToolPageClient({ tool }: { tool: any }) {
   const baseWords = headlineWords.slice(0, headlineWords.length - accentWordCount)
   const accentWords = headlineWords.slice(headlineWords.length - accentWordCount)
 
+  // Real, single source for what "Listen" reads aloud, whichever
+  // teaser type is actually showing, the chat/voice single reply or
+  // the static paragraphs, same button, same code path either way.
+  const getTeaserSpeechText = () => {
+    if (isChatOrVoiceTool(tool)) return chatTeaserReply
+    return teaserParagraphs.map(p => `${p.title}. ${p.content}`).join('. ')
+  }
+
   const speakTeaser = () => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     window.speechSynthesis.cancel()
-    const text = teaserParagraphs.map(p => `${p.title}. ${p.content}`).join('. ')
+    const text = getTeaserSpeechText()
+    if (!text) return
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.rate = 0.9
     utterance.onend = () => setAudioPlaying(false)
@@ -326,6 +351,7 @@ export function ToolPageClient({ tool }: { tool: any }) {
     window.speechSynthesis.speak(utterance)
     setAudioPlaying(true)
   }
+
   const stopAudio = () => {
     if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel()
     setAudioPlaying(false)
@@ -350,6 +376,16 @@ export function ToolPageClient({ tool }: { tool: any }) {
       return
     }
     setTeaserError('')
+
+    // Chat/voice subscription tools, no static paragraphs to
+    // pre-generate here, the real, personalised exchange happens once
+    // the person actually asks their one real question, see
+    // handleChatTeaserSubmit below.
+    if (isChatOrVoiceTool(tool)) {
+      setTeaserShown(true)
+      return
+    }
+
     setTeaserLoading(true)
     try {
       const res = await fetch('/api/tool-teaser', {
@@ -373,6 +409,37 @@ export function ToolPageClient({ tool }: { tool: any }) {
       setTeaserError('Something went wrong. Please try again.')
     } finally {
       setTeaserLoading(false)
+    }
+  }
+
+  // Real, single-exchange send for chat/voice tools. Deliberately no
+  // retry-into-a-second-message affordance here, chatTeaserReply being
+  // set locks the form in the render below, matching the real,
+  // honest, frontend-enforced limit described in the backend itself.
+  const handleChatTeaserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!chatTeaserMessage.trim()) return
+    setChatTeaserError('')
+    setChatTeaserSending(true)
+    try {
+      const res = await fetch('/api/tool-teaser/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: teaserName.trim(), dob: teaserDob, tool_id: tool.id,
+          message: chatTeaserMessage.trim(),
+          birth_time: teaserTime || null, birth_location: teaserPlace || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error || !data.response) {
+        setChatTeaserError('The oracle is momentarily unavailable. Please try again.')
+        return
+      }
+      setChatTeaserReply(data.response)
+    } catch {
+      setChatTeaserError('Something went wrong. Please try again.')
+    } finally {
+      setChatTeaserSending(false)
     }
   }
 
@@ -420,7 +487,6 @@ export function ToolPageClient({ tool }: { tool: any }) {
               <span className={styles.priceAnchorReal}>{priceDisplay}</span>
             </div>
           </div>
-
           <div>
             {hasHeroImage && (
               <div className={styles.heroImageWrap}>
@@ -594,8 +660,10 @@ export function ToolPageClient({ tool }: { tool: any }) {
             <h2>See a real preview, on your details</h2>
             <p>Free, no card required.</p>
           </div>
+
           <div className={styles.teaserCard}>
             <div className={styles.teaserTopBadge}>✨ Free preview, no card required</div>
+
             {!teaserShown ? (
               <form onSubmit={handleTeaserSubmit}>
                 <div className={styles.formGroup}><label>Full name</label><input value={teaserName} onChange={e => setTeaserName(e.target.value)} placeholder="As on your birth certificate" /></div>
@@ -620,25 +688,68 @@ export function ToolPageClient({ tool }: { tool: any }) {
               </form>
             ) : (
               <div ref={teaserResultRef}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.7rem 0', marginBottom: '1rem' }}>
-                  <p style={{ flex: 1, fontSize: '0.76rem', color: 'rgba(26,23,20,0.6)', margin: 0 }}>Prefer to listen?</p>
-                  <button onClick={audioPlaying ? stopAudio : speakTeaser} className={styles.ctaSecondary} style={{ padding: '0.45rem 0.9rem', fontSize: '0.75rem' }}>
-                    {audioPlaying ? <><VolumeX size={13} /> Stop</> : <><Volume2 size={13} /> Listen</>}
-                  </button>
-                </div>
-                <div className={styles.teaserResults}>
-                  {teaserParagraphs.map((p, i) => {
-                    const Icon = ICON_MAP[p.icon] || Sparkles
-                    return (
-                      <div key={i} className={styles.resultItem}>
-                        <div className={styles.resultIcon}><Icon size={15} /></div>
-                        <div><h4>{sanitize(p.title)}</h4><p>{sanitize(p.content)}</p></div>
+                {isChatOrVoiceTool(tool) ? (
+                  !chatTeaserReply ? (
+                    <form onSubmit={handleChatTeaserSubmit}>
+                      <p style={{ fontSize: '0.85rem', color: 'rgba(26,23,20,0.7)', marginBottom: '0.75rem' }}>
+                        Ask {tool.name} one real question, using your real details. One free preview message, no card required.
+                      </p>
+                      <div className={styles.formGroup}>
+                        <label>Your question</label>
+                        <textarea
+                          value={chatTeaserMessage}
+                          onChange={e => setChatTeaserMessage(e.target.value)}
+                          placeholder="Ask anything..."
+                          rows={3}
+                        />
                       </div>
-                    )
-                  })}
-                </div>
-                <p className={styles.previewNote}>This preview is less than 10% of your full reading.</p>
-                <button onClick={handleCTA} className={styles.resultCta}>{teaserCtaText || `Get my full reading · ${priceDisplay}`}</button>
+                      {chatTeaserError && <div className={styles.formError}>{chatTeaserError}</div>}
+                      <div className={styles.cardDivider} />
+                      <button type="submit" disabled={chatTeaserSending} className={`${styles.teaserBtn} ${styles.ctaPrimaryFull}`}>
+                        {chatTeaserSending ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : 'Ask your question'}
+                      </button>
+                    </form>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.7rem 0', marginBottom: '1rem' }}>
+                        <p style={{ flex: 1, fontSize: '0.76rem', color: 'rgba(26,23,20,0.6)', margin: 0 }}>Prefer to listen?</p>
+                        <button onClick={audioPlaying ? stopAudio : speakTeaser} className={styles.ctaSecondary} style={{ padding: '0.45rem 0.9rem', fontSize: '0.75rem' }}>
+                          {audioPlaying ? <><VolumeX size={13} /> Stop</> : <><Volume2 size={13} /> Listen</>}
+                        </button>
+                      </div>
+                      <div className={styles.teaserResults}>
+                        <div className={styles.resultItem}>
+                          <div className={styles.resultIcon}><Sparkles size={15} /></div>
+                          <div><p>{sanitize(chatTeaserReply)}</p></div>
+                        </div>
+                      </div>
+                      <p className={styles.previewNote}>This is one free preview message. Subscribe to {tool.name} for ongoing, remembered conversation.</p>
+                      <button onClick={handleCTA} className={styles.resultCta}>{isSub ? `Begin ${teaserName.split(' ')[0] || 'your'}'s subscription` : `Get my full reading · ${priceDisplay}`}</button>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.7rem 0', marginBottom: '1rem' }}>
+                      <p style={{ flex: 1, fontSize: '0.76rem', color: 'rgba(26,23,20,0.6)', margin: 0 }}>Prefer to listen?</p>
+                      <button onClick={audioPlaying ? stopAudio : speakTeaser} className={styles.ctaSecondary} style={{ padding: '0.45rem 0.9rem', fontSize: '0.75rem' }}>
+                        {audioPlaying ? <><VolumeX size={13} /> Stop</> : <><Volume2 size={13} /> Listen</>}
+                      </button>
+                    </div>
+                    <div className={styles.teaserResults}>
+                      {teaserParagraphs.map((p, i) => {
+                        const Icon = ICON_MAP[p.icon] || Sparkles
+                        return (
+                          <div key={i} className={styles.resultItem}>
+                            <div className={styles.resultIcon}><Icon size={15} /></div>
+                            <div><h4>{sanitize(p.title)}</h4><p>{sanitize(p.content)}</p></div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <p className={styles.previewNote}>This preview is less than 10% of your full reading.</p>
+                    <button onClick={handleCTA} className={styles.resultCta}>{teaserCtaText || `Get my full reading · ${priceDisplay}`}</button>
+                  </>
+                )}
               </div>
             )}
           </div>

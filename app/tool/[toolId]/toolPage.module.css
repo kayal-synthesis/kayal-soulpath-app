@@ -15,7 +15,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
 
 .page, .page * { margin:0; padding:0; box-sizing:border-box; }
-
 .page {
   background:#faf7f2; font-family:'Inter',sans-serif; color:#1a1714; line-height:1.6;
   padding-top:70px; overflow-x:hidden; position:relative;
@@ -81,14 +80,11 @@
 .ctaSecondary { padding:0.9rem 1.8rem; background:transparent; color:var(--accentDeep); border:1.5px solid var(--accent); border-radius:2.5rem; font-size:0.9rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; text-align:center; min-height:44px; }
 .ctaSecondary:hover { background:var(--accent); color:#f8f5ef; }
 .trust { font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:rgba(26,23,20,0.35); display:block; }
-
 .priceAnchorBadge { display:inline-flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px 8px; margin-top:0.9rem; padding:0.5rem 1rem; background:color-mix(in srgb, var(--accent) 6%, transparent); border:1px solid color-mix(in srgb, var(--accent) 18%, transparent); border-radius:1.2rem; font-size:0.78rem; max-width:100%; }
 .priceAnchorStrike { color:rgba(26,23,20,0.4); text-decoration:line-through; }
 .priceAnchorArrow { color:var(--accent); }
 .priceAnchorReal { color:var(--accentDeep); font-weight:700; }
-
 /* Currency status line removed too, the price itself (which already reflects auto-detected currency) is the only thing shown now */
-
 .heroImageWrap { position:relative; width:100%; height:460px; border-radius:16px; overflow:hidden; background:linear-gradient(160deg,var(--accent) 0%,var(--accentDeep) 45%,#2d1b69 100%); box-shadow:0 12px 40px rgba(26,23,20,0.06); transition:transform 0.3s ease-out; }
 .heroImage { width:100%; height:100%; object-fit:cover; display:block; animation:kenBurns 24s ease-in-out infinite alternate; }
 /* .heroImageWrap img kept as a fallback in case any other markup still
@@ -109,7 +105,6 @@
   mix-blend-mode:multiply; }
 .heroImageGlow { position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 15%, transparent) 0%, transparent 70%); opacity:0; transition:opacity 0.8s ease; mix-blend-mode:overlay; }
 .heroImageGlow.active { opacity:1; }
-
 .heroInteraction { text-align:center; margin-top:1.2rem; display:flex; justify-content:center; }
 .motionTrigger { display:inline-flex; align-items:center; gap:8px; padding:0.6rem 1.6rem; background:#fff; border:1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius:2.5rem; font-size:0.85rem; font-weight:500; color:#4a4036; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 15px rgba(0,0,0,0.02); }
 .motionTrigger:hover { background:#faf7f2; border-color:var(--accent); transform:translateY(-2px); }
@@ -203,9 +198,10 @@
 .teaserTopBadge { display:inline-flex; align-items:center; gap:6px; padding:0.35rem 0.85rem; background:color-mix(in srgb, var(--accent) 8%, transparent); border:1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius:2rem; font-size:0.72rem; font-weight:600; color:var(--accentDeep); margin-bottom:1rem; }
 .formGroup { margin-bottom:0.85rem; }
 .formGroup label { display:block; font-weight:700; font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.45rem; color:#4a4036; }
-.formGroup input { width:100%; padding:0.75rem 1.1rem; min-height:46px; box-sizing:border-box; border:1.5px solid rgba(26,23,20,0.1); border-radius:0.9rem; font-size:0.95rem; font-family:'Inter',sans-serif; background:rgba(250,247,242,0.6); transition:border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease; color:#1a1714; }
-.formGroup input:focus { outline:none; border-color:var(--accent); background:#ffffff; box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent); }
-.formGroup input::placeholder { color:rgba(26,23,20,0.42); }
+.formGroup input, .formGroup textarea { width:100%; padding:0.75rem 1.1rem; min-height:46px; box-sizing:border-box; border:1.5px solid rgba(26,23,20,0.1); border-radius:0.9rem; font-size:0.95rem; font-family:'Inter',sans-serif; background:rgba(250,247,242,0.6); transition:border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease; color:#1a1714; }
+.formGroup input:focus, .formGroup textarea:focus { outline:none; border-color:var(--accent); background:#ffffff; box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent); }
+.formGroup input::placeholder, .formGroup textarea::placeholder { color:rgba(26,23,20,0.42); }
+.formGroup textarea { resize:vertical; line-height:1.5; }
 .formRow { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 .cardDivider { height:1px; background:rgba(26,23,20,0.06); margin:1rem 0; width:100%; }
 .teaserBtn { width:100%; padding:1.15rem; background:linear-gradient(135deg,var(--accent),var(--accentDeep)); color:#f8f5ef; border:none; border-radius:2.5rem; font-size:1rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; transition:opacity 0.2s, transform 0.1s; letter-spacing:0.02em; box-shadow:0 10px 30px color-mix(in srgb, var(--accent) 28%, transparent); min-height:44px; }
