@@ -83,49 +83,8 @@ export default function AdminDomainsPage() {
         `)
         .order('created_at', { ascending: false })
 
-      if (data && data.length > 0) {
+      if (data) {
         setDomains(data)
-      } else {
-        // Mock data for demonstration
-        setDomains([
-          {
-            id: '1',
-            domain: 'app.example.com',
-            status: 'active',
-            verified_at: new Date().toISOString(),
-            ssl_status: 'active',
-            dns_records: [
-              { type: 'A', name: '@', value: '76.76.21.21', ttl: 3600, status: 'ok' },
-              { type: 'CNAME', name: 'www', value: 'app.example.com', ttl: 3600, status: 'ok' }
-            ],
-            created_at: new Date().toISOString(),
-            user_id: null
-          },
-          {
-            id: '2',
-            domain: 'api.example.com',
-            status: 'pending',
-            verified_at: null,
-            ssl_status: 'pending',
-            dns_records: [
-              { type: 'A', name: '@', value: '76.76.21.21', ttl: 3600, status: 'pending' }
-            ],
-            created_at: new Date().toISOString(),
-            user_id: null
-          },
-          {
-            id: '3',
-            domain: 'admin.example.com',
-            status: 'failed',
-            verified_at: null,
-            ssl_status: 'failed',
-            dns_records: [
-              { type: 'A', name: '@', value: '76.76.21.22', ttl: 3600, status: 'error', error: 'DNS not propagated' }
-            ],
-            created_at: new Date().toISOString(),
-            user_id: null
-          }
-        ])
       }
     } catch (error) {
       console.error('Error fetching domains:', error)
@@ -169,31 +128,31 @@ export default function AdminDomainsPage() {
 
   const verifyDomain = async (domainId: string) => {
     setVerifying(domainId)
-    
-    // Simulate verification
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Log the action
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase
-      .from('admin_logs')
-      .insert({
-        admin_id: user?.id,
-        action: 'domain_verified',
-        resource: domainId,
-        created_at: new Date().toISOString()
-      })
-    
-    toast.success('Domain verified successfully')
-    setVerifying(null)
-    fetchDomains()
+    try {
+      // Real, honest gap: verifying a domain for real means an actual
+      // DNS lookup against whatever provider is in use, and triggering
+      // real SSL issuance. Neither exists yet, no backend route for
+      // this was found anywhere in the codebase. Rather than fake a
+      // 2-second delay and write a false, permanent "domain_verified"
+      // entry to the real admin audit log, this says so plainly and
+      // changes nothing in the database.
+      toast.info('Real DNS/SSL verification isn\'t wired up yet, check propagation directly with your DNS provider for now.')
+    } finally {
+      setVerifying(null)
+    }
   }
 
   const refreshDNS = async (domainId: string) => {
     setRefreshing(domainId)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    toast.success('DNS records refreshed')
-    setRefreshing(null)
+    try {
+      // Same real, honest gap as verifyDomain above, a genuine refresh
+      // needs an actual DNS lookup this page doesn't have a backend
+      // for yet. The DNS record statuses shown below only ever reflect
+      // whatever was last saved to the database, not a live check.
+      toast.info('Real DNS refresh isn\'t wired up yet, the records below reflect what was last saved, not a live lookup.')
+    } finally {
+      setRefreshing(null)
+    }
   }
 
   const copyToClipboard = (text: string, id: string) => {

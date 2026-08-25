@@ -1,7 +1,6 @@
 'use client'
 import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -17,7 +16,6 @@ import {
   Phone, Twitter, Facebook, Linkedin, HelpCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
-
 // Reads the 60-day attribution cookie set by app/ref/[code]/route.ts.
 // Used as a fallback when someone registers without a ?ref= in the URL
 // of that specific page load, having clicked a referral link days
@@ -27,17 +25,14 @@ const getRefCodeCookie = (): string | null => {
   const match = document.cookie.match(/(?:^|; )kayal_ref=([^;]*)/)
   return match ? decodeURIComponent(match[1]) : null
 }
-
 function ReferralRegisterPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
-
   // The URL param takes priority when present, since it's the most direct
   // signal, but falls back to the cookie for anyone who clicked a link
   // and registered later without ?ref= on this specific page load.
   const referralCode = searchParams.get('ref') || getRefCodeCookie()
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -46,12 +41,10 @@ function ReferralRegisterPageInner() {
     agreeTerms: false,
     agreeCommissionRules: false
   })
-
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
   // Updated commission tiers, rate determined by tool price
   const commissionTiers = [
     {
@@ -79,10 +72,8 @@ function ReferralRegisterPageInner() {
       icon:       Award,
     },
   ]
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
-
     if (!formData.name.trim()) newErrors.name = 'Name is required'
     if (!formData.email) newErrors.email = 'Email is required'
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format'
@@ -93,82 +84,74 @@ function ReferralRegisterPageInner() {
     }
     if (!formData.agreeTerms) newErrors.agreeTerms = 'You must agree to the terms'
     if (!formData.agreeCommissionRules) newErrors.agreeCommissionRules = 'You must agree to commission rules'
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
-
   const handleSubmit = async () => {
     if (!validateForm()) return
-
     setIsLoading(true)
-
     try {
       const { data: existingAuthUser } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
       }).catch(() => ({ data: { user: null } }))
-
       if (existingAuthUser?.user) {
         setErrors({ email: 'Email already registered' })
         setIsLoading(false)
         return
       }
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
-            full_name: formData.name,
-            source: 'referral'
+            full_name:        formData.name,
+            source:            'referral',
+            // Real, live database trigger, on_auth_user_created, fires
+            // the instant this call succeeds and creates the real
+            // public.users row itself, including a genuine referral_code,
+            // before any code below this line ever runs. Passing
+            // affiliate_status here lets the trigger set it correctly
+            // from the start. Set directly to 'active', not 'pending',
+            // registration is fully automatic now, no approval step
+            // exists anywhere to ever move someone forward, the same
+            // real philosophy already applied to Strategic tier.
+            affiliate_status: 'active',
           }
         }
       })
-
       if (authError) { console.error('Auth error:', authError); throw authError }
       if (!authData.user) throw new Error('No user created')
-
+      // Real fix: the row already exists, created by the trigger above,
+      // a second INSERT here would collide on the same real id. This is
+      // now an UPDATE, filling in only what the trigger doesn't already
+      // set, recruited_by specifically, the one real field this form
+      // alone knows about.
       const { error: userError } = await supabase
         .from('users')
-        .insert({
-          token:            authData.user.id,
-          email:            formData.email,
-          full_name:        formData.name,
-          name:             formData.name,
-          affiliate_status: 'pending',
-          email_verified:   false,
-          is_active:        1,
-          pending_balance:  0,
-          total_paid_out:   0,
-          created:          new Date().toISOString(),
+        .update({
           // This was being read from the URL and displayed in a badge, but
           // never actually saved, meaning recruitment attribution was
           // silently thrown away the moment an account was created, even
           // when the code was right there. Null is a normal, valid case:
           // most people register with no referrer at all, and become a
           // plain top-level affiliate on their own.
-          recruited_by:     referralCode || null,
+          recruited_by: referralCode || null,
         })
-
+        .eq('token', authData.user.id)
       if (userError) { console.error('User insert error:', userError); throw userError }
-
       toast.success('Account created successfully!')
-
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password
       })
-
       if (signInError) {
         toast.error('Account created but login failed. Please sign in manually.')
         router.push('/member/referral/login?registered=true')
         return
       }
-
       toast.success('Welcome to the Kayal LifeOS Affiliate Programme!')
       window.location.href = '/member/referral/dashboard'
-
     } catch (error: any) {
       console.error('Registration error:', error)
       toast.error(error.message || 'Registration failed. Please try again.')
@@ -176,11 +159,9 @@ function ReferralRegisterPageInner() {
       setIsLoading(false)
     }
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
       <div className="max-w-6xl mx-auto px-4 py-12">
-
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -203,7 +184,6 @@ function ReferralRegisterPageInner() {
             </Badge>
           )}
         </motion.div>
-
         {/* Commission Tiers */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -225,7 +205,6 @@ function ReferralRegisterPageInner() {
             )
           })}
         </motion.div>
-
         {/* Terms Summary Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -250,7 +229,6 @@ function ReferralRegisterPageInner() {
             <strong>Low-ticket sale:</strong>&nbsp;1.0 pt · <strong>High-ticket:</strong>&nbsp;1.5 pts
           </span>
         </motion.div>
-
         {/* Registration Form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -260,9 +238,7 @@ function ReferralRegisterPageInner() {
         >
           <Card className="p-6">
             <h2 className="text-xl font-serif mb-6">Create Your Account</h2>
-
             <div className="space-y-4">
-
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium mb-1">Full Name</label>
@@ -278,7 +254,6 @@ function ReferralRegisterPageInner() {
                 </div>
                 {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
               </div>
-
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium mb-1">Email Address</label>
@@ -294,7 +269,6 @@ function ReferralRegisterPageInner() {
                 </div>
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
               </div>
-
               {/* Password */}
               <div>
                 <label className="block text-sm font-medium mb-1">Password</label>
@@ -313,7 +287,6 @@ function ReferralRegisterPageInner() {
                 </div>
                 {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
               </div>
-
               {/* Confirm Password */}
               <div>
                 <label className="block text-sm font-medium mb-1">Confirm Password</label>
@@ -332,10 +305,8 @@ function ReferralRegisterPageInner() {
                 </div>
                 {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
               </div>
-
               {/* Checkboxes */}
               <div className="space-y-2">
-
                 {/* Terms */}
                 <div className="flex items-start gap-2">
                   <input
@@ -351,7 +322,6 @@ function ReferralRegisterPageInner() {
                   </label>
                 </div>
                 {errors.agreeTerms && <p className="text-xs text-red-500">{errors.agreeTerms}</p>}
-
                 {/* Commission rules */}
                 <div className="flex items-start gap-2">
                   <input
@@ -378,9 +348,7 @@ function ReferralRegisterPageInner() {
                   </label>
                 </div>
                 {errors.agreeCommissionRules && <p className="text-xs text-red-500">{errors.agreeCommissionRules}</p>}
-
               </div>
-
               {/* Submit */}
               <Button onClick={handleSubmit} disabled={isLoading} fullWidth size="lg" className="mt-6">
                 {isLoading ? (
@@ -392,18 +360,15 @@ function ReferralRegisterPageInner() {
                   </>
                 )}
               </Button>
-
               <p className="text-center text-sm text-neutral-500 mt-4">
                 Already have an account?{' '}
                 <button onClick={() => router.push('/member/referral/login')} className="text-primary-600 hover:underline font-medium">
                   Sign in
                 </button>
               </p>
-
               <p className="text-center text-xs text-neutral-400 mt-2">
                 Questions? <a href="mailto:contact@kayalsoulpath.com" className="text-primary-500 hover:underline">contact@kayalsoulpath.com</a>
               </p>
-
             </div>
           </Card>
         </motion.div>
@@ -411,7 +376,6 @@ function ReferralRegisterPageInner() {
     </div>
   )
 }
-
 export default function ReferralRegisterPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>

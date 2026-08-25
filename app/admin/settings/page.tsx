@@ -26,12 +26,10 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  RefreshCw,
   Users,
   Lock,
   Eye,
   EyeOff,
-  Copy,
   Trash2,
   Palette,
   Link,
@@ -98,29 +96,10 @@ interface AdminSettings {
     dateFormat: string
   }
   integrations: {
-    stripe: {
-      enabled: boolean
-      testMode: boolean
-      publishableKey: string
-      secretKey: string
-      webhookSecret: string
-    }
-    mailgun: {
-      enabled: boolean
-      domain: string
-      apiKey: string
-      fromEmail: string
-    }
-    recaptcha: {
-      enabled: boolean
-      siteKey: string
-      secretKey: string
-    }
-    google: {
-      enabled: boolean
-      clientId: string
-      clientSecret: string
-    }
+    stripe:    { enabled: boolean }
+    mailgun:   { enabled: boolean }
+    recaptcha: { enabled: boolean }
+    google:    { enabled: boolean }
   }
   appearance: {
     theme: 'light' | 'dark' | 'system'
@@ -135,8 +114,6 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'system' | 'integrations' | 'appearance'>('profile')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [showSecrets, setShowSecrets] = useState(false)
-  const [copied, setCopied] = useState<string | null>(null)
   
   const [settings, setSettings] = useState<AdminSettings>({
     profile: {
@@ -182,29 +159,10 @@ export default function AdminSettingsPage() {
       dateFormat: 'MM/DD/YYYY'
     },
     integrations: {
-      stripe: {
-        enabled: false,
-        testMode: true,
-        publishableKey: '',
-        secretKey: '',
-        webhookSecret: ''
-      },
-      mailgun: {
-        enabled: false,
-        domain: '',
-        apiKey: '',
-        fromEmail: ''
-      },
-      recaptcha: {
-        enabled: false,
-        siteKey: '',
-        secretKey: ''
-      },
-      google: {
-        enabled: false,
-        clientId: '',
-        clientSecret: ''
-      }
+      stripe:    { enabled: false },
+      mailgun:   { enabled: false },
+      recaptcha: { enabled: false },
+      google:    { enabled: false }
     },
     appearance: {
       theme: 'system',
@@ -336,27 +294,6 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(false)
     }
-  }
-
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(field)
-    setTimeout(() => setCopied(null), 2000)
-    toast.success('Copied to clipboard')
-  }
-
-  const generateWebhookSecret = () => {
-    const secret = crypto.randomUUID().replace(/-/g, '')
-    setSettings({
-      ...settings,
-      integrations: {
-        ...settings.integrations,
-        stripe: {
-          ...settings.integrations.stripe,
-          webhookSecret: secret
-        }
-      }
-    })
   }
 
   if (loading) {
@@ -808,323 +745,50 @@ export default function AdminSettingsPage() {
       {/* Integrations Settings */}
       {activeTab === 'integrations' && (
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Integrations</h2>
-          <div className="space-y-6 max-w-2xl">
-            {/* Stripe */}
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <CreditCard className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <h3 className="font-medium">Stripe</h3>
-                    <p className="text-sm text-gray-500">Payment processing</p>
+          <h2 className="text-lg font-semibold mb-2">Integrations</h2>
+          <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3 max-w-2xl">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800">
+              Real, live API keys and webhook secrets are configured directly in your hosting
+              environment's environment variables, not here. This page never displays, accepts,
+              or generates real credentials, only whether a given integration is currently
+              enabled for this admin panel's own reference.
+            </p>
+          </div>
+          <div className="space-y-4 max-w-2xl">
+            {[
+              { key: 'stripe',    icon: CreditCard, color: 'text-blue-600',   name: 'Stripe',     desc: 'Payment processing, configured via STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET' },
+              { key: 'mailgun',   icon: Mail,        color: 'text-purple-600', name: 'Mailgun',    desc: 'Email service, configured via your email provider\'s own environment variables' },
+              { key: 'recaptcha', icon: Shield,       color: 'text-green-600', name: 'reCAPTCHA',  desc: 'Bot protection, configured via RECAPTCHA_SITE_KEY / RECAPTCHA_SECRET_KEY' },
+              { key: 'google',    icon: Globe,        color: 'text-red-600',  name: 'Google',      desc: 'OAuth & social login, configured via GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET' },
+            ].map(({ key, icon: Icon, color, name, desc }) => (
+              <div key={key} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-5 h-5 ${color}`} />
+                    <div>
+                      <h3 className="font-medium">{name}</h3>
+                      <p className="text-sm text-gray-500">{desc}</p>
+                    </div>
                   </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.integrations.stripe.enabled}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        stripe: { ...settings.integrations.stripe, enabled: e.target.checked }
-                      }
-                    })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                </label>
-              </div>
-              
-              {settings.integrations.stripe.enabled && (
-                <div className="space-y-3 mt-4">
-                  <label className="flex items-center gap-2">
+                  <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={settings.integrations.stripe.testMode}
+                      checked={(settings.integrations as any)[key].enabled}
                       onChange={(e) => setSettings({
                         ...settings,
                         integrations: {
                           ...settings.integrations,
-                          stripe: { ...settings.integrations.stripe, testMode: e.target.checked }
+                          [key]: { enabled: e.target.checked }
                         }
                       })}
-                      className="rounded"
+                      className="sr-only peer"
                     />
-                    <span className="text-sm">Test Mode</span>
+                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                   </label>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Publishable Key</label>
-                    <div className="flex gap-2">
-                      <Input
-                        type={showSecrets ? 'text' : 'password'}
-                        value={settings.integrations.stripe.publishableKey}
-                        onChange={(e) => setSettings({
-                          ...settings,
-                          integrations: {
-                            ...settings.integrations,
-                            stripe: { ...settings.integrations.stripe, publishableKey: e.target.value }
-                          }
-                        })}
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(settings.integrations.stripe.publishableKey, 'stripe_publishable')}
-                      >
-                        {copied === 'stripe_publishable' ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Secret Key</label>
-                    <div className="flex gap-2">
-                      <Input
-                        type={showSecrets ? 'text' : 'password'}
-                        value={settings.integrations.stripe.secretKey}
-                        onChange={(e) => setSettings({
-                          ...settings,
-                          integrations: {
-                            ...settings.integrations,
-                            stripe: { ...settings.integrations.stripe, secretKey: e.target.value }
-                          }
-                        })}
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(settings.integrations.stripe.secretKey, 'stripe_secret')}
-                      >
-                        {copied === 'stripe_secret' ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Webhook Secret</label>
-                    <div className="flex gap-2">
-                      <Input
-                        type={showSecrets ? 'text' : 'password'}
-                        value={settings.integrations.stripe.webhookSecret}
-                        onChange={(e) => setSettings({
-                          ...settings,
-                          integrations: {
-                            ...settings.integrations,
-                            stripe: { ...settings.integrations.stripe, webhookSecret: e.target.value }
-                          }
-                        })}
-                        className="flex-1"
-                      />
-                      <Button variant="outline" size="sm" onClick={generateWebhookSecret}>
-                        <RefreshCw className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(settings.integrations.stripe.webhookSecret, 'stripe_webhook')}
-                      >
-                        {copied === 'stripe_webhook' ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Mailgun */}
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-purple-600" />
-                  <div>
-                    <h3 className="font-medium">Mailgun</h3>
-                    <p className="text-sm text-gray-500">Email service</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.integrations.mailgun.enabled}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        mailgun: { ...settings.integrations.mailgun, enabled: e.target.checked }
-                      }
-                    })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                </label>
               </div>
-              
-              {settings.integrations.mailgun.enabled && (
-                <div className="space-y-3 mt-4">
-                  <Input
-                    placeholder="Domain"
-                    value={settings.integrations.mailgun.domain}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        mailgun: { ...settings.integrations.mailgun, domain: e.target.value }
-                      }
-                    })}
-                  />
-                  <Input
-                    type={showSecrets ? 'text' : 'password'}
-                    placeholder="API Key"
-                    value={settings.integrations.mailgun.apiKey}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        mailgun: { ...settings.integrations.mailgun, apiKey: e.target.value }
-                      }
-                    })}
-                  />
-                  <Input
-                    type="email"
-                    placeholder="From Email"
-                    value={settings.integrations.mailgun.fromEmail}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        mailgun: { ...settings.integrations.mailgun, fromEmail: e.target.value }
-                      }
-                    })}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* reCAPTCHA */}
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <div>
-                    <h3 className="font-medium">reCAPTCHA</h3>
-                    <p className="text-sm text-gray-500">Bot protection</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.integrations.recaptcha.enabled}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        recaptcha: { ...settings.integrations.recaptcha, enabled: e.target.checked }
-                      }
-                    })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                </label>
-              </div>
-              
-              {settings.integrations.recaptcha.enabled && (
-                <div className="space-y-3 mt-4">
-                  <Input
-                    placeholder="Site Key"
-                    value={settings.integrations.recaptcha.siteKey}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        recaptcha: { ...settings.integrations.recaptcha, siteKey: e.target.value }
-                      }
-                    })}
-                  />
-                  <Input
-                    type={showSecrets ? 'text' : 'password'}
-                    placeholder="Secret Key"
-                    value={settings.integrations.recaptcha.secretKey}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        recaptcha: { ...settings.integrations.recaptcha, secretKey: e.target.value }
-                      }
-                    })}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Google */}
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-red-600" />
-                  <div>
-                    <h3 className="font-medium">Google</h3>
-                    <p className="text-sm text-gray-500">OAuth & Social Login</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.integrations.google.enabled}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        google: { ...settings.integrations.google, enabled: e.target.checked }
-                      }
-                    })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                </label>
-              </div>
-              
-              {settings.integrations.google.enabled && (
-                <div className="space-y-3 mt-4">
-                  <Input
-                    placeholder="Client ID"
-                    value={settings.integrations.google.clientId}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        google: { ...settings.integrations.google, clientId: e.target.value }
-                      }
-                    })}
-                  />
-                  <Input
-                    type={showSecrets ? 'text' : 'password'}
-                    placeholder="Client Secret"
-                    value={settings.integrations.google.clientSecret}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      integrations: {
-                        ...settings.integrations,
-                        google: { ...settings.integrations.google, clientSecret: e.target.value }
-                      }
-                    })}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <input
-                type="checkbox"
-                checked={showSecrets}
-                onChange={(e) => setShowSecrets(e.target.checked)}
-                className="rounded"
-              />
-              <span>Show secret keys</span>
-            </div>
+            ))}
           </div>
         </Card>
       )}

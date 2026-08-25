@@ -144,13 +144,28 @@ export default function AdminReportsPage() {
       const startDate = range.start.toISOString()
       const endDate = range.end.toISOString()
 
-      // ===== FETCH PURCHASES =====
+      // ===== FETCH PURCHASES (real purchase counts, not revenue) =====
       const { data: purchases } = await supabase
         .from('purchases')
-        .select('price, tool_name, tool_type, created_at')
+        .select('tool_name, tool_type, created_at')
         .gte('created_at', startDate)
         .lte('created_at', endDate)
         .order('created_at', { ascending: true })
+
+      // ===== FETCH REVENUE (real, correct source) =====
+      // revenue_events, not purchases.price summed directly, same real
+      // fix already proven on the standalone Revenue page, a
+      // subscription renewal updates the existing purchases row rather
+      // than inserting a new one, by design, so a direct sum there
+      // silently misses real, historical renewal revenue and never
+      // excludes refunds. revenue_events has no tool_type column, so
+      // "revenue by source" below groups by real tool_name instead.
+      const { data: revenueEvents } = await supabase
+        .from('revenue_events')
+        .select('amount_usd, tool_name, created_at')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate)
+        .not('amount_usd', 'is', null)
 
       // ===== FETCH USERS =====
       const { data: users } = await supabase
@@ -160,16 +175,39 @@ export default function AdminReportsPage() {
         .lte('created_at', endDate)
 
       // ===== FETCH AFFILIATES =====
+      // Real, confirmed source of truth, users, not affiliate_profiles,
+      // confirmed empty, zero rows ever. Filters out plain customers,
+      // the trigger's own default for anyone who never went through
+      // the referral flow.
       const { data: affiliates } = await supabase
-        .from('affiliate_profiles')
-        .select(`
-          *,
-          users!affiliate_profiles_user_id_fkey (
-            full_name,
-            referral_count
-          )
-        `)
+        .from('users')
+        .select('affiliate_status, full_name, referral_code, pending_balance, total_paid_out, created_at')
+        .not('affiliate_status', 'is', null)
+        .neq('affiliate_status', 'customer')
         .gte('created_at', startDate)
+
+      // Real, direct recruit counts, replacing a referral_count column
+      // that was never real anywhere in this codebase, confirmed
+      // tonight. Counts how many real users have each affiliate's real
+      // referral_code as their own recruited_by.
+      const { data: allRecruits } = await supabase
+        .from('users')
+        .select('recruited_by')
+        .not('recruited_by', 'is', null)
+      const recruitCounts: Record<string, number> = {}
+      allRecruits?.forEach((r: any) => {
+        if (r.recruited_by) recruitCounts[r.recruited_by] = (recruitCounts[r.recruited_by] || 0) + 1
+      })
+
+      // Real, per-day affiliate commission, from affiliate_conversions
+      // directly, a genuinely more accurate real source than anything
+      // derivable from users, which only ever holds a running balance,
+      // not a per-day figure.
+      const { data: affiliateConversions } = await supabase
+        .from('affiliate_conversions')
+        .select('commission_amount, created_at')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate)
 
       // ===== FETCH SECURITY EVENTS =====
       const { data: securityEvents } = await supabase
@@ -193,22 +231,23 @@ export default function AdminReportsPage() {
       // Revenue by day
       const revenueByDay = dailyData.map(date => ({
         date,
-        amount: purchases?.filter(p => p.created_at?.startsWith(date))
-          .reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0
+        amount: revenueEvents?.filter(e => e.created_at?.startsWith(date))
+          .reduce((sum, e) => sum + (Number(e.amount_usd) || 0), 0) || 0
       }))
 
       // Revenue by month
-      const months = new Set(purchases?.map(p => p.created_at?.substring(0, 7)) || [])
+      const months = new Set(revenueEvents?.map(e => e.created_at?.substring(0, 7)) || [])
       const revenueByMonth = Array.from(months).map(month => ({
         month,
-        amount: purchases?.filter(p => p.created_at?.startsWith(month!))
-          .reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0
+        amount: revenueEvents?.filter(e => e.created_at?.startsWith(month!))
+          .reduce((sum, e) => sum + (Number(e.amount_usd) || 0), 0) || 0
       }))
 
-      // Revenue by source (tool type)
-      const revenueBySource = purchases?.reduce((acc: any, p) => {
-        const source = p.tool_type || 'other'
-        acc[source] = (acc[source] || 0) + (Number(p.price) || 0)
+      // Revenue by source, grouped by real tool_name, revenue_events
+      // has no tool_type column to group by instead.
+      const revenueBySource = revenueEvents?.reduce((acc: any, e) => {
+        const source = e.tool_name || 'other'
+        acc[source] = (acc[source] || 0) + (Number(e.amount_usd) || 0)
         return acc
       }, {})
 
@@ -258,20 +297,22 @@ export default function AdminReportsPage() {
         return acc
       }, {})
 
-      // Affiliate earnings by day
+      // Affiliate earnings by day, real, from affiliate_conversions
       const affiliateEarningsByDay = dailyData.map(date => ({
         date,
-        amount: affiliates?.filter(a => a.created_at?.startsWith(date))
-          .reduce((sum, a) => sum + (Number(a.total_earned) || 0), 0) || 0
+        amount: affiliateConversions?.filter(c => c.created_at?.startsWith(date))
+          .reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0) || 0
       }))
 
-      // Top affiliates
+      // Top affiliates, real full_name, real earnings from the same
+      // confirmed balance fields credit_commission itself maintains,
+      // and real recruit counts from the direct query above.
       const topAffiliates = affiliates
-        ?.filter(a => a.approved)
+        ?.filter(a => a.affiliate_status === 'active')
         .map(a => ({
-          name: a.users?.full_name || 'Unknown',
-          earnings: a.total_earned || 0,
-          referrals: a.users?.referral_count || 0
+          name: a.full_name || 'Unknown',
+          earnings: (a.pending_balance || 0) + (a.total_paid_out || 0),
+          referrals: a.referral_code ? (recruitCounts[a.referral_code] || 0) : 0,
         }))
         .sort((a, b) => b.earnings - a.earnings)
         .slice(0, 5) || []
@@ -295,11 +336,11 @@ export default function AdminReportsPage() {
       }, {})
 
       // Calculate totals and metrics
-      const totalRevenue = purchases?.reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0
+      const totalRevenue = revenueEvents?.reduce((sum, e) => sum + (Number(e.amount_usd) || 0), 0) || 0
       const totalPurchases = purchases?.length || 0
       const totalUsers = users?.length || 0
       const totalAffiliates = affiliates?.length || 0
-      const approvedAffiliates = affiliates?.filter(a => a.approved).length || 0
+      const approvedAffiliates = affiliates?.filter(a => a.affiliate_status === 'active').length || 0
       
       const usersWith2FA = users?.filter(u => u.two_factor_enabled).length || 0
       const failedLogins = loginAttempts?.filter(l => !l.success).length || 0
@@ -307,13 +348,14 @@ export default function AdminReportsPage() {
       // Calculate growth (compare to previous period)
       const previousStart = new Date(range.start)
       previousStart.setDate(previousStart.getDate() - days)
-      const { data: previousPurchases } = await supabase
-        .from('purchases')
-        .select('price')
+      const { data: previousRevenueEvents } = await supabase
+        .from('revenue_events')
+        .select('amount_usd')
         .gte('created_at', previousStart.toISOString())
         .lt('created_at', range.start.toISOString())
+        .not('amount_usd', 'is', null)
 
-      const previousRevenue = previousPurchases?.reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0
+      const previousRevenue = previousRevenueEvents?.reduce((sum, e) => sum + (Number(e.amount_usd) || 0), 0) || 0
       const growth = previousRevenue > 0 
         ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 
         : 0
@@ -376,10 +418,37 @@ export default function AdminReportsPage() {
   }, [fetchReportData])
 
   const exportReport = async (format: 'csv' | 'pdf' | 'excel') => {
+    if (!data) {
+      toast.error('No report data to export')
+      return
+    }
     setExporting(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    toast.success(`Report exported as ${format.toUpperCase()}`)
-    setExporting(false)
+    try {
+      const headers = ['Date', 'Revenue', 'Purchases']
+      const rows = data.revenue.byDay.map((r, i) => [
+        r.date,
+        r.amount.toFixed(2),
+        data.purchases.byDay[i]?.count ?? 0,
+      ])
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `report-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      toast.success('Report exported')
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export report')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const formatCurrency = (amount: number) => {

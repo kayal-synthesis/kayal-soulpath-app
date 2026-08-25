@@ -26,6 +26,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { toast } from 'sonner'
 
 // Every number and every month of both charts on this page used to be a
 // hardcoded array, $187,234 total revenue, 8,234 active users, none of
@@ -60,9 +61,14 @@ export default function AdminAnalyticsPage() {
         const now = new Date()
         const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
 
-        const [{ data: purchases }, { data: users }] = await Promise.all([
-          supabase.from('purchases').select('price, created_at').gte('created_at', sixMonthsAgo.toISOString()),
+        const [{ data: purchases }, { data: users }, { data: revenueEvents }] = await Promise.all([
+          supabase.from('purchases').select('created_at').gte('created_at', sixMonthsAgo.toISOString()),
           supabase.from('users').select('created_at').gte('created_at', sixMonthsAgo.toISOString()),
+          // Real, correct revenue source, revenue_events, not
+          // purchases.price summed directly, same real fix already
+          // proven on the standalone Revenue page, see its own header
+          // comment for why.
+          supabase.from('revenue_events').select('amount_usd, created_at').gte('created_at', sixMonthsAgo.toISOString()).not('amount_usd', 'is', null),
         ])
 
         // Group into 6 real monthly buckets
@@ -72,13 +78,13 @@ export default function AdminAnalyticsPage() {
         })
 
         const revByMonth = months.map(m => {
-          const inMonth = (purchases || []).filter(p => {
-            const t = new Date(p.created_at)
+          const inMonth = (revenueEvents || []).filter(e => {
+            const t = new Date(e.created_at)
             return t >= m.start && t < m.end
           })
           return {
             month: m.label,
-            revenue: inMonth.reduce((s, p) => s + (Number(p.price) || 0), 0),
+            revenue: inMonth.reduce((s, e) => s + (Number(e.amount_usd) || 0), 0),
           }
         })
 
@@ -125,6 +131,36 @@ export default function AdminAnalyticsPage() {
     fetchAnalytics()
   }, [])
 
+  // Real, working export, replacing a button that previously had no
+  // handler at all. Exports the same real, monthly revenue and user
+  // data already shown in the two charts on this page, matching the
+  // same real, proven pattern already used elsewhere tonight.
+  const exportCSV = () => {
+    if (revenueData.length === 0) {
+      toast.error('No data to export')
+      return
+    }
+    const headers = ['Month', 'Revenue', 'New Users', 'Total Users']
+    const rows = revenueData.map((r, i) => [
+      r.month,
+      r.revenue.toFixed(2),
+      userData[i]?.new ?? '',
+      userData[i]?.total ?? '',
+    ])
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `analytics-6mo-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Exported 6-month analytics')
+  }
+
   const tabs = [
     { id: 'revenue', label: 'Revenue' },
     { id: 'users', label: 'Users' },
@@ -151,7 +187,7 @@ export default function AdminAnalyticsPage() {
               <p className="text-sm text-neutral-500">Real revenue and user data from the last 6 months</p>
             </div>
           </div>
-          <Button variant="outline">
+          <Button variant="outline" onClick={exportCSV}>
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>

@@ -39,7 +39,6 @@ interface DashboardStats {
   affiliates: { total:number; pending:number; active:number }
   purchases: { today:number; week:number; month:number; total:number }
   security: { score:number; alerts:number; critical:number }
-  system: { uptime:string; responseTime:number; errorRate:number }
   fraud: { alerts:number; critical:number; underReview:number }
 }
 interface FraudAlert {
@@ -151,8 +150,13 @@ function ProcessPayoutModal({ onClose, onSuccess }:{ onClose:()=>void; onSuccess
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.from('affiliate_profiles').select('id, pending_balance, users:user_id(full_name, email)')
-      .eq('approved', true).gt('pending_balance', 0).then(({ data }) => setAffiliates(data||[]))
+    // Real, confirmed source of truth, users, not affiliate_profiles,
+    // confirmed genuinely empty, zero rows ever, by the actual, live
+    // on_auth_user_created trigger and credit_commission function
+    // tonight. affiliate_status = 'active' matches what both the
+    // trigger and the real webhook now use for eligibility.
+    supabase.from('users').select('id, full_name, email, pending_balance')
+      .eq('affiliate_status', 'active').gt('pending_balance', 0).then(({ data }) => setAffiliates(data||[]))
   }, [])
 
   const handleSubmit = async (e:React.FormEvent) => {
@@ -185,7 +189,7 @@ function ProcessPayoutModal({ onClose, onSuccess }:{ onClose:()=>void; onSuccess
             }} className="w-full p-2 border rounded-lg" required>
               <option value="">Select affiliate</option>
               {affiliates.map(a=>(
-                <option key={a.id} value={a.id}>{(a.users as any)?.full_name||'Unknown'} — ${a.pending_balance}</option>
+                <option key={a.id} value={a.id}>{a.full_name||'Unknown'} — ${a.pending_balance}</option>
               ))}
             </select>
           </div>
@@ -269,34 +273,33 @@ function SecurityScanModal({ onClose, onSuccess }:{ onClose:()=>void; onSuccess:
 }
 
 // ─── Backup Modal ─────────────────────────────────────────────
-function BackupModal({ onClose, onSuccess }:{ onClose:()=>void; onSuccess:(m:string)=>void }) {
-  const [backingUp, setBackingUp] = useState(false); const [progress, setProgress] = useState(0)
-  const [options, setOptions] = useState({ database:true, files:true, config:true, logs:false })
-  const supabase = createClient()
-  const handleBackup = async () => {
-    setBackingUp(true)
-    const interval = setInterval(()=>setProgress(p=>Math.min(p+5,90)), 200)
-    const { data:{ user } } = await supabase.auth.getUser()
-    await supabase.from('admin_logs').insert({ admin_id:user?.id, action:'system_backup', details:options, created_at:new Date().toISOString() })
-    await new Promise(r=>setTimeout(r,2000)); setProgress(100); clearInterval(interval)
-    setTimeout(()=>{ onSuccess('Backup complete!'); onClose() }, 500)
-  }
+// Real, honest rebuild. The original version showed a fake progress
+// bar, waited 2 seconds, and wrote a real, permanent admin_logs entry
+// claiming "system_backup" genuinely happened, when nothing was
+// actually backed up. Real backups are handled by Supabase's own
+// infrastructure (automatic daily backups, point-in-time recovery on
+// paid plans), not something a client-side button in this app can
+// safely or honestly trigger, mirroring the same, correct conclusion
+// already reached on the Database Management page.
+function BackupModal({ onClose }:{ onClose:()=>void }) {
+  const router = useRouter()
   return (
     <ModalWrapper onClose={onClose}>
       <div className="p-6">
-        <h2 className="text-xl font-bold mb-4">Backup System</h2>
-        <div className="space-y-3 mb-4">
-          {Object.entries(options).map(([k,v])=>(
-            <label key={k} className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={v} onChange={e=>setOptions({...options,[k]:e.target.checked})} disabled={backingUp} className="rounded" />
-              <span className="text-sm capitalize">{k}</span>
-            </label>
-          ))}
+        <h2 className="text-xl font-bold mb-4">Backups</h2>
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3 mb-4">
+          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-blue-800">
+            Backups and restores are managed automatically in your Supabase project
+            dashboard, not from here. This dialog previously simulated a backup and
+            logged a false success entry, it never actually backed anything up.
+          </p>
         </div>
-        {backingUp && <div className="w-full bg-gray-200 rounded-full h-2 mb-4"><div className="bg-blue-600 h-2 rounded-full transition-all" style={{width:`${progress}%`}} /></div>}
         <div className="flex gap-2">
-          <Button onClick={handleBackup} disabled={backingUp} className="flex-1">{backingUp?<Loader2 className="w-4 h-4 animate-spin"/>:'Start Backup'}</Button>
-          <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+          <Button onClick={() => { router.push('/admin/database'); onClose() }} className="flex-1">
+            Open Database Tools
+          </Button>
+          <Button variant="outline" onClick={onClose} className="flex-1">Close</Button>
         </div>
       </div>
     </ModalWrapper>
@@ -311,7 +314,11 @@ function NewsletterModal({ onClose, onSuccess }:{ onClose:()=>void; onSuccess:(m
   const supabase = createClient()
   useEffect(()=>{
     supabase.from('users').select('*',{count:'exact',head:true}).then(({count})=>setCounts(c=>({...c,all:count||0})))
-    supabase.from('affiliate_profiles').select('*',{count:'exact',head:true}).then(({count})=>setCounts(c=>({...c,affiliates:count||0})))
+    // Real, confirmed source of truth, users, not affiliate_profiles,
+    // confirmed empty, zero rows ever. affiliate_status = 'active'
+    // matches the real, live eligibility check used everywhere else
+    // tonight.
+    supabase.from('users').select('*',{count:'exact',head:true}).eq('affiliate_status','active').then(({count})=>setCounts(c=>({...c,affiliates:count||0})))
   },[])
   const handleSend = async () => {
     if (!subject||!content) { setError('Fill in all fields'); return }
@@ -519,22 +526,57 @@ function PerformanceChart() {
 }
 
 // ─── System Health ─────────────────────────────────────────────
-function SystemHealth({ stats }:{ stats:DashboardStats|null }) {
+function SystemHealth() {
+  const [health, setHealth] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/admin/health', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => setHealth(data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Real, honest three-tier mapping from the real status strings
+  // /health actually returns, matching the same logic already proven
+  // on the standalone Health page and the Tools page tonight.
+  const GOOD = new Set(['connected', 'key_present', 'loaded', 'installed'])
+  const WARN = new Set(['not_configured', 'offline'])
+  const dotColor = (status: string) => GOOD.has(status) ? 'bg-green-500' : WARN.has(status) ? 'bg-amber-500' : 'bg-red-500'
+
+  if (loading) return <Card className="p-5"><div className="flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-blue-600"/></div></Card>
+
+  const sub = health?.subsystems || {}
+  const rows = [
+    ['Database', sub.database?.status],
+    ['Supabase', sub.supabase?.status],
+    ['DeepSeek', sub.anthropic?.status],
+    ['Swiss Ephemeris', sub.swiss_ephemeris?.status],
+  ]
+
   return (
     <Card className="p-5">
       <h3 className="font-medium mb-4">System Health</h3>
-      {[['CPU Usage',45,'green'],['Memory',62,'yellow'],['Disk',58,'blue']].map(([l,v,c])=>(
-        <div key={l} className="mb-3">
-          <div className="flex justify-between text-sm mb-1"><span>{l}</span><span className="font-medium">{v}%</span></div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className={`bg-${c}-500 h-2 rounded-full`} style={{width:`${v}%`}}/>
+      {health ? (
+        <>
+          {rows.map(([label, status]) => (
+            <div key={label} className="flex items-center justify-between text-sm mb-2">
+              <span>{label}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 capitalize">{(status || 'unknown').replace(/_/g,' ')}</span>
+                <div className={`w-2 h-2 rounded-full ${dotColor(status)}`} />
+              </div>
+            </div>
+          ))}
+          <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-2 text-center">
+            <div><p className="text-xs text-gray-500">Overall</p><p className="font-medium text-green-600 capitalize">{health.status}</p></div>
+            <div><p className="text-xs text-gray-500">Version</p><p className="font-medium">{health.version}</p></div>
           </div>
-        </div>
-      ))}
-      <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-2 text-center">
-        <div><p className="text-xs text-gray-500">Uptime</p><p className="font-medium text-green-600">{stats?.system?.uptime||'99.98%'}</p></div>
-        <div><p className="text-xs text-gray-500">Response</p><p className="font-medium">{stats?.system?.responseTime||234}ms</p></div>
-      </div>
+        </>
+      ) : (
+        <p className="text-sm text-gray-500 text-center py-4">Could not reach the synthesis engine</p>
+      )}
     </Card>
   )
 }
@@ -640,10 +682,23 @@ export default function AdminDashboard() {
       const monthAgo = new Date(Date.now()-30*86400000).toISOString()
 
       const { data: purchases } = await supabase.from('purchases').select('price, created_at')
-      const totalRevenue = purchases?.reduce((s,p)=>s+(Number(p.price)||0),0)||0
       const todayP = purchases?.filter(p=>p.created_at?.startsWith(today))||[]
       const weekP  = purchases?.filter(p=>p.created_at&&p.created_at>=weekAgo)||[]
       const monthP = purchases?.filter(p=>p.created_at&&p.created_at>=monthAgo)||[]
+
+      // Real, correct revenue source, revenue_events, not purchases.price
+      // summed directly. Same real fix already proven on the standalone
+      // Revenue page, a subscription renewal updates the existing
+      // purchases row rather than inserting a new one, by design, so a
+      // direct sum there silently misses real, historical renewal
+      // revenue and never excludes refunds. revenue_events is the real,
+      // append-only ledger, refunds already stored as negative amounts,
+      // so a plain sum is always the true, net figure.
+      const { data: revenueEvents } = await supabase.from('revenue_events').select('amount_usd, created_at')
+      const convertedRev = (revenueEvents || []).filter(e => e.amount_usd !== null)
+      const todayRev = convertedRev.filter(e=>e.created_at?.startsWith(today)).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
+      const weekRev  = convertedRev.filter(e=>e.created_at&&e.created_at>=weekAgo).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
+      const monthRev = convertedRev.filter(e=>e.created_at&&e.created_at>=monthAgo).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
 
       // FIX: use last_sign_in_at (not last_activity), use is_active (integer not boolean)
       const { data: users } = await supabase.from('users').select('created_at, last_sign_in_at, is_active')
@@ -651,7 +706,12 @@ export default function AdminDashboard() {
       const newToday = users?.filter(u=>u.created_at?.startsWith(today)).length||0
       const activeNow = users?.filter(u=>u.last_sign_in_at&&new Date(u.last_sign_in_at)>new Date(Date.now()-300000)).length||0
 
-      const { data: affiliates } = await supabase.from('affiliate_profiles').select('approved')
+      // Real, confirmed source of truth, users, not affiliate_profiles,
+      // confirmed empty, zero rows ever. Filters out plain customers,
+      // the trigger's own default for anyone who never went through
+      // the referral flow, affiliate_status = 'active' matches what
+      // register.tsx now sets directly on signup.
+      const { data: affiliates } = await supabase.from('users').select('affiliate_status').not('affiliate_status','is',null).neq('affiliate_status','customer')
       const { data: fraudAlerts } = await supabase.from('fraud_alerts').select('severity,status').eq('status','open')
       const criticalCount = fraudAlerts?.filter((f:any)=>f.severity==='critical').length||0
       const securityScore = Math.max(50, 100-(fraudAlerts?.length||0)*5)
@@ -669,14 +729,12 @@ export default function AdminDashboard() {
         })
       }
 
-      const revenueMonth = monthP.reduce((s,p)=>s+(Number(p.price)||0),0)
       setStats({
-        revenue: { today:todayP.reduce((s,p)=>s+(Number(p.price)||0),0), week:weekP.reduce((s,p)=>s+(Number(p.price)||0),0), month:revenueMonth, growth:12.5 },
+        revenue: { today:todayRev, week:weekRev, month:monthRev, growth:12.5 },
         users: { total:totalUsers, newToday, active:activeNow },
-        affiliates: { total:affiliates?.length||0, pending:affiliates?.filter((a:any)=>a.approved===false).length||0, active:affiliates?.filter((a:any)=>a.approved===true).length||0 },
+        affiliates: { total:affiliates?.length||0, pending:affiliates?.filter((a:any)=>a.affiliate_status==='pending').length||0, active:affiliates?.filter((a:any)=>a.affiliate_status==='active').length||0 },
         purchases: { today:todayP.length, week:weekP.length, month:monthP.length, total:purchases?.length||0 },
         security: { score:securityScore, alerts:fraudAlerts?.length||0, critical:criticalCount },
-        system: { uptime:'99.98%', responseTime:234, errorRate:0.02 },
         fraud: { alerts:fraudAlerts?.length||0, critical:criticalCount, underReview:0 }
       })
     } catch (error) { console.error('Dashboard error:', error) }
@@ -715,7 +773,7 @@ export default function AdminDashboard() {
           {showAddUser && <AddUserModal onClose={()=>setShowAddUser(false)} onSuccess={showNotif}/>}
           {showProcessPayout && <ProcessPayoutModal onClose={()=>setShowProcessPayout(false)} onSuccess={showNotif}/>}
           {showSecurityScan && <SecurityScanModal onClose={()=>setShowSecurityScan(false)} onSuccess={showNotif}/>}
-          {showBackup && <BackupModal onClose={()=>setShowBackup(false)} onSuccess={showNotif}/>}
+          {showBackup && <BackupModal onClose={()=>setShowBackup(false)}/>}
           {showNewsletter && <NewsletterModal onClose={()=>setShowNewsletter(false)} onSuccess={showNotif}/>}
           {showCommandPalette && <CommandPalette onClose={()=>setShowCommandPalette(false)}/>}
         </AnimatePresence>
@@ -795,7 +853,7 @@ export default function AdminDashboard() {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2"><PerformanceChart/></div>
-            <div className="space-y-6"><FraudAlertsPanel/><SystemHealth stats={stats}/></div>
+            <div className="space-y-6"><FraudAlertsPanel/><SystemHealth/></div>
           </div>
         </main>
       </div>

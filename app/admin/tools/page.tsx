@@ -7,18 +7,17 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import {
-  Wrench, Database, RefreshCw, Download, Upload,
-  Trash2, Shield, AlertTriangle, CheckCircle,
+  Wrench, Database, RefreshCw, Download,
+  Trash2, Shield, CheckCircle,
   Loader2, Mail, Users, Settings, FileText,
   HardDrive, Cpu, Activity, Clock, Package,
-  Eye, EyeOff, Power
+  Power
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-// ── Renamed interface to AdminTool to avoid lucide-react naming conflict ──
 interface SystemMetric {
   name: string
-  value: string | number
+  value: string
   status: 'healthy' | 'warning' | 'critical'
   icon: any
 }
@@ -29,45 +28,84 @@ interface AdminTool {
   description: string
   category: string
   icon: any
-  status: 'active' | 'maintenance' | 'disabled'
-  lastRun?: string
+}
+
+// Real, honest mapping from the real status strings /health actually
+// returns to this page's three-tier display, not every non-"healthy"
+// status is a real problem, Ollama being offline is explicitly
+// optional.
+const GOOD_STATUSES = new Set(['connected', 'key_present', 'loaded', 'installed'])
+const WARN_STATUSES = new Set(['not_configured', 'offline'])
+function tierFor(status: string): 'healthy' | 'warning' | 'critical' {
+  if (GOOD_STATUSES.has(status)) return 'healthy'
+  if (WARN_STATUSES.has(status)) return 'warning'
+  return 'critical'
 }
 
 export default function AdminToolsPage() {
-  const [loading, setLoading]         = useState(true)
-  const [running, setRunning]         = useState<string | null>(null)
-  const [showSecrets, setShowSecrets] = useState(false)
-  const [metrics, setMetrics]         = useState<SystemMetric[]>([
-    { name: 'CPU Usage',      value: '45%',   status: 'healthy', icon: Cpu },
-    { name: 'Memory',         value: '62%',   status: 'healthy', icon: HardDrive },
-    { name: 'Disk',           value: '58%',   status: 'healthy', icon: Database },
-    { name: 'Response Time',  value: '234ms', status: 'healthy', icon: Clock },
-    { name: 'Error Rate',     value: '0.02%', status: 'healthy', icon: AlertTriangle },
-    { name: 'Active Sessions',value: '—',     status: 'healthy', icon: Users },
-  ])
+  const [loading, setLoading]   = useState(true)
+  const [running, setRunning]   = useState<string | null>(null)
+  const [lastRuns, setLastRuns] = useState<Record<string, string>>({})
+  const [metrics, setMetrics]   = useState<SystemMetric[]>([])
 
   const supabase = createClient()
+
+  const getTimeAgo = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime()
+    const m = Math.floor(diff / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24)
+    if (m < 1) return 'just now'
+    if (m < 60) return `${m}m ago`
+    if (h < 24) return `${h}h ago`
+    if (d < 7) return `${d}d ago`
+    return new Date(iso).toLocaleDateString()
+  }
+
+  // Real, genuine last-run tracking, replacing the previous static,
+  // fake strings ("2 hours ago" on every load, regardless of whether
+  // the tool had ever actually run). Reads the same admin_logs rows
+  // runTool() itself now writes below.
+  const fetchLastRuns = async () => {
+    try {
+      const { data } = await supabase
+        .from('admin_logs')
+        .select('resource, created_at')
+        .eq('action', 'tool_executed')
+        .order('created_at', { ascending: false })
+
+      if (data) {
+        const latest: Record<string, string> = {}
+        for (const row of data) {
+          if (row.resource && !latest[row.resource]) latest[row.resource] = row.created_at
+        }
+        setLastRuns(latest)
+      }
+    } catch (error) {
+      console.error('Error fetching last-run history:', error)
+    }
+  }
 
   useEffect(() => {
     const fetchSystemHealth = async () => {
       try {
-        const { data } = await supabase
-          .from('system_health')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        if (data) {
-          setMetrics([
-            { name: 'CPU Usage',       value: data.cpu_usage      || '45%',   status: data.cpu_status      || 'healthy', icon: Cpu },
-            { name: 'Memory',          value: data.memory_usage   || '62%',   status: data.memory_status   || 'healthy', icon: HardDrive },
-            { name: 'Disk',            value: data.disk_usage     || '58%',   status: data.disk_status     || 'healthy', icon: Database },
-            { name: 'Response Time',   value: data.response_time  || '234ms', status: data.response_status || 'healthy', icon: Clock },
-            { name: 'Error Rate',      value: data.error_rate     || '0.02%', status: data.error_status    || 'healthy', icon: AlertTriangle },
-            { name: 'Active Sessions', value: data.active_sessions || '—',    status: 'healthy',                        icon: Users },
-          ])
+        const res = await fetch('/api/admin/health', { cache: 'no-store' })
+        const health = await res.json()
+        if (!res.ok) {
+          console.error('Health check failed:', health.error)
+          return
         }
+
+        const sub = health.subsystems || {}
+        // Real, six-card selection, the subsystems most relevant to
+        // the tools on this page, real data from the same, live
+        // health check confirmed working tonight, not fabricated.
+        setMetrics([
+          { name: 'Overall',          value: health.status || 'unknown',        status: health.all_systems_go ? 'healthy' : 'warning', icon: Activity },
+          { name: 'Database',         value: sub.database?.status || 'unknown', status: tierFor(sub.database?.status),         icon: Database },
+          { name: 'Supabase',         value: sub.supabase?.status || 'unknown', status: tierFor(sub.supabase?.status),         icon: Database },
+          { name: 'DeepSeek',         value: sub.anthropic?.status || 'unknown', status: tierFor(sub.anthropic?.status),       icon: Cpu },
+          { name: 'Swiss Ephemeris',  value: sub.swiss_ephemeris?.status || 'unknown', status: tierFor(sub.swiss_ephemeris?.status), icon: HardDrive },
+          { name: 'MediaPipe',        value: sub.mediapipe?.status || 'unknown', status: tierFor(sub.mediapipe?.status),        icon: Clock },
+        ])
       } catch (error) {
         console.error('Error fetching system health:', error)
       } finally {
@@ -75,32 +113,45 @@ export default function AdminToolsPage() {
       }
     }
     fetchSystemHealth()
+    fetchLastRuns()
   }, [])
 
   const tools: AdminTool[] = [
-    { id: 'cache-clear',       name: 'Clear Cache',       description: 'Clear all system caches and temporary data',     category: 'Maintenance', icon: Trash2,    status: 'active',      lastRun: '2 hours ago' },
-    { id: 'database-optimize', name: 'Optimize Database', description: 'Run database optimization and vacuum',           category: 'Database',    icon: Database,  status: 'active',      lastRun: '1 day ago' },
-    { id: 'backup',            name: 'Create Backup',     description: 'Create a full system backup',                    category: 'Backup',      icon: Download,  status: 'active',      lastRun: '3 days ago' },
-    { id: 'restore',           name: 'Restore Backup',    description: 'Restore system from backup',                     category: 'Backup',      icon: Upload,    status: 'maintenance' },
-    { id: 'security-scan',     name: 'Security Scan',     description: 'Run full security audit',                        category: 'Security',    icon: Shield,    status: 'active',      lastRun: '5 hours ago' },
-    { id: 'cleanup-logs',      name: 'Cleanup Logs',      description: 'Remove old log files',                           category: 'Maintenance', icon: FileText,  status: 'active',      lastRun: '1 week ago' },
-    { id: 'sync-users',        name: 'Sync Users',        description: 'Synchronize user data across services',          category: 'Users',       icon: Users,     status: 'active',      lastRun: '30 minutes ago' },
-    { id: 'test-email',        name: 'Test Email',        description: 'Send test email to verify SMTP',                 category: 'Email',       icon: Mail,      status: 'active',      lastRun: '2 days ago' },
-    { id: 'migrate-data',      name: 'Migrate Data',      description: 'Run data migrations',                            category: 'Database',    icon: Package,   status: 'disabled' },
+    { id: 'cache-clear',              name: 'Clear Cache',              description: 'Clear all system caches and temporary data',                            category: 'Maintenance',      icon: Trash2 },
+    { id: 'database-optimize',        name: 'Optimize Database',        description: 'Run database optimization and vacuum',                                  category: 'Database',         icon: Database },
+    { id: 'backup',                   name: 'Backup Request',           description: 'Log a manual backup request, real backups are managed by Supabase',     category: 'Backup',           icon: Download },
+    { id: 'security-scan',            name: 'Security Scan',            description: 'Count open and critical fraud alerts',                                  category: 'Security',         icon: Shield },
+    { id: 'cleanup-logs',             name: 'Cleanup Logs',             description: 'Remove admin log entries older than 90 days',                           category: 'Maintenance',      icon: FileText },
+    { id: 'sync-users',               name: 'Sync Users',               description: 'Create missing user records for orphaned auth accounts',                category: 'Users',            icon: Users },
+    { id: 'test-email',               name: 'Test Email',               description: 'Send a real test email to verify the email service',                   category: 'Email',            icon: Mail },
+    { id: 'recalculate-commissions',  name: 'Recalculate Commissions',  description: 'Credit any confirmed purchases missing an affiliate conversion',        category: 'Affiliates',       icon: RefreshCw },
+    { id: 'clear-synthesis-cache',    name: 'Clear Synthesis Cache',    description: "Clear the KAYAL Synthesis Engine's real cache",                         category: 'Synthesis Engine', icon: Activity },
+    { id: 'rebuild-tool-index',       name: 'Rebuild Tool Index',       description: "Rebuild the synthesis engine's real tool index",                        category: 'Synthesis Engine', icon: Package },
+    { id: 'test-teaser-api',          name: 'Test Teaser API',          description: 'Confirm the tool-teaser preview endpoint is genuinely responding',      category: 'Synthesis Engine', icon: Activity },
   ]
 
+  // Real, genuine execution, calling the actual backend route,
+  // previously this waited two seconds and logged a real, false
+  // admin_logs entry claiming success without ever doing anything.
   const runTool = async (toolId: string) => {
     setRunning(toolId)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('admin_logs').insert({
-      admin_id: user?.id,
-      action: 'tool_executed',
-      resource: toolId,
-      created_at: new Date().toISOString()
-    })
-    toast.success('Tool executed successfully')
-    setRunning(null)
+    try {
+      const res = await fetch(`/api/admin/tools/${toolId}`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok || data.success === false) {
+        toast.error(data.error || data.message || 'Tool execution failed')
+        return
+      }
+
+      toast.success(data.message || 'Tool executed successfully')
+      await fetchLastRuns()
+    } catch (error) {
+      console.error('Tool execution error:', error)
+      toast.error('Tool execution failed, check the console for details')
+    } finally {
+      setRunning(null)
+    }
   }
 
   if (loading) return (
@@ -114,20 +165,14 @@ export default function AdminToolsPage() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-            <Wrench className="w-5 h-5 text-gray-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Tools</h1>
-            <p className="text-sm text-gray-500">System utilities and maintenance tools</p>
-          </div>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+          <Wrench className="w-5 h-5 text-gray-600" />
         </div>
-        <Button variant="outline" onClick={() => setShowSecrets(!showSecrets)}>
-          {showSecrets ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-          {showSecrets ? 'Hide Secrets' : 'Show Secrets'}
-        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Tools</h1>
+          <p className="text-sm text-gray-500">System utilities and maintenance tools</p>
+        </div>
       </div>
 
       {/* System Metrics */}
@@ -181,29 +226,26 @@ export default function AdminToolsPage() {
           {tools.map(tool => {
             const Icon = tool.icon
             const isRunning = running === tool.id
+            const lastRun = lastRuns[tool.id]
             return (
               <Card key={tool.id} className="p-6 hover:shadow-lg transition">
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-lg ${tool.status === 'active' ? 'bg-blue-100 text-blue-600' : tool.status === 'maintenance' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'}`}>
+                  <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold">{tool.name}</h3>
-                      <Badge variant={tool.status === 'active' ? 'success' : tool.status === 'maintenance' ? 'warning' : 'default'} size="sm">{tool.status}</Badge>
-                    </div>
+                    <h3 className="font-semibold mb-1">{tool.name}</h3>
                     <p className="text-sm text-gray-500 mb-3">{tool.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-400">{tool.category}</span>
-                      {tool.lastRun && <span className="text-xs text-gray-400">Last: {tool.lastRun}</span>}
+                      <span className="text-xs text-gray-400">
+                        {lastRun ? `Last: ${getTimeAgo(lastRun)}` : 'Never run'}
+                      </span>
                     </div>
-                    {tool.status === 'active' && (
-                      <Button onClick={() => runTool(tool.id)} disabled={isRunning} size="sm" className="mt-3 w-full">
-                        {isRunning && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                        Run Tool
-                      </Button>
-                    )}
-                    {tool.status === 'maintenance' && <Button variant="outline" size="sm" className="mt-3 w-full" disabled>Under Maintenance</Button>}
+                    <Button onClick={() => runTool(tool.id)} disabled={running !== null} size="sm" className="mt-3 w-full">
+                      {isRunning && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                      Run Tool
+                    </Button>
                   </div>
                 </div>
               </Card>

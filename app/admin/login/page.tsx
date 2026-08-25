@@ -51,8 +51,6 @@ export default function AdminLogin() {
     setError(null)
 
     try {
-      console.log('Attempting login for:', email)
-      
       // Attempt login with Supabase Auth
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -61,14 +59,12 @@ export default function AdminLogin() {
 
       if (authError) {
         console.error('Auth error:', authError)
-        throw new Error(authError.message)
+        throw new Error('Invalid email or password')
       }
 
       if (!data.user) {
         throw new Error('No user data returned')
       }
-
-      console.log('Auth successful, user ID:', data.user.id)
 
       // Check if user exists in admin_users table
       const { data: adminData, error: adminError } = await supabase
@@ -77,16 +73,17 @@ export default function AdminLogin() {
         .eq('id', data.user.id)
         .single()
 
-      console.log('Admin check result:', adminData, adminError)
-
       if (adminError || !adminData) {
-        // Not an admin - sign them out immediately
+        // Not an admin - sign them out immediately. Deliberately the
+        // same, generic error message as an actual wrong password
+        // above, a distinct message here would let anyone confirm a
+        // valid, non-admin account exists simply by testing real
+        // credentials against this form.
         await supabase.auth.signOut()
-        throw new Error('Unauthorized access. Admin privileges required.')
+        throw new Error('Invalid email or password')
       }
 
       // Success - redirect to dashboard
-      console.log('Admin login successful, redirecting...')
       router.push('/admin/dashboard')
       
     } catch (err: any) {

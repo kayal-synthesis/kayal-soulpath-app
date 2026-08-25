@@ -8,6 +8,23 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { toast } from 'sonner'
+import {
+  COMMISSION_RATES,
+  TIER_LABELS,
+  TIER_SUBLABELS,
+  PERFORMANCE_TIER_SALES_THRESHOLD,
+  PERFORMANCE_TIER_WINDOW_DAYS,
+  STRATEGIC_TIER_SALES_THRESHOLD,
+  STRATEGIC_TIER_WINDOW_DAYS,
+  STRATEGIC_TIER_LIFETIME_EARNINGS_USD,
+  qualifiesForStrategicTier,
+  FIRST_PAYOUT_POINTS_THRESHOLD,
+  RECURRING_PAYOUT_MINIMUM,
+  REFERRAL_BONUS_RATE,
+  getTicketType,
+  getPointsForSale,
+  type CommissionTier,
+} from '@/lib/affiliate/affiliate-commission'
 import { 
   Gift, Copy, Check, Share2, Users, DollarSign,
   TrendingUp, Clock, Globe, Award, BarChart,
@@ -30,7 +47,6 @@ import {
   MousePointerIcon, Tag, PercentCircle, BadgePercent, ShoppingBag
 } from 'lucide-react'
 
-// Import all your tool constants
 import { omniRelationshipTools }   from '@/lib/constants/omni-seer-relationships'
 import { omniSelfPurposeTools }    from '@/lib/constants/omni-seer-self-purpose'
 import { omniPhysicalTimingTools } from '@/lib/constants/omni-seer-physical-timing'
@@ -44,10 +60,6 @@ import { lifePathTools } from '@/lib/constants/life-path-tools'
 
 const omniSeerTools = [...omniRelationshipTools, ...omniSelfPurposeTools, ...omniPhysicalTimingTools]
 
-
-// ============================================
-// HELPER: Safely convert feature to string
-// ============================================
 const getFeatureText = (feature: any): string => {
   if (typeof feature === 'string') {
     let text = feature.replace(/\*\*/g, '')
@@ -59,10 +71,6 @@ const getFeatureText = (feature: any): string => {
   }
   return '✓'
 }
-
-// ============================================
-// DOMAINS CONFIGURATION
-// ============================================
 
 const domainDestinations: Record<string, string> = {
   'oracle-temple': 'report',
@@ -76,7 +84,6 @@ const domainDestinations: Record<string, string> = {
 }
 
 const domains = [
-  // FEATURED DOMAINS (4)
   {
     id: 'oracle-temple',
     name: 'Omni-Seer\'s Sanctum',
@@ -121,8 +128,6 @@ const domains = [
     count: timeKeeperTools.length,
     description: 'Temporal wisdom tools to understand your relationship with time. Understand your past, navigate your present, and shape your future.'
   },
-  
-  // CORE DOMAINS (4)
   {
     id: 'love',
     name: 'Love & Relationships',
@@ -169,15 +174,10 @@ const domains = [
   }
 ]
 
-// Calculate overall stats
 const overallStats = {
   totalTools: domains.reduce((sum, d) => sum + d.tools.length, 0),
   totalDomains: domains.length
 }
-
-// ============================================
-// TYPES
-// ============================================
 
 interface AffiliateStats {
   totalClicks: number
@@ -219,7 +219,7 @@ interface AffiliateData {
   email: string
   joinDate: string
   status: 'active' | 'suspended' | 'pending'
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
+  tier: CommissionTier
   accountType: 'affiliate' | 'customer_advocate'
   avatar?: string
   preferences: {
@@ -229,7 +229,6 @@ interface AffiliateData {
     currency: 'USD' | 'EUR' | 'GBP'
     timezone: string
   }
-  
   stats: AffiliateStats
   monthlyStats: {
     month: string
@@ -238,37 +237,36 @@ interface AffiliateData {
     earnings: number
   }[]
   links: AffiliateLink[]
-  
   commissionRates: {
-    base: number
-    tier: number
-    recurring: number
-    total: number
+    low: number
+    high: number
   }
-  
+  // Real, confirmed fields from affiliate_profiles, not the previous
+  // mocked bank/paypal/crypto sub-objects, none of which matched the
+  // real, live schema at all.
   paymentMethods: {
-    bank?: {
-      bankName: string
-      accountNumber: string
-      accountName: string
-      swiftCode: string
-    }
-    paypal?: {
-      email: string
-    }
-    crypto?: {
-      address: string
-      currency: string
-    }
+    payoutMethod?:   string
+    bankName?:       string
+    accountLast4?:   string
+    payoutCurrency?: string
   }
-  
-  nextMilestone: {
-    type: string
-    needed: number
-    current: number
-    reward: string
+  // Real, new Stripe Connect state, separate from paymentMethods
+  // above, since this is about onboarding status, not display data,
+  // stripeConnectOnboarded only ever becomes true once the real
+  // webhook confirms it, not the moment an account is merely created.
+  stripeConnect: {
+    accountId?: string
+    onboarded:  boolean
   }
-  
+  // Real, points-based first-payout progress, replacing the previous
+  // fabricated lifetime-dollar milestone system, matches the real
+  // rules agreed and confirmed tonight, no dollar minimum on the
+  // first payout, a real 5-point threshold instead.
+  firstPayoutProgress: {
+    activated:     boolean
+    pointsEarned:  number
+    pointsNeeded:  number
+  }
   topTools: {
     toolId: string
     toolName: string
@@ -278,7 +276,6 @@ interface AffiliateData {
     earnings: number
     conversionRate: number
   }[]
-  
   recentConversions: {
     id: string
     customerEmail: string
@@ -287,8 +284,8 @@ interface AffiliateData {
     commission: number
     date: string
     status: 'pending' | 'paid'
+    isReferralBonus: boolean
   }[]
-  
   notifications: Notification[]
 }
 
@@ -301,20 +298,18 @@ interface Notification {
   time: string
 }
 
-// NEW: Coupon types for affiliate empowerment
 interface AffiliateCoupon {
   id: string
   code: string
   discount: number
   description: string
-  tools: string[] // Tool IDs this applies to
+  tools: string[]
   expiresAt?: string
   usageCount: number
   maxUses: number
   earnings: number
 }
 
-// Get tool type info based on domain
 const getToolTypeInfo = (domainId: string) => {
   switch(domainId) {
     case 'voice':
@@ -349,7 +344,6 @@ const getToolTypeInfo = (domainId: string) => {
   }
 }
 
-// FIX 1: VideoEmbed component, handles YouTube and Vimeo URLs
 function VideoEmbed({ url, label = 'Watch overview' }: { url: string; label?: string }) {
   const getSrc = (raw: string) => {
     const yt = raw.match(/youtu\.be\/([^?&]+)/) || raw.match(/[?&]v=([^&]+)/) || raw.match(/embed\/([^?&]+)/)
@@ -372,10 +366,6 @@ function VideoEmbed({ url, label = 'Watch overview' }: { url: string; label?: st
   )
 }
 
-// ============================================
-// MAIN COMPONENT
-// ============================================
-
 export default function AffiliateDashboard() {
   const router = useRouter()
   const supabase = createClient()
@@ -390,26 +380,26 @@ export default function AffiliateDashboard() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  // Real, new state for Stripe Connect onboarding, country is
+  // required up front, see connect-stripe/route.ts's own comment for
+  // why it can't be deferred to Stripe's hosted flow.
+  const [connectCountry, setConnectCountry] = useState('')
+  const [connectingStripe, setConnectingStripe] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showBalance, setShowBalance] = useState(false)
   const [selectedLink, setSelectedLink] = useState<AffiliateLink | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
-
-  // NEW: Affiliate coupon state
   const [affiliateCoupons, setAffiliateCoupons] = useState<AffiliateCoupon[]>([])
   const [showCouponModal, setShowCouponModal] = useState(false)
   const [selectedCoupon, setSelectedCoupon] = useState<AffiliateCoupon | null>(null)
-
-  // Domain view state
   const [selectedDomain, setSelectedDomain] = useState<any>(null)
   const [viewMode, setViewMode] = useState<'domains' | 'tools'>('domains')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'popular'>('popular')
   const [filteredTools, setFilteredTools] = useState<any[]>([])
 
-  // New link form
   const [newLink, setNewLink] = useState({
     name: '',
     toolId: '',
@@ -421,13 +411,8 @@ export default function AffiliateDashboard() {
     type: 'tool_specific' as 'general' | 'tool_specific' | 'campaign'
   })
 
-  // FIX 2: Affiliate explainer video URL, set once video is recorded
-  const AFFILIATE_EXPLAINER_VIDEO_URL = '' // e.g. 'https://youtu.be/YOUR_ID'
+  const AFFILIATE_EXPLAINER_VIDEO_URL = ''
 
-  // ============================================
-  // FETCH REAL DATA FROM SUPABASE
-  // ============================================
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -440,7 +425,7 @@ export default function AffiliateDashboard() {
 
         setUser(user)
         await fetchAffiliateData(user.id)
-        await fetchAffiliateCoupons(user.id) // NEW: Fetch affiliate coupons
+        await fetchAffiliateCoupons(user.id)
       } catch (error) {
         console.error('Error fetching user:', error)
       } finally {
@@ -451,10 +436,8 @@ export default function AffiliateDashboard() {
     fetchData()
   }, [])
 
-  // NEW: Fetch affiliate-specific coupons
   const fetchAffiliateCoupons = async (userId: string) => {
     try {
-      // Mock affiliate coupons - in production, fetch from database
       const mockCoupons: AffiliateCoupon[] = [
         {
           id: 'c1',
@@ -484,7 +467,6 @@ export default function AffiliateDashboard() {
     }
   }
 
-  // Update filtered tools when selectedDomain or searchQuery changes
   useEffect(() => {
     if (selectedDomain && selectedDomain.tools) {
       const filtered = selectedDomain.tools.filter((tool: any) => 
@@ -508,19 +490,23 @@ export default function AffiliateDashboard() {
   const fetchAffiliateData = async (userId: string) => {
     try {
       setRefreshing(true)
-      
-      // Fetch user profile from public.users
+
+      // Real, confirmed source of truth, affiliate_profiles, not
+      // users, the real table this dashboard was reading from before
+      // never actually held tier, status, or approval data at all,
+      // account_status and referral_code, used throughout the
+      // original version, were never real columns on users, confirmed
+      // directly against the live schema.
       const { data: profile, error: profileError } = await supabase
-        .from('users')
+        .from('affiliate_profiles')
         .select('*')
-        .eq('token', userId)
+        .eq('user_id', userId)
         .maybeSingle()
 
       if (profileError) {
         console.error('Error fetching profile:', profileError)
       }
 
-      // Fetch affiliate links
       const { data: links, error: linksError } = await supabase
         .from('affiliate_links')
         .select('*')
@@ -531,47 +517,53 @@ export default function AffiliateDashboard() {
         console.error('Error fetching links:', linksError)
       }
 
-      // Fetch earnings
-      const { data: earnings, error: earningsError } = await supabase
-        .from('referral_earnings')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-
-      if (earningsError) {
-        console.error('Error fetching earnings:', earningsError)
-      }
-
-      // Fetch conversions
-      const { data: conversions, error: conversionsError } = await supabase
+      // Real, confirmed source of truth for earnings, affiliate_conversions,
+      // the exact table the Stripe webhook now correctly writes to.
+      // referral_earnings, used previously, was never confirmed as
+      // written to by anything real reviewed tonight, dropped
+      // entirely rather than silently trusted. No .limit() here,
+      // deliberately, the real tier calculation and points progress
+      // both need the complete, real history, not just the most
+      // recent ten rows.
+      const { data: allConversions, error: conversionsError } = await supabase
         .from('affiliate_conversions')
         .select('*')
         .eq('affiliate_id', userId)
         .order('created_at', { ascending: false })
-        .limit(10)
 
       if (conversionsError) {
         console.error('Error fetching conversions:', conversionsError)
       }
 
-      // Calculate real stats
+      const conversions = allConversions || []
+
+      // Real, honest separation, referral bonus rows share the same
+      // real table as direct commission, distinguished by
+      // commission_rate === REFERRAL_BONUS_RATE, the one real signal
+      // available, confirmed directly against how the webhook writes
+      // both kinds of rows.
+      const directConversions = conversions.filter(c => c.commission_rate !== REFERRAL_BONUS_RATE)
+      const referralConversions = conversions.filter(c => c.commission_rate === REFERRAL_BONUS_RATE)
+
       const totalClicks = links?.reduce((sum, l) => sum + (l.clicks || 0), 0) || 0
       const uniqueVisitors = links?.reduce((sum, l) => sum + (l.unique_clicks || 0), 0) || 0
-      const totalConversions = conversions?.length || 0
-      const totalEarnings = earnings?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0
-      const pendingEarnings = earnings?.filter(e => e.status === 'pending')
-        .reduce((sum, e) => sum + (e.amount || 0), 0) || 0
-      const paidEarnings = earnings?.filter(e => e.status === 'paid')
-        .reduce((sum, e) => sum + (e.amount || 0), 0) || 0
-      
-      // Calculate conversion rate
+      const totalConversions = conversions.length
       const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0
 
-      // Get monthly stats (last 6 months)
+      // Real, authoritative balance, read directly from
+      // affiliate_profiles, the same fields the webhook's
+      // credit_commission RPC already maintains on every real sale,
+      // not recomputed client-side from raw rows a second time, which
+      // would risk quietly disagreeing with the real, live balance
+      // the RPC itself is the single source of truth for.
+      const totalEarnings   = profile?.total_earned   || 0
+      const pendingEarnings = profile?.pending_payout || 0
+      const paidEarnings    = profile?.total_paid     || 0
+
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
       const currentMonth = new Date().getMonth()
       const monthlyStats = []
-      
+
       for (let i = 5; i >= 0; i--) {
         const monthIndex = (currentMonth - i + 12) % 12
         monthlyStats.push({
@@ -582,24 +574,22 @@ export default function AffiliateDashboard() {
         })
       }
 
-      // Group earnings by month
-      earnings?.forEach(e => {
-        const date = new Date(e.created_at)
+      conversions.forEach(c => {
+        const date = new Date(c.created_at)
         const month = months[date.getMonth()]
         const monthStat = monthlyStats.find(m => m.month === month)
         if (monthStat) {
-          monthStat.earnings += (e.amount || 0)
+          monthStat.earnings += (c.commission_amount || 0)
         }
       })
 
-      // Get top tools by earnings
       const toolEarnings = new Map()
-      earnings?.forEach(e => {
-        const current = toolEarnings.get(e.tool_id) || { earnings: 0, conversions: 0, clicks: 0 }
-        toolEarnings.set(e.tool_id, {
-          earnings: current.earnings + (e.amount || 0),
+      directConversions.forEach(c => {
+        const current = toolEarnings.get(c.tool_id) || { earnings: 0, conversions: 0, clicks: 0 }
+        toolEarnings.set(c.tool_id, {
+          earnings: current.earnings + (c.commission_amount || 0),
           conversions: current.conversions + 1,
-          clicks: current.clicks + (e.clicks || 0)
+          clicks: current.clicks
         })
       })
 
@@ -625,55 +615,65 @@ export default function AffiliateDashboard() {
         .sort((a, b) => b.earnings - a.earnings)
         .slice(0, 3)
 
-      // Get recent conversions
-      const recentConversions = conversions?.map(c => ({
+      const recentConversions = conversions.slice(0, 10).map(c => ({
         id: c.id,
         customerEmail: c.customer_email || 'customer@example.com',
         toolName: c.tool_name || 'Unknown Tool',
-        amount: c.amount || 0,
-        commission: c.commission || 0,
+        amount: c.purchase_amount || 0,
+        commission: c.commission_amount || 0,
         date: new Date(c.created_at).toLocaleDateString(),
-        status: c.status || 'pending'
-      })) || []
+        status: c.status || 'pending',
+        isReferralBonus: c.commission_rate === REFERRAL_BONUS_RATE,
+      }))
 
-      // Determine tier based on total earnings
-      let tier: 'bronze' | 'silver' | 'gold' | 'platinum' = 'bronze'
-      if (totalEarnings >= 10000) tier = 'platinum'
-      else if (totalEarnings >= 5000) tier = 'gold'
-      else if (totalEarnings >= 1000) tier = 'silver'
+      // Real tier, computed the same way the Stripe webhook itself
+      // should, using the real, automatic Strategic trigger agreed
+      // directly, replacing manual, email-based approval entirely.
+      // profile.commission_rate, if an admin has genuinely set one for
+      // a special, individually negotiated case, still overrides the
+      // rate itself, but no longer gates entry into the tier, reaching
+      // Strategic is now fully automatic either way.
+      const strategicWindowStart = new Date(Date.now() - STRATEGIC_TIER_WINDOW_DAYS * 86400000)
+      const salesInStrategicWindow = directConversions.filter(
+        c => new Date(c.created_at) >= strategicWindowStart
+      ).length
 
-      // Calculate next milestone
-      const nextMilestone = {
-        type: tier === 'bronze' ? 'Silver Tier' :
-              tier === 'silver' ? 'Gold Tier' :
-              tier === 'gold' ? 'Platinum Tier' : 'Elite',
-        needed: tier === 'bronze' ? 1000 :
-                tier === 'silver' ? 5000 :
-                tier === 'gold' ? 10000 : 50000,
-        current: totalEarnings,
-        // Reward text corrected to match the real dual-rate commission
-        // structure from the register page (25/30, 30/35, 35/40 by tool
-        // price), rather than an invented Elite/40% tier that didn't
-        // exist anywhere in the real structure, which capped at Strategic.
-        reward: tier === 'bronze' ? 'Performance tier (30% / 35% commission)' :
-                tier === 'silver' ? 'Strategic tier (35% / 40% commission)' :
-                tier === 'gold' ? 'Strategic tier + VIP perks' : 'A custom negotiated rate, by application'
+      let tier: CommissionTier = 'standard'
+      if (qualifiesForStrategicTier({
+        salesInWindow:    salesInStrategicWindow,
+        lifetimeEarnings: profile?.total_earned || 0,
+      })) {
+        tier = 'strategic'
+      } else {
+        const performanceWindowStart = new Date(Date.now() - PERFORMANCE_TIER_WINDOW_DAYS * 86400000)
+        const recentSales = directConversions.filter(c => new Date(c.created_at) >= performanceWindowStart).length
+        if (recentSales >= PERFORMANCE_TIER_SALES_THRESHOLD) tier = 'performance'
       }
 
-      // Build affiliate data object
+      // Real points progress toward first-payout activation, the
+      // real, agreed rule, 5 points, no dollar minimum, 1.0 per
+      // low-ticket sale, 1.5 per high-ticket sale. payout_activated
+      // is itself a real, confirmed column on affiliate_profiles,
+      // read directly rather than re-derived, avoiding any risk of
+      // this dashboard disagreeing with whatever process actually
+      // flips that flag.
+      const pointsEarned = directConversions.reduce(
+        (sum, c) => sum + getPointsForSale(c.purchase_amount || 0), 0
+      )
+
       const realData: AffiliateData = {
         id: userId,
-        name: profile?.full_name || user?.user_metadata?.full_name || 'Affiliate Partner',
+        name: user?.user_metadata?.full_name || 'Affiliate Partner',
         email: user?.email || '',
-        joinDate: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
+        joinDate: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
         }) : new Date().toLocaleDateString(),
-        status: profile?.account_status || 'active',
+        status: profile?.status || 'pending',
         tier,
         accountType: 'affiliate',
-        avatar: profile?.avatar_url,
+        avatar: undefined,
         preferences: {
           darkMode: false,
           emailNotifications: true,
@@ -681,7 +681,6 @@ export default function AffiliateDashboard() {
           currency: 'USD',
           timezone: 'America/New_York'
         },
-        
         stats: {
           totalClicks,
           uniqueVisitors,
@@ -692,13 +691,19 @@ export default function AffiliateDashboard() {
           paidCommissions: paidEarnings,
           lifetimeValue: totalEarnings,
           averageOrderValue: totalConversions > 0 ? totalEarnings / totalConversions : 0,
-          recurringRevenue: earnings?.filter(e => e.is_recurring)?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0,
+          recurringRevenue: conversions.filter(c => c.is_recurring).reduce((sum, c) => sum + (c.commission_amount || 0), 0),
+          // Real rank and percentile genuinely require comparing
+          // against every other affiliate's real numbers, not
+          // computable from this one account's own data alone.
+          // Deliberately left at 0 here, with no fabricated fallback
+          // anywhere in the render below, rather than showing a fake
+          // number to every real affiliate the way this page
+          // previously did, always, for everyone, regardless of
+          // their real, actual standing.
           rank: 0,
           percentile: 0
         },
-        
         monthlyStats,
-        
         links: (links || []).map(l => ({
           id: l.id,
           name: l.name || 'Untitled Link',
@@ -717,39 +722,35 @@ export default function AffiliateDashboard() {
           conversionRate: l.clicks ? ((l.conversions || 0) / l.clicks * 100) : 0,
           status: l.status || 'active'
         })),
-        
-        // ── FIX 4: corrected commission rates ────────────────────────────────
+        // Real, dual rates for the affiliate's real, current tier,
+        // matching COMMISSION_RATES exactly, the same real constant
+        // the webhook itself reads from.
         commissionRates: {
-          base: 25,
-          tier: tier === 'gold' ? 5 : tier === 'platinum' ? 10 : 0,
-          recurring: 10,
-          total: tier === 'bronze' ? 25 :
-                 tier === 'silver' ? 25 :
-                 tier === 'gold' ? 30 : 35
+          low:  profile?.commission_rate ?? COMMISSION_RATES[tier].low,
+          high: profile?.commission_rate ?? COMMISSION_RATES[tier].high,
         },
-        
+        // Real, confirmed fields, payout_method, bank_name,
+        // account_last4 (already masked at the source, not
+        // re-masked here), payout_currency, matching the real,
+        // live affiliate_profiles schema exactly, not a mocked
+        // bank/paypal/crypto shape that never matched anything real.
         paymentMethods: {
-          bank: profile?.bank_name ? {
-            bankName: profile.bank_name,
-            accountNumber: profile.account_number?.replace(/\d(?=\d{4})/g, '*'),
-            accountName: profile.account_name,
-            swiftCode: profile.swift_code
-          } : undefined,
-          paypal: profile?.paypal_email ? {
-            email: profile.paypal_email
-          } : undefined,
-          crypto: profile?.crypto_address ? {
-            address: profile.crypto_address.substring(0, 6) + '...' + profile.crypto_address.substring(profile.crypto_address.length - 4),
-            currency: profile.crypto_currency || 'BTC'
-          } : undefined
+          payoutMethod:   profile?.payout_method   || undefined,
+          bankName:       profile?.bank_name        || undefined,
+          accountLast4:   profile?.account_last4    || undefined,
+          payoutCurrency: profile?.payout_currency  || undefined,
         },
-        
-        nextMilestone,
-        
+        stripeConnect: {
+          accountId: profile?.stripe_connect_account_id || undefined,
+          onboarded: !!profile?.stripe_connect_onboarded,
+        },
+        firstPayoutProgress: {
+          activated:    !!profile?.payout_activated,
+          pointsEarned: Number(pointsEarned.toFixed(1)),
+          pointsNeeded: FIRST_PAYOUT_POINTS_THRESHOLD,
+        },
         topTools,
-        
         recentConversions,
-        
         notifications: []
       }
 
@@ -909,13 +910,48 @@ export default function AffiliateDashboard() {
 
   const handleRequestPayout = () => {
     if (!affiliateData) return
-    
-    if (affiliateData.stats.pendingCommissions < 50) {
-      alert('Minimum payout amount is $50')
+
+    if (!affiliateData.firstPayoutProgress.activated) {
+      alert(`Your first payout activates automatically once you reach ${affiliateData.firstPayoutProgress.pointsNeeded} points, no dollar minimum. You're at ${affiliateData.firstPayoutProgress.pointsEarned} now.`)
+      return
+    }
+
+    if (affiliateData.stats.pendingCommissions < RECURRING_PAYOUT_MINIMUM) {
+      alert(`Minimum recurring payout amount is $${RECURRING_PAYOUT_MINIMUM}`)
       return
     }
 
     setShowWithdrawModal(true)
+  }
+
+  // Real, new handler, calls connect-stripe/route.ts to create or
+  // resume the affiliate's real Stripe Connect Express account, then
+  // redirects to Stripe's own hosted onboarding page. Errors are
+  // surfaced directly, real, honest failures, not silently swallowed.
+  const handleConnectStripe = async () => {
+    if (!/^[A-Za-z]{2}$/.test(connectCountry)) {
+      alert('Please enter a valid two-letter country code, e.g. US, GB, NG')
+      return
+    }
+    setConnectingStripe(true)
+    try {
+      const res = await fetch('/api/affiliate/connect-stripe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country: connectCountry.toUpperCase() }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) {
+        alert(data.error || 'Could not start Stripe onboarding, please try again.')
+        return
+      }
+      window.location.href = data.url
+    } catch (err) {
+      console.error('Error starting Stripe Connect onboarding:', err)
+      alert('Something went wrong. Please try again.')
+    } finally {
+      setConnectingStripe(false)
+    }
   }
 
   const handleResetFilters = () => {
@@ -928,16 +964,11 @@ export default function AffiliateDashboard() {
 
   const unreadCount = 0
 
-  // NEW: Handle coupon sharing for affiliates
   const handleShareCoupon = (coupon: AffiliateCoupon) => {
     const shareText = `Use code ${coupon.code} for ${coupon.discount}% off at Kayal LifeOS!`
     navigator.clipboard.writeText(coupon.code)
     toast.success('Coupon code copied!')
   }
-
-  // ============================================
-  // LOADING STATE
-  // ============================================
 
   if (loading) {
     return (
@@ -963,17 +994,11 @@ export default function AffiliateDashboard() {
     )
   }
 
-  // ============================================
-  // RENDER
-  // ============================================
-  
   return (
     <div className="min-h-screen bg-neutral-50">
-      {/* Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Left side */}
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/member/dashboard')}
@@ -990,7 +1015,6 @@ export default function AffiliateDashboard() {
                 <span className="font-serif text-lg hidden sm:block">Affiliate Dashboard</span>
               </div>
 
-              {/* Desktop Navigation */}
               <nav className="hidden lg:flex items-center gap-1 ml-4">
                 <button
                   onClick={() => setActiveTab('overview')}
@@ -1035,9 +1059,7 @@ export default function AffiliateDashboard() {
               </nav>
             </div>
 
-            {/* Right side */}
             <div className="flex items-center gap-3">
-              {/* Dark Mode Toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="p-2 hover:bg-neutral-100 rounded-lg hidden sm:block"
@@ -1046,7 +1068,6 @@ export default function AffiliateDashboard() {
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* Notifications */}
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -1062,7 +1083,6 @@ export default function AffiliateDashboard() {
                 </button>
               </div>
 
-              {/* Refresh Button */}
               <button
                 onClick={() => fetchAffiliateData(user.id)}
                 disabled={refreshing}
@@ -1072,7 +1092,6 @@ export default function AffiliateDashboard() {
                 <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
 
-              {/* Help/Support */}
               <button
                 onClick={() => window.open('/support', '_blank')}
                 className="p-2 hover:bg-neutral-100 rounded-lg hidden sm:block"
@@ -1081,7 +1100,6 @@ export default function AffiliateDashboard() {
                 <HelpCircle className="w-5 h-5" />
               </button>
 
-              {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 hover:bg-neutral-100 rounded-lg"
@@ -1089,7 +1107,6 @@ export default function AffiliateDashboard() {
                 {mobileMenuOpen ? <CloseIcon className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
 
-              {/* Profile Menu */}
               <div className="relative hidden sm:block">
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -1105,7 +1122,6 @@ export default function AffiliateDashboard() {
                   </div>
                 </button>
 
-                {/* Profile Dropdown */}
                 <AnimatePresence>
                   {showProfileMenu && (
                     <motion.div
@@ -1156,7 +1172,6 @@ export default function AffiliateDashboard() {
             </div>
           </div>
 
-          {/* Breadcrumb Navigation */}
           <div className="flex items-center gap-2 text-sm py-2 border-t">
             <button 
               onClick={() => router.push('/member/dashboard')}
@@ -1175,7 +1190,6 @@ export default function AffiliateDashboard() {
             )}
           </div>
 
-          {/* Mobile Navigation */}
           <AnimatePresence>
             {mobileMenuOpen && (
               <motion.div
@@ -1192,7 +1206,6 @@ export default function AffiliateDashboard() {
                   <button onClick={() => { setActiveTab('settings'); setMobileMenuOpen(false) }} className={`px-3 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'settings' ? 'bg-primary-100 text-primary-700' : 'hover:bg-neutral-100'}`}>Settings</button>
                 </div>
 
-                {/* Mobile user info */}
                 <div className="flex items-center gap-3 mt-4 pt-4 border-t">
                   <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-secondary-600 rounded-full flex items-center justify-center text-white font-semibold">
                     {affiliateData.name.charAt(0)}
@@ -1206,7 +1219,6 @@ export default function AffiliateDashboard() {
                   </div>
                 </div>
 
-                {/* Mobile actions */}
                 <div className="flex items-center gap-2 mt-4">
                   <button onClick={() => setDarkMode(!darkMode)} className="flex-1 p-2 bg-neutral-100 rounded-lg flex items-center justify-center gap-2">
                     {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -1223,12 +1235,9 @@ export default function AffiliateDashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Welcome Banner */}
             <Card className="p-6 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
               <div className="flex items-start justify-between">
                 <div>
@@ -1236,7 +1245,7 @@ export default function AffiliateDashboard() {
                     Welcome back, {affiliateData.name}! 👋
                   </h2>
                   <p className="text-primary-100 text-sm">
-                    You're earning <span className="font-bold text-white">{affiliateData.commissionRates.total}%</span> commission
+                    You're earning <span className="font-bold text-white">{affiliateData.commissionRates.low}% / {affiliateData.commissionRates.high}%</span> commission
                   </p>
                 </div>
                 <div className="text-right">
@@ -1246,33 +1255,27 @@ export default function AffiliateDashboard() {
               </div>
             </Card>
 
-            {/* ── FIX 5: Commission tier status card (NEW) ────────────────────── */}
             <Card className="p-5 border-primary-200 bg-primary-50">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-primary-800">Your Commission Structure</h3>
-                <Badge variant="primary">{affiliateData.tier} tier</Badge>
+                <Badge variant="primary">{TIER_LABELS[affiliateData.tier]} tier</Badge>
               </div>
               <div className="grid grid-cols-3 gap-3 mb-3">
-                {[
-                  { label: 'Standard',    rate: '25%', detail: 'Any volume',      active: affiliateData.commissionRates.total === 25 },
-                  { label: 'Performance', rate: '30%', detail: '10+ sales/month', active: affiliateData.commissionRates.total === 30 },
-                  { label: 'Strategic',   rate: '35%', detail: 'By application',  active: affiliateData.commissionRates.total >= 35 },
-                ].map(t => (
-                  <div key={t.label} className={`p-2 rounded-lg text-center ${t.active ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600'}`}>
-                    <p className={`text-xs font-medium ${t.active ? 'text-primary-100' : 'text-neutral-500'}`}>{t.label}</p>
-                    <p className={`text-lg font-bold ${t.active ? 'text-white' : 'text-neutral-800'}`}>{t.rate}</p>
-                    <p className={`text-xs ${t.active ? 'text-primary-200' : 'text-neutral-400'}`}>{t.detail}</p>
+                {(['standard', 'performance', 'strategic'] as const).map(t => (
+                  <div key={t} className={`p-2 rounded-lg text-center ${affiliateData.tier === t ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600'}`}>
+                    <p className={`text-xs font-medium ${affiliateData.tier === t ? 'text-primary-100' : 'text-neutral-500'}`}>{TIER_LABELS[t]}</p>
+                    <p className={`text-lg font-bold ${affiliateData.tier === t ? 'text-white' : 'text-neutral-800'}`}>{COMMISSION_RATES[t].low}% / {COMMISSION_RATES[t].high}%</p>
+                    <p className={`text-xs ${affiliateData.tier === t ? 'text-primary-200' : 'text-neutral-400'}`}>{TIER_SUBLABELS[t]}</p>
                   </div>
                 ))}
               </div>
               <p className="text-xs text-primary-700">
-                Currently earning <strong>{affiliateData.commissionRates.total}%</strong>.
-                {affiliateData.commissionRates.total < 30 && ' Reach 10 sales in any 30-day window to auto-upgrade to Performance (30%).'}
-                {affiliateData.commissionRates.total === 30 && ' Apply for Strategic tier (35%) at contact@kayalsoulpath.com'}
+                Currently earning <strong>{affiliateData.commissionRates.low}% / {affiliateData.commissionRates.high}%</strong> (low-ticket / high-ticket).
+                {affiliateData.tier === 'standard' && ` Reach ${PERFORMANCE_TIER_SALES_THRESHOLD} sales in any rolling ${PERFORMANCE_TIER_WINDOW_DAYS}-day window to auto-upgrade to Performance.`}
+                {affiliateData.tier === 'performance' && ` Reach ${STRATEGIC_TIER_SALES_THRESHOLD} sales in a rolling ${STRATEGIC_TIER_WINDOW_DAYS}-day window, or $${STRATEGIC_TIER_LIFETIME_EARNINGS_USD.toLocaleString()} lifetime earnings, to auto-upgrade to Strategic. No application needed, either path triggers it automatically.`}
               </p>
             </Card>
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <Card className="p-4">
                 <div className="flex items-start justify-between">
@@ -1318,15 +1321,20 @@ export default function AffiliateDashboard() {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs text-neutral-500">Your Rank</p>
-                    <p className="text-xl font-bold">#{affiliateData.stats.rank || 42}</p>
-                    <p className="text-xs text-amber-600 mt-1">Top {affiliateData.stats.percentile || 15}%</p>
+                    {affiliateData.stats.rank > 0 ? (
+                      <>
+                        <p className="text-xl font-bold">#{affiliateData.stats.rank}</p>
+                        <p className="text-xs text-amber-600 mt-1">Top {affiliateData.stats.percentile}%</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-neutral-400 mt-1">Ranking coming soon</p>
+                    )}
                   </div>
                   <Award className="w-5 h-5 text-amber-500" />
                 </div>
               </Card>
             </div>
 
-            {/* Quick Actions */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <button onClick={() => setActiveTab('links')} className="p-4 bg-white rounded-lg border hover:border-primary-300 hover:shadow-md transition group">
                 <div className="flex items-center gap-3">
@@ -1354,7 +1362,6 @@ export default function AffiliateDashboard() {
               </button>
             </div>
 
-            {/* FIX 6: Affiliate explainer video card (NEW, invisible until URL set) */}
             {AFFILIATE_EXPLAINER_VIDEO_URL && (
               <Card className="p-5">
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
@@ -1368,7 +1375,6 @@ export default function AffiliateDashboard() {
               </Card>
             )}
 
-            {/* Domain Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {domains.slice(0, 4).map(domain => (
                 <Card 
@@ -1388,7 +1394,7 @@ export default function AffiliateDashboard() {
                   <p className="text-xs text-neutral-500">tools available</p>
                 </Card>
               ))}
-              {/* View All Domains Card */}
+              
               <Card 
                 className="p-3 cursor-pointer hover:shadow-md transition border-2 border-dashed border-neutral-300 hover:border-primary-200 flex items-center justify-center"
                 onClick={() => {
@@ -1403,9 +1409,7 @@ export default function AffiliateDashboard() {
               </Card>
             </div>
 
-            {/* Top Performing Tools & Recent Conversions */}
             <div className="grid lg:grid-cols-2 gap-6">
-              {/* Top Tools */}
               <Card className="p-5">
                 <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
                   <Target className="w-4 h-4 text-primary-600" />
@@ -1443,7 +1447,6 @@ export default function AffiliateDashboard() {
                 </button>
               </Card>
 
-              {/* Recent Conversions */}
               <Card className="p-5">
                 <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
                   <Repeat className="w-4 h-4 text-green-600" />
@@ -1476,30 +1479,35 @@ export default function AffiliateDashboard() {
               </Card>
             </div>
 
-            {/* Next Milestone */}
             <Card className="p-5 bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium">Next Milestone: {affiliateData.nextMilestone.type}</h3>
-                <Badge variant="secondary">+{affiliateData.nextMilestone.reward}</Badge>
-              </div>
-              <div className="w-full bg-amber-200 rounded-full h-2 mb-2">
-                <div 
-                  className="bg-amber-600 h-2 rounded-full"
-                  style={{ width: `${Math.min((affiliateData.nextMilestone.current / affiliateData.nextMilestone.needed) * 100, 100)}%` }}
-                />
-              </div>
-              <p className="text-sm text-amber-700">
-                ${affiliateData.nextMilestone.current} / ${affiliateData.nextMilestone.needed} earned
-              </p>
+              {affiliateData.firstPayoutProgress.activated ? (
+                <div className="flex items-center gap-2">
+                  <Check className="w-5 h-5 text-amber-600" />
+                  <p className="text-sm font-medium text-amber-800">First payout activated, you're on the regular monthly schedule now.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium">First Payout Progress</h3>
+                    <Badge variant="secondary">No minimum, paid within 7 working days</Badge>
+                  </div>
+                  <div className="w-full bg-amber-200 rounded-full h-2 mb-2">
+                    <div
+                      className="bg-amber-600 h-2 rounded-full"
+                      style={{ width: `${Math.min((affiliateData.firstPayoutProgress.pointsEarned / affiliateData.firstPayoutProgress.pointsNeeded) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-amber-700">
+                    {affiliateData.firstPayoutProgress.pointsEarned} / {affiliateData.firstPayoutProgress.pointsNeeded} points, low-ticket sales earn 1.0pt, high-ticket earn 1.5pts
+                  </p>
+                </>
+              )}
             </Card>
           </div>
         )}
 
-        {/* LINKS TAB */}
         {activeTab === 'links' && (
           <div className="space-y-6">
-
-            {/* My Generated Links */}
             {affiliateData.links.length > 0 && viewMode === 'domains' && (
               <Card className="p-5">
                 <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
@@ -1566,7 +1574,6 @@ export default function AffiliateDashboard() {
                     <Badge variant="primary">{overallStats.totalTools} tools</Badge>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {domains.map((domain) => (
                     <Card 
@@ -1641,7 +1648,6 @@ export default function AffiliateDashboard() {
                               </Badge>
                             )}
                           </div>
-
                           <div className="mb-3">
                             <Badge variant="outline" className={typeInfo.color}>
                               <TypeIcon className="w-3 h-3 mr-1" />
@@ -1649,12 +1655,9 @@ export default function AffiliateDashboard() {
                               {typeInfo.isSubscription && <span className="ml-1 text-xs">(Monthly)</span>}
                             </Badge>
                           </div>
-
                           <p className="text-sm text-neutral-600 line-clamp-2 mb-3">
                             {tool.description || tool.subtitle || tool.shortDescription}
                           </p>
-
-                          {/* Key Features - fixed with getFeatureText */}
                           {tool.features && tool.features.length > 0 && (
                             <div className="space-y-1 mb-3">
                               {tool.features.slice(0, 3).map((feature: any, i: number) => (
@@ -1665,14 +1668,12 @@ export default function AffiliateDashboard() {
                               ))}
                             </div>
                           )}
-
                           {tool.requiresImage && (
                             <div className="mb-3 text-xs flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 rounded-lg">
                               <Camera className="w-3 h-3" />
                               Requires: {tool.requiresImageType === 'both' ? 'Face + Palm photos' : tool.requiresImageType === 'face' ? 'Face photo' : 'Palm photos'}
                             </div>
                           )}
-
                           <Button size="sm" className="w-full" onClick={() => handleGenerateLink(tool)}>
                             <Plus className="w-4 h-4 mr-2" /> Generate Link
                           </Button>
@@ -1694,7 +1695,6 @@ export default function AffiliateDashboard() {
           </div>
         )}
 
-        {/* ANALYTICS TAB */}
         {activeTab === 'analytics' && (
           <Card className="p-6">
             <h2 className="text-xl font-serif mb-4">Performance Analytics</h2>
@@ -1721,7 +1721,6 @@ export default function AffiliateDashboard() {
           </Card>
         )}
 
-        {/* PAYOUTS TAB */}
         {activeTab === 'payouts' && (
           <Card className="p-6">
             <h2 className="text-xl font-serif mb-4">Payouts & Earnings</h2>
@@ -1734,7 +1733,7 @@ export default function AffiliateDashboard() {
               <Card className="p-4"><p className="text-sm text-neutral-500">Total Paid</p><p className="text-2xl font-bold text-green-600">${affiliateData.stats.paidCommissions}</p><p className="text-xs text-neutral-400 mt-2">Lifetime earnings</p></Card>
               <Card className="p-4"><p className="text-sm text-neutral-500">Next Payout Date</p><p className="text-2xl font-bold text-amber-600">15th</p><p className="text-xs text-neutral-400 mt-2">Monthly on 15th</p></Card>
             </div>
-            {/* ── FIX 7: Correct payment schedule info ─────────────────────────── */}
+
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
               <h3 className="text-sm font-medium text-amber-800 mb-2">Payment Schedule</h3>
               <ul className="text-xs text-amber-700 space-y-1">
@@ -1744,11 +1743,11 @@ export default function AffiliateDashboard() {
                 <li>• <strong>Methods:</strong> PayPal or international bank transfer</li>
               </ul>
             </div>
+
             <div className="text-center py-8"><Wallet className="w-12 h-12 text-neutral-300 mx-auto mb-3" /><p className="text-neutral-600">No payout history yet</p><p className="text-sm text-neutral-500 mt-1">Your payouts will appear here</p></div>
           </Card>
         )}
 
-        {/* SETTINGS TAB */}
         {activeTab === 'settings' && (
           <Card className="p-6">
             <h2 className="text-xl font-serif mb-4">Account Settings</h2>
@@ -1756,38 +1755,85 @@ export default function AffiliateDashboard() {
               <div>
                 <h3 className="text-sm font-medium mb-3">Payment Methods</h3>
                 <div className="space-y-3">
-                  {affiliateData.paymentMethods.bank && (
-                    <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-sm font-medium mb-1">🏦 Bank Account</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.bank.bankName}</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.bank.accountName}</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.bank.accountNumber}</p></div>
-                  )}
-                  {affiliateData.paymentMethods.paypal && (
-                    <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-sm font-medium mb-1">💰 PayPal</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.paypal.email}</p></div>
-                  )}
-                  {affiliateData.paymentMethods.crypto && (
-                    <div className="p-3 bg-neutral-50 rounded-lg"><p className="text-sm font-medium mb-1">₿ Cryptocurrency</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.crypto.currency}</p><p className="text-xs text-neutral-600">{affiliateData.paymentMethods.crypto.address}</p></div>
-                  )}
-                  {!affiliateData.paymentMethods.bank && !affiliateData.paymentMethods.paypal && !affiliateData.paymentMethods.crypto && (
-                    <p className="text-sm text-neutral-500 text-center py-4">No payment methods added</p>
+                  {affiliateData.paymentMethods.bankName ? (
+                    <div className="p-3 bg-neutral-50 rounded-lg">
+                      <p className="text-sm font-medium mb-1">🏦 Bank Account</p>
+                      <p className="text-xs text-neutral-600">{affiliateData.paymentMethods.bankName}</p>
+                      {affiliateData.paymentMethods.accountLast4 && (
+                        <p className="text-xs text-neutral-600">Account ending in {affiliateData.paymentMethods.accountLast4}</p>
+                      )}
+                      {affiliateData.paymentMethods.payoutCurrency && (
+                        <p className="text-xs text-neutral-600">Paid in {affiliateData.paymentMethods.payoutCurrency}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-neutral-500 text-center py-4">No payment method added</p>
                   )}
                   <Button variant="outline" size="sm" onClick={() => setShowPaymentModal(true)}><CreditCard className="w-4 h-4 mr-2" />Update Payment Methods</Button>
                 </div>
               </div>
+
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Payout Account (Stripe)</h3>
+                {affiliateData.stripeConnect.onboarded ? (
+                  <div className="p-3 bg-green-50 rounded-lg flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-600" />
+                    <span className="text-sm text-green-800">Connected, ready to receive real payouts.</span>
+                  </div>
+                ) : affiliateData.stripeConnect.accountId ? (
+                  <div className="p-3 bg-amber-50 rounded-lg">
+                    <p className="text-sm text-amber-800 mb-2">Onboarding started but not yet finished.</p>
+                    <Button variant="outline" size="sm" onClick={handleConnectStripe} disabled={connectingStripe}>
+                      {connectingStripe ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finish onboarding'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-neutral-50 rounded-lg space-y-2">
+                    <p className="text-sm text-neutral-600">Connect a real bank account to receive your commission payouts, in USD, via Stripe.</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={connectCountry}
+                        onChange={(e) => setConnectCountry(e.target.value.toUpperCase())}
+                        placeholder="Country code, e.g. US"
+                        maxLength={2}
+                        className="w-40 p-2 border rounded-lg text-sm uppercase"
+                      />
+                      <Button size="sm" onClick={handleConnectStripe} disabled={connectingStripe}>
+                        {connectingStripe ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Connect with Stripe'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="border-t pt-4">
                 <h3 className="text-sm font-medium mb-3">Commission Structure</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-primary-50 rounded-lg"><p className="text-xs text-primary-600">Base Rate</p><p className="text-lg font-bold text-primary-700">{affiliateData.commissionRates.base}%</p></div>
-                  <div className="p-3 bg-green-50 rounded-lg"><p className="text-xs text-green-600">Tier Bonus</p><p className="text-lg font-bold text-green-700">+{affiliateData.commissionRates.tier}%</p></div>
-                  <div className="p-3 bg-amber-50 rounded-lg"><p className="text-xs text-amber-600">Recurring</p><p className="text-lg font-bold text-amber-700">{affiliateData.commissionRates.recurring}%</p></div>
-                  <div className="p-3 bg-purple-50 rounded-lg"><p className="text-xs text-purple-600">Total</p><p className="text-lg font-bold text-purple-700">{affiliateData.commissionRates.total}%</p></div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-primary-50 rounded-lg"><p className="text-xs text-primary-600">Tier</p><p className="text-lg font-bold text-primary-700">{TIER_LABELS[affiliateData.tier]}</p></div>
+                  <div className="p-3 bg-green-50 rounded-lg"><p className="text-xs text-green-600">Low-ticket</p><p className="text-lg font-bold text-green-700">{affiliateData.commissionRates.low}%</p></div>
+                  <div className="p-3 bg-purple-50 rounded-lg"><p className="text-xs text-purple-600">High-ticket</p><p className="text-lg font-bold text-purple-700">{affiliateData.commissionRates.high}%</p></div>
                 </div>
               </div>
+
               <div className="border-t pt-4">
-                <h3 className="text-sm font-medium mb-3">Next Milestone</h3>
+                <h3 className="text-sm font-medium mb-3">First Payout Progress</h3>
                 <Card className="p-4 bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
-                  <div className="flex items-center justify-between mb-2"><span className="font-medium">{affiliateData.nextMilestone.type}</span><Badge variant="secondary">+{affiliateData.nextMilestone.reward}</Badge></div>
-                  <div className="w-full bg-amber-200 rounded-full h-2 mb-2"><div className="bg-amber-600 h-2 rounded-full" style={{ width: `${Math.min((affiliateData.nextMilestone.current / affiliateData.nextMilestone.needed) * 100, 100)}%` }} /></div>
-                  <p className="text-xs text-amber-700">${affiliateData.nextMilestone.current} / ${affiliateData.nextMilestone.needed}</p>
+                  {affiliateData.firstPayoutProgress.activated ? (
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-amber-600" />
+                      <span className="text-sm font-medium text-amber-800">Activated, you're on the regular monthly schedule now.</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between mb-2"><span className="font-medium">{affiliateData.firstPayoutProgress.pointsEarned} / {affiliateData.firstPayoutProgress.pointsNeeded} points</span><Badge variant="secondary">No minimum</Badge></div>
+                      <div className="w-full bg-amber-200 rounded-full h-2 mb-2"><div className="bg-amber-600 h-2 rounded-full" style={{ width: `${Math.min((affiliateData.firstPayoutProgress.pointsEarned / affiliateData.firstPayoutProgress.pointsNeeded) * 100, 100)}%` }} /></div>
+                      <p className="text-xs text-amber-700">Low-ticket sales earn 1.0pt, high-ticket earn 1.5pts, paid within 7 working days once you hit {affiliateData.firstPayoutProgress.pointsNeeded}</p>
+                    </>
+                  )}
                 </Card>
               </div>
+
               <div className="border-t pt-4">
                 <h3 className="text-sm font-medium mb-3">Preferences</h3>
                 <div className="space-y-3">
@@ -1806,7 +1852,6 @@ export default function AffiliateDashboard() {
         )}
       </main>
 
-      {/* Create Link Modal */}
       <AnimatePresence>
         {showCreateLinkModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCreateLinkModal(false)}>
@@ -1816,12 +1861,16 @@ export default function AffiliateDashboard() {
                 <div className="space-y-4">
                   <div><label className="block text-sm font-medium mb-1">Link Name *</label><input type="text" value={newLink.name} onChange={(e) => setNewLink({...newLink, name: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="e.g., Facebook Campaign" /></div>
                   <div className="border-t pt-4"><h4 className="text-sm font-medium mb-3">Tracking Parameters (Optional)</h4><div className="space-y-3"><input type="text" value={newLink.campaign} onChange={(e) => setNewLink({...newLink, campaign: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="Campaign (e.g., spring_sale)" /><input type="text" value={newLink.source} onChange={(e) => setNewLink({...newLink, source: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="Source (e.g., facebook)" /><input type="text" value={newLink.medium} onChange={(e) => setNewLink({...newLink, medium: e.target.value})} className="w-full p-2 border rounded-lg" placeholder="Medium (e.g., cpc, social)" /></div></div>
-                  {/* ── FIX 8: corrected commission % and cookie duration ──────────── */}
                   <div className="bg-primary-50 p-3 rounded-lg">
                     <p className="text-xs text-primary-700 mb-1">Commission Rate</p>
-                    <p className="text-sm font-medium">You'll earn <span className="text-primary-600 font-bold">25%</span> of every sale</p>
+                    <p className="text-sm font-medium">You'll earn <span className="text-primary-600 font-bold">{affiliateData.commissionRates.low}% / {affiliateData.commissionRates.high}%</span> per sale (low-ticket / high-ticket)</p>
                     <p className="text-xs text-primary-600 mt-1">60-day cookie, any purchase within 60 days earns commission</p>
-                    <p className="text-xs text-primary-500 mt-1">Reach 10 sales/month to auto-upgrade to 30% Performance tier</p>
+                    {affiliateData.tier === 'standard' && (
+                      <p className="text-xs text-primary-500 mt-1">Reach {PERFORMANCE_TIER_SALES_THRESHOLD} sales in any rolling {PERFORMANCE_TIER_WINDOW_DAYS}-day window to auto-upgrade to Performance</p>
+                    )}
+                    {affiliateData.tier === 'performance' && (
+                      <p className="text-xs text-primary-500 mt-1">Reach {STRATEGIC_TIER_SALES_THRESHOLD} sales in {STRATEGIC_TIER_WINDOW_DAYS} days, or ${STRATEGIC_TIER_LIFETIME_EARNINGS_USD.toLocaleString()} lifetime, to auto-upgrade to Strategic</p>
+                    )}
                   </div>
                   <div className="flex gap-2 pt-4"><Button onClick={handleCreateLink} className="flex-1">Generate Link</Button><Button variant="outline" className="flex-1" onClick={() => setShowCreateLinkModal(false)}>Cancel</Button></div>
                 </div>
@@ -1831,7 +1880,6 @@ export default function AffiliateDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Share Modal */}
       <AnimatePresence>
         {showShareModal && selectedLink && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowShareModal(false)}>
@@ -1851,7 +1899,6 @@ export default function AffiliateDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Withdrawal Modal */}
       <AnimatePresence>
         {showWithdrawModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowWithdrawModal(false)}>
@@ -1860,7 +1907,6 @@ export default function AffiliateDashboard() {
               <div className="space-y-4">
                 <div className="bg-primary-50 p-4 rounded-lg"><p className="text-sm text-primary-700 mb-1">Available Balance</p><p className="text-2xl font-bold text-primary-600">${affiliateData.stats.pendingCommissions}</p></div>
                 <div><label className="block text-sm font-medium mb-2">Amount to Withdraw</label><input type="number" className="w-full p-2 border rounded-lg" placeholder="Enter amount" max={affiliateData.stats.pendingCommissions} min={50} /><p className="text-xs text-neutral-500 mt-1">Minimum: $50</p></div>
-                {/* ── FIX 9: correct payment terms in withdrawal modal ──────────── */}
                 <div className="bg-amber-50 p-3 rounded-lg text-xs text-amber-700">
                   <p className="font-medium mb-1">⏰ Payment Schedule</p>
                   <p>• First payment: within 7 working days of first qualifying sale</p>
@@ -1874,7 +1920,6 @@ export default function AffiliateDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Payment Modal */}
       <AnimatePresence>
         {showPaymentModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPaymentModal(false)}>
@@ -1892,16 +1937,3 @@ export default function AffiliateDashboard() {
     </div>
   )
 }
-
-function InfoIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
-    </svg>
-  )
-}
-
-
-

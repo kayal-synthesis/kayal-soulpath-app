@@ -1,7 +1,6 @@
 'use client'
 import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
-
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -13,7 +12,6 @@ import {
   Gift, Loader2, CheckCircle 
 } from 'lucide-react'
 import Link from 'next/link'
-
 function ReferralLoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -22,7 +20,18 @@ function ReferralLoginPageInner() {
   // Check for success message from registration or password reset
   const registered = searchParams.get('registered')
   const resetSuccess = searchParams.get('reset')
-  const redirectTo = searchParams.get('redirect') || '/member/referral/dashboard'
+  // Real fix for a genuine open redirect, redirectTo previously came
+  // straight from the URL query with no validation at all, letting a
+  // crafted link like ?redirect=https://look-alike-site.com send
+  // someone who logs in legitimately somewhere else entirely. Only a
+  // real, relative, in-app path is accepted now, "/something", never
+  // a full URL, and specifically never a protocol-relative one either
+  // ("//evil.com" starts with a single slash but browsers still treat
+  // it as external).
+  const rawRedirect = searchParams.get('redirect')
+  const redirectTo = (rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//'))
+    ? rawRedirect
+    : '/member/referral/dashboard'
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,7 +39,6 @@ function ReferralLoginPageInner() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-
   // Show success messages
   useEffect(() => {
     if (registered === 'true') {
@@ -40,19 +48,16 @@ function ReferralLoginPageInner() {
       setSuccessMessage('Password reset successfully! Please sign in with your new password.')
     }
   }, [registered, resetSuccess])
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setSuccessMessage('')
-
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-
       if (error) throw error
       
       // Check if user is an affiliate
@@ -81,24 +86,19 @@ function ReferralLoginPageInner() {
       setLoading(false)
     }
   }
-
   const handleForgotPassword = async () => {
     if (!email) {
       setError('Please enter your email first')
       return
     }
-
     setLoading(true)
     setError('')
     setSuccessMessage('')
-
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/member/referral/reset-password`,
       })
-
       if (error) throw error
-
       setSuccessMessage('Password reset link sent to your email! Please check your inbox.')
       // Clear the email field after successful send
       // setEmail('') // Optional: uncomment if you want to clear the email field
@@ -108,7 +108,6 @@ function ReferralLoginPageInner() {
       setLoading(false)
     }
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center p-4">
       <motion.div
@@ -125,7 +124,6 @@ function ReferralLoginPageInner() {
             <h1 className="text-2xl font-serif mb-2">Welcome Back</h1>
             <p className="text-neutral-600">Sign in to your affiliate account</p>
           </div>
-
           {/* Success Message */}
           {successMessage && (
             <motion.div
@@ -137,7 +135,6 @@ function ReferralLoginPageInner() {
               <span>{successMessage}</span>
             </motion.div>
           )}
-
           {/* Error Message */}
           {error && (
             <motion.div
@@ -149,7 +146,6 @@ function ReferralLoginPageInner() {
               <span>{error}</span>
             </motion.div>
           )}
-
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Email Field */}
@@ -170,7 +166,6 @@ function ReferralLoginPageInner() {
                 />
               </div>
             </div>
-
             {/* Password Field */}
             <div>
               <label className="block text-sm font-medium mb-1">
@@ -197,7 +192,6 @@ function ReferralLoginPageInner() {
                 </button>
               </div>
             </div>
-
             {/* Forgot Password Link */}
             <div className="flex justify-end">
               <button
@@ -209,7 +203,6 @@ function ReferralLoginPageInner() {
                 Forgot password?
               </button>
             </div>
-
             {/* Submit Button */}
             <Button
               type="submit"
@@ -228,7 +221,6 @@ function ReferralLoginPageInner() {
               )}
             </Button>
           </form>
-
           {/* Register Link */}
           <p className="text-center text-sm text-neutral-500 mt-6">
             Don't have an account?{' '}
@@ -239,7 +231,6 @@ function ReferralLoginPageInner() {
               Join the Referral Community
             </Link>
           </p>
-
           {/* Security Note */}
           <p className="text-center text-xs text-neutral-400 mt-4">
             Secure login powered by Supabase Auth
@@ -249,7 +240,6 @@ function ReferralLoginPageInner() {
     </div>
   )
 }
-
 export default function ReferralLoginPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>

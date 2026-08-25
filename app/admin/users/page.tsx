@@ -36,21 +36,26 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0)
   const [stats, setStats] = useState({ total:0, activeToday:0, affiliates:0, revenue:0 })
   const [deleteWarning, setDeleteWarning] = useState<{ user: AdminUser; recruitCount: number } | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   const fetchStats = async () => {
     const today = new Date().toISOString().split('T')[0]
     const [totalRes, todayRes, affRes, revRes] = await Promise.all([
       supabase.from('users').select('*',{count:'exact',head:true}),
       supabase.from('users').select('*',{count:'exact',head:true}).gte('last_sign_in_at',today),
-      supabase.from('affiliate_profiles').select('*',{count:'exact',head:true}).eq('approved',true),
-      supabase.from('purchases').select('price'),
+      // Real, confirmed source of truth, users, not affiliate_profiles,
+      // confirmed empty, zero rows ever.
+      supabase.from('users').select('*',{count:'exact',head:true}).eq('affiliate_status','active'),
+      // Real, correct revenue source, revenue_events, not purchases.price
+      // summed directly, same real fix already proven on the standalone
+      // Revenue page, see its own header comment for why.
+      supabase.from('revenue_events').select('amount_usd'),
     ])
     setStats({
       total: totalRes.count||0,
       activeToday: todayRes.count||0,
       affiliates: affRes.count||0,
-      // FIX: purchases column is price not amount
-      revenue: (revRes.data||[]).reduce((s:number,p:any)=>s+(Number(p.price)||0),0)
+      revenue: (revRes.data||[]).reduce((s:number,e:any)=>s+(Number(e.amount_usd)||0),0)
     })
   }
 
@@ -85,6 +90,60 @@ export default function AdminUsersPage() {
 
   useEffect(()=>{ fetchStats(); fetchUsers(0) },[fetchUsers])
 
+  // Real, working export, replacing a button that previously had no
+  // handler at all, matching the same real, proven pattern already
+  // used on the Purchases page tonight.
+  const exportCSV = async () => {
+    setExporting(true)
+    try {
+      let query = supabase
+        .from('users')
+        .select('full_name, email, created_at, last_sign_in_at, is_active, affiliate_status, referral_code')
+        .order('created_at', { ascending: false })
+        .limit(5000)
+
+      if (search) query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`)
+      if (filter==='affiliates')   query = query.eq('affiliate_status','active')
+      if (filter==='inactive')     query = query.eq('is_active',0)
+
+      const { data, error } = await query
+      if (error) throw error
+      if (!data || data.length === 0) {
+        toast.error('No users to export')
+        return
+      }
+
+      const headers = ['Name', 'Email', 'Joined', 'Last Sign In', 'Active', 'Affiliate Status', 'Referral Code']
+      const rows = data.map((u: any) => [
+        u.full_name || '',
+        u.email || '',
+        new Date(u.created_at).toISOString(),
+        u.last_sign_in_at ? new Date(u.last_sign_in_at).toISOString() : '',
+        u.is_active === 0 ? 'No' : 'Yes',
+        u.affiliate_status || '',
+        u.referral_code || '',
+      ])
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `users-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      toast.success(`Exported ${data.length} users${data.length === 5000 ? ' (capped at 5,000)' : ''}`)
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export users')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const handleSuspend = async (userId:string) => {
     try {
       // FIX: is_active is integer (0=inactive), not a status string
@@ -102,10 +161,14 @@ export default function AdminUsersPage() {
   // their overrides would just quietly stop crediting with no error
   // anywhere. This surfaces that risk before it happens rather than after.
   const checkRecruits = async (user: AdminUser): Promise<number> => {
+    // Real, confirmed source of truth, users, not affiliate_profiles,
+    // confirmed empty, zero rows ever. This check queried a table with
+    // no real data in it, meaning it silently never fired for anyone,
+    // referral_code lives directly on the same real users row.
     const { data: profile } = await supabase
-      .from('affiliate_profiles')
+      .from('users')
       .select('referral_code')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .maybeSingle()
 
     if (!profile?.referral_code) return 0
@@ -162,7 +225,10 @@ export default function AdminUsersPage() {
           <Button variant="outline" onClick={()=>fetchUsers(page)} disabled={refreshing}>
             <RefreshCw className={`w-4 h-4 mr-2 ${refreshing?'animate-spin':''}`}/>Refresh
           </Button>
-          <Button variant="outline"><Download className="w-4 h-4 mr-2"/>Export</Button>
+          <Button variant="outline" onClick={exportCSV} disabled={exporting}>
+            {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Download className="w-4 h-4 mr-2"/>}
+            Export
+          </Button>
         </div>
       </div>
 

@@ -58,7 +58,7 @@ export default function RevenuePage() {
   const [timeRange, setTimeRange] = useState<'today'|'week'|'month'|'year'>('month')
   const [events, setEvents] = useState<RevenueEvent[]>([])
   const [stats, setStats] = useState({
-    total: 0, today: 0, week: 0, month: 0,
+    total: 0, today: 0, week: 0, month: 0, year: 0,
     refunds: 0, avgValue: 0, growth: 0,
     // Real, honest coverage tracking, not hidden, how many of the
     // events counted above genuinely have a converted USD figure
@@ -74,6 +74,7 @@ export default function RevenuePage() {
       const todayStr  = now.toISOString().split('T')[0]
       const weekAgo   = new Date(Date.now() - 7*86400000).toISOString()
       const monthAgo  = new Date(Date.now() - 30*86400000).toISOString()
+      const yearAgo   = new Date(Date.now() - 365*86400000).toISOString()
 
       // All revenue events, real, converted-USD events and
       // not-yet-converted ones both pulled here, so the unconverted
@@ -89,6 +90,7 @@ export default function RevenuePage() {
       const todayRev  = converted.filter(e=>e.created_at?.startsWith(todayStr)).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
       const weekRev   = converted.filter(e=>e.created_at&&e.created_at>=weekAgo).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
       const monthRev  = converted.filter(e=>e.created_at&&e.created_at>=monthAgo).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
+      const yearRev   = converted.filter(e=>e.created_at&&e.created_at>=yearAgo).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
       // Refunds are already negative in the ledger, by design, this
       // sum is naturally negative or zero, displayed as a positive
       // magnitude below for readability.
@@ -101,7 +103,7 @@ export default function RevenuePage() {
       const prevRev = converted.filter(e=>e.created_at&&e.created_at>=prevMonthAgo&&e.created_at<monthAgo).reduce((s,e)=>s+(Number(e.amount_usd)||0),0)
       const growth = prevRev>0 ? ((monthRev-prevRev)/prevRev)*100 : 0
 
-      setStats({ total:totalRev, today:todayRev, week:weekRev, month:monthRev, refunds, avgValue, growth:Math.round(growth*10)/10, unconvertedCount })
+      setStats({ total:totalRev, today:todayRev, week:weekRev, month:monthRev, year:yearRev, refunds, avgValue, growth:Math.round(growth*10)/10, unconvertedCount })
 
       // Daily chart for last 30 days, net figure per day, purchases
       // and renewals add, refunds, already negative, subtract
@@ -181,10 +183,19 @@ export default function RevenuePage() {
       )}
 
       {/* Stats */}
+      {(() => {
+        // Real fix, the dropdown above previously changed timeRange
+        // state but fetchRevenue never read it, every card showed the
+        // same fixed windows no matter what was selected. This maps
+        // the real, selected range to a genuine label and value, used
+        // by the second card below.
+        const rangeLabel = { today: "Today's Revenue", week: "This Week's Revenue", month: "This Month's Revenue", year: "This Year's Revenue" }[timeRange]
+        const rangeValue = { today: stats.today, week: stats.week, month: stats.month, year: stats.year }[timeRange]
+        return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label:'Total Revenue', value:stats.total, color:'text-primary-600', icon:DollarSign, bg:'bg-primary-100' },
-          { label:'This Month',    value:stats.month,  color:'text-blue-600',    icon:TrendingUp,  bg:'bg-blue-100' },
+          { label:rangeLabel,      value:rangeValue,   color:'text-blue-600',    icon:TrendingUp,  bg:'bg-blue-100' },
           { label:'This Week',     value:stats.week,   color:'text-green-600',   icon:Wallet,      bg:'bg-green-100' },
           { label:'Refunds',       value:stats.refunds,color:'text-red-600',     icon:Receipt,     bg:'bg-red-100' },
         ].map(s=>{
@@ -195,7 +206,7 @@ export default function RevenuePage() {
                 <div>
                   <p className="text-sm text-neutral-500">{s.label}</p>
                   <p className={`text-2xl font-bold mt-1 ${s.color}`}>{displayValue(s.value)}</p>
-                  {s.label==='This Month'&&<p className="text-xs text-green-600 mt-1 flex items-center gap-1"><TrendingUp className="w-3 h-3"/>+{stats.growth}% vs prev</p>}
+                  {s.label===rangeLabel&&<p className="text-xs text-green-600 mt-1 flex items-center gap-1"><TrendingUp className="w-3 h-3"/>+{stats.growth}% vs prev</p>}
                 </div>
                 <div className={`w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center`}>
                   <Icon className={`w-5 h-5 ${s.color}`}/>
@@ -205,6 +216,8 @@ export default function RevenuePage() {
           )
         })}
       </div>
+        )
+      })()}
 
       {/* Chart */}
       <Card className="p-6">

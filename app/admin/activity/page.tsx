@@ -7,8 +7,8 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import {
-  Activity, User, ShoppingBag, DollarSign,
-  Shield, Settings, Mail, Download,
+  Activity, User, DollarSign,
+  Settings, Mail, Download,
   Filter, Search, Calendar, Clock,
   AlertTriangle, CheckCircle, Info,
   Eye, Loader2, RefreshCw
@@ -26,15 +26,14 @@ interface ActivityLog {
 }
 
 const ACTION_META: Record<string, { icon: any; color: string; severity: string }> = {
-  login:            { icon: User,        color: 'bg-blue-100 text-blue-600',   severity: 'info' },
-  logout:           { icon: User,        color: 'bg-gray-100 text-gray-600',   severity: 'info' },
-  purchase_created: { icon: ShoppingBag, color: 'bg-green-100 text-green-600', severity: 'success' },
-  payout_processed: { icon: DollarSign,  color: 'bg-purple-100 text-purple-600', severity: 'success' },
-  user_updated:     { icon: Settings,    color: 'bg-blue-100 text-blue-600',   severity: 'info' },
-  tool_executed:    { icon: Activity,    color: 'bg-yellow-100 text-yellow-600', severity: 'info' },
-  fraud_detected:   { icon: AlertTriangle, color: 'bg-red-100 text-red-600',   severity: 'critical' },
-  affiliate_approved: { icon: CheckCircle, color: 'bg-green-100 text-green-600', severity: 'success' },
-  security_event:   { icon: Shield,      color: 'bg-red-100 text-red-600',     severity: 'warning' },
+  login:              { icon: User,        color: 'bg-blue-100 text-blue-600',     severity: 'info' },
+  settings_updated:   { icon: Settings,    color: 'bg-blue-100 text-blue-600',     severity: 'info' },
+  tool_executed:      { icon: Activity,    color: 'bg-yellow-100 text-yellow-600', severity: 'info' },
+  payout_marked_paid: { icon: DollarSign,  color: 'bg-purple-100 text-purple-600', severity: 'success' },
+  user_created:       { icon: User,        color: 'bg-green-100 text-green-600',   severity: 'success' },
+  newsletter_sent:    { icon: Mail,        color: 'bg-blue-100 text-blue-600',     severity: 'info' },
+  affiliate_approved: { icon: CheckCircle, color: 'bg-green-100 text-green-600',   severity: 'success' },
+  affiliate_rejected: { icon: AlertTriangle, color: 'bg-red-100 text-red-600',     severity: 'warning' },
 }
 
 const DEFAULT_META = { icon: Info, color: 'bg-gray-100 text-gray-600', severity: 'info' }
@@ -128,10 +127,10 @@ export default function ActivityPage() {
           <select value={filter} onChange={e => setFilter(e.target.value)} className="px-3 py-2 border rounded-lg">
             <option value="all">All Activities</option>
             <option value="login">Logins</option>
-            <option value="purchase_created">Purchases</option>
-            <option value="payout_processed">Payouts</option>
-            <option value="fraud_detected">Security</option>
             <option value="tool_executed">Admin Tools</option>
+            <option value="payout_marked_paid">Payouts</option>
+            <option value="user_created">New Users</option>
+            <option value="settings_updated">Settings Changes</option>
           </select>
         </div>
       </Card>

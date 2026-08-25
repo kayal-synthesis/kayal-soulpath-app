@@ -33,6 +33,7 @@ export default function PurchasesPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(0)
@@ -53,10 +54,14 @@ export default function PurchasesPage() {
         supabase.from('purchases').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
         supabase.from('purchases').select('*', { count: 'exact', head: true }).gte('created_at', weekStart),
         supabase.from('purchases').select('*', { count: 'exact', head: true }).gte('created_at', monthStart),
-        supabase.from('purchases').select('price'),
+        // Real, correct revenue source, revenue_events, not
+        // purchases.price summed directly, same real fix already
+        // proven on the standalone Revenue page, see its own header
+        // comment for why.
+        supabase.from('revenue_events').select('amount_usd'),
       ])
 
-      const revenue = (revenueRes.data || []).reduce((s, p) => s + (Number(p.price) || 0), 0)
+      const revenue = (revenueRes.data || []).reduce((s, e: any) => s + (Number(e.amount_usd) || 0), 0)
 
       setStats({
         total:   totalRes.count  || 0,
@@ -105,6 +110,62 @@ export default function PurchasesPage() {
     fetchPurchases(0)
   }, [fetchPurchases])
 
+  // Real, working export, replacing a button that previously had no
+  // handler at all. Fetches real rows matching the current filters,
+  // capped at 5,000, stated honestly here rather than silently
+  // truncated, matching the same real, proven pattern already used on
+  // the Database Management page tonight.
+  const exportCSV = async () => {
+    setExporting(true)
+    try {
+      let query = supabase
+        .from('purchases')
+        .select('tool_name, tool_id, category, price, status, ref_code, created_at, users(email, full_name)')
+        .order('created_at', { ascending: false })
+        .limit(5000)
+
+      if (statusFilter !== 'all') query = query.eq('status', statusFilter)
+      if (search) query = query.or(`tool_name.ilike.%${search}%,tool_id.ilike.%${search}%`)
+
+      const { data, error } = await query
+      if (error) throw error
+      if (!data || data.length === 0) {
+        toast.error('No purchases to export')
+        return
+      }
+
+      const headers = ['Date', 'Tool', 'Category', 'Price', 'Status', 'Ref Code', 'Customer Email', 'Customer Name']
+      const rows = data.map((p: any) => [
+        new Date(p.created_at).toISOString(),
+        p.tool_name || p.tool_id,
+        p.category || '',
+        (Number(p.price) || 0).toFixed(2),
+        p.status,
+        p.ref_code || '',
+        p.users?.email || '',
+        p.users?.full_name || '',
+      ])
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `purchases-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      toast.success(`Exported ${data.length} purchases${data.length === 5000 ? ' (capped at 5,000)' : ''}`)
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export purchases')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const statusBadgeVariant = (s: string) => {
     if (s === 'active' || s === 'completed') return 'success'
     if (s === 'pending') return 'warning'
@@ -132,7 +193,10 @@ export default function PurchasesPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline"><Download className="w-4 h-4 mr-2" />Export</Button>
+          <Button variant="outline" onClick={exportCSV} disabled={exporting}>
+            {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            Export
+          </Button>
         </div>
       </div>
 
@@ -207,7 +271,7 @@ export default function PurchasesPage() {
                   </td>
                   <td className="py-3 text-sm">
                     <p>{p.users?.full_name || '—'}</p>
-                    <p className="text-xs text-neutral-400">{p.users?.email || p.user_id.slice(0, 8) + '...'}</p>
+                    <p className="text-xs text-neutral-400">{p.users?.email || (p.user_id ? p.user_id.slice(0, 8) + '...' : 'guest')}</p>
                   </td>
                   <td className="py-3"><Badge variant="outline" size="sm">{p.category}</Badge></td>
                   <td className="py-3 font-medium text-green-600">${(Number(p.price) || 0).toFixed(2)}</td>

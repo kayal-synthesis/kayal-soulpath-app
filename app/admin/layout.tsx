@@ -12,7 +12,7 @@ import {
   LayoutDashboard, Users, DollarSign, ShoppingBag,
   Layers, BarChart, FileText, Settings, LogOut,
   Menu, X, Bell, Shield, AlertTriangle, Activity,
-  CreditCard, Gift, Target, Globe, HelpCircle,
+  Gift, Target, Globe, HelpCircle,
   ChevronLeft, ChevronRight, UserCog, Wallet,
   TrendingUp, Calendar, Clock, Download, Filter,
   Search, Home, PieChart, Zap, Award, Crown,
@@ -82,14 +82,10 @@ export default function AdminLayout({
       )
       .subscribe()
 
-    const affiliatesChannel = supabase
-      .channel('affiliates-count')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'affiliate_profiles' },
-        () => fetchBadgeCounts()
-      )
-      .subscribe()
+    // Real, new affiliates are users table inserts now, confirmed
+    // by tonight's schema check, affiliate_profiles is genuinely
+    // empty, never written to, this subscription could never have
+    // fired. The usersChannel above already covers this.
 
     const fraudChannel = supabase
       .channel('fraud-count')
@@ -106,7 +102,6 @@ export default function AdminLayout({
     return () => {
       supabase.removeChannel(purchasesChannel)
       supabase.removeChannel(usersChannel)
-      supabase.removeChannel(affiliatesChannel)
       supabase.removeChannel(fraudChannel)
       clearInterval(interval)
     }
@@ -170,11 +165,12 @@ export default function AdminLayout({
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today.toISOString())
 
-      // Pending affiliates
+      // Pending affiliates, real, confirmed source of truth, users,
+      // not affiliate_profiles, confirmed genuinely empty tonight.
       const { count: pendingAffiliates } = await supabase
-        .from('affiliate_profiles')
+        .from('users')
         .select('*', { count: 'exact', head: true })
-        .eq('approved', false)
+        .eq('affiliate_status', 'pending')
 
       // Open fraud alerts
       const { count: openFraudAlerts } = await supabase
@@ -188,6 +184,12 @@ export default function AdminLayout({
         .select('*', { count: 'exact', head: true })
         .eq('severity', 'critical')
         .eq('status', 'open')
+
+      // Open tasks, real, genuine tasks table now exists.
+      const { count: openTasks } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'done')
 
       // Unread notifications
       const { data: { user } } = await supabase.auth.getUser()
@@ -206,7 +208,7 @@ export default function AdminLayout({
         users: newUsersToday || 0,
         affiliates: pendingAffiliates || 0,
         security: criticalAlerts || 0,
-        tasks: 0, // You can implement tasks count if you have a tasks table
+        tasks: openTasks || 0,
         notifications: unreadNotifications
       })
 
@@ -293,12 +295,6 @@ export default function AdminLayout({
       icon: Bell,
       roles: ['super_admin', 'admin', 'moderator'],
       badge: { count: badgeCounts.notifications, color: 'bg-red-500' }
-    },
-    {
-      name: 'Billing',
-      href: '/admin/billing',
-      icon: CreditCard,
-      roles: ['super_admin', 'finance']
     },
     {
       name: 'Reports',
