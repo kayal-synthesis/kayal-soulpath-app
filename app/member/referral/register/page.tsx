@@ -140,6 +140,19 @@ function ReferralRegisterPageInner() {
         })
         .eq('token', authData.user.id)
       if (userError) { console.error('User insert error:', userError); throw userError }
+
+      // Real, live signal from Supabase itself, not an assumption
+      // about whether email confirmation is currently on or off.
+      // When it's required, signUp() succeeds but returns no real
+      // session yet, when it's off, a real session comes back
+      // immediately. This handles both correctly, regardless of
+      // which way the project setting is actually set.
+      if (!authData.session) {
+        toast.success('Account created! Check your email to confirm your account before signing in.')
+        router.push('/member/referral/login?registered=true')
+        return
+      }
+
       toast.success('Account created successfully!')
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
