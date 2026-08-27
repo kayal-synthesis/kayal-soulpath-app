@@ -343,14 +343,14 @@ export function StandardToolCard({
             </div>
             <div className="pt-1 min-w-0">
               <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.15em] uppercase mb-1" style={{ color: a.accent+'BB' }}>{a.label}</p>
-              <h3 className="font-serif text-sm sm:text-base font-semibold text-neutral-900 leading-snug">{tool.name}</h3>
+              <h3 className="font-serif text-base sm:text-lg font-semibold text-neutral-900 leading-snug">{tool.name}</h3>
             </div>
           </div>
 
-          <p className="text-xs text-neutral-600 leading-relaxed mb-2 italic">{tool.tagline}</p>
+          <p className="text-sm text-neutral-600 leading-relaxed mb-2 italic">{tool.tagline}</p>
 
           {tool.hook && (
-            <p className="text-xs text-neutral-600 leading-relaxed mb-3">{tool.hook}</p>
+            <p className="text-sm text-neutral-600 leading-relaxed mb-3">{tool.hook}</p>
           )}
 
           <div className="flex flex-wrap gap-1.5 mb-3">
@@ -370,7 +370,7 @@ export function StandardToolCard({
                 {visible.map((f, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: a.from }} />
-                    <span className="text-[15px] text-neutral-600 leading-relaxed">{f}</span>
+                    <span className="text-sm text-neutral-600 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -514,14 +514,14 @@ export function FlagshipToolCard({
             </div>
             <div>
               <p className="text-[9px] sm:text-[10px] font-bold tracking-[0.15em] uppercase mb-1" style={{ color: a.accent+'BB' }}>{a.label}</p>
-              <h3 className="font-serif text-base sm:text-lg font-bold text-neutral-900 leading-snug">{tool.name}</h3>
+              <h3 className="font-serif text-lg sm:text-xl font-bold text-neutral-900 leading-snug">{tool.name}</h3>
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mb-2 italic">{tool.tagline}</p>
+          <p className="text-sm text-neutral-600 leading-relaxed mb-2 italic">{tool.tagline}</p>
 
           {tool.hook && (
-            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mb-3 sm:mb-4">{tool.hook}</p>
+            <p className="text-sm text-neutral-600 leading-relaxed mb-3 sm:mb-4">{tool.hook}</p>
           )}
 
           <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-5">
@@ -543,7 +543,7 @@ export function FlagshipToolCard({
                     <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: a.soft }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: a.from }} />
                     </div>
-                    <span className="text-[15px] text-neutral-600 leading-relaxed">{f}</span>
+                    <span className="text-sm text-neutral-600 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
