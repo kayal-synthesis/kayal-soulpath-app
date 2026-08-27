@@ -215,7 +215,7 @@ function StarRow({ rating = 4.9, count }: { rating?: number; count?: number }) {
           <Star key={s} className={`w-3 h-3 ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-neutral-200 fill-neutral-200'}`} />
         ))}
       </div>
-      <span className="text-[11px] text-neutral-400 font-medium">
+      <span className="text-[11px] text-neutral-500 font-medium">
         {rating.toFixed(1)}{count ? ` · ${count.toLocaleString()} reviews` : ''}
       </span>
     </div>
@@ -347,7 +347,7 @@ export function StandardToolCard({
             </div>
           </div>
 
-          <p className="text-xs text-neutral-500 leading-relaxed mb-2 italic">{tool.tagline}</p>
+          <p className="text-xs text-neutral-600 leading-relaxed mb-2 italic">{tool.tagline}</p>
 
           {tool.hook && (
             <p className="text-xs text-neutral-600 leading-relaxed mb-3">{tool.hook}</p>
@@ -365,12 +365,12 @@ export function StandardToolCard({
 
           {features.length > 0 && (
             <div className="mb-3">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-400 mb-2">What You Get</p>
-              <ul className="space-y-1.5">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-500 mb-2">What You Get</p>
+              <ul className="space-y-2">
                 {visible.map((f, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: a.from }} />
-                    <span className="text-sm text-neutral-600 leading-snug">{f}</span>
+                    <span className="text-[15px] text-neutral-600 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -404,11 +404,11 @@ export function StandardToolCard({
             <div>
               <div className="flex items-baseline gap-1">
                 <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">${tool.price}</span>
-                {tool.subscriptionPeriod && <span className="text-xs text-neutral-400">/{tool.subscriptionPeriod}</span>}
+                {tool.subscriptionPeriod && <span className="text-xs text-neutral-500">/{tool.subscriptionPeriod}</span>}
               </div>
               <div className="flex items-center gap-1 mt-0.5">
                 <Clock className="w-3 h-3 text-neutral-300" />
-                <span className="text-[10px] text-neutral-400">{tool.deliveryMinutes ?? 20}-min delivery</span>
+                <span className="text-[10px] text-neutral-500">{tool.deliveryMinutes ?? 20}-min delivery</span>
               </div>
             </div>
             {showAddButton && (
@@ -498,7 +498,7 @@ export function FlagshipToolCard({
           <div className="flex items-center gap-2 mb-4">
             <Crown className="w-3.5 h-3.5" style={{ color: a.accent }} />
             <span className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: a.accent }}>Flagship Reading</span>
-            {tool.systemsCount && <span className="ml-auto text-[10px] font-semibold text-neutral-400">{tool.systemsCount} systems</span>}
+            {tool.systemsCount && <span className="ml-auto text-[10px] font-semibold text-neutral-500">{tool.systemsCount} systems</span>}
           </div>
 
           <div className="absolute top-4 right-4 sm:top-4 sm:right-5 flex flex-col items-end gap-1.5 z-10">
@@ -518,7 +518,7 @@ export function FlagshipToolCard({
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-neutral-500 leading-relaxed mb-2 italic">{tool.tagline}</p>
+          <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mb-2 italic">{tool.tagline}</p>
 
           {tool.hook && (
             <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mb-3 sm:mb-4">{tool.hook}</p>
@@ -536,14 +536,14 @@ export function FlagshipToolCard({
 
           {features.length > 0 && (
             <div className="mb-4 sm:mb-5">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-400 mb-2 sm:mb-3">What You Get</p>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-500 mb-2 sm:mb-3">What You Get</p>
               <ul className="space-y-2">
                 {visible.map((f, i) => (
                   <li key={i} className="flex items-start gap-2.5">
                     <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: a.soft }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: a.from }} />
                     </div>
-                    <span className="text-sm text-neutral-600 leading-snug">{f}</span>
+                    <span className="text-[15px] text-neutral-600 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -573,11 +573,11 @@ export function FlagshipToolCard({
             <div>
               <div className="flex items-baseline gap-1">
                 <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">${tool.price}</span>
-                {tool.subscriptionPeriod && <span className="text-xs text-neutral-400">/{tool.subscriptionPeriod}</span>}
+                {tool.subscriptionPeriod && <span className="text-xs text-neutral-500">/{tool.subscriptionPeriod}</span>}
               </div>
               <div className="flex items-center gap-1 mt-0.5">
                 <Clock className="w-3 h-3 text-neutral-300" />
-                <span className="text-[10px] text-neutral-400">{tool.deliveryMinutes ?? 20}-min delivery</span>
+                <span className="text-[10px] text-neutral-500">{tool.deliveryMinutes ?? 20}-min delivery</span>
               </div>
             </div>
             {showAddButton && (
@@ -649,7 +649,7 @@ export function BundleSelector({ tools, onProceedToCheckout }: {
   return (
     <div className="space-y-6 sm:space-y-8">
       <div>
-        <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-400 mb-3">Choose Your Bundle</p>
+        <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-500 mb-3">Choose Your Bundle</p>
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {([1,2,3] as Tier[]).map(t => {
             const disc   = BUNDLE_DISCOUNTS[t]
@@ -661,7 +661,7 @@ export function BundleSelector({ tools, onProceedToCheckout }: {
                 {t === 3 && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-400 text-amber-950">Best Value</span>}
                 <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900 mb-0.5">{t}</span>
                 <span className="text-[10px] text-neutral-500 mb-1">Reading{t > 1 ? 's' : ''}</span>
-                {disc > 0 ? <span className="text-[10px] sm:text-[11px] font-bold text-indigo-600">{disc}% off</span> : <span className="text-[10px] sm:text-[11px] text-neutral-400">Full price</span>}
+                {disc > 0 ? <span className="text-[10px] sm:text-[11px] font-bold text-indigo-600">{disc}% off</span> : <span className="text-[10px] sm:text-[11px] text-neutral-500">Full price</span>}
               </button>
             )
           })}
@@ -670,7 +670,7 @@ export function BundleSelector({ tools, onProceedToCheckout }: {
 
       {selectedTools.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-400">Selected ({selectedTools.length}/{tier})</p>
+          <p className="text-[10px] font-bold tracking-widest uppercase text-neutral-500">Selected ({selectedTools.length}/{tier})</p>
           {selectedTools.map(t => <CompactToolCard key={t.id} tool={t} discountedPrice={tier > 1 ? t.price * (1 - BUNDLE_DISCOUNTS[tier] / 100) : undefined} />)}
           {slotsLeft > 0 && <p className="text-xs text-indigo-600 text-center font-medium">Select {slotsLeft} more reading{slotsLeft > 1 ? 's' : ''} to unlock your discount</p>}
         </div>
@@ -710,7 +710,7 @@ export function BundleSelector({ tools, onProceedToCheckout }: {
                 {bundle.savings > 0 && <><span className="text-sm text-neutral-400 line-through">${bundle.subtotal.toFixed(0)}</span><span className="text-sm font-bold text-emerald-600">Save ${bundle.savings.toFixed(0)}</span></>}
               </div>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
               <Clock className="w-3 h-3" /><span>20-min delivery</span>
             </div>
           </div>

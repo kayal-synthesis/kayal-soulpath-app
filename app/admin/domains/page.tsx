@@ -107,7 +107,7 @@ export default function AdminDomainsPage() {
           status: 'pending',
           ssl_status: 'pending',
           dns_records: [
-            { type: 'A', name: '@', value: '76.76.21.21', status: 'pending' }
+            { type: 'A', name: '@', value: '178.105.92.171', status: 'pending' }
           ],
           created_at: new Date().toISOString(),
           user_id: user?.id
@@ -129,14 +129,34 @@ export default function AdminDomainsPage() {
   const verifyDomain = async (domainId: string) => {
     setVerifying(domainId)
     try {
-      // Real, honest gap: verifying a domain for real means an actual
-      // DNS lookup against whatever provider is in use, and triggering
-      // real SSL issuance. Neither exists yet, no backend route for
-      // this was found anywhere in the codebase. Rather than fake a
-      // 2-second delay and write a false, permanent "domain_verified"
-      // entry to the real admin audit log, this says so plainly and
-      // changes nothing in the database.
-      toast.info('Real DNS/SSL verification isn\'t wired up yet, check propagation directly with your DNS provider for now.')
+      const target = domains.find(d => d.id === domainId)
+      if (!target) return
+
+      const res = await fetch('/api/admin/domains/verify', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ domainId, domain: target.domain }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || 'Verification failed')
+        return
+      }
+
+      if (data.overallStatus === 'active') {
+        toast.success('Domain verified, DNS and SSL both genuinely active')
+      } else if (data.dnsError) {
+        toast.error(data.dnsError)
+      } else if (data.sslStatus === 'failed') {
+        toast.error('DNS is correct, but SSL isn\'t responding yet, this can take a few minutes after DNS first propagates')
+      } else {
+        toast.info('Verification ran, status still pending')
+      }
+
+      fetchDomains()
+    } catch (error: any) {
+      toast.error(error.message || 'Verification failed')
     } finally {
       setVerifying(null)
     }
@@ -145,11 +165,25 @@ export default function AdminDomainsPage() {
   const refreshDNS = async (domainId: string) => {
     setRefreshing(domainId)
     try {
-      // Same real, honest gap as verifyDomain above, a genuine refresh
-      // needs an actual DNS lookup this page doesn't have a backend
-      // for yet. The DNS record statuses shown below only ever reflect
-      // whatever was last saved to the database, not a live check.
-      toast.info('Real DNS refresh isn\'t wired up yet, the records below reflect what was last saved, not a live lookup.')
+      const target = domains.find(d => d.id === domainId)
+      if (!target) return
+
+      const res = await fetch('/api/admin/domains/verify', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ domainId, domain: target.domain }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || 'Refresh failed')
+        return
+      }
+
+      toast.success(`DNS refreshed, resolves to ${data.resolvedIps?.join(', ') || 'nothing'}`)
+      fetchDomains()
+    } catch (error: any) {
+      toast.error(error.message || 'Refresh failed')
     } finally {
       setRefreshing(null)
     }

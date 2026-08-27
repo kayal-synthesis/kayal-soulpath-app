@@ -382,7 +382,7 @@ function NotificationsPanel({ onClose }:{ onClose:()=>void }) {
           <div key={n.id} onClick={()=>markRead(n.id)} className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${!n.read?'bg-blue-50/30':''}`}>
             <p className="text-sm font-medium">{n.title}</p>
             <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
-            <p className="text-xs text-gray-400 mt-1">{getTimeAgo(n.created_at)}</p>
+            <p className="text-xs text-gray-500 mt-1">{getTimeAgo(n.created_at)}</p>
           </div>
         ))}
       </div>

@@ -342,7 +342,7 @@ function ReferralRegisterPageInner() {
                     <span className="block text-primary-500 text-xs">
                       Strategic (+10%): 35% low · 40% high, by application
                     </span>
-                    <span className="block text-neutral-400 mt-1">
+                    <span className="block text-neutral-500 mt-1">
                       First payout: 5 points, no minimum · Recurring: $50 min, 15th monthly · 60-day cookie
                     </span>
                   </label>
@@ -366,7 +366,7 @@ function ReferralRegisterPageInner() {
                   Sign in
                 </button>
               </p>
-              <p className="text-center text-xs text-neutral-400 mt-2">
+              <p className="text-center text-xs text-neutral-500 mt-2">
                 Questions? <a href="mailto:contact@kayalsoulpath.com" className="text-primary-500 hover:underline">contact@kayalsoulpath.com</a>
               </p>
             </div>

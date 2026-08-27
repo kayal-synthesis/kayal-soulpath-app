@@ -257,7 +257,7 @@ export default function PurchasesPage() {
             </thead>
             <tbody>
               {purchases.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-8 text-neutral-400">No purchases found</td></tr>
+                <tr><td colSpan={7} className="text-center py-8 text-neutral-500">No purchases found</td></tr>
               ) : purchases.map(p => (
                 <tr key={p.id} className="border-b last:border-0 hover:bg-neutral-50">
                   <td className="py-3">
@@ -265,13 +265,13 @@ export default function PurchasesPage() {
                       <Package className="w-4 h-4 text-primary-600 flex-shrink-0" />
                       <div>
                         <p className="font-medium text-sm">{p.tool_name || p.tool_id}</p>
-                        <p className="text-xs text-neutral-400">{p.tool_type}</p>
+                        <p className="text-xs text-neutral-500">{p.tool_type}</p>
                       </div>
                     </div>
                   </td>
                   <td className="py-3 text-sm">
                     <p>{p.users?.full_name || '—'}</p>
-                    <p className="text-xs text-neutral-400">{p.users?.email || (p.user_id ? p.user_id.slice(0, 8) + '...' : 'guest')}</p>
+                    <p className="text-xs text-neutral-500">{p.users?.email || (p.user_id ? p.user_id.slice(0, 8) + '...' : 'guest')}</p>
                   </td>
                   <td className="py-3"><Badge variant="outline" size="sm">{p.category}</Badge></td>
                   <td className="py-3 font-medium text-green-600">${(Number(p.price) || 0).toFixed(2)}</td>

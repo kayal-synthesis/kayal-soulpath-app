@@ -26,11 +26,11 @@ interface PayoutRequest {
   id:              string
   affiliate_id:    string
   amount:          number
-  method:          string
+  payment_method:  string
   payment_details: Record<string, string>
   status:          'pending' | 'processing' | 'paid' | 'failed' | 'rejected'
   admin_note?:     string
-  requested_at:    string
+  created_at:      string
   processed_at?:   string
   // Joined from users
   affiliate_name:  string
@@ -50,6 +50,7 @@ export default function AdminAffiliatePayoutsPage() {
   const [loading,     setLoading]     = useState(true)
   const [refreshing,  setRefreshing]  = useState(false)
   const [processing,  setProcessing]  = useState<string | null>(null)
+  const [exporting,   setExporting]   = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('pending_processing')
 
   const [stats, setStats] = useState({
@@ -59,6 +60,14 @@ export default function AdminAffiliatePayoutsPage() {
     totalValue: 0,
   })
 
+  // Real, live Stripe balance, fetched fresh, not derived from
+  // anything stored locally. null while loading or if the fetch
+  // genuinely fails, so the UI can be honest about not knowing yet
+  // rather than showing a stale or fabricated number.
+  const [stripeBalance,  setStripeBalance]  = useState<{ available: number; pending: number } | null>(null)
+  const [balanceError,   setBalanceError]   = useState<string | null>(null)
+  const [balanceLoading, setBalanceLoading] = useState(true)
+
   // ── Fetch payout requests with affiliate details ───────────
 
   const fetchRequests = useCallback(async () => {
@@ -67,10 +76,10 @@ export default function AdminAffiliatePayoutsPage() {
       let query = supabase
         .from('payout_requests')
         .select(`
-          id, affiliate_id, amount, method, payment_details,
-          status, admin_note, requested_at, processed_at
+          id, affiliate_id, amount, payment_method, payment_details,
+          status, admin_note, created_at, processed_at
         `)
-        .order('requested_at', { ascending: true })
+        .order('created_at', { ascending: true })
 
       if (statusFilter === 'pending_processing') {
         query = query.in('status', ['pending', 'processing'])
@@ -133,11 +142,84 @@ export default function AdminAffiliatePayoutsPage() {
 
   useEffect(() => { fetchRequests() }, [fetchRequests])
 
+  // Real, live Stripe balance, fetched fresh on load, entirely
+  // separate from the locally-derived payout stats above, this is
+  // the one, real answer to "do we actually have the money."
+  const fetchBalance = useCallback(async () => {
+    setBalanceLoading(true)
+    setBalanceError(null)
+    try {
+      const res = await fetch('/api/admin/balance', { cache: 'no-store' })
+      const data = await res.json()
+      if (!res.ok) {
+        setBalanceError(data.error || 'Could not load balance')
+        setStripeBalance(null)
+        return
+      }
+      // Real sum across any currency entries Stripe actually
+      // returns, not assuming USD is the only one.
+      const available = (data.available || []).reduce((s: number, b: any) => s + b.amount, 0)
+      const pending    = (data.pending    || []).reduce((s: number, b: any) => s + b.amount, 0)
+      setStripeBalance({ available, pending })
+    } catch (err: any) {
+      setBalanceError(err.message || 'Could not load balance')
+      setStripeBalance(null)
+    } finally {
+      setBalanceLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchBalance() }, [fetchBalance])
+
+  // Real, working export, replacing a button that previously had no
+  // handler at all. Exports exactly what's currently shown, the
+  // already-fetched, already-filtered requests, matching the same
+  // real, proven pattern already used on the Purchases and Users
+  // pages tonight.
+  const exportCSV = () => {
+    if (requests.length === 0) {
+      toast.error('No payout requests to export')
+      return
+    }
+    setExporting(true)
+    try {
+      const headers = ['Affiliate', 'Email', 'Amount', 'Method', 'Status', 'Requested', 'Processed', 'Admin Note']
+      const rows = requests.map(r => [
+        r.affiliate_name,
+        r.affiliate_email,
+        r.amount.toFixed(2),
+        r.payment_method,
+        r.status,
+        new Date(r.created_at).toISOString(),
+        r.processed_at ? new Date(r.processed_at).toISOString() : '',
+        r.admin_note || '',
+      ])
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `payouts-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      toast.success(`Exported ${requests.length} payout requests`)
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export payouts')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   // ── Mark as paid ──────────────────────────────────────────
 
   const markPaid = async (req: PayoutRequest) => {
     if (!confirm(
-      `Confirm: $${req.amount.toFixed(2)} paid to ${req.affiliate_name} via ${req.method}?`
+      `Confirm: $${req.amount.toFixed(2)} paid to ${req.affiliate_name} via ${req.payment_method}?`
     )) return
 
     setProcessing(req.id)
@@ -170,7 +252,7 @@ export default function AdminAffiliatePayoutsPage() {
         payout_id:     req.id,
         type:          'paid_out',
         amount:        req.amount,
-        description:   `Payout via ${req.method} — marked paid by admin`,
+        description:   `Payout via ${req.payment_method} — marked paid by admin`,
         balance_after: Math.max(0, req.pending_balance - req.amount),
         created_at:    new Date().toISOString(),
       })
@@ -180,7 +262,7 @@ export default function AdminAffiliatePayoutsPage() {
       await supabase.from('admin_logs').insert({
         admin_id:   user?.id,
         action:     'payout_marked_paid',
-        details:    { payout_id: req.id, affiliate_id: req.affiliate_id, amount: req.amount, method: req.method },
+        details:    { payout_id: req.id, affiliate_id: req.affiliate_id, amount: req.amount, payment_method: req.payment_method },
         created_at: new Date().toISOString(),
       })
 
@@ -265,11 +347,45 @@ export default function AdminAffiliatePayoutsPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" /> Export
+          <Button variant="outline" onClick={exportCSV} disabled={exporting}>
+            {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} Export
           </Button>
         </div>
       </div>
+
+      {/* Real, live Stripe balance, not derived from anything local */}
+      <Card className="p-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">Stripe Balance</h3>
+          <button onClick={fetchBalance} disabled={balanceLoading} className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
+            <RefreshCw className={`w-3 h-3 ${balanceLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+        {balanceLoading ? (
+          <p className="text-sm text-gray-400">Checking Stripe...</p>
+        ) : balanceError ? (
+          <p className="text-sm text-red-600">{balanceError}</p>
+        ) : stripeBalance ? (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500">Available now</p>
+                <p className="text-2xl font-bold text-gray-900">${stripeBalance.available.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Pending (settling)</p>
+                <p className="text-2xl font-bold text-gray-500">${stripeBalance.pending.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+            {stripeBalance.available < stats.totalValue && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                Available balance is less than the ${stats.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })} currently owed across pending and processing payouts.
+              </div>
+            )}
+          </>
+        ) : null}
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -332,11 +448,11 @@ export default function AdminAffiliatePayoutsPage() {
                 <div className="flex-1 min-w-[180px]">
                   <p className="font-semibold text-gray-900">{req.affiliate_name}</p>
                   <p className="text-xs text-gray-500">{req.affiliate_email}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Requested: {new Date(req.requested_at).toLocaleDateString()}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Requested: {new Date(req.created_at).toLocaleDateString()}
                   </p>
                   {req.processed_at && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Processed: {new Date(req.processed_at).toLocaleDateString()}
                     </p>
                   )}
@@ -347,8 +463,8 @@ export default function AdminAffiliatePayoutsPage() {
                   <p className="text-2xl font-bold text-gray-900">
                     ${req.amount.toFixed(2)}
                   </p>
-                  <p className="text-sm capitalize text-gray-600">{req.method}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-sm capitalize text-gray-600">{req.payment_method}</p>
+                  <p className="text-xs text-gray-500 mt-1">
                     Remaining balance: ${Math.max(0, req.pending_balance - req.amount).toFixed(2)}
                   </p>
                 </div>
@@ -430,4 +546,3 @@ export default function AdminAffiliatePayoutsPage() {
     </div>
   )
 }
-

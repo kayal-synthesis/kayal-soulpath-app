@@ -603,7 +603,7 @@ export default function PurchasePage() {
               </div>
               <div className="text-left min-w-0">
                 <p className="text-sm font-semibold text-neutral-800 truncate">{tool.name}</p>
-                <p className="text-xs text-neutral-400 mt-0.5">
+                <p className="text-xs text-neutral-500 mt-0.5">
                   {hasDiscount
                     ? <span className="text-green-600 font-medium">You save ${savings.toFixed(2)}</span>
                     : `~${tool.deliveryMinutes || 20} min delivery`}
@@ -670,7 +670,7 @@ export default function PurchasePage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-serif text-neutral-900">Upload Your Photos</h2>
-                    <p className="text-xs text-neutral-400 mt-0.5">
+                    <p className="text-xs text-neutral-500 mt-0.5">
                       Required for your{' '}
                       {requiresImage?.type === 'both'
                         ? 'full synthesis reading'
@@ -683,7 +683,7 @@ export default function PurchasePage() {
                 {(requiresImage?.type === 'palm' || requiresImage?.type === 'both') && (
                   <div className="mb-5">
                     <p className="text-sm font-medium text-neutral-700 mb-2">Which hand is your dominant hand?</p>
-                    <p className="text-xs text-neutral-400 mb-3">
+                    <p className="text-[13px] text-neutral-500 mb-3 leading-relaxed">
                       This determines which palm is read as your dominant hand (present life, future direction)
                       and which as your passive hand (the blueprint you were born with).
                     </p>
@@ -698,7 +698,7 @@ export default function PurchasePage() {
                         }`}
                       >
                         <p className="text-sm font-semibold text-neutral-800">Right-handed</p>
-                        <p className="text-xs text-neutral-400 mt-1">Right palm is dominant</p>
+                        <p className="text-xs text-neutral-500 mt-1">Right palm is dominant</p>
                       </button>
                       <button
                         type="button"
@@ -710,7 +710,7 @@ export default function PurchasePage() {
                         }`}
                       >
                         <p className="text-sm font-semibold text-neutral-800">Left-handed</p>
-                        <p className="text-xs text-neutral-400 mt-1">Left palm is dominant</p>
+                        <p className="text-xs text-neutral-500 mt-1">Left palm is dominant</p>
                       </button>
                     </div>
                   </div>
@@ -775,9 +775,9 @@ export default function PurchasePage() {
                       <p className="font-semibold text-neutral-900 leading-tight">{tool.name}</p>
                       <div className="flex items-center gap-1.5 mt-1">
                         <CategoryIcon className="w-3 h-3 text-neutral-400" />
-                        <span className="text-xs text-neutral-400 capitalize">{domain.replace('-', ' ')}</span>
+                        <span className="text-xs text-neutral-500 capitalize">{domain.replace('-', ' ')}</span>
                       </div>
-                      <p className="text-xs text-neutral-400 mt-1 leading-relaxed line-clamp-2">
+                      <p className="text-xs text-neutral-500 mt-1 leading-relaxed line-clamp-2">
                         {tool.tagline || tool.description}
                       </p>
                       {fullName && (
@@ -818,7 +818,7 @@ export default function PurchasePage() {
                     <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
                       Considering Moving Somewhere? (Optional)
                     </label>
-                    <p className="text-xs text-neutral-400 mb-3">
+                    <p className="text-[13px] text-neutral-500 mb-3 leading-relaxed">
                       Name up to two places you're actually weighing, and your reading will compare each one directly against your pattern, not just cover where you live now.
                     </p>
                     <input
@@ -971,7 +971,7 @@ export default function PurchasePage() {
                   )}
                 </Button>
                 {!isSub && (
-                  <p className="text-xs text-center text-neutral-400 pb-2">
+                  <p className="text-xs text-center text-neutral-500 pb-2">
                     Your reading will be ready in approximately {tool.deliveryMinutes || 20} minutes after payment.
                   </p>
                 )}

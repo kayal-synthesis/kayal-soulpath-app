@@ -231,7 +231,7 @@ export default function RevenuePage() {
                   {v!==0&&<div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">${v.toFixed(0)}</div>}
                 </div>
               </div>
-              {(i===0||i===14||i===29)&&<span className="text-xs text-gray-400">{new Date(Date.now()-(29-i)*86400000).toLocaleDateString('en',{month:'short',day:'numeric'})}</span>}
+              {(i===0||i===14||i===29)&&<span className="text-xs text-gray-500">{new Date(Date.now()-(29-i)*86400000).toLocaleDateString('en',{month:'short',day:'numeric'})}</span>}
             </div>
           ))}
         </div>
@@ -266,7 +266,7 @@ export default function RevenuePage() {
             </thead>
             <tbody>
               {events.length===0 ? (
-                <tr><td colSpan={6} className="text-center py-8 text-neutral-400">No revenue events yet</td></tr>
+                <tr><td colSpan={6} className="text-center py-8 text-neutral-500">No revenue events yet</td></tr>
               ) : events.map(e=>(
                 <tr key={e.id} className="border-b last:border-0 hover:bg-neutral-50">
                   <td className="py-3 text-sm">{new Date(e.created_at).toLocaleDateString()}</td>
@@ -278,7 +278,7 @@ export default function RevenuePage() {
                   </td>
                   <td className="py-3 text-sm">
                     <p>{(e.users as any)?.full_name||'—'}</p>
-                    <p className="text-xs text-neutral-400">{(e.users as any)?.email||(e.user_id ? e.user_id.slice(0,8)+'...' : 'guest')}</p>
+                    <p className="text-xs text-neutral-500">{(e.users as any)?.email||(e.user_id ? e.user_id.slice(0,8)+'...' : 'guest')}</p>
                   </td>
                   <td className="py-3 text-xs font-mono text-neutral-500">{e.ref_code||'—'}</td>
                   <td className={`py-3 text-sm font-medium ${e.amount_usd===null?'text-neutral-400 italic':Number(e.amount_usd)>=0?'text-green-600':'text-red-600'}`}>

@@ -235,7 +235,7 @@ export default function AdminHealthPage() {
                         <StatusIcon className={`w-5 h-5 ${style.color}`} />
                       </div>
                       <p className="text-xs text-neutral-500 capitalize">{sub.status?.replace(/_/g, ' ')}</p>
-                      {detail && <p className="text-xs text-neutral-400 mt-0.5">{detail}</p>}
+                      {detail && <p className="text-xs text-neutral-500 mt-0.5">{detail}</p>}
                     </div>
                   )
                 })}

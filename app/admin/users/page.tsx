@@ -279,7 +279,7 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {users.length===0 ? (
-                <tr><td colSpan={6} className="text-center py-8 text-neutral-400">No users found</td></tr>
+                <tr><td colSpan={6} className="text-center py-8 text-neutral-500">No users found</td></tr>
               ) : users.map(u=>(
                 <tr key={u.id} className="border-b hover:bg-neutral-50">
                   <td className="py-3 px-2">
@@ -356,7 +356,7 @@ export default function AdminUsersPage() {
                 Delete Anyway
               </Button>
             </div>
-            <button onClick={() => setDeleteWarning(null)} className="mt-3 text-sm text-neutral-400 hover:text-neutral-600 w-full text-center">
+            <button onClick={() => setDeleteWarning(null)} className="mt-3 text-sm text-neutral-500 hover:text-neutral-600 w-full text-center">
               Cancel
             </button>
           </div>

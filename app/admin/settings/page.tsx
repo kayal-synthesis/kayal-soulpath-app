@@ -208,7 +208,12 @@ export default function AdminSettingsPage() {
               timezone: profile.timezone || 'America/New_York',
               language: profile.language || 'en',
               twoFactorEnabled: profile.two_factor_enabled || false
-            }
+            },
+            // Real, previously never-saved preferences, now loaded
+            // from admin_users, falling back to the existing defaults
+            // only when genuinely never saved before.
+            notifications: profile.notification_preferences || prev.notifications,
+            appearance: profile.appearance_preferences || prev.appearance,
           }))
         }
 
@@ -252,6 +257,12 @@ export default function AdminSettingsPage() {
             timezone: settings.profile.timezone,
             language: settings.profile.language,
             two_factor_enabled: settings.profile.twoFactorEnabled,
+            // Real, genuine save for these two, previously the tab
+            // appeared to save successfully, real toast and all, but
+            // silently discarded everything the moment the page
+            // refreshed, nothing anywhere actually wrote it down.
+            notification_preferences: settings.notifications,
+            appearance_preferences: settings.appearance,
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id)

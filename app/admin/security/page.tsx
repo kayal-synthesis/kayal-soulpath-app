@@ -51,12 +51,20 @@ export default function SecurityPage() {
       const since = new Date(Date.now()-hours*3600000).toISOString()
 
       const [{ data: alerts }, { data: logins }, { data: secEvents }] = await Promise.all([
-        supabase.from('fraud_alerts').select('*, users:user_id(email)').eq('status','open').order('severity',{ascending:false}).limit(20),
+        // Real fix, .order('severity') previously sorted alphabetically
+        // on the raw text value, medium, low, high, critical, in that
+        // literal order, the exact opposite of the intended real
+        // priority. Fetched by recency here instead, then sorted
+        // below using a real, numeric severity rank.
+        supabase.from('fraud_alerts').select('*, users:user_id(email)').eq('status','open').order('created_at',{ascending:false}).limit(20),
         supabase.from('login_attempts').select('*, users:user_id(email)').gte('created_at',since).order('created_at',{ascending:false}).limit(30),
         supabase.from('security_events').select('*').gte('created_at',since).limit(10),
       ])
 
-      const fa = (alerts||[]) as FraudAlert[]
+      // Real, numeric severity rank, critical genuinely sorts first
+      // now, not last.
+      const SEVERITY_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 }
+      const fa = ((alerts||[]) as FraudAlert[]).sort((a, b) => (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0))
       const la = (logins||[]) as LoginAttempt[]
 
       const criticalCount = fa.filter(a=>a.severity==='critical').length
@@ -198,7 +206,7 @@ export default function SecurityPage() {
         <Card className="p-6">
           <h3 className="font-medium mb-4">Recent Login Attempts</h3>
           {loginAttempts.length===0 ? (
-            <p className="text-center text-neutral-400 py-8 text-sm">No login attempts in this period</p>
+            <p className="text-center text-neutral-500 py-8 text-sm">No login attempts in this period</p>
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {loginAttempts.map(l=>(
@@ -210,7 +218,7 @@ export default function SecurityPage() {
                     <p className="text-sm truncate">{l.users?.email||'Unknown'}</p>
                     <p className="text-xs text-neutral-500">{l.ip_address||'Unknown IP'}</p>
                   </div>
-                  <span className="text-xs text-neutral-400 flex-shrink-0">{getTimeAgo(l.created_at)}</span>
+                  <span className="text-xs text-neutral-500 flex-shrink-0">{getTimeAgo(l.created_at)}</span>
                 </div>
               ))}
             </div>
@@ -232,7 +240,7 @@ export default function SecurityPage() {
             setBlockedIP('')
           }}>Flag IP</Button>
         </div>
-        <p className="text-xs text-neutral-400">Flagged IPs are logged to the security_events table. Configure actual blocking at your infrastructure/CDN level.</p>
+        <p className="text-[13px] text-neutral-500 leading-relaxed">Flagged IPs are logged to the security_events table. Configure actual blocking at your infrastructure/CDN level.</p>
       </Card>
     </div>
   )

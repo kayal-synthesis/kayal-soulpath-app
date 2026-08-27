@@ -232,7 +232,7 @@ function ReferralLoginPageInner() {
             </Link>
           </p>
           {/* Security Note */}
-          <p className="text-center text-xs text-neutral-400 mt-4">
+          <p className="text-center text-xs text-neutral-500 mt-4">
             Secure login powered by Supabase Auth
           </p>
         </Card>

@@ -185,7 +185,7 @@ function UpsellCard({
         </button>
         <button
           onClick={onDecline}
-          className="w-full text-center text-xs text-neutral-400 hover:text-neutral-600 mt-3 transition-colors py-1"
+          className="w-full text-center text-xs text-neutral-500 hover:text-neutral-600 mt-3 transition-colors py-1"
         >
           No thanks, I don't need this right now
         </button>
@@ -490,7 +490,7 @@ function AccountStep({
           </button>
           <button
             onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setAccountError('') }}
-            className="w-full text-center text-xs text-neutral-400 hover:text-neutral-600 pt-1"
+            className="w-full text-center text-xs text-neutral-500 hover:text-neutral-600 pt-1"
           >
             {mode === 'signin' ? "New here? Create an account instead" : 'Already have an account? Sign in instead'}
           </button>
@@ -542,7 +542,7 @@ function AccountStep({
       <div className="text-center">
         <a
           href="/domains"
-          className="text-xs text-neutral-400 hover:text-neutral-600 underline underline-offset-2"
+          className="text-xs text-neutral-500 hover:text-neutral-600 underline underline-offset-2"
         >
           Explore other tools
         </a>
@@ -977,14 +977,14 @@ export default function PurchaseConfirmationPage() {
             <div className="text-center">
               <a
                 href="/domains"
-                className="text-xs text-neutral-400 hover:text-neutral-600 underline underline-offset-2"
+                className="text-xs text-neutral-500 hover:text-neutral-600 underline underline-offset-2"
               >
                 Explore other tools
               </a>
             </div>
           </>
         )}
-        <p className="text-center text-xs text-neutral-400">
+        <p className="text-center text-xs text-neutral-500">
           Questions? Email support@kayalsoulpath.com, we respond within 2 hours.
         </p>
       </div>

@@ -184,9 +184,9 @@ export default function NotificationsPage() {
       {/* Notifications List */}
       <Card className="p-6">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 text-neutral-400">
-            <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No notifications{filter !== 'all' ? ` (${filter})` : ''}</p>
+          <div className="text-center py-12">
+            <Bell className="w-12 h-12 mx-auto mb-3 text-neutral-400 opacity-30" />
+            <p className="text-neutral-500">No notifications{filter !== 'all' ? ` (${filter})` : ''}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -207,7 +207,7 @@ export default function NotificationsPage() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium">{notif.title}</h4>
-                        <span className="text-xs text-neutral-400">{getTimeAgo(notif.created_at)}</span>
+                        <span className="text-xs text-neutral-500">{getTimeAgo(notif.created_at)}</span>
                       </div>
                       <p className="text-sm text-neutral-600 mt-1">{notif.message}</p>
                     </div>

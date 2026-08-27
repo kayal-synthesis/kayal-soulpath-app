@@ -210,7 +210,7 @@ function ResetPasswordInner() {
           )}
           {/* Help Text */}
           {!success && (
-            <p className="text-center text-xs text-neutral-400 mt-6">
+            <p className="text-center text-xs text-neutral-500 mt-6">
               This link expires in 24 hours. If you need a new link,{' '}
               <Link 
                 href="/member/referral/login" 

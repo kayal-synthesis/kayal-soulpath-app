@@ -237,8 +237,8 @@ export default function AdminToolsPage() {
                     <h3 className="font-semibold mb-1">{tool.name}</h3>
                     <p className="text-sm text-gray-500 mb-3">{tool.description}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{tool.category}</span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-500">{tool.category}</span>
+                      <span className="text-xs text-gray-500">
                         {lastRun ? `Last: ${getTimeAgo(lastRun)}` : 'Never run'}
                       </span>
                     </div>

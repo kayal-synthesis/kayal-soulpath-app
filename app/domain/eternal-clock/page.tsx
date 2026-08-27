@@ -46,7 +46,7 @@ export default function EternalClockPage() {
     <div className="min-h-screen bg-neutral-50">
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-700 mb-4 transition-colors">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-700 mb-4 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
           <div className="flex items-start justify-between flex-wrap gap-4">
@@ -58,7 +58,7 @@ export default function EternalClockPage() {
                   <span className="text-xs font-semibold text-teal-500 uppercase tracking-widest">Timekeeper's Vault</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Eternal Clock</h1>
-                <p className="text-neutral-500 mt-1 text-sm max-w-xl">
+                <p className="text-neutral-600 mt-1 text-sm max-w-xl">
                   Wake every morning knowing what the day is asking of you — five timescales of personalised forecasting across {tools.length} dedicated readings.
                 </p>
               </div>

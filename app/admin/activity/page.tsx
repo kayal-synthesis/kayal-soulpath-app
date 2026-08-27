@@ -138,9 +138,9 @@ export default function ActivityPage() {
       {/* Timeline */}
       <Card className="p-6">
         {logs.length === 0 ? (
-          <div className="text-center py-12 text-neutral-400">
-            <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No activity logs found</p>
+          <div className="text-center py-12">
+            <Activity className="w-12 h-12 mx-auto mb-3 text-neutral-400 opacity-30" />
+            <p className="text-neutral-500">No activity logs found</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -155,7 +155,7 @@ export default function ActivityPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium capitalize">{log.action.replace(/_/g, ' ')}</p>
-                      <span className="text-xs text-neutral-400 flex-shrink-0">{formatTime(log.created_at)}</span>
+                      <span className="text-xs text-neutral-500 flex-shrink-0">{formatTime(log.created_at)}</span>
                     </div>
                     {log.admin && (
                       <p className="text-sm text-neutral-600 mt-0.5">
@@ -164,11 +164,11 @@ export default function ActivityPage() {
                     )}
                     {log.resource && <p className="text-sm text-neutral-500">Resource: {log.resource}</p>}
                     {log.details && (
-                      <p className="text-xs text-neutral-400 mt-1 truncate">
+                      <p className="text-xs text-neutral-500 mt-1 truncate">
                         {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details}
                       </p>
                     )}
-                    {log.ip_address && <p className="text-xs text-neutral-400">IP: {log.ip_address}</p>}
+                    {log.ip_address && <p className="text-xs text-neutral-500">IP: {log.ip_address}</p>}
                   </div>
                 </div>
               )

@@ -599,7 +599,7 @@ export default function AdminReportsPage() {
           <div className="h-80">
             {/* Chart would go here - using a chart library like recharts or chart.js */}
             <div className="h-full flex items-center justify-center bg-gray-50 rounded-lg">
-              <p className="text-gray-400">Chart visualization would appear here</p>
+              <p className="text-gray-500">Chart visualization would appear here</p>
             </div>
           </div>
         </Card>
@@ -696,13 +696,13 @@ export default function AdminReportsPage() {
         <Card className="p-6">
           <h3 className="font-semibold mb-4">User Growth</h3>
           <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <p className="text-gray-400">User growth chart</p>
+            <p className="text-gray-500">User growth chart</p>
           </div>
         </Card>
         <Card className="p-6">
           <h3 className="font-semibold mb-4">Purchase Volume</h3>
           <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <p className="text-gray-400">Purchase volume chart</p>
+            <p className="text-gray-500">Purchase volume chart</p>
           </div>
         </Card>
       </div>

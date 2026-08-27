@@ -244,7 +244,7 @@ export default function TasksPage() {
       <Card className="p-6">
         <div className="space-y-2">
           {filtered.length === 0 ? (
-            <p className="text-center text-neutral-400 py-8">No tasks found</p>
+            <p className="text-center text-neutral-500 py-8">No tasks found</p>
           ) : filtered.map((task) => (
             <div key={task.id} className="flex items-center gap-4 p-3 border rounded-lg hover:shadow-sm">
               <button

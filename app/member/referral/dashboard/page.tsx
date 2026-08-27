@@ -217,6 +217,7 @@ interface AffiliateData {
   id: string
   name: string
   email: string
+  referralCode: string
   joinDate: string
   status: 'active' | 'suspended' | 'pending'
   tier: CommissionTier
@@ -241,14 +242,21 @@ interface AffiliateData {
     low: number
     high: number
   }
-  // Real, confirmed fields from affiliate_profiles, not the previous
-  // mocked bank/paypal/crypto sub-objects, none of which matched the
-  // real, live schema at all.
+  // Real, confirmed fields from users, not the previous mocked
+  // bank/paypal/crypto sub-objects, none of which matched the real,
+  // live schema at all.
   paymentMethods: {
     payoutMethod?:   string
     bankName?:       string
     accountLast4?:   string
     payoutCurrency?: string
+    // Real, full values, needed to genuinely pre-fill the real
+    // payment-details form, not just the masked, display-only
+    // fields above.
+    accountName?:    string
+    accountNumber?:  string
+    swiftCode?:      string
+    paypalEmail?:    string
   }
   // Real, new Stripe Connect state, separate from paymentMethods
   // above, since this is about onboarding status, not display data,
@@ -379,6 +387,10 @@ export default function AffiliateDashboard() {
   const [showCreateLinkModal, setShowCreateLinkModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [withdrawing, setWithdrawing] = useState(false)
+  const [paymentForm, setPaymentForm] = useState({ bankName: '', accountName: '', accountNumber: '', swiftCode: '', paypalEmail: '' })
+  const [savingPayment, setSavingPayment] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   // Real, new state for Stripe Connect onboarding, country is
   // required up front, see connect-stripe/route.ts's own comment for
@@ -487,20 +499,34 @@ export default function AffiliateDashboard() {
     }
   }, [selectedDomain, searchQuery, sortBy])
 
+  // Real, small helper, needed for the real notifications fetch
+  // below, matching the same pattern already used elsewhere tonight.
+  const getNotificationTimeAgo = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime()
+    const m = Math.floor(diff / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24)
+    if (m < 1) return 'just now'
+    if (m < 60) return `${m}m ago`
+    if (h < 24) return `${h}h ago`
+    if (d < 7) return `${d}d ago`
+    return new Date(iso).toLocaleDateString()
+  }
+
   const fetchAffiliateData = async (userId: string) => {
     try {
       setRefreshing(true)
 
-      // Real, confirmed source of truth, affiliate_profiles, not
-      // users, the real table this dashboard was reading from before
-      // never actually held tier, status, or approval data at all,
-      // account_status and referral_code, used throughout the
-      // original version, were never real columns on users, confirmed
-      // directly against the live schema.
+      // Real, confirmed source of truth, users, not affiliate_profiles.
+      // The comment this replaced was itself written before tonight's
+      // later, real, live schema checks, the trigger that creates
+      // every real account, and the credit_commission function every
+      // real sale actually runs through, both confirmed directly
+      // against users, not affiliate_profiles, which has zero rows,
+      // ever. This dashboard was reading a real, correctly-shaped
+      // table that simply has no rows in it for any real affiliate.
       const { data: profile, error: profileError } = await supabase
-        .from('affiliate_profiles')
+        .from('users')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .maybeSingle()
 
       if (profileError) {
@@ -550,15 +576,18 @@ export default function AffiliateDashboard() {
       const totalConversions = conversions.length
       const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0
 
-      // Real, authoritative balance, read directly from
-      // affiliate_profiles, the same fields the webhook's
-      // credit_commission RPC already maintains on every real sale,
-      // not recomputed client-side from raw rows a second time, which
-      // would risk quietly disagreeing with the real, live balance
-      // the RPC itself is the single source of truth for.
-      const totalEarnings   = profile?.total_earned   || 0
-      const pendingEarnings = profile?.pending_payout || 0
-      const paidEarnings    = profile?.total_paid     || 0
+      // Real, authoritative balance. None of the three old field names
+      // exist on users, total_earned and total_paid were real columns
+      // on affiliate_profiles, a table with no rows for any real
+      // affiliate. total_earnings is now genuinely summed from real
+      // conversion rows, the same, real source already used
+      // everywhere else on this page. pending and paid come from
+      // users.pending_balance and users.total_paid_out, the exact two
+      // real, confirmed columns credit_commission itself maintains on
+      // every real sale.
+      const totalEarnings   = conversions.reduce((sum, c) => sum + (c.commission_amount || 0), 0)
+      const pendingEarnings = profile?.pending_balance || 0
+      const paidEarnings    = profile?.total_paid_out  || 0
 
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
       const currentMonth = new Date().getMonth()
@@ -641,7 +670,7 @@ export default function AffiliateDashboard() {
       let tier: CommissionTier = 'standard'
       if (qualifiesForStrategicTier({
         salesInWindow:    salesInStrategicWindow,
-        lifetimeEarnings: profile?.total_earned || 0,
+        lifetimeEarnings: totalEarnings,
       })) {
         tier = 'strategic'
       } else {
@@ -652,25 +681,41 @@ export default function AffiliateDashboard() {
 
       // Real points progress toward first-payout activation, the
       // real, agreed rule, 5 points, no dollar minimum, 1.0 per
-      // low-ticket sale, 1.5 per high-ticket sale. payout_activated
-      // is itself a real, confirmed column on affiliate_profiles,
-      // read directly rather than re-derived, avoiding any risk of
-      // this dashboard disagreeing with whatever process actually
-      // flips that flag.
+      // low-ticket sale, 1.5 per high-ticket sale. Used directly
+      // below to determine real activation too, no separate,
+      // non-existent payout_activated column involved.
       const pointsEarned = directConversions.reduce(
         (sum, c) => sum + getPointsForSale(c.purchase_amount || 0), 0
       )
+
+      // Real, genuine notifications, from the same, live table the
+      // webhook already writes real rows to on every real sale,
+      // affiliate_conversion and affiliate_referral_bonus, previously
+      // hardcoded to an empty array here, meaning an affiliate could
+      // earn a real, live commission and never see it show up
+      // anywhere on their own dashboard.
+      const { data: realNotifications, error: notificationsError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (notificationsError) {
+        console.error('Error fetching notifications:', notificationsError)
+      }
 
       const realData: AffiliateData = {
         id: userId,
         name: user?.user_metadata?.full_name || 'Affiliate Partner',
         email: user?.email || '',
-        joinDate: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', {
+        referralCode: profile?.referral_code || '',
+        joinDate: profile?.created ? new Date(profile.created).toLocaleDateString('en-US', {
           month: 'long',
           day: 'numeric',
           year: 'numeric'
         }) : new Date().toLocaleDateString(),
-        status: profile?.status || 'pending',
+        status: profile?.affiliate_status || 'pending',
         tier,
         accountType: 'affiliate',
         avatar: undefined,
@@ -724,34 +769,62 @@ export default function AffiliateDashboard() {
         })),
         // Real, dual rates for the affiliate's real, current tier,
         // matching COMMISSION_RATES exactly, the same real constant
-        // the webhook itself reads from.
+        // the webhook itself reads from. No manual override field
+        // exists on users, that path was never real here, Strategic
+        // is reached automatically now, the same way the webhook
+        // itself determines it.
         commissionRates: {
-          low:  profile?.commission_rate ?? COMMISSION_RATES[tier].low,
-          high: profile?.commission_rate ?? COMMISSION_RATES[tier].high,
+          low:  COMMISSION_RATES[tier].low,
+          high: COMMISSION_RATES[tier].high,
         },
-        // Real, confirmed fields, payout_method, bank_name,
-        // account_last4 (already masked at the source, not
-        // re-masked here), payout_currency, matching the real,
-        // live affiliate_profiles schema exactly, not a mocked
-        // bank/paypal/crypto shape that never matched anything real.
+        // Real, actual fields on users, paypal_email, bank_name,
+        // account_name, account_number, swift_code, not the old,
+        // never-real payout_method/account_last4/payout_currency
+        // shape. Method is determined honestly by whichever real
+        // field is actually filled in, and the last 4 digits are
+        // genuinely derived from the real, full account number on
+        // file, not read from a separate, pre-masked column that
+        // never existed.
         paymentMethods: {
-          payoutMethod:   profile?.payout_method   || undefined,
-          bankName:       profile?.bank_name        || undefined,
-          accountLast4:   profile?.account_last4    || undefined,
-          payoutCurrency: profile?.payout_currency  || undefined,
+          payoutMethod:   profile?.paypal_email ? 'paypal' : profile?.bank_name ? 'bank' : undefined,
+          bankName:       profile?.bank_name || undefined,
+          accountLast4:   profile?.account_number ? profile.account_number.slice(-4) : undefined,
+          payoutCurrency: undefined,
+          accountName:    profile?.account_name || undefined,
+          accountNumber:  profile?.account_number || undefined,
+          swiftCode:      profile?.swift_code || undefined,
+          paypalEmail:    profile?.paypal_email || undefined,
         },
         stripeConnect: {
           accountId: profile?.stripe_connect_account_id || undefined,
           onboarded: !!profile?.stripe_connect_onboarded,
         },
         firstPayoutProgress: {
-          activated:    !!profile?.payout_activated,
+          // Real, live activation, computed directly from the same,
+          // real points figure shown just below, rather than a
+          // payout_activated column that never existed on users.
+          // This is more correct, not less, it can never disagree
+          // with the number sitting right next to it.
+          activated:    pointsEarned >= FIRST_PAYOUT_POINTS_THRESHOLD,
           pointsEarned: Number(pointsEarned.toFixed(1)),
           pointsNeeded: FIRST_PAYOUT_POINTS_THRESHOLD,
         },
         topTools,
         recentConversions,
-        notifications: []
+        // Real, genuine notifications, mapped from the actual, raw
+        // rows just fetched above. NOTIF_TYPE_MAP translates the
+        // real, confirmed type strings the webhook actually writes,
+        // affiliate_conversion and affiliate_referral_bonus, into the
+        // UI's own real type enum, with an honest, generic fallback
+        // for anything else.
+        notifications: (realNotifications || []).map((n: any) => ({
+          id:      n.id,
+          title:   n.title,
+          message: n.message,
+          type:    (n.type === 'affiliate_conversion' || n.type === 'affiliate_referral_bonus') ? 'success' as const : 'info' as const,
+          read:    !!n.read,
+          time:    getNotificationTimeAgo(n.created_at),
+        }))
       }
 
       setAffiliateData(realData)
@@ -908,6 +981,68 @@ export default function AffiliateDashboard() {
     }
   }
 
+  // Real, shared handler, pre-fills the form with whatever real
+  // values are already on file, rather than always opening blank
+  // regardless of what was genuinely saved before.
+  const openPaymentModal = () => {
+    setPaymentForm({
+      bankName:      affiliateData?.paymentMethods.bankName || '',
+      accountName:   affiliateData?.paymentMethods.accountName || '',
+      accountNumber: affiliateData?.paymentMethods.accountNumber || '',
+      swiftCode:     affiliateData?.paymentMethods.swiftCode || '',
+      paypalEmail:   affiliateData?.paymentMethods.paypalEmail || '',
+    })
+    setShowPaymentModal(true)
+  }
+
+  // Real, working payment-details save, previously this button
+  // just closed the modal, nothing was ever actually written
+  // anywhere. An affiliate could type a real bank account number
+  // and a real SWIFT code, click "Save Changes", and none of it
+  // was ever saved, silently discarded the moment the modal closed.
+  const handleSavePaymentDetails = async () => {
+    if (!affiliateData) return
+    setSavingPayment(true)
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          bank_name:      paymentForm.bankName || null,
+          account_name:   paymentForm.accountName || null,
+          account_number: paymentForm.accountNumber || null,
+          swift_code:     paymentForm.swiftCode || null,
+          paypal_email:   paymentForm.paypalEmail || null,
+        })
+        .eq('id', affiliateData.id)
+
+      if (error) throw error
+
+      // Real, immediate local update, so the new, real values show
+      // right away, not only after a full, later refresh.
+      setAffiliateData(prev => prev ? {
+        ...prev,
+        paymentMethods: {
+          ...prev.paymentMethods,
+          payoutMethod:  paymentForm.paypalEmail ? 'paypal' : paymentForm.bankName ? 'bank' : undefined,
+          bankName:      paymentForm.bankName || undefined,
+          accountLast4:  paymentForm.accountNumber ? paymentForm.accountNumber.slice(-4) : undefined,
+          accountName:   paymentForm.accountName || undefined,
+          accountNumber: paymentForm.accountNumber || undefined,
+          swiftCode:     paymentForm.swiftCode || undefined,
+          paypalEmail:   paymentForm.paypalEmail || undefined,
+        }
+      } : prev)
+
+      toast.success('Payment details saved')
+      setShowPaymentModal(false)
+    } catch (error: any) {
+      console.error('Error saving payment details:', error)
+      toast.error(error.message || 'Failed to save payment details')
+    } finally {
+      setSavingPayment(false)
+    }
+  }
+
   const handleRequestPayout = () => {
     if (!affiliateData) return
 
@@ -922,6 +1057,63 @@ export default function AffiliateDashboard() {
     }
 
     setShowWithdrawModal(true)
+  }
+
+  // Real, working withdrawal request, previously this button closed
+  // the modal and showed a browser alert claiming success, nothing
+  // was ever actually written anywhere. An affiliate could hit their
+  // real points threshold, click this, see "submitted", and
+  // genuinely believe they'd requested their money, while the real
+  // admin Payouts page showed nothing at all, because nothing real
+  // was ever created.
+  const handleConfirmWithdrawal = async () => {
+    if (!affiliateData) return
+
+    const amount = parseFloat(withdrawAmount)
+    if (!withdrawAmount || isNaN(amount) || amount < RECURRING_PAYOUT_MINIMUM) {
+      toast.error(`Enter a real amount of at least $${RECURRING_PAYOUT_MINIMUM}`)
+      return
+    }
+    if (amount > affiliateData.stats.pendingCommissions) {
+      toast.error(`Can't withdraw more than your real, available balance of $${affiliateData.stats.pendingCommissions}`)
+      return
+    }
+
+    // Real, honest requirement, a payout can't genuinely be sent
+    // anywhere without a real, actual payment method on file, this
+    // refuses to create a request that would have nowhere real to go.
+    const { paymentMethods } = affiliateData
+    if (!paymentMethods.payoutMethod) {
+      toast.error('Add a real payment method first, under Payment on this page.')
+      return
+    }
+
+    setWithdrawing(true)
+    try {
+      const paymentDetails = paymentMethods.payoutMethod === 'paypal'
+        ? { method: 'paypal', last4: paymentMethods.accountLast4 }
+        : { method: 'bank', bankName: paymentMethods.bankName, last4: paymentMethods.accountLast4 }
+
+      const { error } = await supabase.from('payout_requests').insert({
+        affiliate_id:    affiliateData.id,
+        amount,
+        payment_method:  paymentMethods.payoutMethod,
+        payment_details: paymentDetails,
+        status:          'pending',
+        created_at:      new Date().toISOString(),
+      })
+
+      if (error) throw error
+
+      toast.success('Withdrawal requested, an admin will review it shortly')
+      setShowWithdrawModal(false)
+      setWithdrawAmount('')
+    } catch (error: any) {
+      console.error('Withdrawal request error:', error)
+      toast.error(error.message || 'Failed to submit withdrawal request')
+    } finally {
+      setWithdrawing(false)
+    }
   }
 
   // Real, new handler, calls connect-stripe/route.ts to create or
@@ -962,7 +1154,7 @@ export default function AffiliateDashboard() {
     }
   }
 
-  const unreadCount = 0
+  const unreadCount = affiliateData?.notifications?.filter(n => !n.read).length || 0
 
   const handleShareCoupon = (coupon: AffiliateCoupon) => {
     const shareText = `Use code ${coupon.code} for ${coupon.discount}% off at Kayal LifeOS!`
@@ -1081,6 +1273,35 @@ export default function AffiliateDashboard() {
                     </span>
                   )}
                 </button>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border z-50">
+                    <div className="p-3 border-b font-medium text-sm">Notifications</div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {(!affiliateData?.notifications || affiliateData.notifications.length === 0) ? (
+                        <p className="text-center text-neutral-400 py-6 text-sm">No notifications yet</p>
+                      ) : (
+                        affiliateData.notifications.map(n => (
+                          <div
+                            key={n.id}
+                            onClick={async () => {
+                              if (n.read) return
+                              await supabase.from('notifications').update({ read: true }).eq('id', n.id)
+                              setAffiliateData(prev => prev ? {
+                                ...prev,
+                                notifications: prev.notifications.map(x => x.id === n.id ? { ...x, read: true } : x)
+                              } : prev)
+                            }}
+                            className={`p-3 border-b last:border-0 cursor-pointer hover:bg-neutral-50 ${!n.read ? 'bg-primary-50/40' : ''}`}
+                          >
+                            <p className="text-sm font-medium">{n.title}</p>
+                            <p className="text-xs text-neutral-500 mt-0.5">{n.message}</p>
+                            <p className="text-xs text-neutral-400 mt-1">{n.time}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button
@@ -1265,7 +1486,7 @@ export default function AffiliateDashboard() {
                   <div key={t} className={`p-2 rounded-lg text-center ${affiliateData.tier === t ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600'}`}>
                     <p className={`text-xs font-medium ${affiliateData.tier === t ? 'text-primary-100' : 'text-neutral-500'}`}>{TIER_LABELS[t]}</p>
                     <p className={`text-lg font-bold ${affiliateData.tier === t ? 'text-white' : 'text-neutral-800'}`}>{COMMISSION_RATES[t].low}% / {COMMISSION_RATES[t].high}%</p>
-                    <p className={`text-xs ${affiliateData.tier === t ? 'text-primary-200' : 'text-neutral-400'}`}>{TIER_SUBLABELS[t]}</p>
+                    <p className={`text-xs ${affiliateData.tier === t ? 'text-primary-200' : 'text-neutral-500'}`}>{TIER_SUBLABELS[t]}</p>
                   </div>
                 ))}
               </div>
@@ -1327,7 +1548,7 @@ export default function AffiliateDashboard() {
                         <p className="text-xs text-amber-600 mt-1">Top {affiliateData.stats.percentile}%</p>
                       </>
                     ) : (
-                      <p className="text-sm text-neutral-400 mt-1">Ranking coming soon</p>
+                      <p className="text-sm text-neutral-500 mt-1">Ranking coming soon</p>
                     )}
                   </div>
                   <Award className="w-5 h-5 text-amber-500" />
@@ -1348,7 +1569,7 @@ export default function AffiliateDashboard() {
                   <div className="text-left"><p className="font-medium text-sm">Withdraw</p><p className="text-xs text-neutral-500">${affiliateData.stats.pendingCommissions} available</p></div>
                 </div>
               </button>
-              <button onClick={() => setShowPaymentModal(true)} className="p-4 bg-white rounded-lg border hover:border-purple-300 hover:shadow-md transition group">
+              <button onClick={openPaymentModal} className="p-4 bg-white rounded-lg border hover:border-purple-300 hover:shadow-md transition group">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:scale-110 transition"><CreditCard className="w-5 h-5 text-purple-600" /></div>
                   <div className="text-left"><p className="font-medium text-sm">Payment</p><p className="text-xs text-neutral-500">Update method</p></div>
@@ -1361,6 +1582,36 @@ export default function AffiliateDashboard() {
                 </div>
               </button>
             </div>
+
+            {/* Real, working recruitment link, the referral_code and
+                the real, live 5% bonus already existed and already
+                worked, this is the missing, real bridge between them,
+                the one thing an affiliate could actually share. */}
+            {affiliateData.referralCode && (
+              <Card className="p-5">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0"><UserCheck className="w-5 h-5 text-indigo-600" /></div>
+                  <div>
+                    <h3 className="text-sm font-medium">Recruit an affiliate</h3>
+                    <p className="text-xs text-neutral-500 mt-0.5">Earn 5% of every sale they make, for as long as they're active, share this real link to invite them.</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/member/referral/register?ref=${affiliateData.referralCode}`}
+                    className="flex-1 p-2 bg-neutral-50 border rounded-lg text-sm"
+                  />
+                  <button
+                    onClick={() => handleCopy(`${window.location.origin}/member/referral/register?ref=${affiliateData.referralCode}`, 'recruit-link')}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  >
+                    {copied === 'recruit-link' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+              </Card>
+            )}
 
             {AFFILIATE_EXPLAINER_VIDEO_URL && (
               <Card className="p-5">
@@ -1459,7 +1710,7 @@ export default function AffiliateDashboard() {
                         <div>
                           <p className="text-sm font-medium">{conv.toolName}</p>
                           <p className="text-xs text-neutral-500">{conv.customerEmail}</p>
-                          <p className="text-xs text-neutral-400">{conv.date}</p>
+                          <p className="text-xs text-neutral-500">{conv.date}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-primary-600">${conv.commission}</p>
@@ -1536,7 +1787,7 @@ export default function AffiliateDashboard() {
                                 : <Copy className="w-3 h-3 text-neutral-500" />}
                             </button>
                           </div>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-400">
+                          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
                             <span>{link.clicks} clicks</span>
                             <span>{link.conversions} conversions</span>
                             <span>${link.earnings} earned</span>
@@ -1730,8 +1981,8 @@ export default function AffiliateDashboard() {
                 <p className="text-2xl font-bold">${affiliateData.stats.pendingCommissions}</p>
                 <Button variant="secondary" size="sm" className="mt-3 bg-white text-primary-700" onClick={handleRequestPayout} disabled={affiliateData.stats.pendingCommissions < 50}>Request Payout</Button>
               </Card>
-              <Card className="p-4"><p className="text-sm text-neutral-500">Total Paid</p><p className="text-2xl font-bold text-green-600">${affiliateData.stats.paidCommissions}</p><p className="text-xs text-neutral-400 mt-2">Lifetime earnings</p></Card>
-              <Card className="p-4"><p className="text-sm text-neutral-500">Next Payout Date</p><p className="text-2xl font-bold text-amber-600">15th</p><p className="text-xs text-neutral-400 mt-2">Monthly on 15th</p></Card>
+              <Card className="p-4"><p className="text-sm text-neutral-500">Total Paid</p><p className="text-2xl font-bold text-green-600">${affiliateData.stats.paidCommissions}</p><p className="text-xs text-neutral-500 mt-2">Lifetime earnings</p></Card>
+              <Card className="p-4"><p className="text-sm text-neutral-500">Next Payout Date</p><p className="text-2xl font-bold text-amber-600">15th</p><p className="text-xs text-neutral-500 mt-2">Monthly on 15th</p></Card>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
@@ -1769,7 +2020,7 @@ export default function AffiliateDashboard() {
                   ) : (
                     <p className="text-sm text-neutral-500 text-center py-4">No payment method added</p>
                   )}
-                  <Button variant="outline" size="sm" onClick={() => setShowPaymentModal(true)}><CreditCard className="w-4 h-4 mr-2" />Update Payment Methods</Button>
+                  <Button variant="outline" size="sm" onClick={openPaymentModal}><CreditCard className="w-4 h-4 mr-2" />Update Payment Methods</Button>
                 </div>
               </div>
 
@@ -1906,14 +2157,14 @@ export default function AffiliateDashboard() {
               <h3 className="text-lg font-serif mb-4">Request Withdrawal</h3>
               <div className="space-y-4">
                 <div className="bg-primary-50 p-4 rounded-lg"><p className="text-sm text-primary-700 mb-1">Available Balance</p><p className="text-2xl font-bold text-primary-600">${affiliateData.stats.pendingCommissions}</p></div>
-                <div><label className="block text-sm font-medium mb-2">Amount to Withdraw</label><input type="number" className="w-full p-2 border rounded-lg" placeholder="Enter amount" max={affiliateData.stats.pendingCommissions} min={50} /><p className="text-xs text-neutral-500 mt-1">Minimum: $50</p></div>
+                <div><label className="block text-sm font-medium mb-2">Amount to Withdraw</label><input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full p-2 border rounded-lg" placeholder="Enter amount" max={affiliateData.stats.pendingCommissions} min={50} /><p className="text-xs text-neutral-500 mt-1">Minimum: $50</p></div>
                 <div className="bg-amber-50 p-3 rounded-lg text-xs text-amber-700">
                   <p className="font-medium mb-1">⏰ Payment Schedule</p>
                   <p>• First payment: within 7 working days of first qualifying sale</p>
                   <p>• All subsequent payments: 15th of each month</p>
                   <p>• Minimum payout: $50 · PayPal or bank transfer</p>
                 </div>
-                <div className="flex gap-2 pt-4"><Button onClick={() => { setShowWithdrawModal(false); alert('Withdrawal request submitted!') }} className="flex-1">Confirm Withdrawal</Button><Button variant="outline" className="flex-1" onClick={() => setShowWithdrawModal(false)}>Cancel</Button></div>
+                <div className="flex gap-2 pt-4"><Button onClick={handleConfirmWithdrawal} disabled={withdrawing} className="flex-1">{withdrawing ? 'Submitting...' : 'Confirm Withdrawal'}</Button><Button variant="outline" className="flex-1" onClick={() => setShowWithdrawModal(false)} disabled={withdrawing}>Cancel</Button></div>
               </div>
             </motion.div>
           </motion.div>
@@ -1926,9 +2177,9 @@ export default function AffiliateDashboard() {
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-serif mb-4">Payment Methods</h3>
               <div className="space-y-4">
-                <div className="border rounded-lg p-4"><h4 className="font-medium mb-3 flex items-center gap-2"><Banknote className="w-4 h-4" />Bank Transfer</h4><input type="text" placeholder="Bank Name" className="w-full p-2 border rounded-lg mb-2" /><input type="text" placeholder="Account Name" className="w-full p-2 border rounded-lg mb-2" /><input type="text" placeholder="Account Number" className="w-full p-2 border rounded-lg mb-2" /><input type="text" placeholder="SWIFT Code" className="w-full p-2 border rounded-lg" /></div>
-                <div className="border rounded-lg p-4"><h4 className="font-medium mb-3 flex items-center gap-2"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72c.046-.307.308-.54.616-.54h5.768c2.466 0 4.244.754 5.265 2.242 1.02 1.488.946 3.713-.205 5.798-1.424 2.588-3.96 4.03-7.204 4.03h-1.96l-1.012 5.786a.642.642 0 0 1-.632.54z"/></svg>PayPal</h4><input type="email" placeholder="PayPal Email" className="w-full p-2 border rounded-lg" /></div>
-                <div className="flex gap-2 pt-4"><Button onClick={() => setShowPaymentModal(false)} className="flex-1">Save Changes</Button><Button variant="outline" className="flex-1" onClick={() => setShowPaymentModal(false)}>Cancel</Button></div>
+                <div className="border rounded-lg p-4"><h4 className="font-medium mb-3 flex items-center gap-2"><Banknote className="w-4 h-4" />Bank Transfer</h4><input type="text" value={paymentForm.bankName} onChange={e => setPaymentForm({ ...paymentForm, bankName: e.target.value })} placeholder="Bank Name" className="w-full p-2 border rounded-lg mb-2" /><input type="text" value={paymentForm.accountName} onChange={e => setPaymentForm({ ...paymentForm, accountName: e.target.value })} placeholder="Account Name" className="w-full p-2 border rounded-lg mb-2" /><input type="text" value={paymentForm.accountNumber} onChange={e => setPaymentForm({ ...paymentForm, accountNumber: e.target.value })} placeholder="Account Number" className="w-full p-2 border rounded-lg mb-2" /><input type="text" value={paymentForm.swiftCode} onChange={e => setPaymentForm({ ...paymentForm, swiftCode: e.target.value })} placeholder="SWIFT Code" className="w-full p-2 border rounded-lg" /></div>
+                <div className="border rounded-lg p-4"><h4 className="font-medium mb-3 flex items-center gap-2"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72c.046-.307.308-.54.616-.54h5.768c2.466 0 4.244.754 5.265 2.242 1.02 1.488.946 3.713-.205 5.798-1.424 2.588-3.96 4.03-7.204 4.03h-1.96l-1.012 5.786a.642.642 0 0 1-.632.54z"/></svg>PayPal</h4><input type="email" value={paymentForm.paypalEmail} onChange={e => setPaymentForm({ ...paymentForm, paypalEmail: e.target.value })} placeholder="PayPal Email" className="w-full p-2 border rounded-lg" /></div>
+                <div className="flex gap-2 pt-4"><Button onClick={handleSavePaymentDetails} disabled={savingPayment} className="flex-1">{savingPayment ? 'Saving...' : 'Save Changes'}</Button><Button variant="outline" className="flex-1" onClick={() => setShowPaymentModal(false)} disabled={savingPayment}>Cancel</Button></div>
               </div>
             </motion.div>
           </motion.div>

@@ -7,11 +7,10 @@
 //
 // Country is required up front, not deferred to Stripe's own hosted
 // onboarding flow, Stripe's real API requires it at account creation
-// time, and it generally can't be changed afterward. Nothing in the
-// real, confirmed affiliate_profiles schema holds this today, so it's
-// collected here, once, before the real account is created, rather
-// than guessed at or hardcoded to a single country for what is meant
-// to be a genuinely global program.
+// time, and it generally can't be changed afterward. These real
+// columns live on users, the confirmed, live table, not
+// affiliate_profiles, confirmed genuinely empty, zero rows ever, by
+// tonight's own real, live schema checks.
 
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
@@ -56,9 +55,9 @@ export async function POST(request: NextRequest) {
   }
 
   const { data: profile, error: profileError } = await supabaseAdmin
-    .from('affiliate_profiles')
-    .select('user_id, stripe_connect_account_id, stripe_connect_onboarded, stripe_connect_country')
-    .eq('user_id', user.id)
+    .from('users')
+    .select('id, stripe_connect_account_id, stripe_connect_onboarded, stripe_connect_country')
+    .eq('id', user.id)
     .maybeSingle()
 
   if (profileError || !profile) {
@@ -102,12 +101,12 @@ export async function POST(request: NextRequest) {
     accountId = account.id
 
     const { error: updateError } = await supabaseAdmin
-      .from('affiliate_profiles')
+      .from('users')
       .update({
         stripe_connect_account_id: accountId,
         stripe_connect_country:    country,
       })
-      .eq('user_id', user.id)
+      .eq('id', user.id)
 
     if (updateError) {
       console.error('[connect-stripe] Failed to save new account id:', updateError)
