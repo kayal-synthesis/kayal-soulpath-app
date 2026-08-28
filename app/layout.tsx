@@ -66,9 +66,12 @@ export const metadata: Metadata = {
     images: ['/images/tools/the_Calling.webp'],
   },
   icons: {
-    icon:     '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple:    '/favicon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.png',
+    apple:    '/favicon.png',
   },
 }
 
