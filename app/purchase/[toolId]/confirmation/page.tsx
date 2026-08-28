@@ -8,6 +8,18 @@ import type { Tool } from '@/lib/tools/all-tools-index'
 import { createClient } from '@/lib/supabase/client'
 import { useCurrency, formatPrice } from '@/lib/hooks/useCurrency'
 
+// Reads the same, real 60-day attribution cookie set by
+// app/ref/[code]/route.ts and already used everywhere else in the
+// app, purchase_toolId_page.tsx, register.tsx. Reused here rather
+// than reinvented, so there's only ever one, real, single standard
+// for "how recent is recent enough" across the whole app, not two
+// that could quietly disagree with each other.
+const getRefCode = (): string | null => {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|; )kayal_ref=([^;]*)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 /**
  * v1.1, real fix, replacing a purely cosmetic countdown for chat and
  * voice destination tools with actual, honest polling against the
@@ -302,6 +314,25 @@ function AccountStep({
         throw error
       }
       if (data.user) {
+        // Real, genuine recruiter attribution, only when the box
+        // above was checked, and only when a real, still-valid
+        // referral cookie actually exists, the same, real 60-day
+        // window already used everywhere else in the app. A visitor
+        // who bought through a tool link, then separately decides to
+        // become an affiliate here, now correctly credits whoever
+        // originally referred them, not silently thrown away.
+        if (joinAffiliate) {
+          const refCode = getRefCode()
+          if (refCode) {
+            const { error: recruitedByError } = await supabase
+              .from('users')
+              .update({ recruited_by: refCode })
+              .eq('token', data.user.id)
+            if (recruitedByError) {
+              console.error('recruited_by update error:', recruitedByError)
+            }
+          }
+        }
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
         if (signInError) {
           window.location.href = '/auth/login?email=' + encodeURIComponent(email)
