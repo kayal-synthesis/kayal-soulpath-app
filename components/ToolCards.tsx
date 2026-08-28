@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useCurrency, formatPrice } from '@/lib/hooks/useCurrency'
+import { usePricingLocalization, formatLocalizedPrice } from '@/lib/hooks/usePricingLocalization'
 import {
   Star, CheckCircle, ChevronDown, ChevronUp, ChevronRight,
   Upload, Clock, Users, Crown, Download, X, RefreshCw,
@@ -270,7 +270,7 @@ export function StandardToolCard({
   showAddButton = true, className = '',
 }: CardProps) {
   const router     = useRouter()
-  const { currency, rate } = useCurrency()
+  const { currency, multiplier } = usePricingLocalization()
   const a          = getAccent(tool.domain)
   const isOwned    = state === 'owned'
   const isSelected = state === 'selected'
@@ -405,7 +405,7 @@ export function StandardToolCard({
           <div className="flex items-end justify-between gap-2">
             <div>
               <div className="flex items-baseline gap-1">
-                <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">{formatPrice(tool.price, currency, rate)}</span>
+                <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">{formatLocalizedPrice(tool.price, currency, multiplier)}</span>
                 {tool.subscriptionPeriod && <span className="text-xs text-neutral-500">/{tool.subscriptionPeriod}</span>}
               </div>
               <div className="flex items-center gap-1 mt-0.5">
@@ -438,7 +438,7 @@ export function FlagshipToolCard({
   showAddButton = true, className = '',
 }: CardProps) {
   const router     = useRouter()
-  const { currency, rate } = useCurrency()
+  const { currency, multiplier } = usePricingLocalization()
   const a          = getAccent(tool.domain)
   const isOwned    = state === 'owned'
   const isSelected = state === 'selected'
@@ -575,7 +575,7 @@ export function FlagshipToolCard({
           <div className="flex items-end justify-between gap-3 sm:gap-4">
             <div>
               <div className="flex items-baseline gap-1">
-                <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">{formatPrice(tool.price, currency, rate)}</span>
+                <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">{formatLocalizedPrice(tool.price, currency, multiplier)}</span>
                 {tool.subscriptionPeriod && <span className="text-xs text-neutral-500">/{tool.subscriptionPeriod}</span>}
               </div>
               <div className="flex items-center gap-1 mt-0.5">
@@ -606,7 +606,7 @@ export function FlagshipToolCard({
 // ─── Compact Card ─────────────────────────────────────────────
 export function CompactToolCard({ tool, discountedPrice }: { tool: ToolData; discountedPrice?: number }) {
   const a = getAccent(tool.domain)
-  const { currency, rate } = useCurrency()
+  const { currency, multiplier } = usePricingLocalization()
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-neutral-100">
       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: a.soft }}>{tool.emoji || '🔮'}</div>
@@ -616,9 +616,9 @@ export function CompactToolCard({ tool, discountedPrice }: { tool: ToolData; dis
       </div>
       <div className="text-right flex-shrink-0">
         {discountedPrice !== undefined && discountedPrice < tool.price ? (
-          <><p className="text-sm font-bold text-neutral-900">{formatPrice(discountedPrice, currency, rate)}</p><p className="text-[10px] text-neutral-400 line-through">{formatPrice(tool.price, currency, rate)}</p></>
+          <><p className="text-sm font-bold text-neutral-900">{formatLocalizedPrice(discountedPrice, currency, multiplier)}</p><p className="text-[10px] text-neutral-400 line-through">{formatLocalizedPrice(tool.price, currency, multiplier)}</p></>
         ) : (
-          <p className="text-sm font-bold text-neutral-900">{formatPrice(tool.price, currency, rate)}</p>
+          <p className="text-sm font-bold text-neutral-900">{formatLocalizedPrice(tool.price, currency, multiplier)}</p>
         )}
       </div>
     </div>
@@ -638,7 +638,7 @@ export function BundleSelector({ tools, onProceedToCheckout }: {
   const [tier,           setTier]          = useState<Tier>(1)
   const [selectedTools,  setSelectedTools] = useState<ToolData[]>([])
   const [domainFilter,   setDomainFilter]  = useState<string>('all')
-  const { currency, rate } = useCurrency()
+  const { currency, multiplier } = usePricingLocalization()
 
   const bundle     = calculateBundle(selectedTools, tier)
   const slotsLeft  = tier - selectedTools.length
@@ -711,8 +711,8 @@ export function BundleSelector({ tools, onProceedToCheckout }: {
             <div>
               <p className="text-xs text-neutral-500 mb-0.5">{selectedTools.length} reading{selectedTools.length > 1 ? 's' : ''}{bundle.discount > 0 ? ` · ${bundle.discount}% off` : ''}</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">{formatPrice(bundle.total, currency, rate)}</span>
-                {bundle.savings > 0 && <><span className="text-sm text-neutral-400 line-through">{formatPrice(bundle.subtotal, currency, rate)}</span><span className="text-sm font-bold text-emerald-600">Save {formatPrice(bundle.savings, currency, rate)}</span></>}
+                <span className="text-xl sm:text-2xl font-serif font-bold text-neutral-900">{formatLocalizedPrice(bundle.total, currency, multiplier)}</span>
+                {bundle.savings > 0 && <><span className="text-sm text-neutral-400 line-through">{formatLocalizedPrice(bundle.subtotal, currency, multiplier)}</span><span className="text-sm font-bold text-emerald-600">Save {formatLocalizedPrice(bundle.savings, currency, multiplier)}</span></>}
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-neutral-500">
@@ -728,7 +728,7 @@ export function BundleSelector({ tools, onProceedToCheckout }: {
               cursor: canCheckout ? 'pointer' : 'not-allowed',
             }}>
             {canCheckout
-              ? bundle.savings > 0 ? `Proceed to Checkout, Save ${formatPrice(bundle.savings, currency, rate)}` : 'Proceed to Checkout'
+              ? bundle.savings > 0 ? `Proceed to Checkout, Save ${formatLocalizedPrice(bundle.savings, currency, multiplier)}` : 'Proceed to Checkout'
               : `Select ${slotsLeft} more reading${slotsLeft > 1 ? 's' : ''} to continue`}
           </button>
         </div>

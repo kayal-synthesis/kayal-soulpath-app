@@ -6,7 +6,7 @@ import { CheckCircle, Clock, Zap, ChevronRight, Star, X, User, Mail, Key, Loader
 import { allTools, getToolById } from '@/lib/tools/all-tools-index'
 import type { Tool } from '@/lib/tools/all-tools-index'
 import { createClient } from '@/lib/supabase/client'
-import { useCurrency, formatPrice } from '@/lib/hooks/useCurrency'
+import { usePricingLocalization, formatLocalizedPrice } from '@/lib/hooks/usePricingLocalization'
 
 // Reads the same, real 60-day attribution cookie set by
 // app/ref/[code]/route.ts and already used everywhere else in the
@@ -122,7 +122,7 @@ function UpsellCard({
   onDecline: () => void
   accepting: boolean
 }) {
-  const { currency, rate } = useCurrency()
+  const { currency, multiplier } = usePricingLocalization()
   return (
     <motion.div
       initial={{ opacity: 0, y: 32 }}
@@ -176,7 +176,7 @@ function UpsellCard({
               Add this now and save 20%, available only at checkout
             </p>
             <p className="text-xs text-amber-600 mt-0.5">
-              Full price after this page: <span className="line-through">{formatPrice(tool.price, currency, rate)}</span>
+              Full price after this page: <span className="line-through">{formatLocalizedPrice(tool.price, currency, multiplier)}</span>
             </p>
           </div>
         </div>
@@ -192,7 +192,7 @@ function UpsellCard({
             </span>
           ) : (
             <>
-              Yes, add {tool.name} for {formatPrice(tool.price * 0.8, currency, rate)}
+              Yes, add {tool.name} for {formatLocalizedPrice(tool.price * 0.8, currency, multiplier)}
               <ChevronRight className="w-4 h-4" />
             </>
           )}
