@@ -11,6 +11,7 @@
 import { NextResponse }   from 'next/server'
 import { createClient }   from '@supabase/supabase-js'
 import { cookies }        from 'next/headers'
+import { creditAffiliateCommission, creditReferralBonus } from '@/lib/affiliate/credit-purchase-commission'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +25,12 @@ const supabaseAdmin = createClient(
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+
+    // Real, actual requester IP, needed below so a coupon's real
+    // usage record carries the same, real signal the validate route
+    // checks against, not just the resolved user_id.
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    const requestIp = forwardedFor?.split(',')[0]?.trim() || null
 
     const {
       userId,
@@ -206,6 +213,7 @@ export async function POST(request: Request) {
         user_id:         resolvedUserId,
         purchase_id:     purchase.id,
         discount_amount: (originalPrice || price) - finalPrice,
+        ip_address:      requestIp,
         used_at:         new Date().toISOString(),
       })
     }
@@ -231,295 +239,35 @@ export async function POST(request: Request) {
     }
 
     // ──── Affiliate commission ────────────────────────────────────────────────────────────────────
-    // Rewritten from the flat 30% version. That was a real, serious bug:
-    // every sale was credited at the same rate regardless of the tool's
-    // price tier or the affiliate's actual standing, which directly
-    // contradicted the real Standard/Performance/Strategic structure
-    // affiliates agree to on the register page.
-    //
-    // Also switched the lookup from users.referral_code to
-    // affiliate_profiles.referral_code. ReferralTeaser.tsx, the component
-    // that already correctly reads real affiliate data rather than
-    // fabricating it, treats affiliate_profiles as the source of truth,
-    // and two separate admin pages were found independently relying on
-    // affiliate_profiles.approved for the same purpose. users.referral_code
-    // was a second, unsynced field answering the same question.
+    // Real, rebuilt to match the exact, single, real commission and
+    // referral-bonus functions already live and working in
+    // app/api/webhooks/stripe/route.ts, not a second, separate
+    // implementation. The previous version here used a genuinely
+    // different, older design entirely, Flutterwave for real payouts,
+    // a manual commission_rate override, and a Tier-2 override system,
+    // none of which match what's actually confirmed live tonight,
+    // Stripe as the real payment and payout provider, fully automatic
+    // tiers, and a single-hop, flat referral bonus only.
     if (ref_code) {
       try {
-        const HIGH_TICKET_THRESHOLD = 37 // matches the register page's own tier table
+        const commissionResult = await creditAffiliateCommission(supabaseAdmin, {
+          refCode:         ref_code,
+          linkId:          link_id || null,
+          toolId:          toolId,
+          toolName:        toolName,
+          saleAmountUsd:   finalPrice,
+          stripeSessionId: purchase.id,
+          isRecurring:     false,
+        })
 
-        const { data: affiliate } = await supabaseAdmin
-          .from('affiliate_profiles')
-          .select('id, user_id, commission_rate, approved, status')
-          .eq('referral_code', ref_code)
-          .single()
-
-        if (affiliate && affiliate.approved && affiliate.status !== 'suspended') {
-
-          // Idempotency: skip if already recorded for this purchase
-          const { data: existing } = await supabaseAdmin
-            .from('affiliate_conversions')
-            .select('id')
-            .eq('stripe_session_id', purchase.id)  // use purchase id as session key in test mode
-            .maybeSingle()
-
-          if (!existing) {
-            let commissionRate: number
-
-            if (affiliate.commission_rate != null) {
-              // Strategic tier: individually negotiated rate, set by an
-              // admin at approval time, overrides the formula entirely.
-              commissionRate = affiliate.commission_rate
-            } else {
-              // Standard/Performance: the formula. Performance requires
-              // 10+ sales in the last rolling 30 days, matching the
-              // register page's real, agreed-upon terms exactly.
-              const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
-              const { count: recentSales } = await supabaseAdmin
-                .from('affiliate_conversions')
-                .select('id', { count: 'exact', head: true })
-                .eq('affiliate_id', affiliate.user_id)
-                .gte('created_at', thirtyDaysAgo)
-
-              const isPerformanceTier = (recentSales || 0) >= 10
-              const isHighTicket      = finalPrice >= HIGH_TICKET_THRESHOLD
-
-              commissionRate = isPerformanceTier
-                ? (isHighTicket ? 35 : 30)
-                : (isHighTicket ? 30 : 25)
-            }
-
-            const commissionAmount = Math.round(finalPrice * (commissionRate / 100) * 100) / 100
-
-            // Insert conversion record aligned to our schema
-            const { data: conversion } = await supabaseAdmin
-              .from('affiliate_conversions')
-              .insert({
-                affiliate_id:      affiliate.user_id,
-                link_id:           link_id          || null,
-                tool_id:           toolId,
-                tool_name:         toolName,
-                ref_code:          ref_code,
-                stripe_session_id: purchase.id,     // purchase id as idempotency key
-                purchase_amount:   finalPrice,
-                commission_rate:   commissionRate,
-                commission_amount: commissionAmount,
-                is_recurring:      false,
-                status:            'pending',
-                created_at:        new Date().toISOString(),
-              })
-              .select('id')
-              .single()
-
-            if (conversion) {
-              // Credit commission via RPC (updates pending_balance + writes ledger)
-              await supabaseAdmin.rpc('credit_commission', {
-                p_affiliate_id:    affiliate.user_id,
-                p_conversion_id:   conversion.id,
-                p_purchase_amount: finalPrice,
-              })
-
-              // Notify affiliate
-              await supabaseAdmin.from('notifications').insert({
-                user_id:    affiliate.user_id,
-                type:       'affiliate_conversion',
-                title:      '🎉 New Sale!',
-                message:    `Someone purchased ${toolName} using your link. You earned $${commissionAmount.toFixed(2)}!`,
-                data:       { conversion_id: conversion.id, amount: commissionAmount },
-                read:       false,
-                created_at: new Date().toISOString(),
-              })
-
-              console.log(`[add-purchase] Commission $${commissionAmount} (${commissionRate}%) credited to affiliate ${ref_code}`)
-
-              // ──── Instant first-payout trigger ──────────────────────────────
-              // Only runs for affiliates who have not yet had their first
-              // payout, and only if they have already submitted banking
-              // details (flutterwave_recipient_id set). Uses the same
-              // 5-point threshold ReferralTeaser.tsx already shows progress
-              // toward.
-              //
-              // Critically, this only ever RECORDS a pending attempt.
-              // Flutterwave's initial API response confirms the transfer
-              // was accepted, not that it completed, real bank transfers
-              // are asynchronous, the actual outcome arrives later via
-              // webhook. affiliate_profiles.pending_payout and
-              // payout_activated are never touched here, only by
-              // app/api/webhooks/flutterwave/route.ts once the real
-              // outcome is known. Marking anything final at this point
-              // would mean telling an affiliate they were paid for a
-              // transfer that could still fail afterward.
-              try {
-                const { data: fullProfile } = await supabaseAdmin
-                  .from('affiliate_profiles')
-                  .select('id, payout_activated, flutterwave_recipient_id, payout_currency, pending_payout')
-                  .eq('id', affiliate.id)
-                  .single()
-
-                if (fullProfile && !fullProfile.payout_activated && fullProfile.flutterwave_recipient_id) {
-                  const { data: confirmedSales } = await supabaseAdmin
-                    .from('affiliate_conversions')
-                    .select('purchase_amount')
-                    .eq('affiliate_id', affiliate.user_id)
-                    .in('status', ['pending', 'confirmed'])
-
-                  const totalPoints = (confirmedSales || []).reduce(
-                    (sum, s) => sum + (Number(s.purchase_amount) >= 37 ? 1.5 : 1.0), 0
-                  )
-
-                  if (totalPoints >= 5.0) {
-                    const { convertUsdToLocal, triggerPayout, buildPayoutReference, recordPayoutAttempt } =
-                      await import('@/lib/flutterwave/payouts')
-
-                    const usdAmount = fullProfile.pending_payout || 0
-                    const localAmount = await convertUsdToLocal(usdAmount, fullProfile.payout_currency)
-                    const reference = buildPayoutReference(affiliate.user_id, 'first')
-
-                    const payoutResult = await triggerPayout({
-                      recipientId: fullProfile.flutterwave_recipient_id,
-                      amountLocal: localAmount,
-                      currency:    fullProfile.payout_currency,
-                      reference,
-                    })
-
-                    if (payoutResult.success) {
-                      // Accepted, not yet completed. Recorded as pending,
-                      // the webhook finishes this later.
-                      await recordPayoutAttempt({
-                        supabaseAdmin,
-                        affiliateId: affiliate.id,
-                        userId:      affiliate.user_id,
-                        reference,
-                        transferId:  payoutResult.transferId,
-                        kind:        'first',
-                        amountUsd:   usdAmount,
-                        amountLocal: localAmount,
-                        currency:    fullProfile.payout_currency,
-                      })
-
-                      await supabaseAdmin.from('notifications').insert({
-                        user_id:    affiliate.user_id,
-                        type:       'affiliate_payout',
-                        title:      '💰 First Payout Initiated',
-                        message:    `Your first commission payout of ${localAmount} ${fullProfile.payout_currency} is being processed. You'll be notified once it's confirmed delivered.`,
-                        data:       { reference },
-                        read:       false,
-                        created_at: new Date().toISOString(),
-                      })
-                    } else {
-                      console.error(`[add-purchase] First payout request failed for ${affiliate.user_id}: ${payoutResult.error}`)
-                      await supabaseAdmin.from('admin_logs').insert({
-                        admin_id:   null,
-                        action:     'payout_failed',
-                        resource:   affiliate.user_id,
-                        details:    { reason: payoutResult.error, amount: usdAmount, reference },
-                        created_at: new Date().toISOString(),
-                      })
-                    }
-                  }
-                }
-              } catch (payoutError) {
-                console.error('[add-purchase] First-payout check error:', payoutError)
-              }
-
-              // ──── Tier-2 override ──────────────────────────────────────────────
-              // If this affiliate was themselves recruited by someone, that
-              // recruiter earns a smaller override on this same sale, on top
-              // of what was just credited above in full. Bounded to exactly
-              // one hop: this always looks up the direct recruiter only, never
-              // walks further up any chain, which is what keeps this
-              // structurally different from a real MLM tree rather than just
-              // a smaller one. Only recruiters actually approved for Strategic
-              // tier can receive this (override_rate set on their profile at
-              // approval time), not every affiliate who happens to have
-              // recruited someone.
-              try {
-                const { data: recruitedUser } = await supabaseAdmin
-                  .from('users')
-                  .select('recruited_by')
-                  .eq('id', affiliate.user_id)
-                  .maybeSingle()
-
-                const recruiterCode = recruitedUser?.recruited_by
-
-                if (recruiterCode) {
-                  const { data: recruiter } = await supabaseAdmin
-                    .from('affiliate_profiles')
-                    .select('id, user_id, override_rate, approved, status')
-                    .eq('referral_code', recruiterCode)
-                    .single()
-
-                  if (
-                    recruiter &&
-                    recruiter.approved &&
-                    recruiter.status !== 'suspended' &&
-                    recruiter.override_rate != null &&
-                    recruiter.override_rate > 0
-                  ) {
-                    // Distinct idempotency key from the direct commission
-                    // record above, since both rows share the same
-                    // underlying purchase and stripe_session_id must not
-                    // collide between them.
-                    const overrideSessionId = `${purchase.id}_override`
-
-                    const { data: existingOverride } = await supabaseAdmin
-                      .from('affiliate_conversions')
-                      .select('id')
-                      .eq('stripe_session_id', overrideSessionId)
-                      .maybeSingle()
-
-                    if (!existingOverride) {
-                      const overrideAmount = Math.round(finalPrice * (recruiter.override_rate / 100) * 100) / 100
-
-                      const { data: overrideConversion } = await supabaseAdmin
-                        .from('affiliate_conversions')
-                        .insert({
-                          affiliate_id:      recruiter.user_id,
-                          link_id:           null,
-                          tool_id:           toolId,
-                          tool_name:         toolName,
-                          ref_code:          recruiterCode,
-                          stripe_session_id: overrideSessionId,
-                          purchase_amount:   finalPrice,
-                          commission_rate:   recruiter.override_rate,
-                          commission_amount: overrideAmount,
-                          is_recurring:      false,
-                          status:            'pending',
-                          created_at:        new Date().toISOString(),
-                        })
-                        .select('id')
-                        .single()
-
-                      if (overrideConversion) {
-                        await supabaseAdmin.rpc('credit_commission', {
-                          p_affiliate_id:    recruiter.user_id,
-                          p_conversion_id:   overrideConversion.id,
-                          p_purchase_amount: finalPrice,
-                        })
-
-                        await supabaseAdmin.from('notifications').insert({
-                          user_id:    recruiter.user_id,
-                          type:       'affiliate_override',
-                          title:      '🎉 Override Earned!',
-                          message:    `A partner you recruited made a sale. You earned $${overrideAmount.toFixed(2)} in override commission.`,
-                          data:       { conversion_id: overrideConversion.id, amount: overrideAmount },
-                          read:       false,
-                          created_at: new Date().toISOString(),
-                        })
-
-                        console.log(`[add-purchase] Override $${overrideAmount} (${recruiter.override_rate}%) credited to recruiter ${recruiterCode}`)
-                      }
-                    }
-                  }
-                }
-              } catch (overrideError) {
-                // Never fail the purchase, or the direct commission that was
-                // already successfully credited above, because this
-                // secondary override step failed.
-                console.error('[add-purchase] Tier-2 override error:', overrideError)
-              }
-            }
-          }
+        if (commissionResult) {
+          await creditReferralBonus(supabaseAdmin, {
+            recruitAffiliateUserId: commissionResult.affiliateUserId,
+            toolId:                 toolId,
+            toolName:                toolName,
+            saleAmountUsd:           finalPrice,
+            stripeSessionId:         purchase.id,
+          })
         }
       } catch (affiliateError) {
         // Never fail the purchase because affiliate tracking failed

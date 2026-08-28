@@ -352,13 +352,21 @@ export default function PurchasePage() {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return
+    // Real, required for guests specifically, the coupon check has
+    // nothing to identify a guest by otherwise, and this same,
+    // real email carries forward to the rest of checkout too, not
+    // asked for twice.
+    if (!loggedInUser && !email.trim()) {
+      setCouponError('Enter your email above to apply a coupon')
+      return
+    }
     setValidatingCoupon(true)
     setCouponError('')
     try {
       const res  = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, toolId, userId: loggedInUser?.id || null }),
+        body: JSON.stringify({ code: couponCode, toolId, userId: loggedInUser?.id || null, email: email || null }),
       })
       const data = await res.json()
       if (data.valid && data.coupon) {
@@ -887,6 +895,15 @@ export default function PurchasePage() {
                             exit={{ opacity: 0, height: 0 }}
                             className="overflow-hidden"
                           >
+                            {!loggedInUser && (
+                              <input
+                                type="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                placeholder="Your email, needed to apply a coupon"
+                                className="w-full px-4 py-3 mt-3 border border-neutral-200 rounded-xl text-base focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 bg-white"
+                              />
+                            )}
                             <div className="flex gap-2 mt-3">
                               <input
                                 type="text"

@@ -6,6 +6,7 @@ import { CheckCircle, Clock, Zap, ChevronRight, Star, X, User, Mail, Key, Loader
 import { allTools, getToolById } from '@/lib/tools/all-tools-index'
 import type { Tool } from '@/lib/tools/all-tools-index'
 import { createClient } from '@/lib/supabase/client'
+import { useCurrency, formatPrice } from '@/lib/hooks/useCurrency'
 
 /**
  * v1.1, real fix, replacing a purely cosmetic countdown for chat and
@@ -109,6 +110,7 @@ function UpsellCard({
   onDecline: () => void
   accepting: boolean
 }) {
+  const { currency, rate } = useCurrency()
   return (
     <motion.div
       initial={{ opacity: 0, y: 32 }}
@@ -162,7 +164,7 @@ function UpsellCard({
               Add this now and save 20%, available only at checkout
             </p>
             <p className="text-xs text-amber-600 mt-0.5">
-              Full price after this page: <span className="line-through">${tool.price}</span>
+              Full price after this page: <span className="line-through">{formatPrice(tool.price, currency, rate)}</span>
             </p>
           </div>
         </div>
@@ -178,7 +180,7 @@ function UpsellCard({
             </span>
           ) : (
             <>
-              Yes, add {tool.name} for ${Math.round(tool.price * 0.8)}
+              Yes, add {tool.name} for {formatPrice(tool.price * 0.8, currency, rate)}
               <ChevronRight className="w-4 h-4" />
             </>
           )}
@@ -248,6 +250,7 @@ function AccountStep({
   const [magicLinkLoading, setMagicLinkLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
+  const [joinAffiliate, setJoinAffiliate] = useState(false)
 
   useEffect(() => {
     const savedEmail = typeof window !== 'undefined' ? localStorage.getItem(RETURNING_EMAIL_KEY) : null
@@ -275,7 +278,16 @@ function AccountStep({
     try {
       const { data, error } = await supabase.auth.signUp({
         email, password,
-        options: { data: { name } },
+        options: {
+          data: {
+            name,
+            // Real, genuine opt-in, only set when the box below is
+            // actually checked, the trigger's own default, 'customer',
+            // applies otherwise, exactly as it already does for anyone
+            // who doesn't check it.
+            ...(joinAffiliate ? { affiliate_status: 'active' } : {}),
+          },
+        },
       })
       if (error) {
         // Real, specific handling instead of a dead-end raw error
@@ -468,6 +480,19 @@ function AccountStep({
             {passwordError && <p className="text-xs text-red-500 mt-1">{passwordError}</p>}
           </div>
           {accountError && <p className="text-xs text-red-500">{accountError}</p>}
+          {mode === 'signup' && (
+            <label className="flex items-start gap-2.5 p-3 bg-primary-50 border border-primary-100 rounded-lg cursor-pointer">
+              <input
+                type="checkbox"
+                checked={joinAffiliate}
+                onChange={e => setJoinAffiliate(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span className="text-xs text-neutral-700">
+                <span className="font-medium">Also join the KAYAL Affiliate Programme</span>, earn 25-40% commission sharing tools you love, no extra steps, activates the moment your account is created.
+              </span>
+            </label>
+          )}
           <button
             onClick={mode === 'signin' ? handleSignIn : handleCreateAccount}
             disabled={accountLoading || !email || !password}
@@ -538,11 +563,14 @@ function AccountStep({
       </motion.div>
       {/* Explore more, a real path forward beyond just this one purchase,
           points at the app's own domains catalog, works for both guests
-          and logged-in accounts. */}
+          and logged-in accounts. Rebuilt as a real, visible button, a
+          small, underlined gray text link was genuinely too easy to
+          miss and too light to read, even after being darkened once
+          already tonight. */}
       <div className="text-center">
         <a
           href="/domains"
-          className="text-xs text-neutral-500 hover:text-neutral-600 underline underline-offset-2"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-neutral-200 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50 transition-colors shadow-sm"
         >
           Explore other tools
         </a>
@@ -977,7 +1005,7 @@ export default function PurchaseConfirmationPage() {
             <div className="text-center">
               <a
                 href="/domains"
-                className="text-xs text-neutral-500 hover:text-neutral-600 underline underline-offset-2"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-neutral-200 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50 transition-colors shadow-sm"
               >
                 Explore other tools
               </a>
