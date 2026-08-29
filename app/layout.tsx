@@ -98,7 +98,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google Tag Manager */}
         {/* Google Analytics GA4 */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-MTVMZDP8CT"
+          src="https://www.googletagmanager.com/gtag/js?id=G-M6BFCPB2EP"
           strategy="afterInteractive"
         />
         <Script
@@ -109,7 +109,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-MTVMZDP8CT');
+              gtag('config', 'G-M6BFCPB2EP');
             `,
           }}
         />
