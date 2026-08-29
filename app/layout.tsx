@@ -23,6 +23,9 @@ const metadataBase = new URL('https://app.kayalsoulpath.com')
 
 export const metadata: Metadata = {
   metadataBase,
+  verification: {
+    google: 'zQ-RFU2rBSwFgW-4KrrEcX1pnQx_2Ca-xdA1Wyln0_A',
+  },
   title: {
     default:  'KAYAL LifeOS | Numerology & Astrology Readings',
     template: '%s | KAYAL LifeOS',
