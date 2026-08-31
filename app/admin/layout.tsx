@@ -251,6 +251,12 @@ export default function AdminLayout({
       badge: { count: badgeCounts.users, color: 'bg-blue-500' }
     },
     {
+      name: 'Demographics',
+      href: '/admin/demographics',
+      icon: PieChart,
+      roles: ['super_admin', 'admin', 'moderator']
+    },
+    {
       name: 'Affiliates',
       href: '/admin/affiliates',
       icon: Award,
