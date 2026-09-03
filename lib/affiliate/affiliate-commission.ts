@@ -22,11 +22,16 @@
 //   1. Tools priced $30–$36 fall into neither the "low" nor "high"
 //      band defined in either real source file. That gap exists in
 //      the original spec itself, not introduced here.
-//   2. Strategic tier is explicitly "by application," not a number
-//      any live sales data can compute. Whichever file ends up
-//      determining a real affiliate's tier needs a real, persisted
-//      approval flag from the database, this file only defines the
-//      rate that flag should map to once it exists.
+//   2. Superseded: Strategic tier was originally, in both real source
+//      files, "by application." That manual approval requirement was
+//      later, deliberately replaced with a fully automatic, dual-path
+//      trigger, see STRATEGIC_TIER_SALES_THRESHOLD and
+//      STRATEGIC_TIER_LIFETIME_EARNINGS_USD below, and the
+//      qualifiesForStrategicTier() function this file actually
+//      exports. No real, persisted approval flag is needed, or used,
+//      anywhere. TIER_SUBLABELS.strategic below reflects this,
+//      current, real, automatic behavior directly, not the original,
+//      superseded description.
 //   3. The Performance tier bonus is explicitly permanent once
 //      triggered, "does not reset monthly." A live, recomputed
 //      30-day check alone cannot express that permanence correctly,
@@ -122,7 +127,7 @@ export const TIER_LABELS: Record<CommissionTier, string> = {
 export const TIER_SUBLABELS: Record<CommissionTier, string> = {
   standard:    'Automatic on sign-up, begins immediately',
   performance: '10+ sales in any rolling 30-day window',
-  strategic:   'Platform owners & influencers, by application',
+  strategic:   '30+ sales in 90 days, or $5,000 lifetime, auto-upgraded',
 }
 
 // ─────────────────────────────────────────────────────────────

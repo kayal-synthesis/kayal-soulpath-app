@@ -65,9 +65,9 @@ function ReferralRegisterPageInner() {
     },
     {
       label:      'Strategic',
-      sublabel:   'Platform owners & influencers · By application',
+      sublabel:   '30+ sales in 90 days, or $5,000 lifetime',
       commission: '35% / 40%',
-      detail:     'Low-ticket 35% · High-ticket 40% · Negotiable',
+      detail:     'Low-ticket 35% · High-ticket 40% · Auto-upgraded',
       color:      'bg-amber-50 text-amber-700',
       icon:       Award,
     },
@@ -353,7 +353,7 @@ function ReferralRegisterPageInner() {
                       Performance (+5%): 30% low · 35% high, after 10 sales/30 days
                     </span>
                     <span className="block text-primary-500 text-xs">
-                      Strategic (+10%): 35% low · 40% high, by application
+                      Strategic (+10%): 35% low · 40% high, after 30 sales/90 days or $5,000 lifetime
                     </span>
                     <span className="block text-neutral-500 mt-1">
                       First payout: 5 points, no minimum · Recurring: $50 min, 15th monthly · 60-day cookie

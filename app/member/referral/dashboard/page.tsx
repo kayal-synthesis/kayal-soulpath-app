@@ -171,6 +171,27 @@ const domains = [
     tools: lifePathTools,
     count: lifePathTools.length,
     description: 'Life purpose and destiny revelation tools. Discover why you\'re here and what you\'re meant to do.'
+  },
+  {
+    id: 'free-tools',
+    name: 'Free Tools',
+    icon: '🎁',
+    color: 'from-teal-600 to-emerald-600',
+    url: '/domain/free-tools',
+    destination: 'free',
+    tools: [
+      { id: 'life-blueprint',      name: 'Life Blueprint',          emoji: '🔢' },
+      { id: 'face-reader',         name: 'Face Energy Reader',      emoji: '👁️' },
+      { id: 'hand-map',            name: 'Hand Map Reader',         emoji: '🤚' },
+      { id: 'body-energy',         name: 'Vitality Blueprint',      emoji: '🔥' },
+      { id: 'compatibility',       name: 'Compatibility Blueprint', emoji: '💞' },
+      { id: 'environment-pattern', name: 'Environment Blueprint',   emoji: '🌍' },
+      { id: 'name-vibration',      name: 'Name Vibration Reader',   emoji: '✨' },
+      { id: 'soul-timing',         name: 'Soul Timing Window',      emoji: '🌙' },
+      { id: 'universal-day',       name: 'Universal Day Reading',   emoji: '📅' },
+    ],
+    count: 9,
+    description: 'Free, no-signup tools that reveal a genuine slice of someone\'s real blueprint, the natural, low-friction entry point for anyone who isn\'t ready to buy yet.'
   }
 ]
 
@@ -855,7 +876,14 @@ export default function AffiliateDashboard() {
     try {
       const baseUrl = window.location.origin
       const destination = domainDestinations[newLink.domainId] || 'report'
-      let destinationUrl = `${baseUrl}/tool/${newLink.toolId}?ref=${user?.id}`
+      // Real, the one, new, actual branch, free tools live on a
+      // genuinely different, real domain, kayalsoulpath.com, not
+      // app.kayalsoulpath.com, with their own, real, static
+      // pages/tool-{id}.html URL shape, nothing else about this
+      // function changes for every other, real, existing domain.
+      let destinationUrl = newLink.domainId === 'free-tools'
+        ? `https://kayalsoulpath.com/pages/tool-${newLink.toolId}.html?ref=${user?.id}`
+        : `${baseUrl}/tool/${newLink.toolId}?ref=${user?.id}`
       
       if (newLink.campaign) {
         destinationUrl += `&utm_campaign=${encodeURIComponent(newLink.campaign)}`
