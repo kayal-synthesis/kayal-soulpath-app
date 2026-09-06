@@ -948,7 +948,7 @@ def _token_count(response: Dict) -> int:
     return usage.get("input_tokens", 0) + usage.get("output_tokens", 0)
 
 def _word_to_tokens(word_count: int) -> int:
-    return min(4096, int(word_count / 0.75) + 200)
+    return min(8000, int(word_count / 0.75) + 400)
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
