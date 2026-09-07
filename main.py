@@ -3294,7 +3294,7 @@ async def get_user_history(token: str):
         "narrative_sessions": [dict(n) for n in narrative_sessions],
     }
 
-@app.get("/user/{token}/conversations")
+@app.get("/api/user/{token}/conversations")
 async def get_conversations(token: str, session_id: Optional[str] = None):
     conn = get_db_connection(); cur = conn.cursor()
 
