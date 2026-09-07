@@ -499,6 +499,11 @@ async def _call_deepseek(
 
                 if resp.status_code == 200:
                     data = resp.json()
+                    # TEMPORARY DIAGNOSTIC LOG, added to trace the
+                    # real, exact shape of DeepSeek's response when
+                    # content comes back empty despite a 200 OK. Safe
+                    # to remove once the real cause is confirmed.
+                    logger.info(f"RAW DEEPSEEK RESPONSE: {data}")
                     choices = data.get("choices", [])
                     if not choices:
                         logger.error("DeepSeek API: no choices in response")
