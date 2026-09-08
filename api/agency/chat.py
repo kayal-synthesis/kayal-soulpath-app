@@ -499,17 +499,33 @@ async def _call_deepseek(
 
                 if resp.status_code == 200:
                     data = resp.json()
-                    # TEMPORARY DIAGNOSTIC LOG, added to trace the
-                    # real, exact shape of DeepSeek's response when
-                    # content comes back empty despite a 200 OK. Safe
-                    # to remove once the real cause is confirmed.
-                    logger.info(f"RAW DEEPSEEK RESPONSE: {data}")
                     choices = data.get("choices", [])
                     if not choices:
                         logger.error("DeepSeek API: no choices in response")
                         return None, "empty_response"
                     content = choices[0].get("message", {}).get("content", "")
-                    return (content.strip() if content else None), None
+                    finish_reason = choices[0].get("finish_reason", "unknown")
+
+                    # Real, the confirmed, actual root cause. DeepSeek
+                    # can return a genuine 200, with a real choices
+                    # array present, but an empty content string
+                    # inside it. This previously fell straight through
+                    # to `return (None, None)`, both the text AND the
+                    # error reason came back None, exactly matching
+                    # the bare "None" seen in production logs. Now
+                    # treated as a real, distinct, retryable failure,
+                    # finish_reason folded directly into the real,
+                    # returned error string, so the next real failure
+                    # names the true, specific cause on its own.
+                    if not content or not content.strip():
+                        logger.warning(f"DeepSeek returned empty content, finish_reason={finish_reason} (attempt {attempt + 1})")
+                        last_error = f"empty_content_{finish_reason}"
+                        if attempt < _MAX_RETRIES:
+                            await asyncio.sleep(_RETRY_DELAY_SECONDS)
+                            continue
+                        return None, f"empty_content_{finish_reason}"
+
+                    return content.strip(), None
 
                 # Real, specific reason, extracted and logged, not
                 # discarded. Matches the same real error categories
