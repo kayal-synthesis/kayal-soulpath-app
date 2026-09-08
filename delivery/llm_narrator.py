@@ -267,6 +267,23 @@ async def _narrate_tool_section_async(
     )
     max_tokens = _word_to_tokens(word_target)
 
+    # Real, temporary diagnostic, approximating the actual, combined
+    # input size using the real, confirmed ratio already verified
+    # directly against DeepSeek's own tokenizer, roughly 1.37 tokens
+    # per word. This is deliberately an estimate, not exact, but
+    # precise enough to answer the real, structural question, is
+    # the input alone already consuming most of the shared, real
+    # 16384-token context window, leaving little room for output,
+    # regardless of what max_tokens is separately set to.
+    _combined_input_words = len((system + " " + prompt).split())
+    _approx_input_tokens = int(_combined_input_words * 1.37)
+    logger.info(
+        f"PROMPT SIZE CHECK [{session_id}] section={item_index}/{item_total}: "
+        f"~{_approx_input_tokens} estimated input tokens, "
+        f"max_tokens={max_tokens} requested for output, "
+        f"combined against a 16384 total context window"
+    )
+
     response = await _call_deepseek_async(
         messages=[{"role": "user", "content": prompt}],
         system=system,

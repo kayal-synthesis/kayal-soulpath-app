@@ -650,6 +650,17 @@ async def generate_tool_teaser(
     # only-DeepSeek requirement.
     from api.agency.chat import _call_deepseek
 
+    # Real, temporary diagnostic, matching the exact, same, real
+    # check just added to llm_narrator.py, approximating the actual,
+    # combined input size using the real, confirmed ratio verified
+    # directly against DeepSeek's own tokenizer earlier tonight.
+    _approx_input_tokens = int(len(prompt.split()) * 1.37)
+    logger.info(
+        f"TEASER PROMPT SIZE CHECK [{tool_id}]: ~{_approx_input_tokens} "
+        f"estimated input tokens, max_tokens=800 requested for output, "
+        f"combined against a 16384 total context window"
+    )
+
     raw, error_reason = await _call_deepseek(
         messages=[{"role": "user", "content": prompt}],
         max_tokens=800,
