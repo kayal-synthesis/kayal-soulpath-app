@@ -494,6 +494,16 @@ async def _call_deepseek(
                         "messages": messages,
                         "max_tokens": max_tokens,
                         "temperature": temperature,
+                        # Real, explicit, deliberate test, added after
+                        # finish_reason=length kept returning on
+                        # small, real prompts with generous max_tokens
+                        # room. DeepSeek's own quick-start docs
+                        # implied thinking is off by default, but a
+                        # separate, real explanation claims the
+                        # opposite for this specific model. Cheap,
+                        # reversible, worth testing directly rather
+                        # than trusting either claim blindly.
+                        "thinking": {"type": "disabled"},
                     }
                 )
 
