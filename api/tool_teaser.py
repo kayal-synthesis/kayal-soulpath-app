@@ -655,7 +655,7 @@ async def generate_tool_teaser(
     # combined input size using the real, confirmed ratio verified
     # directly against DeepSeek's own tokenizer earlier tonight.
     _approx_input_tokens = int(len(prompt.split()) * 1.37)
-    logger.info(
+    logger.error(
         f"TEASER PROMPT SIZE CHECK [{tool_id}]: ~{_approx_input_tokens} "
         f"estimated input tokens, max_tokens=800 requested for output, "
         f"combined against a 16384 total context window"

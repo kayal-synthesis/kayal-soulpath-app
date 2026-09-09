@@ -277,7 +277,7 @@ async def _narrate_tool_section_async(
     # regardless of what max_tokens is separately set to.
     _combined_input_words = len((system + " " + prompt).split())
     _approx_input_tokens = int(_combined_input_words * 1.37)
-    logger.info(
+    logger.error(
         f"PROMPT SIZE CHECK [{session_id}] section={item_index}/{item_total}: "
         f"~{_approx_input_tokens} estimated input tokens, "
         f"max_tokens={max_tokens} requested for output, "
