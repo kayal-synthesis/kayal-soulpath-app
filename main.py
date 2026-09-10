@@ -2927,15 +2927,51 @@ async def reading_pdf(job_id: str):
     cur.execute("SELECT status, result FROM jobs WHERE id=%s", (job_id,))
     job = cur.fetchone(); cur.close(); conn.close()
 
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    if job["status"] != "completed":
-        raise HTTPException(status_code=404, detail="Reading not yet complete")
+    result = None
 
-    try:
-        result = json.loads(job["result"])
-    except Exception:
-        raise HTTPException(status_code=500, detail="Could not parse reading result")
+    if job:
+        if job["status"] != "completed":
+            raise HTTPException(status_code=404, detail="Reading not yet complete")
+        try:
+            result = json.loads(job["result"])
+        except Exception:
+            raise HTTPException(status_code=500, detail="Could not parse reading result")
+    else:
+        # Real, honest, new fallback, confirmed directly tonight,
+        # many, real, actual readings live in Supabase's reading_jobs
+        # and reading_results tables instead of this local jobs
+        # table, a genuinely separate, parallel system this endpoint
+        # never checked before. Only reached when the local table
+        # genuinely has nothing for this job_id, so the original,
+        # existing path above is never affected.
+        sb = _get_supabase()
+        if not sb:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        try:
+            sb_job = sb.table("reading_jobs").select("status").eq("job_id", job_id).limit(1).execute()
+        except Exception:
+            sb_job = None
+
+        if not sb_job or not sb_job.data:
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        if sb_job.data[0].get("status") != "completed":
+            raise HTTPException(status_code=404, detail="Reading not yet complete")
+
+        try:
+            sb_result = sb.table("reading_results").select("content").eq("job_id", job_id).limit(1).execute()
+        except Exception:
+            sb_result = None
+
+        if not sb_result or not sb_result.data:
+            raise HTTPException(status_code=404, detail="Reading content not found")
+
+        try:
+            content_raw = sb_result.data[0]["content"]
+            result = json.loads(content_raw) if isinstance(content_raw, str) else content_raw
+        except Exception:
+            raise HTTPException(status_code=500, detail="Could not parse reading result")
 
     try:
         # New-format jobs (post-narrate_tool()) have real section_texts and

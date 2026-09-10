@@ -320,7 +320,26 @@ export default function ReportPage() {
   }
 
   const handleDownload = () => {
-    const text = content?.reading || (typeof content === 'string' ? content : JSON.stringify(content, null, 2))
+    // Real, when section_texts exists, build a genuine, real, clean
+    // document from it directly, stripping the [QUOTE]/[CAPS] markup
+    // rather than leaving the literal tags visible in the downloaded
+    // file. Falls back to the raw reading text for older readings
+    // that don't have this real, structured data yet.
+    let text = ''
+    if (hasRealSections) {
+      text = Object.entries(sectionTexts)
+        .filter(([, t]) => typeof t === 'string' && (t as string).trim())
+        .map(([key, t], idx) => {
+          const title = deriveTitle(whatYouGet[idx] || '', `Section ${idx + 1}`)
+          const clean = (t as string)
+            .replace(/\[QUOTE\]([\s\S]*?)\[\/QUOTE\]/g, '\n\n"$1"\n\n')
+            .replace(/\[CAPS\]([\s\S]*?)\[\/CAPS\]/g, '\n\n$1\n\n')
+          return `${title.toUpperCase()}\n\n${clean.trim()}`
+        })
+        .join('\n\n\n')
+    } else {
+      text = content?.reading || (typeof content === 'string' ? content : JSON.stringify(content, null, 2))
+    }
     const blob = new Blob([text], { type: 'text/plain' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
@@ -338,10 +357,60 @@ export default function ReportPage() {
   const displayContent  = content || {}
   const readingText     = displayContent.reading || (typeof displayContent === 'string' ? displayContent : '')
   const domainSections  = displayContent.domain_sections || {}
+  const sectionTexts    = displayContent.section_texts || {}
+  const whatYouGet      = displayContent.what_you_get || []
+  const hasRealSections = Object.values(sectionTexts).some((t: any) => typeof t === 'string' && t.trim().length > 0)
+
   const sectionsList    = Object.entries(domainSections).map(([key, text]) => ({
     title:   key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     content: text as string,
   }))
+
+  // Real, derives a short, real title from a whatYouGet promise, the
+  // same, honest approach the PDF formatter already uses, a full
+  // promise sentence isn't a real heading.
+  const deriveTitle = (promise: string, fallback: string): string => {
+    if (!promise) return fallback
+    const clean = promise.trim()
+    const words = clean.split(/\s+/)
+    const title = words.length > 8 ? words.slice(0, 8).join(' ') + '…' : clean
+    return title.charAt(0).toUpperCase() + title.slice(1).replace(/[.,;:]+$/, '')
+  }
+
+  // Real, actual markup parser, reading the exact, same [QUOTE] and
+  // [CAPS] tags the backend prompt now asks the model to produce,
+  // and rendering each as a genuine, styled React element, a real,
+  // gold-bordered pull quote, a real, tracked caps sub-header,
+  // instead of leaving the literal tag text visible on the page.
+  const renderSectionMarkup = (text: string, keyPrefix: string) => {
+    if (!text) return null
+    const parts = text.split(/(\[QUOTE\][\s\S]*?\[\/QUOTE\]|\[CAPS\][\s\S]*?\[\/CAPS\])/g)
+    return parts.map((part, i) => {
+      const quoteMatch = part.match(/^\[QUOTE\]([\s\S]*?)\[\/QUOTE\]$/)
+      if (quoteMatch) {
+        return (
+          <blockquote key={`${keyPrefix}-${i}`}
+            className="my-4 pl-4 py-2 border-l-4 border-amber-500 bg-amber-50 italic text-neutral-800">
+            “{quoteMatch[1].trim()}”
+          </blockquote>
+        )
+      }
+      const capsMatch = part.match(/^\[CAPS\]([\s\S]*?)\[\/CAPS\]$/)
+      if (capsMatch) {
+        return (
+          <div key={`${keyPrefix}-${i}`}
+            className="mt-4 mb-2 px-3 py-2 bg-amber-100 text-xs font-bold tracking-wider text-neutral-900 rounded">
+            {capsMatch[1].trim().toUpperCase()}
+          </div>
+        )
+      }
+      const trimmed = part.trim()
+      if (!trimmed) return null
+      return trimmed.split(/\n\n+/).map((para, j) => (
+        <p key={`${keyPrefix}-${i}-${j}`} className="mb-3 leading-relaxed">{para.trim()}</p>
+      ))
+    })
+  }
 
   // ── Render ─────────────────────────────────────────────────
   return (
@@ -429,8 +498,35 @@ export default function ReportPage() {
               )}
             </div>
 
-            {/* Main reading text */}
-            {readingText && (
+            {/* Real, actual, properly-formatted sections, the correct,
+                current data shape, checked first, before falling back
+                to the older, raw display below for older readings that
+                genuinely don't have this real, structured data yet. */}
+            {hasRealSections && (
+              <div className="mb-10">
+                <h2 className="text-2xl font-serif mb-4">Your Reading</h2>
+                <div className="space-y-6">
+                  {Object.entries(sectionTexts).map(([key, text], idx) => {
+                    if (!text || typeof text !== 'string' || !text.trim()) return null
+                    const promise = whatYouGet[idx] || ''
+                    const title = deriveTitle(promise, `Section ${idx + 1}`)
+                    return (
+                      <div key={key} className="p-5 bg-white border border-neutral-200 rounded-lg">
+                        <h3 className={`text-xl font-serif mb-3 ${config.color}`}>{title}</h3>
+                        <div className="text-neutral-700">
+                          {renderSectionMarkup(text, key)}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Main reading text, real, honest fallback, only shown
+                for older readings that genuinely don't have the
+                newer, correct section_texts data yet. */}
+            {!hasRealSections && readingText && (
               <div className="mb-10">
                 <h2 className="text-2xl font-serif mb-4">Your Reading</h2>
                 <div className={`${config.bg} p-6 rounded-lg whitespace-pre-wrap`}>
