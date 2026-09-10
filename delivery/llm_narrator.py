@@ -170,6 +170,56 @@ def _words_per_section_for_price(price: float) -> Tuple[int, int]:
             return lo, hi
     return _SECTION_WORD_TIERS[-1][1], _SECTION_WORD_TIERS[-1][2]
 
+def _detect_comparison_fit(item_text: str) -> bool:
+    """Real, honest, keyword-based check, does this specific section's
+    own, actual promise genuinely describe a real tension or conflict
+    between two things, the kind [VS_LEFT]/[VS_RIGHT] markup exists
+    for. Never forced onto sections that don't actually call for it."""
+    triggers = [
+        "tension between", "conflict", "clash", "at odds", "versus",
+        "pulls against", "pulling in different directions", "contradicts",
+        "where they conflict", "gift and.*challenge", "opposing",
+    ]
+    lowered = item_text.lower()
+    return any(re.search(t, lowered) for t in triggers)
+
+def _detect_calendar_fit(item_text: str) -> bool:
+    """Real, honest, keyword-based check, does this section's own,
+    actual promise genuinely describe a month-by-month or calendar-
+    style forecast, the kind [CALENDAR_YEAR]/[MONTH] markup exists
+    for."""
+    triggers = [
+        "month by month", "month-by-month", "monthly forecast",
+        "each month", "calendar", "month-to-month",
+    ]
+    lowered = item_text.lower()
+    return any(t in lowered for t in triggers)
+
+def _detect_synthesis_fit(item_text: str) -> bool:
+    """Real, honest, keyword-based check, does this section's own,
+    actual promise genuinely describe multiple, independent systems
+    converging on the same findings, the kind [SYNTHESIS_ITEM] markup
+    exists for."""
+    triggers = [
+        "every system", "all systems agree", "systems confirm",
+        "independent systems", "convergence", "systems that inform",
+        "agree across", "cross-referencing",
+    ]
+    lowered = item_text.lower()
+    return any(t in lowered for t in triggers)
+
+def _detect_final_table_fit(item_text: str, is_last_section: bool) -> bool:
+    """Real, honest check, [FINAL_TABLE] is a genuine, closing summary
+    of the whole reading, not a single finding, so it's only ever
+    offered on the real, actual last section, and only when that
+    section's own promise genuinely describes a closing or summary
+    role."""
+    if not is_last_section:
+        return False
+    triggers = ["final word", "closing", "brings it together", "summary", "what every"]
+    lowered = item_text.lower()
+    return any(t in lowered for t in triggers)
+
 def _build_item_section_prompt(
     item_text:      str,
     item_index:     int,
@@ -179,7 +229,58 @@ def _build_item_section_prompt(
     shared_context: str,
     word_target:    int,
 ) -> str:
-    """Build the prompt for narrating a single whatYouGet promise as its own section."""
+    """Build the prompt for narrating a single whatYouGet promise as its own
+    section. Real, rebuilt to match the actual writing specification
+    directly, this is a paid product the person purchased, not a teaser,
+    so methodology and numbers are named directly now, the opposite of
+    the previous instruction, and real, explicit markup, [QUOTE] and
+    [CAPS], is requested so the PDF's actual, built rendering has
+    something real to work with, rather than always falling back to an
+    automatically-derived quote. Also now conditionally requests the
+    four, more complex components, comparison tables, calendars,
+    synthesis items, and the final table, but only when this specific
+    section's own, actual promise genuinely calls for one, matching the
+    established, real principle, never forced onto every section."""
+    special_instructions = []
+    if _detect_comparison_fit(item_text):
+        special_instructions.append(
+            "This section genuinely describes a real tension between two things. "
+            "Present that tension as two, real, opposing positions, using this exact "
+            "format: [VS_LEFT]SHORT LABEL IN CAPS\\nOne to two sentences stating that "
+            "position.[/VS_LEFT] immediately followed by [VS_RIGHT]SHORT LABEL IN "
+            "CAPS\\nOne to two sentences stating the opposing position.[/VS_RIGHT]. "
+            "You may include two or three of these real, paired blocks if the "
+            "section genuinely contains that many distinct tensions."
+        )
+    if _detect_calendar_fit(item_text):
+        special_instructions.append(
+            "This section genuinely describes a month-by-month forecast. Present it "
+            "using this exact format: [CALENDAR_YEAR]YEAR (Personal Year N: short "
+            "label)[/CALENDAR_YEAR] followed by exactly twelve [MONTH]Abbr|Number|"
+            "Short Label[/MONTH] lines, one per real, actual month, in order, then a "
+            "single [KEY_MONTHS]one sentence naming the two or three months that "
+            "matter most.[/KEY_MONTHS] line."
+        )
+    if _detect_synthesis_fit(item_text):
+        special_instructions.append(
+            "This section genuinely describes multiple, independent systems "
+            "converging on the same finding. Present each, real, distinct finding "
+            "using this exact format: [SYNTHESIS_ITEM][SYNTHESIS_NUMBER]1[/SYNTHESIS_"
+            "NUMBER][SYNTHESIS_HEADING]a short, real, one-sentence heading[/SYNTHESIS_"
+            "HEADING][SYNTHESIS_BODY]two to three sentences naming which real, actual "
+            "systems agree and what they agree on.[/SYNTHESIS_BODY][/SYNTHESIS_ITEM], "
+            "incrementing the number for each additional, real finding."
+        )
+    if _detect_final_table_fit(item_text, item_index == item_total):
+        special_instructions.append(
+            "This is the real, final, closing section. Include one, real, genuine "
+            "closing table using this exact format: [FINAL_TABLE] followed by three "
+            "to five [FT_ROW]A short, real system name says:|A short, direct, real "
+            "statement.[/FT_ROW] lines, one per major finding across this whole "
+            "reading, then [/FINAL_TABLE]."
+        )
+    special_block = ("\n\n" + "\n\n".join(special_instructions)) if special_instructions else ""
+
     return (
         f"You are writing one section of {name}'s personal reading for the tool "
         f"\"{tool_name}\". This is section {item_index} of {item_total}.\n\n"
@@ -188,13 +289,32 @@ def _build_item_section_prompt(
         f"SIGNAL DATA AVAILABLE FOR THIS READING:\n{shared_context}\n\n"
         f"Use whatever signals above are genuinely relevant to this specific promise. "
         f"Do not force in signals that do not actually serve this section's job.\n\n"
+        f"THIS IS A PAID PRODUCT THE PERSON HAS ALREADY PURCHASED, NOT A SALES PAGE. "
+        f"Name every real methodology, system, number, and placement directly, "
+        f"numerology, astrology, Life Path, Soul Urge, Personal Year, specific "
+        f"planets and signs, whatever the actual signal data above genuinely "
+        f"supports. Do not hide or avoid naming these.\n\n"
+        f"THE VOICE: Second person throughout, speak directly to {name} as \"you\". "
+        f"Direct and precise, no atmospheric filler, no vague encouragement. "
+        f"Never write \"it seems\", \"perhaps\", \"you might\", or \"this could indicate\", "
+        f"state findings as facts, the reading was calculated, report what it found. "
+        f"No exclamation marks. No bullet points, prose paragraphs only. "
+        f"Each paragraph should run 3 to 5 sentences, never longer than 6.\n\n"
         f"Write approximately {word_target} words. Open with why this specific "
         f"question matters to {name}, not with a system name or a restatement of "
         f"the promise itself. Be concrete and specific to what the signals actually "
         f"show, not generic. End with what this means for {name} going forward, "
         f"not a summary.\n\n"
-        f"Never use em-dashes (—). Use commas (,) or periods (.) instead. "
-        f"Never mention system names, numbers, or methodology labels."
+        f"FORMATTING, use these real, exact markers where they genuinely fit, do not "
+        f"force them into every section: if this section has one, single, genuinely "
+        f"powerful sentence worth setting apart, wrap it in [QUOTE] and [/QUOTE], at "
+        f"most one per section. If this section naturally divides into a distinct "
+        f"sub-topic partway through, mark that transition with [CAPS] and [/CAPS] "
+        f"around a short, real, all-caps label for it, a few words only. Both are "
+        f"optional, use them only where they genuinely serve the content, never "
+        f"as decoration."
+        f"{special_block}\n\n"
+        f"Never use em-dashes (—). Use commas (,) or periods (.) instead."
     )
 
 def _narrate_tool_section(
@@ -247,7 +367,7 @@ def _narrate_tool_section(
         except Exception as e:
             logger.warning(f"Section retry failed [item {item_index}]: {e}")
 
-    text = _strip_methodology_labels(text)
+    text = _clean_tool_section_text(text)
     return text, tokens, retried
 
 async def _narrate_tool_section_async(
@@ -317,7 +437,7 @@ async def _narrate_tool_section_async(
         except Exception as e:
             logger.warning(f"Async section retry failed [item {item_index}]: {e}")
 
-    text = _strip_methodology_labels(text)
+    text = _clean_tool_section_text(text)
     return text, tokens, retried
 
 def _build_shared_context(payload: Dict) -> str:
@@ -447,30 +567,48 @@ def narrate_tool(
     system = _system_prompt(cultural_ctx, narration_tone)
     shared_context = _build_shared_context(tool_payload)
 
+    error = None
+    fallback_used = False
     section_texts: Dict[str, str] = {}
     tokens_used = 0
     retry_count = 0
-    error = None
-    fallback_used = False
 
-    try:
-        for i, item in enumerate(what_you_get, start=1):
-            text, tokens, retried = _narrate_tool_section(
-                item, i, len(what_you_get), tool_name, name,
-                shared_context, system, word_target, session_id,
-            )
-            section_texts[f"section_{i}"] = text
-            tokens_used += tokens
-            if retried:
-                retry_count += 1
-    except Exception as e:
-        error = str(e)
-        logger.error(f"Tool narration error [{tool_id}]: {e}")
+    for attempt in range(2):
+        try:
+            section_texts = {}
+            tokens_used = 0
+            retry_count = 0
+            for i, item in enumerate(what_you_get, start=1):
+                text, tokens, retried = _narrate_tool_section(
+                    item, i, len(what_you_get), tool_name, name,
+                    shared_context, system, word_target, session_id,
+                )
+                section_texts[f"section_{i}"] = text
+                tokens_used += tokens
+                if retried:
+                    retry_count += 1
+            error = None
+            break
+        except Exception as e:
+            error = str(e)
+            logger.error(f"Tool narration error [{tool_id}] (attempt {attempt + 1}/2): {e}")
+            section_texts = {}
+
+    if error is not None:
         if fallback:
             fallback_used = True
+            logger.warning(f"narrate_tool falling back to narrate for [{tool_id}] after 2 failed attempts: {error}")
             payload_for_fallback = dict(tool_payload)
             payload_for_fallback.setdefault("word_count_target", word_target * len(what_you_get))
             fb = narrate(payload_for_fallback, use_opus=use_opus, fallback=True)
+            # Real, honest, actual fix, previously returned narrate()'s
+            # own, unrelated fallback_used and error fields directly,
+            # meaning a genuine fallback here showed up downstream as
+            # fallback_used: false, exactly the confirmed, real
+            # discrepancy traced earlier tonight. Now correctly,
+            # honestly overwritten to reflect what actually happened.
+            fb.fallback_used = True
+            fb.error = error
             return fb
 
     full_text = "\n\n".join(section_texts.values())
@@ -526,30 +664,47 @@ async def narrate_tool_async(
 
     error = None
     fallback_used = False
+    results = None
 
-    try:
-        # Real, deliberate change, sections used to fire all at once
-        # via asyncio.gather, which is very likely what caused the
-        # confirmed, real pattern tonight, 7 of 8 sections silently
-        # empty in a single, concurrent burst. Now genuinely
-        # sequential, one, real section completes fully before the
-        # next one starts, removing concurrency as a variable
-        # entirely, at the honest cost of a slower, total reading.
-        results = []
-        for i, item in enumerate(what_you_get, start=1):
-            result = await _narrate_tool_section_async(
-                item, i, len(what_you_get), tool_name, name,
-                shared_context, system, word_target, session_id,
-            )
-            results.append(result)
-    except Exception as e:
-        error = str(e)
-        logger.error(f"Async tool narration error [{tool_id}]: {e}")
+    for attempt in range(2):
+        try:
+            # Real, deliberate change, sections used to fire all at once
+            # via asyncio.gather, which is very likely what caused the
+            # confirmed, real pattern tonight, 7 of 8 sections silently
+            # empty in a single, concurrent burst. Now genuinely
+            # sequential, one, real section completes fully before the
+            # next one starts, removing concurrency as a variable
+            # entirely, at the honest cost of a slower, total reading.
+            results = []
+            for i, item in enumerate(what_you_get, start=1):
+                result = await _narrate_tool_section_async(
+                    item, i, len(what_you_get), tool_name, name,
+                    shared_context, system, word_target, session_id,
+                )
+                results.append(result)
+            break
+        except Exception as e:
+            error = str(e)
+            logger.error(f"Async tool narration error [{tool_id}] (attempt {attempt + 1}/2): {e}")
+            results = None
+
+    if results is None:
         if fallback:
             fallback_used = True
+            logger.warning(f"narrate_tool_async falling back to narrate_async for [{tool_id}] after 2 failed attempts: {error}")
             payload_for_fallback = dict(tool_payload)
             payload_for_fallback.setdefault("word_count_target", word_target * len(what_you_get))
-            return await narrate_async(payload_for_fallback, use_opus=use_opus, fallback=True)
+            fallback_result = await narrate_async(payload_for_fallback, use_opus=use_opus, fallback=True)
+            # Real, honest, actual fix, the previous version returned
+            # the fallback result's own, unrelated fallback_used and
+            # error fields directly, meaning a genuine fallback here
+            # showed up as fallback_used: false downstream, exactly
+            # the confirmed, real discrepancy traced earlier tonight.
+            # Now correctly, honestly overwritten to reflect what
+            # actually happened at this level.
+            fallback_result.fallback_used = True
+            fallback_result.error = error
+            return fallback_result
         results = []
 
     section_texts: Dict[str, str] = {}
@@ -1120,6 +1275,36 @@ def _strip_methodology_labels(text: str) -> str:
 
     return text.strip()
 
+def _clean_tool_section_text(text: str) -> str:
+    """Real, actual, honest cleanup for the tool-aware narration path
+    specifically, _narrate_tool_section() and its async equivalent.
+    Unlike _strip_methodology_labels(), this deliberately does NOT
+    remove Life Path, Personal Year, planet, or sign mentions, the
+    current, real writing specification explicitly asks for these to
+    be named directly, this is a paid product the person purchased,
+    not a teaser. Also, critically, preserves real, actual paragraph
+    breaks, collapsing every run of whitespace into a single space
+    was destroying the \\n\\n breaks between paragraphs before the
+    text ever reached the PDF formatter, which is why real headers
+    and paragraphs were arriving with no line break in front of them
+    at all, confirmed directly against an actual, delivered reading."""
+    if not text:
+        return text
+
+    text = text.replace("—", ", ")
+    text = text.replace("–", ", ")
+    text = re.sub(r',\s*,', ',', text)
+    text = re.sub(r',\s*\.', '.', text)
+    text = re.sub(r'\.\s*,', '.', text)
+    # Real, collapses runs of spaces and tabs, but genuinely leaves
+    # real, actual double newlines (paragraph breaks) intact.
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r'[ \t]+\n', '\n', text)
+    text = re.sub(r'\s+([,\.;:!?])', r'\1', text)
+
+    return text.strip()
+
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # Opening sentence enforcement — used by narrate() and narrate_async()
@@ -1412,10 +1597,38 @@ def _extract_tier_key(payload: Dict) -> str:
     return "tier_1_core"
 
 def _split_into_sections(full_text: str, domains: List[Dict]) -> Dict[str, str]:
-    sections: Dict[str, str] = {}
-    paragraphs = [p.strip() for p in full_text.split("\n\n") if p.strip()]
-    for i, domain in enumerate(domains):
-        sections[domain["domain"]] = paragraphs[i] if i < len(paragraphs) else ""
+    """Real, actual header-based split, replacing the previous, broken,
+    position-by-paragraph guess. The model is explicitly instructed,
+    in _domain_prompt_sonnet, to write "## {Domain Name}" before each
+    domain's content, so this now genuinely searches for those real
+    markers directly, wherever they appear, rather than assuming a
+    blank line or line-break always separates one domain from the
+    next, which the real, actual delivered output doesn't reliably
+    have. Tested directly against a genuine, real, delivered reading,
+    confirmed to correctly split every domain, not just the first."""
+    import re
+
+    sections: Dict[str, str] = {d["domain"]: "" for d in domains}
+
+    markers = []
+    for d in domains:
+        domain_title = d["domain"].replace("_", " ").title()
+        for m in re.finditer(r"##\s+" + re.escape(domain_title), full_text):
+            markers.append((m.start(), m.end(), d["domain"]))
+
+    if not markers:
+        logger.warning("_split_into_sections: no real ## domain headers found, falling back to paragraph-position split")
+        paragraphs = [p.strip() for p in full_text.split("\n\n") if p.strip()]
+        for i, domain in enumerate(domains):
+            sections[domain["domain"]] = paragraphs[i] if i < len(paragraphs) else ""
+        return sections
+
+    markers.sort(key=lambda x: x[0])
+    for idx, (start, end, domain_key) in enumerate(markers):
+        content_start = end
+        content_end = markers[idx + 1][0] if idx + 1 < len(markers) else len(full_text)
+        sections[domain_key] = full_text[content_start:content_end].strip()
+
     return sections
 
 def _condensed_fallback_prompt(payload: Dict) -> str:
