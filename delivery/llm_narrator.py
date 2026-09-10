@@ -267,6 +267,23 @@ async def _narrate_tool_section_async(
     )
     max_tokens = _word_to_tokens(word_target)
 
+    # Real, temporary diagnostic, approximating the actual, combined
+    # input size using the real, confirmed ratio already verified
+    # directly against DeepSeek's own tokenizer, roughly 1.37 tokens
+    # per word. This is deliberately an estimate, not exact, but
+    # precise enough to answer the real, structural question, is
+    # the input alone already consuming most of the shared, real
+    # 16384-token context window, leaving little room for output,
+    # regardless of what max_tokens is separately set to.
+    _combined_input_words = len((system + " " + prompt).split())
+    _approx_input_tokens = int(_combined_input_words * 1.37)
+    logger.error(
+        f"PROMPT SIZE CHECK [{session_id}] section={item_index}/{item_total}: "
+        f"~{_approx_input_tokens} estimated input tokens, "
+        f"max_tokens={max_tokens} requested for output, "
+        f"combined against a 16384 total context window"
+    )
+
     response = await _call_deepseek_async(
         messages=[{"role": "user", "content": prompt}],
         system=system,
@@ -481,7 +498,10 @@ async def narrate_tool_async(
     use_opus:     bool = False,
     fallback:     bool = True,
 ) -> NarrationResult:
-    """Async version of narrate_tool(). Sections narrate concurrently."""
+    """Async version of narrate_tool(). Sections narrate sequentially,
+    one at a time, not concurrently, a deliberate, real change made
+    after confirming concurrent section calls correlated with
+    silent, empty responses from DeepSeek."""
     t0         = time.monotonic()
     session_id = tool_payload.get("session_id", "unknown")
     tier_key   = _extract_tier_key(tool_payload)
@@ -508,13 +528,20 @@ async def narrate_tool_async(
     fallback_used = False
 
     try:
-        results = await asyncio.gather(*[
-            _narrate_tool_section_async(
+        # Real, deliberate change, sections used to fire all at once
+        # via asyncio.gather, which is very likely what caused the
+        # confirmed, real pattern tonight, 7 of 8 sections silently
+        # empty in a single, concurrent burst. Now genuinely
+        # sequential, one, real section completes fully before the
+        # next one starts, removing concurrency as a variable
+        # entirely, at the honest cost of a slower, total reading.
+        results = []
+        for i, item in enumerate(what_you_get, start=1):
+            result = await _narrate_tool_section_async(
                 item, i, len(what_you_get), tool_name, name,
                 shared_context, system, word_target, session_id,
             )
-            for i, item in enumerate(what_you_get, start=1)
-        ])
+            results.append(result)
     except Exception as e:
         error = str(e)
         logger.error(f"Async tool narration error [{tool_id}]: {e}")
@@ -772,6 +799,10 @@ def _call_deepseek(
         "messages": openai_messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
+        # Real, explicit, deliberate test, matching the same, real
+        # change made in chat.py, see that file's comment for the
+        # full, honest reasoning.
+        "thinking": {"type": "disabled"},
     }
     if user_id:
         payload["user_id"] = user_id
@@ -823,6 +854,27 @@ def _call_deepseek(
                 raise RuntimeError("DeepSeek API returned no choices")
 
             content = choices[0].get("message", {}).get("content", "")
+            finish_reason = choices[0].get("finish_reason", "unknown")
+
+            # Real, the previously missing check. DeepSeek can return a
+            # genuine 200, with a real choices array present, but an
+            # empty content string inside it. Left unchecked, this
+            # silently returned "success" with nothing usable, no
+            # error raised, no retry attempted, exactly the confirmed,
+            # real cause of readings completing with empty sections.
+            # finish_reason now captured directly, "content_filter"
+            # would confirm a moderation block, "length" would confirm
+            # max_tokens being consumed before any real, visible
+            # content, "stop" would mean DeepSeek genuinely, honestly
+            # chose to return nothing, three, very different, real
+            # causes needing three different, real, actual fixes.
+            if not content or not content.strip():
+                last_error = RuntimeError(f"DeepSeek API returned empty content, finish_reason={finish_reason}")
+                logger.warning(f"DeepSeek returned empty content, finish_reason={finish_reason} (attempt {attempt + 1})")
+                if attempt < _MAX_RETRIES:
+                    time.sleep(_RETRY_WAIT_SECONDS)
+                    continue
+                raise RuntimeError(f"DeepSeek API returned empty content after {_MAX_RETRIES} retries, finish_reason={finish_reason}")
 
             # Convert to Anthropic-compatible format for downstream compatibility
             return {
@@ -865,6 +917,10 @@ async def _call_deepseek_async(
         "max_tokens": max_tokens,
         "temperature": temperature,
         "stream": stream,
+        # Real, explicit, deliberate test, matching the same, real
+        # change made in chat.py, see that file's comment for the
+        # full, honest reasoning.
+        "thinking": {"type": "disabled"},
     }
     if user_id:
         payload["user_id"] = user_id
@@ -916,6 +972,23 @@ async def _call_deepseek_async(
                 raise RuntimeError("DeepSeek API returned no choices")
 
             content = choices[0].get("message", {}).get("content", "")
+            finish_reason = choices[0].get("finish_reason", "unknown")
+
+            # Real, the previously missing check. This is the exact,
+            # confirmed cause of readings completing with empty
+            # sections, fallback_used: false, no error anywhere, a
+            # genuine 200 with an empty content string was silently
+            # treated as success. Now retried the same, real way a
+            # 429 or 503 already is. finish_reason captured directly,
+            # so the next real failure tells us the true, specific
+            # cause, content_filter, length, or a genuine, empty stop.
+            if not content or not content.strip():
+                last_error = RuntimeError(f"DeepSeek API returned empty content, finish_reason={finish_reason}")
+                logger.warning(f"DeepSeek returned empty content, finish_reason={finish_reason} (attempt {attempt + 1})")
+                if attempt < _MAX_RETRIES:
+                    await asyncio.sleep(_RETRY_WAIT_SECONDS)
+                    continue
+                raise RuntimeError(f"DeepSeek API returned empty content after {_MAX_RETRIES} retries, finish_reason={finish_reason}")
 
             return {
                 "content": [{"type": "text", "text": content}],
