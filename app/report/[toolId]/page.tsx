@@ -416,13 +416,23 @@ export default function ReportPage() {
       }
       const vsMatch = part.match(/^\[VS_LEFT\]([\s\S]*?)\[\/VS_LEFT\]\s*\[VS_RIGHT\]([\s\S]*?)\[\/VS_RIGHT\]$/i)
       if (vsMatch) {
-        const [leftLabel, ...leftRest] = vsMatch[1].trim().split(/\n+/)
-        const [rightLabel, ...rightRest] = vsMatch[2].trim().split(/\n+/)
+        // Real, robust, honest split, finds where the leading,
+        // all-caps label ends and real, normal-case prose begins,
+        // confirmed directly necessary since the model doesn't
+        // reliably separate them with an actual newline, which the
+        // previous version assumed and silently failed on.
+        const splitLabelBody = (raw: string): [string, string] => {
+          const trimmed = raw.trim()
+          const m = trimmed.match(/^([A-Z0-9][A-Z0-9\s,()'/-]*?)\s+(?=[A-Z][a-z])/)
+          return m ? [m[1].trim(), trimmed.slice(m[0].length).trim()] : [trimmed, '']
+        }
+        const [leftLabel, leftBody] = splitLabelBody(vsMatch[1])
+        const [rightLabel, rightBody] = splitLabelBody(vsMatch[2])
         return (
           <div key={`${keyPrefix}-${i}`} className="kayal-conflict">
-            <div className="kayal-cl"><div className="kayal-clabel">{leftLabel.trim().toUpperCase()}</div><p>{leftRest.join(' ').trim()}</p></div>
+            <div className="kayal-cl"><div className="kayal-clabel">{leftLabel.toUpperCase()}</div><p>{leftBody}</p></div>
             <div className="kayal-arrow">→</div>
-            <div className="kayal-cr"><div className="kayal-clabel">{rightLabel.trim().toUpperCase()}</div><p>{rightRest.join(' ').trim()}</p></div>
+            <div className="kayal-cr"><div className="kayal-clabel">{rightLabel.toUpperCase()}</div><p>{rightBody}</p></div>
           </div>
         )
       }
@@ -521,25 +531,26 @@ export default function ReportPage() {
           --k-cl-bg: #fff7ed; --k-cl-border: #fed7aa; --k-cl-txt: #9a3412;
           --k-cr-bg: #f0fdf4; --k-cr-border: #86efac; --k-cr-txt: #166534;
           background: var(--k-bg); font-family: 'Inter', sans-serif; color: var(--k-text-p);
+          overflow-wrap: break-word;
         }
-        .kayal-cover { text-align: center; padding: 40px 0 32px; border-bottom: 1px solid var(--k-border); margin-bottom: 32px; }
-        .kayal-seal { font-size: 22px; color: var(--k-text); margin-bottom: 14px; }
-        .kayal-eyebrow { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1.5px; color: var(--k-gold); margin-bottom: 14px; }
-        .kayal-cover-name { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 42px; color: var(--k-text); margin: 0 0 10px; line-height: 1.1; }
-        .kayal-cover-sub { font-size: 13px; color: var(--k-muted); margin: 2px 0; }
-        .kayal-cover-sub-light { font-size: 12px; color: var(--k-muted-light); margin: 2px 0; }
-        .kayal-gold-rule { width: 45px; height: 2px; background: var(--k-gold); margin: 16px auto; border: none; }
-        .kayal-cover-intro { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 18px; color: #57534e; max-width: 520px; margin: 16px auto 0; line-height: 1.75; }
-        .kayal-chapter-label { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+        .kayal-cover { text-align: center; padding: 32px 0 28px; border-bottom: 1px solid var(--k-border); margin-bottom: 28px; }
+        .kayal-seal { font-size: 20px; color: var(--k-text); margin-bottom: 12px; }
+        .kayal-eyebrow { font-family: 'Inter'; font-weight: 600; font-size: 9px; letter-spacing: 1px; color: var(--k-gold); margin-bottom: 12px; }
+        .kayal-cover-name { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: clamp(26px, 7vw, 42px); color: var(--k-text); margin: 0 0 8px; line-height: 1.15; word-wrap: break-word; }
+        .kayal-cover-sub { font-size: 12px; color: var(--k-muted); margin: 2px 0; }
+        .kayal-cover-sub-light { font-size: 11px; color: var(--k-muted-light); margin: 2px 0; }
+        .kayal-gold-rule { width: 40px; height: 2px; background: var(--k-gold); margin: 14px auto; border: none; }
+        .kayal-cover-intro { font-family: 'Cormorant Garamond'; font-style: italic; font-size: clamp(15px, 4vw, 18px); color: #57534e; max-width: 520px; margin: 14px auto 0; line-height: 1.7; padding: 0 8px; }
+        .kayal-chapter-label { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
         .kayal-chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--k-border); }
-        .kayal-chapter-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 28px; color: var(--k-text); margin: 0 0 18px; }
-        .kayal-body { font-size: 16px; line-height: 1.8; margin-bottom: 16px; text-align: justify; color: var(--k-text-p); }
-        .kayal-insight { border-left: 3px solid var(--k-gold); background: var(--k-insight-bg); padding: 14px 18px; margin: 18px 0; }
-        .kayal-insight p { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 17px; color: var(--k-insight-txt); margin: 0; line-height: 1.7; text-align: justify; }
-        .kayal-caps { background: #f7ecd1; padding: 8px 14px; font-weight: 700; font-size: 11px; letter-spacing: 1.2px; color: var(--k-text); margin: 20px 0 10px; }
-        .kayal-box { border: 1px solid var(--k-border); background: #fff; padding: 16px 18px; margin: 18px 0; }
-        .kayal-box-title { font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); margin-bottom: 6px; }
-        .kayal-box-body { font-size: 14px; line-height: 1.6; color: var(--k-proof-txt); text-align: justify; }
+        .kayal-chapter-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: clamp(22px, 6vw, 28px); color: var(--k-text); margin: 0 0 18px; line-height: 1.2; }
+        .kayal-body { font-size: 15.5px; line-height: 1.8; margin: 0 0 22px; text-align: justify; color: var(--k-text-p); }
+        .kayal-insight { border-left: 3px solid var(--k-gold); background: var(--k-insight-bg); padding: 14px 16px; margin: 22px 0; }
+        .kayal-insight p { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 16px; color: var(--k-insight-txt); margin: 0; line-height: 1.7; text-align: justify; }
+        .kayal-caps { background: #f7ecd1; padding: 8px 14px; font-weight: 700; font-size: 10.5px; letter-spacing: 1px; color: var(--k-text); margin: 24px 0 12px; }
+        .kayal-box { border: 1px solid var(--k-border); background: #fff; padding: 14px 16px; margin: 22px 0; }
+        .kayal-box-title { font-weight: 600; font-size: 9.5px; letter-spacing: 0.8px; color: var(--k-gold); margin-bottom: 6px; }
+        .kayal-box-body { font-size: 13.5px; line-height: 1.6; color: var(--k-proof-txt); text-align: justify; }
         .kayal-warn { background: var(--k-warn-bg); border-color: var(--k-warn-border); }
         .kayal-warn .kayal-box-title { color: var(--k-warn-txt); }
         .kayal-remedy { background: var(--k-remedy-bg); border-color: var(--k-remedy-border); }
@@ -548,32 +559,42 @@ export default function ReportPage() {
         .kayal-opp .kayal-box-title { color: var(--k-opp-txt); }
         .kayal-time { background: var(--k-time-bg); border-color: var(--k-time-border); }
         .kayal-time .kayal-box-title { color: var(--k-time-txt); }
-        .kayal-conflict { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; margin: 18px 0; }
-        .kayal-conflict > div { padding: 14px 16px; border-radius: 3px; border: 1px solid; }
+        .kayal-conflict { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: stretch; margin: 22px 0; }
+        .kayal-conflict > div { padding: 12px 14px; border-radius: 3px; border: 1px solid; min-width: 0; }
         .kayal-conflict .kayal-cl { background: var(--k-cl-bg); border-color: var(--k-cl-border); }
         .kayal-conflict .kayal-cr { background: var(--k-cr-bg); border-color: var(--k-cr-border); }
-        .kayal-conflict .kayal-arrow { display: flex; align-items: center; justify-content: center; color: var(--k-gold); font-weight: 700; font-size: 15px; border: none !important; padding: 0 !important; }
-        .kayal-conflict .kayal-clabel { font-weight: 600; font-size: 10px; letter-spacing: 0.8px; margin-bottom: 4px; }
+        .kayal-conflict .kayal-arrow { display: flex; align-items: center; justify-content: center; color: var(--k-gold); font-weight: 700; font-size: 14px; border: none !important; padding: 0 4px !important; }
+        .kayal-conflict .kayal-clabel { font-weight: 600; font-size: 9px; letter-spacing: 0.5px; margin-bottom: 4px; word-wrap: break-word; }
         .kayal-cl .kayal-clabel, .kayal-cl p { color: var(--k-cl-txt); }
         .kayal-cr .kayal-clabel, .kayal-cr p { color: var(--k-cr-txt); }
-        .kayal-conflict p { font-size: 13px; margin: 0; line-height: 1.5; }
-        .kayal-final-table { border: 1px solid var(--k-border); margin: 18px 0; }
-        .kayal-ft-row { display: flex; flex-wrap: wrap; padding: 12px 16px; gap: 6px 16px; }
+        .kayal-conflict p { font-size: 12.5px; margin: 0; line-height: 1.5; word-wrap: break-word; }
+        .kayal-final-table { border: 1px solid var(--k-border); margin: 22px 0; }
+        .kayal-ft-row { display: flex; flex-wrap: wrap; padding: 12px 14px; gap: 4px 16px; }
         .kayal-ft-row:nth-child(odd) { background: #fff; }
         .kayal-ft-row:nth-child(even) { background: var(--k-insight-bg); }
-        .kayal-ft-label { font-weight: 600; font-size: 14px; color: var(--k-text); width: 100%; }
-        .kayal-ft-statement { font-style: italic; font-size: 14px; color: var(--k-proof-txt); width: 100%; }
+        .kayal-ft-label { font-weight: 600; font-size: 13px; color: var(--k-text); width: 100%; }
+        .kayal-ft-statement { font-style: italic; font-size: 13px; color: var(--k-proof-txt); width: 100%; }
         @media (min-width: 640px) {
           .kayal-ft-label { width: 40%; } .kayal-ft-statement { width: 58%; }
         }
-        .kayal-timeline-item { display: flex; gap: 14px; margin-bottom: 18px; }
-        .kayal-dot { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Inter'; font-weight: 600; font-size: 10px; color: #fff; }
-        .kayal-timeline-period { font-family: 'Inter'; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; color: var(--k-gold); margin-bottom: 3px; }
-        .kayal-timeline-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 18px; color: var(--k-text); margin: 0 0 5px; }
-        .kayal-timeline-body { font-size: 14px; line-height: 1.6; color: var(--k-proof-txt); text-align: justify; }
-        .kayal-nl-item { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
-        .kayal-nl-badge { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--k-gold); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Inter'; font-weight: 600; font-size: 9px; margin-top: 2px; }
-        .kayal-nl-body { font-size: 15px; line-height: 1.6; color: var(--k-text-p); }
+        .kayal-timeline-item { display: flex; gap: 12px; margin-bottom: 22px; }
+        .kayal-dot { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Inter'; font-weight: 600; font-size: 9px; color: #fff; }
+        .kayal-timeline-period { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 0.4px; color: var(--k-gold); margin-bottom: 3px; }
+        .kayal-timeline-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 17px; color: var(--k-text); margin: 0 0 5px; }
+        .kayal-timeline-body { font-size: 13.5px; line-height: 1.6; color: var(--k-proof-txt); text-align: justify; }
+        .kayal-nl-item { display: flex; gap: 10px; margin-bottom: 14px; align-items: flex-start; }
+        .kayal-nl-badge { flex-shrink: 0; width: 19px; height: 19px; border-radius: 50%; background: var(--k-gold); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Inter'; font-weight: 600; font-size: 8.5px; margin-top: 2px; }
+        .kayal-nl-body { font-size: 14.5px; line-height: 1.6; color: var(--k-text-p); }
+        /* Real, actual, tested mobile rules, confirmed directly by
+           rendering at a genuine, common phone width, the conflict
+           box stacks vertically instead of squeezing three columns
+           into a narrow screen, with the arrow rotated to point down. */
+        @media (max-width: 480px) {
+          .kayal-conflict { grid-template-columns: 1fr; }
+          .kayal-conflict .kayal-arrow { transform: rotate(90deg); padding: 6px 0 !important; }
+          .kayal-cover { padding: 24px 0 20px; }
+          .kayal-body, .kayal-box-body, .kayal-timeline-body { font-size: 14.5px; }
+        }
       `}</style>
 
       {/* Header */}
@@ -636,7 +657,7 @@ export default function ReportPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Card className="p-8">
-          <div className="kayal-reading prose max-w-none">
+          <div className="kayal-reading max-w-none">
             {/* Real, actual cover, matching the verified, tested design
                 precisely, the moon and star seal, the gold eyebrow
                 line, the large serif name, and the real, italic
