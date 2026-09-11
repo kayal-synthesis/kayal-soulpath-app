@@ -445,7 +445,7 @@ def _build_styles(palette):
         # paragraph styles alone can't do a left-only border with a
         # background fill.
         "quote": ParagraphStyle("KayalQuote", fontName="Helvetica-Oblique", fontSize=SIZE_QUOTE,
-                                 textColor=quote, alignment=TA_LEFT, spaceAfter=0,
+                                 textColor=quote, alignment=TA_JUSTIFY, spaceAfter=0,
                                  leading=18),
         "quote_centered": ParagraphStyle("KayalQuoteCentered", fontName="Helvetica-Oblique", fontSize=11,
                                           textColor=navy, alignment=TA_CENTER, spaceAfter=0, leading=17),
@@ -459,7 +459,7 @@ def _build_styles(palette):
         "table_label": ParagraphStyle("KayalTableLabel", fontName="Helvetica-Bold", fontSize=8.5,
                                        textColor=navy, alignment=TA_LEFT, spaceAfter=4),
         "table_body": ParagraphStyle("KayalTableBody", fontName="Helvetica", fontSize=9.5,
-                                      textColor=body, alignment=TA_LEFT, leading=14),
+                                      textColor=body, alignment=TA_JUSTIFY, leading=14),
         "colophon": ParagraphStyle("KayalColophon", fontName="Helvetica", fontSize=7.5,
                                     textColor=med, alignment=TA_CENTER, leading=12, spaceAfter=0),
 
@@ -478,7 +478,7 @@ def _build_styles(palette):
         "cal_month_label": ParagraphStyle("KayalCalMonthLabel", fontName="Helvetica", fontSize=6.5,
                                            textColor=med, alignment=TA_CENTER, leading=9),
         "cal_key_months": ParagraphStyle("KayalCalKeyMonths", fontName="Helvetica-Oblique", fontSize=9,
-                                          textColor=body, alignment=TA_LEFT, leading=14, spaceAfter=12),
+                                          textColor=body, alignment=TA_JUSTIFY, leading=14, spaceAfter=12),
 
         # Real, the five, numbered synthesis items, a large, real gold
         # numeral beside a bold-italic heading and a justified body
@@ -494,7 +494,7 @@ def _build_styles(palette):
         "final_label": ParagraphStyle("KayalFinalLabel", fontName="Helvetica-Bold", fontSize=10,
                                        textColor=navy, alignment=TA_LEFT),
         "final_statement": ParagraphStyle("KayalFinalStatement", fontName="Helvetica-Oblique", fontSize=10,
-                                           textColor=body, alignment=TA_LEFT, leading=15),
+                                           textColor=body, alignment=TA_JUSTIFY, leading=15),
     }
 
 def _make_page_decorator(job_id: str, palette, page_w, page_h, person_name: str = ""):

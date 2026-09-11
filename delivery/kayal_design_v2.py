@@ -116,7 +116,7 @@ def build_styles():
                                 textColor=_TEXT_P, alignment=TA_JUSTIFY, leading=rem(1.0) * 1.8,
                                 spaceAfter=rem(1.0) * 1.067),  # real, confirmed 16px at 15px base
         "insight": ParagraphStyle("Insight", fontName="CormorantGaramond-Italic", fontSize=rem(1.05),
-                                   textColor=_INSIGHT_TXT, alignment=TA_LEFT, leading=rem(1.05) * 1.75),
+                                   textColor=_INSIGHT_TXT, alignment=TA_JUSTIFY, leading=rem(1.05) * 1.75),
         "proof_title": ParagraphStyle("ProofTitle", fontName="Inter-SemiBold", fontSize=rem(0.62),
                                        textColor=_GOLD, alignment=TA_LEFT, leading=rem(0.62) * 1.3),
         "proof_body": ParagraphStyle("ProofBody", fontName="Inter", fontSize=rem(0.88),
@@ -134,7 +134,7 @@ def build_styles():
         "conflict_label": ParagraphStyle("ConflictLabel", fontName="Inter-SemiBold", fontSize=rem(0.62),
                                           alignment=TA_LEFT, leading=rem(0.62) * 1.3),
         "conflict_body": ParagraphStyle("ConflictBody", fontName="Inter", fontSize=rem(0.88),
-                                         alignment=TA_LEFT, leading=rem(0.88) * 1.5),
+                                         alignment=TA_JUSTIFY, leading=rem(0.88) * 1.5),
         "timeline_period": ParagraphStyle("TimelinePeriod", fontName="Inter-SemiBold", fontSize=rem(0.72),
                                            textColor=_GOLD, alignment=TA_LEFT, leading=rem(0.72) * 1.3),
         "timeline_title": ParagraphStyle("TimelineTitle", fontName="CormorantGaramond-Bold", fontSize=rem(1.1),
@@ -400,7 +400,7 @@ def build_numbered_list_item(number: int, text: str, styles) -> Any:
         ("ROUNDEDCORNERS", [10, 10, 10, 10]),
     ]))
     body = Paragraph(_clean_text(text), ParagraphStyle(
-        "NLBody", fontName="Inter", fontSize=11.25, textColor=_TEXT_P, leading=16))
+        "NLBody", fontName="Inter", fontSize=11.25, textColor=_TEXT_P, leading=16, alignment=TA_JUSTIFY))
     row = Table([[badge, body]], colWidths=[30, 422])
     row.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
