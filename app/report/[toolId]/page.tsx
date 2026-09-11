@@ -332,8 +332,15 @@ export default function ReportPage() {
         .map(([key, t], idx) => {
           const title = deriveTitle(whatYouGet[idx] || '', `Section ${idx + 1}`)
           const clean = (t as string)
-            .replace(/\[QUOTE\]([\s\S]*?)\[\/QUOTE\]/g, '\n\n"$1"\n\n')
-            .replace(/\[CAPS\]([\s\S]*?)\[\/CAPS\]/g, '\n\n$1\n\n')
+            .replace(/\[QUOTE\]([\s\S]*?)\[\/QUOTE\]/gi, '\n\n"$1"\n\n')
+            .replace(/\[CAPS\]([\s\S]*?)\[\/CAPS\]/gi, '\n\n$1\n\n')
+            .replace(/\[VS_LEFT\]([\s\S]*?)\[\/VS_LEFT\]\s*\[VS_RIGHT\]([\s\S]*?)\[\/VS_RIGHT\]/gi,
+              (_m, left, right) => `\n\n${left.trim()}\n\nversus\n\n${right.trim()}\n\n`)
+            .replace(/\[FINAL_TABLE\]([\s\S]*?)\[\/FINAL_TABLE\]/gi, (_m, inner) => {
+              const rows = [...(inner as string).matchAll(/\[FT_ROW\]([\s\S]*?)\[\/FT_ROW\]/gi)]
+                .map(rm => rm[1].split('|').map(s => s.trim()).join(' — '))
+              return '\n\n' + rows.join('\n') + '\n\n'
+            })
           return `${title.toUpperCase()}\n\n${clean.trim()}`
         })
         .join('\n\n\n')
@@ -384,30 +391,111 @@ export default function ReportPage() {
   // instead of leaving the literal tag text visible on the page.
   const renderSectionMarkup = (text: string, keyPrefix: string) => {
     if (!text) return null
-    const parts = text.split(/(\[QUOTE\][\s\S]*?\[\/QUOTE\]|\[CAPS\][\s\S]*?\[\/CAPS\])/g)
+    // Real, complete parser, case-insensitive throughout, recognizing
+    // every, real tag the backend prompt can produce, QUOTE, CAPS,
+    // paired VS_LEFT/VS_RIGHT, PROOF, WARNING, REMEDY, OPPORTUNITY,
+    // TIME, TIMELINE_ITEM, NUMBERED_ITEM, and FINAL_TABLE, each
+    // rendered using the real, verified Kayal design classes, tested
+    // first as a static mockup before being wired in here.
+    const parts = text.split(
+      /(\[QUOTE\][\s\S]*?\[\/QUOTE\]|\[CAPS\][\s\S]*?\[\/CAPS\]|\[VS_LEFT\][\s\S]*?\[\/VS_RIGHT\]|\[PROOF\][\s\S]*?\[\/PROOF\]|\[WARNING\][\s\S]*?\[\/WARNING\]|\[REMEDY\][\s\S]*?\[\/REMEDY\]|\[OPPORTUNITY\][\s\S]*?\[\/OPPORTUNITY\]|\[TIME\][\s\S]*?\[\/TIME\]|\[TIMELINE_ITEM\][\s\S]*?\[\/TIMELINE_ITEM\]|\[NUMBERED_ITEM\][\s\S]*?\[\/NUMBERED_ITEM\]|\[FINAL_TABLE\][\s\S]*?\[\/FINAL_TABLE\])/gi
+    )
+    let numberedCount = 0
     return parts.map((part, i) => {
-      const quoteMatch = part.match(/^\[QUOTE\]([\s\S]*?)\[\/QUOTE\]$/)
+      const quoteMatch = part.match(/^\[QUOTE\]([\s\S]*?)\[\/QUOTE\]$/i)
       if (quoteMatch) {
         return (
-          <blockquote key={`${keyPrefix}-${i}`}
-            className="my-4 pl-4 py-2 border-l-4 border-amber-500 bg-amber-50 italic text-neutral-800">
-            “{quoteMatch[1].trim()}”
-          </blockquote>
+          <div key={`${keyPrefix}-${i}`} className="kayal-insight">
+            <p>“{quoteMatch[1].trim()}”</p>
+          </div>
         )
       }
-      const capsMatch = part.match(/^\[CAPS\]([\s\S]*?)\[\/CAPS\]$/)
+      const capsMatch = part.match(/^\[CAPS\]([\s\S]*?)\[\/CAPS\]$/i)
       if (capsMatch) {
+        return <div key={`${keyPrefix}-${i}`} className="kayal-caps">{capsMatch[1].trim().toUpperCase()}</div>
+      }
+      const vsMatch = part.match(/^\[VS_LEFT\]([\s\S]*?)\[\/VS_LEFT\]\s*\[VS_RIGHT\]([\s\S]*?)\[\/VS_RIGHT\]$/i)
+      if (vsMatch) {
+        const [leftLabel, ...leftRest] = vsMatch[1].trim().split(/\n+/)
+        const [rightLabel, ...rightRest] = vsMatch[2].trim().split(/\n+/)
         return (
-          <div key={`${keyPrefix}-${i}`}
-            className="mt-4 mb-2 px-3 py-2 bg-amber-100 text-xs font-bold tracking-wider text-neutral-900 rounded">
-            {capsMatch[1].trim().toUpperCase()}
+          <div key={`${keyPrefix}-${i}`} className="kayal-conflict">
+            <div className="kayal-cl"><div className="kayal-clabel">{leftLabel.trim().toUpperCase()}</div><p>{leftRest.join(' ').trim()}</p></div>
+            <div className="kayal-arrow">→</div>
+            <div className="kayal-cr"><div className="kayal-clabel">{rightLabel.trim().toUpperCase()}</div><p>{rightRest.join(' ').trim()}</p></div>
+          </div>
+        )
+      }
+      const boxTypes: [RegExp, string][] = [
+        [/^\[PROOF\]([\s\S]*?)\[\/PROOF\]$/i, ''],
+        [/^\[WARNING\]([\s\S]*?)\[\/WARNING\]$/i, 'kayal-warn'],
+        [/^\[REMEDY\]([\s\S]*?)\[\/REMEDY\]$/i, 'kayal-remedy'],
+        [/^\[OPPORTUNITY\]([\s\S]*?)\[\/OPPORTUNITY\]$/i, 'kayal-opp'],
+        [/^\[TIME\]([\s\S]*?)\[\/TIME\]$/i, 'kayal-time'],
+      ]
+      for (const [re, cls] of boxTypes) {
+        const m = part.match(re)
+        if (m) {
+          const [title, ...bodyParts] = m[1].trim().split('|')
+          const body = bodyParts.length ? bodyParts.join('|').trim() : title.trim()
+          const label = bodyParts.length ? title.trim() : ''
+          return (
+            <div key={`${keyPrefix}-${i}`} className={`kayal-box ${cls}`}>
+              {label && <div className="kayal-box-title">{label.toUpperCase()}</div>}
+              <div className="kayal-box-body">{body}</div>
+            </div>
+          )
+        }
+      }
+      const timelineMatch = part.match(/^\[TIMELINE_ITEM\]([\s\S]*?)\[\/TIMELINE_ITEM\]$/i)
+      if (timelineMatch) {
+        const segs = timelineMatch[1].split('|').map(s => s.trim())
+        if (segs.length >= 4) {
+          const [number, period, title, body, state] = segs
+          const dotBg = state === 'now' ? '#1c1917' : state === 'future' ? '#e2d9cc' : '#b8860b'
+          return (
+            <div key={`${keyPrefix}-${i}`} className="kayal-timeline-item">
+              <div className="kayal-dot" style={{ background: dotBg }}>{number}</div>
+              <div>
+                <div className="kayal-timeline-period">{period.toUpperCase()}</div>
+                <h4 className="kayal-timeline-title">{title}</h4>
+                <div className="kayal-timeline-body">{body}</div>
+              </div>
+            </div>
+          )
+        }
+      }
+      const numberedMatch = part.match(/^\[NUMBERED_ITEM\]([\s\S]*?)\[\/NUMBERED_ITEM\]$/i)
+      if (numberedMatch) {
+        numberedCount += 1
+        return (
+          <div key={`${keyPrefix}-${i}`} className="kayal-nl-item">
+            <div className="kayal-nl-badge">{numberedCount}</div>
+            <div className="kayal-nl-body">{numberedMatch[1].trim()}</div>
+          </div>
+        )
+      }
+      const finalTableMatch = part.match(/^\[FINAL_TABLE\]([\s\S]*?)\[\/FINAL_TABLE\]$/i)
+      if (finalTableMatch) {
+        const rows = [...finalTableMatch[1].matchAll(/\[FT_ROW\]([\s\S]*?)\[\/FT_ROW\]/gi)]
+          .map(m => m[1].split('|'))
+          .filter(r => r.length === 2)
+        if (!rows.length) return null
+        return (
+          <div key={`${keyPrefix}-${i}`} className="kayal-final-table">
+            {rows.map(([label, statement], j) => (
+              <div key={j} className="kayal-ft-row">
+                <div className="kayal-ft-label">{label.trim()}</div>
+                <div className="kayal-ft-statement">{statement.trim()}</div>
+              </div>
+            ))}
           </div>
         )
       }
       const trimmed = part.trim()
       if (!trimmed) return null
       return trimmed.split(/\n\n+/).map((para, j) => (
-        <p key={`${keyPrefix}-${i}-${j}`} className="mb-3 leading-relaxed">{para.trim()}</p>
+        <p key={`${keyPrefix}-${i}-${j}`} className="kayal-body">{para.trim()}</p>
       ))
     })
   }
@@ -415,6 +503,79 @@ export default function ReportPage() {
   // ── Render ─────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-neutral-50">
+      {/* Real, complete Kayal design system, fonts, colors, and every
+          real component style, matching the actual, verified PDF
+          design directly, tested first as a static mockup before
+          being wired in here. */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+        .kayal-reading {
+          --k-bg: #faf8f4; --k-text: #1c1917; --k-text-p: #2d2925;
+          --k-gold: #b8860b; --k-gold-light: #d4a96a; --k-border: #e2d9cc;
+          --k-muted: #78716c; --k-muted-light: #a8a29e;
+          --k-insight-bg: #fffbf0; --k-insight-txt: #3d3630; --k-proof-txt: #44403c;
+          --k-warn-bg: #fff8f0; --k-warn-border: #f59e0b; --k-warn-txt: #d97706;
+          --k-remedy-bg: #f0f9f4; --k-remedy-border: #86efac; --k-remedy-txt: #16a34a;
+          --k-opp-bg: #f0f7ff; --k-opp-border: #93c5fd; --k-opp-txt: #2563eb;
+          --k-time-bg: #fdf4ff; --k-time-border: #d8b4fe; --k-time-txt: #7c3aed;
+          --k-cl-bg: #fff7ed; --k-cl-border: #fed7aa; --k-cl-txt: #9a3412;
+          --k-cr-bg: #f0fdf4; --k-cr-border: #86efac; --k-cr-txt: #166534;
+          background: var(--k-bg); font-family: 'Inter', sans-serif; color: var(--k-text-p);
+        }
+        .kayal-cover { text-align: center; padding: 40px 0 32px; border-bottom: 1px solid var(--k-border); margin-bottom: 32px; }
+        .kayal-seal { font-size: 22px; color: var(--k-text); margin-bottom: 14px; }
+        .kayal-eyebrow { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1.5px; color: var(--k-gold); margin-bottom: 14px; }
+        .kayal-cover-name { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 42px; color: var(--k-text); margin: 0 0 10px; line-height: 1.1; }
+        .kayal-cover-sub { font-size: 13px; color: var(--k-muted); margin: 2px 0; }
+        .kayal-cover-sub-light { font-size: 12px; color: var(--k-muted-light); margin: 2px 0; }
+        .kayal-gold-rule { width: 45px; height: 2px; background: var(--k-gold); margin: 16px auto; border: none; }
+        .kayal-cover-intro { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 18px; color: #57534e; max-width: 520px; margin: 16px auto 0; line-height: 1.75; }
+        .kayal-chapter-label { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+        .kayal-chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--k-border); }
+        .kayal-chapter-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 28px; color: var(--k-text); margin: 0 0 18px; }
+        .kayal-body { font-size: 16px; line-height: 1.8; margin-bottom: 16px; text-align: justify; color: var(--k-text-p); }
+        .kayal-insight { border-left: 3px solid var(--k-gold); background: var(--k-insight-bg); padding: 14px 18px; margin: 18px 0; }
+        .kayal-insight p { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 17px; color: var(--k-insight-txt); margin: 0; line-height: 1.7; text-align: justify; }
+        .kayal-caps { background: #f7ecd1; padding: 8px 14px; font-weight: 700; font-size: 11px; letter-spacing: 1.2px; color: var(--k-text); margin: 20px 0 10px; }
+        .kayal-box { border: 1px solid var(--k-border); background: #fff; padding: 16px 18px; margin: 18px 0; }
+        .kayal-box-title { font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); margin-bottom: 6px; }
+        .kayal-box-body { font-size: 14px; line-height: 1.6; color: var(--k-proof-txt); text-align: justify; }
+        .kayal-warn { background: var(--k-warn-bg); border-color: var(--k-warn-border); }
+        .kayal-warn .kayal-box-title { color: var(--k-warn-txt); }
+        .kayal-remedy { background: var(--k-remedy-bg); border-color: var(--k-remedy-border); }
+        .kayal-remedy .kayal-box-title { color: var(--k-remedy-txt); }
+        .kayal-opp { background: var(--k-opp-bg); border-color: var(--k-opp-border); }
+        .kayal-opp .kayal-box-title { color: var(--k-opp-txt); }
+        .kayal-time { background: var(--k-time-bg); border-color: var(--k-time-border); }
+        .kayal-time .kayal-box-title { color: var(--k-time-txt); }
+        .kayal-conflict { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; margin: 18px 0; }
+        .kayal-conflict > div { padding: 14px 16px; border-radius: 3px; border: 1px solid; }
+        .kayal-conflict .kayal-cl { background: var(--k-cl-bg); border-color: var(--k-cl-border); }
+        .kayal-conflict .kayal-cr { background: var(--k-cr-bg); border-color: var(--k-cr-border); }
+        .kayal-conflict .kayal-arrow { display: flex; align-items: center; justify-content: center; color: var(--k-gold); font-weight: 700; font-size: 15px; border: none !important; padding: 0 !important; }
+        .kayal-conflict .kayal-clabel { font-weight: 600; font-size: 10px; letter-spacing: 0.8px; margin-bottom: 4px; }
+        .kayal-cl .kayal-clabel, .kayal-cl p { color: var(--k-cl-txt); }
+        .kayal-cr .kayal-clabel, .kayal-cr p { color: var(--k-cr-txt); }
+        .kayal-conflict p { font-size: 13px; margin: 0; line-height: 1.5; }
+        .kayal-final-table { border: 1px solid var(--k-border); margin: 18px 0; }
+        .kayal-ft-row { display: flex; flex-wrap: wrap; padding: 12px 16px; gap: 6px 16px; }
+        .kayal-ft-row:nth-child(odd) { background: #fff; }
+        .kayal-ft-row:nth-child(even) { background: var(--k-insight-bg); }
+        .kayal-ft-label { font-weight: 600; font-size: 14px; color: var(--k-text); width: 100%; }
+        .kayal-ft-statement { font-style: italic; font-size: 14px; color: var(--k-proof-txt); width: 100%; }
+        @media (min-width: 640px) {
+          .kayal-ft-label { width: 40%; } .kayal-ft-statement { width: 58%; }
+        }
+        .kayal-timeline-item { display: flex; gap: 14px; margin-bottom: 18px; }
+        .kayal-dot { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Inter'; font-weight: 600; font-size: 10px; color: #fff; }
+        .kayal-timeline-period { font-family: 'Inter'; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; color: var(--k-gold); margin-bottom: 3px; }
+        .kayal-timeline-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 18px; color: var(--k-text); margin: 0 0 5px; }
+        .kayal-timeline-body { font-size: 14px; line-height: 1.6; color: var(--k-proof-txt); text-align: justify; }
+        .kayal-nl-item { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
+        .kayal-nl-badge { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--k-gold); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Inter'; font-weight: 600; font-size: 9px; margin-top: 2px; }
+        .kayal-nl-body { font-size: 15px; line-height: 1.6; color: var(--k-text-p); }
+      `}</style>
+
       {/* Header */}
       <header className="bg-white border-b border-neutral-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -475,27 +636,21 @@ export default function ReportPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Card className="p-8">
-          <div className="prose max-w-none">
-            {/* Title block */}
-            <div className="text-center mb-12 pb-12 border-b">
-              <h1 className="text-4xl font-serif mb-4">
-                {displayContent.title || tool.name}
+          <div className="kayal-reading prose max-w-none">
+            {/* Real, actual cover, matching the verified, tested design
+                precisely, the moon and star seal, the gold eyebrow
+                line, the large serif name, and the real, italic
+                tagline, replacing the previous, generic title block. */}
+            <div className="kayal-cover">
+              <div className="kayal-seal">☽ ✦ ☾</div>
+              <div className="kayal-eyebrow">KAYAL SOULPATH &nbsp;·&nbsp; COMPLETE PERSONAL READING</div>
+              <h1 className="kayal-cover-name">
+                {(user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email || 'Seeker').toUpperCase()}
               </h1>
-              <div className={`w-24 h-24 mx-auto bg-gradient-to-br ${config.lightGradient}
-                               rounded-full flex items-center justify-center text-5xl mb-6`}>
-                {(tool as any).emoji || config.emoji}
-              </div>
-              <p className="text-neutral-600">
-                Prepared for: <span className="font-semibold">{user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email || 'Seeker'}</span>
-              </p>
-              <p className="text-neutral-600">
-                Date: {new Date().toLocaleDateString()}
-              </p>
-              {jobId && (
-                <p className="text-neutral-600">
-                  Report ID: {jobId.slice(-8)}
-                </p>
-              )}
+              <p className="kayal-cover-sub">{new Date().toLocaleDateString()}</p>
+              {jobId && <p className="kayal-cover-sub-light">Report ID: {jobId.slice(-8)} · Confidential</p>}
+              <hr className="kayal-gold-rule" />
+              <p className="kayal-cover-intro">{displayContent.title || tool.name}</p>
             </div>
 
             {/* Real, actual, properly-formatted sections, the correct,
@@ -504,22 +659,18 @@ export default function ReportPage() {
                 genuinely don't have this real, structured data yet. */}
             {hasRealSections && (
               <div className="mb-10">
-                <h2 className="text-2xl font-serif mb-4">Your Reading</h2>
-                <div className="space-y-6">
-                  {Object.entries(sectionTexts).map(([key, text], idx) => {
-                    if (!text || typeof text !== 'string' || !text.trim()) return null
-                    const promise = whatYouGet[idx] || ''
-                    const title = deriveTitle(promise, `Section ${idx + 1}`)
-                    return (
-                      <div key={key} className="p-5 bg-white border border-neutral-200 rounded-lg">
-                        <h3 className={`text-xl font-serif mb-3 ${config.color}`}>{title}</h3>
-                        <div className="text-neutral-700">
-                          {renderSectionMarkup(text, key)}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                {Object.entries(sectionTexts).map(([key, text], idx) => {
+                  if (!text || typeof text !== 'string' || !text.trim()) return null
+                  const promise = whatYouGet[idx] || ''
+                  const title = deriveTitle(promise, `Section ${idx + 1}`)
+                  return (
+                    <div key={key} className="mb-10">
+                      <div className="kayal-chapter-label">{String(idx + 1).padStart(2, '0')}</div>
+                      <h2 className="kayal-chapter-title">{title}</h2>
+                      {renderSectionMarkup(text, key)}
+                    </div>
+                  )
+                })}
               </div>
             )}
 
