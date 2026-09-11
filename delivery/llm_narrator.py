@@ -156,19 +156,33 @@ class NarrationResult:
 # ---------------------------------------------------------------------------
 _WORDS_PER_PAGE = 300   # matches standard PDF body formatting
 _SECTION_WORD_TIERS = [
-    # (price_ceiling, word_lo, word_hi)
-    (49,  600, 750),
-    (59,  650, 800),
-    (79,  700, 900),
-    (999, 800, 1000),
+    # (price_ceiling, word_lo, word_hi, min_paragraphs)
+    # Real, recomputed directly, now that each, real paragraph runs
+    # 110 to 150 words and every section requires at least one real,
+    # actual quote of 20+ words, confirmed the math actually holds at
+    # every tier, minimum paragraphs plus a quote plus room for at
+    # least one situational box still comfortably fits the target.
+    (49,  700,  900,  5),
+    (59,  800,  1000, 6),
+    (79,  900,  1150, 7),
+    (999, 1050, 1350, 8),
 ]
 
 def _words_per_section_for_price(price: float) -> Tuple[int, int]:
     """Return (low, high) word target per section for a given tool price."""
-    for ceiling, lo, hi in _SECTION_WORD_TIERS:
+    for ceiling, lo, hi, _min_paras in _SECTION_WORD_TIERS:
         if price <= ceiling:
             return lo, hi
     return _SECTION_WORD_TIERS[-1][1], _SECTION_WORD_TIERS[-1][2]
+
+def _min_paragraphs_for_price(price: float) -> int:
+    """Return the real, minimum required paragraph count per section
+    for a given tool price, rising with price the same, real way the
+    word target does."""
+    for ceiling, _lo, _hi, min_paras in _SECTION_WORD_TIERS:
+        if price <= ceiling:
+            return min_paras
+    return _SECTION_WORD_TIERS[-1][3]
 
 def _detect_comparison_fit(item_text: str, shared_context: str = "") -> bool:
     """Real, honest check, does this specific section's own, actual
@@ -239,6 +253,56 @@ def _detect_final_table_fit(item_text: str, is_last_section: bool, shared_contex
     lowered = item_text.lower()
     return any(t in lowered for t in triggers)
 
+def _detect_proof_fit(item_text: str, shared_context: str) -> bool:
+    """Real, honest check, does this section genuinely have real,
+    actual, multi-signal evidence behind its finding, worth setting
+    apart as a real, explicit "why this is true" box, rather than
+    just stated in the flowing prose. Triggers on genuine, multi-
+    signal backing already confirmed in shared_context, "Supporting:"
+    or a two, three, or four-system convergence, since those are
+    exactly the real, honest cases where showing the evidence adds
+    something real."""
+    if re.search(r"Supporting:\s*\S", shared_context):
+        return True
+    if re.search(r"Convergence:\s*(?!single)\w*system", shared_context):
+        return True
+    return False
+
+def _detect_warning_fit(item_text: str, shared_context: str) -> bool:
+    """Real, honest, keyword-based check, does this section genuinely
+    identify a real risk, blind spot, or pattern worth naming
+    directly and setting apart, the kind [WARNING] exists for."""
+    triggers = ["risk", "vulnerab", "blind spot", "warning", "danger",
+                "watch out", "leak", "where this has", "likely to lose"]
+    lowered = (item_text + " " + shared_context).lower()
+    return any(t in lowered for t in triggers)
+
+def _detect_remedy_fit(item_text: str, shared_context: str) -> bool:
+    """Real, honest check, is a genuine, already-selected,
+    culturally-matched remedy actually available for this section, the
+    kind [REMEDY] exists for. Triggers directly on the real "Remedy:"
+    label already confirmed present with real content in
+    shared_context, never invented when no real remedy was selected."""
+    return bool(re.search(r"Remedy:\s*\S", shared_context))
+
+def _detect_opportunity_fit(item_text: str, shared_context: str) -> bool:
+    """Real, honest, keyword-based check, does this section genuinely
+    describe a real, positive window or opening worth setting apart,
+    the kind [OPPORTUNITY] exists for."""
+    triggers = ["opportunity", "window", "opening", "favorable", "favourable",
+                "chance to", "best time", "ripe for"]
+    lowered = item_text.lower()
+    return any(t in lowered for t in triggers)
+
+def _detect_time_fit(item_text: str, shared_context: str) -> bool:
+    """Real, honest check, does this section genuinely have a
+    specific, real timing note worth calling out separately, the kind
+    [TIME] exists for. Triggers on the real "Past:"/"Present:"/
+    "Future:" temporal line already confirmed present in
+    shared_context, the genuine, actual label _build_shared_context
+    produces for computed timing data."""
+    return bool(re.search(r"Past:\s*\S", shared_context))
+
 def _build_item_section_prompt(
     item_text:      str,
     item_index:     int,
@@ -247,19 +311,19 @@ def _build_item_section_prompt(
     name:           str,
     shared_context: str,
     word_target:    int,
+    min_paragraphs: int = 5,
 ) -> str:
     """Build the prompt for narrating a single whatYouGet promise as its own
     section. Real, rebuilt to match the actual writing specification
     directly, this is a paid product the person purchased, not a teaser,
-    so methodology and numbers are named directly now, the opposite of
-    the previous instruction, and real, explicit markup, [QUOTE] and
-    [CAPS], is requested so the PDF's actual, built rendering has
-    something real to work with, rather than always falling back to an
-    automatically-derived quote. Also now conditionally requests the
-    four, more complex components, comparison tables, calendars,
-    synthesis items, and the final table, but only when this specific
-    section's own, actual promise genuinely calls for one, matching the
-    established, real principle, never forced onto every section."""
+    so methodology and numbers are named directly now, and real,
+    explicit markup is requested so the PDF and web page's actual,
+    built rendering has something real to work with. Now also enforces
+    a genuine minimum paragraph count and word range per paragraph,
+    requires at least one real quote, gives the opening section an
+    explicit, real overview job, and offers five, additional, real
+    components, PROOF, WARNING, REMEDY, OPPORTUNITY, TIME, that the
+    model was never actually told existed before this fix."""
     special_instructions = []
     if _detect_comparison_fit(item_text, shared_context):
         special_instructions.append(
@@ -298,16 +362,74 @@ def _build_item_section_prompt(
             "statement.[/FT_ROW] lines, one per major finding across this whole "
             "reading, then [/FINAL_TABLE]."
         )
+    if _detect_proof_fit(item_text, shared_context):
+        special_instructions.append(
+            "This section genuinely has real, multi-signal evidence behind its "
+            "finding. Set that evidence apart, once, using this exact format: "
+            "[PROOF]Why This Is True, The Evidence In Your Design|Two to three "
+            "sentences naming which real, actual systems support this finding and "
+            "what each one specifically shows.[/PROOF]"
+        )
+    if _detect_warning_fit(item_text, shared_context):
+        special_instructions.append(
+            "This section genuinely identifies a real risk, blind spot, or pattern "
+            "worth naming directly. Set it apart, once, using this exact format: "
+            "[WARNING]A short, real, honest title for this risk|Two to three "
+            "sentences naming the real, specific pattern and where it tends to "
+            "show up.[/WARNING]"
+        )
+    if _detect_remedy_fit(item_text, shared_context):
+        special_instructions.append(
+            "A real, already-selected remedy exists for this section, in the "
+            "\"Remedy:\" line above. Present it, once, using this exact format: "
+            "[REMEDY]A short, real title for this practice|The real, actual remedy "
+            "content from the \"Remedy:\" line, in full, not shortened or "
+            "genericized.[/REMEDY]"
+        )
+    if _detect_opportunity_fit(item_text, shared_context):
+        special_instructions.append(
+            "This section genuinely describes a real, positive window or opening. "
+            "Set it apart, once, using this exact format: [OPPORTUNITY]A short, "
+            "real title for this window|Two to three sentences naming what makes "
+            "this specific window real and what to do with it.[/OPPORTUNITY]"
+        )
+    if _detect_time_fit(item_text, shared_context):
+        special_instructions.append(
+            "This section genuinely has a specific, real timing note, from the "
+            "\"Past:\"/\"Present:\"/\"Future:\" line above. Set it apart, once, using "
+            "this exact format: [TIME]A short, real title for this timing note|Two "
+            "to three sentences stating what that real, actual timing data shows "
+            "for this person.[/TIME]"
+        )
     special_block = ("\n\n" + "\n\n".join(special_instructions)) if special_instructions else ""
+
+    opening_instruction = ""
+    if item_index == 1:
+        opening_instruction = (
+            f"\n\nTHIS IS THE OPENING SECTION, it has one, extra, real job beyond "
+            f"its own promise. Before addressing this section's specific job, open "
+            f"with one, real, genuine paragraph giving {name} an honest overview of "
+            f"what this whole reading is actually about for them specifically, the "
+            f"real, overall pattern this tool exists to reveal, the same, honest "
+            f"way a free tool's own synthesis paragraph orients someone before the "
+            f"real, specific findings begin. Then move into this section's own job "
+            f"as normal."
+        )
 
     return (
         f"You are writing one section of {name}'s personal reading for the tool "
-        f"\"{tool_name}\". This is section {item_index} of {item_total}.\n\n"
+        f"\"{tool_name}\". This is section {item_index} of {item_total}."
+        f"{opening_instruction}\n\n"
         f"THIS SECTION'S SPECIFIC JOB — deliver exactly this promise, in full, "
         f"using the real signal data below:\n\"{item_text}\"\n\n"
         f"SIGNAL DATA AVAILABLE FOR THIS READING:\n{shared_context}\n\n"
         f"Use whatever signals above are genuinely relevant to this specific promise. "
-        f"Do not force in signals that do not actually serve this section's job.\n\n"
+        f"Do not force in signals that do not actually serve this section's job. This "
+        f"matters concretely, if this tool's own, real domain is palmistry, or face "
+        f"reading, or astrology specifically, do not reach for numerology just "
+        f"because birth-date data happens to be available, a signal only belongs in "
+        f"this section if it genuinely, directly serves this section's specific job, "
+        f"not because it exists somewhere in the data above.\n\n"
         f"HOW TO READ THE LABELS ABOVE, they are not raw notes, each one is a real, "
         f"already-computed finding, use it precisely for what it actually says. "
         f"\"Convergence: three_system\" or \"four_system\" means multiple, real, "
@@ -350,21 +472,30 @@ def _build_item_section_prompt(
         f"Direct and precise, no atmospheric filler, no vague encouragement. "
         f"Never write \"it seems\", \"perhaps\", \"you might\", or \"this could indicate\", "
         f"state findings as facts, the reading was calculated, report what it found. "
-        f"No exclamation marks. No bullet points, prose paragraphs only. "
-        f"Each paragraph should run 3 to 5 sentences, never longer than 6.\n\n"
-        f"Write approximately {word_target} words. Open with why this specific "
-        f"question matters to {name}, not with a system name or a restatement of "
-        f"the promise itself. Be concrete and specific to what the signals actually "
-        f"show, not generic. End with what this means for {name} going forward, "
-        f"not a summary.\n\n"
-        f"FORMATTING, use these real, exact markers where they genuinely fit, do not "
-        f"force them into every section: if this section has one, single, genuinely "
-        f"powerful sentence worth setting apart, wrap it in [QUOTE] and [/QUOTE], at "
-        f"most one per section. If this section naturally divides into a distinct "
+        f"No exclamation marks. No bullet points, prose paragraphs only.\n\n"
+        f"PARAGRAPH LENGTH, this is a real, firm requirement, not a suggestion. "
+        f"Every, single, real paragraph must run 110 to 150 words, never shorter, "
+        f"never longer. A paragraph under 110 words reads as thin and rushed. A "
+        f"paragraph over 150 words starts to lose the reader. Count as you write.\n\n"
+        f"PARAGRAPH COUNT, this section must contain at least {min_paragraphs} real, "
+        f"actual paragraphs of ordinary prose, not counting any [QUOTE], [CAPS], or "
+        f"other, special, bracketed block. Fewer than {min_paragraphs} real "
+        f"paragraphs is not acceptable for this specific reading.\n\n"
+        f"Write approximately {word_target} words in total for this section. Open "
+        f"with why this specific question matters to {name}, not with a system "
+        f"name or a restatement of the promise itself. Be concrete and specific to "
+        f"what the signals actually show, not generic. End with what this means "
+        f"for {name} going forward, not a summary.\n\n"
+        f"FORMATTING, use these real, exact markers where they genuinely fit. "
+        f"[QUOTE] IS REQUIRED, not optional, every section must include at least "
+        f"one, real, genuinely powerful sentence set apart this way, and that "
+        f"sentence must run at least 20 words, a short, punchy fragment is not "
+        f"enough, wrap it in [QUOTE] and [/QUOTE]. You may use a second [QUOTE] if "
+        f"the section genuinely contains two, real, distinct, powerful lines, but "
+        f"never more than two. If this section naturally divides into a distinct "
         f"sub-topic partway through, mark that transition with [CAPS] and [/CAPS] "
-        f"around a short, real, all-caps label for it, a few words only. Both are "
-        f"optional, use them only where they genuinely serve the content, never "
-        f"as decoration."
+        f"around a short, real, all-caps label for it, a few words only, this one "
+        f"remains optional, use it only where the content genuinely divides."
         f"{special_block}\n\n"
         f"Never use em-dashes (—). Use commas (,) or periods (.) instead."
     )
@@ -379,10 +510,11 @@ def _narrate_tool_section(
     system:         str,
     word_target:    int,
     session_id:     str = "unknown",
+    min_paragraphs: int = 5,
 ) -> Tuple[str, int, bool]:
     """Narrate one whatYouGet item as its own section. Sync."""
     prompt = _build_item_section_prompt(
-        item_text, item_index, item_total, tool_name, name, shared_context, word_target
+        item_text, item_index, item_total, tool_name, name, shared_context, word_target, min_paragraphs
     )
     max_tokens = _word_to_tokens(word_target)
 
@@ -432,10 +564,11 @@ async def _narrate_tool_section_async(
     system:         str,
     word_target:    int,
     session_id:     str = "unknown",
+    min_paragraphs: int = 5,
 ) -> Tuple[str, int, bool]:
     """Narrate one whatYouGet item as its own section. Async."""
     prompt = _build_item_section_prompt(
-        item_text, item_index, item_total, tool_name, name, shared_context, word_target
+        item_text, item_index, item_total, tool_name, name, shared_context, word_target, min_paragraphs
     )
     max_tokens = _word_to_tokens(word_target)
 
@@ -615,6 +748,7 @@ def narrate_tool(
 
     word_lo, word_hi = _words_per_section_for_price(tool_price)
     word_target = (word_lo + word_hi) // 2
+    min_paragraphs = _min_paragraphs_for_price(tool_price)
 
     system = _system_prompt(cultural_ctx, narration_tone)
     shared_context = _build_shared_context(tool_payload)
@@ -633,7 +767,7 @@ def narrate_tool(
             for i, item in enumerate(what_you_get, start=1):
                 text, tokens, retried = _narrate_tool_section(
                     item, i, len(what_you_get), tool_name, name,
-                    shared_context, system, word_target, session_id,
+                    shared_context, system, word_target, session_id, min_paragraphs,
                 )
                 section_texts[f"section_{i}"] = text
                 tokens_used += tokens
@@ -710,6 +844,7 @@ async def narrate_tool_async(
 
     word_lo, word_hi = _words_per_section_for_price(tool_price)
     word_target = (word_lo + word_hi) // 2
+    min_paragraphs = _min_paragraphs_for_price(tool_price)
 
     system = _system_prompt(cultural_ctx, narration_tone)
     shared_context = _build_shared_context(tool_payload)
@@ -731,7 +866,7 @@ async def narrate_tool_async(
             for i, item in enumerate(what_you_get, start=1):
                 result = await _narrate_tool_section_async(
                     item, i, len(what_you_get), tool_name, name,
-                    shared_context, system, word_target, session_id,
+                    shared_context, system, word_target, session_id, min_paragraphs,
                 )
                 results.append(result)
             break

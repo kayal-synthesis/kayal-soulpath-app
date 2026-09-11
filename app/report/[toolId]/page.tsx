@@ -379,9 +379,7 @@ export default function ReportPage() {
   const deriveTitle = (promise: string, fallback: string): string => {
     if (!promise) return fallback
     const clean = promise.trim()
-    const words = clean.split(/\s+/)
-    const title = words.length > 8 ? words.slice(0, 8).join(' ') + '…' : clean
-    return title.charAt(0).toUpperCase() + title.slice(1).replace(/[.,;:]+$/, '')
+    return clean.charAt(0).toUpperCase() + clean.slice(1).replace(/[.,;:]+$/, '')
   }
 
   // Real, actual markup parser, reading the exact, same [QUOTE] and
@@ -541,9 +539,9 @@ export default function ReportPage() {
         .kayal-cover-sub-light { font-size: 11px; color: var(--k-muted-light); margin: 2px 0; }
         .kayal-gold-rule { width: 40px; height: 2px; background: var(--k-gold); margin: 14px auto; border: none; }
         .kayal-cover-intro { font-family: 'Cormorant Garamond'; font-style: italic; font-size: clamp(15px, 4vw, 18px); color: #57534e; max-width: 520px; margin: 14px auto 0; line-height: 1.7; padding: 0 8px; }
-        .kayal-chapter-label { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-        .kayal-chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--k-border); }
-        .kayal-chapter-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: clamp(22px, 6vw, 28px); color: var(--k-text); margin: 0 0 18px; line-height: 1.2; }
+        .kayal-chapter-label { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
+        .kayal-chapter-label::before, .kayal-chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--k-border); max-width: 60px; }
+        .kayal-chapter-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: clamp(22px, 6vw, 28px); color: var(--k-text); margin: 0 0 18px; line-height: 1.25; text-align: center; }
         .kayal-body { font-size: 15.5px; line-height: 1.8; margin: 0 0 22px; text-align: justify; color: var(--k-text-p); }
         .kayal-insight { border-left: 3px solid var(--k-gold); background: var(--k-insight-bg); padding: 14px 16px; margin: 22px 0; }
         .kayal-insight p { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 16px; color: var(--k-insight-txt); margin: 0; line-height: 1.7; text-align: justify; }

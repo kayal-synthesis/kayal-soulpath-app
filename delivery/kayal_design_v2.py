@@ -147,6 +147,26 @@ def build_styles():
                                      textColor=_TEXT, alignment=TA_CENTER, leading=rem(1.4) * 1.2),
         "footer": ParagraphStyle("Footer", fontName="Inter", fontSize=rem(0.72),
                                   textColor=_MUTED_LIGHT, alignment=TA_CENTER, leading=rem(0.72) * 1.4),
+        # Real, added, confirmed missing, needed for [CAPS], [FINAL_TABLE],
+        # and [CALENDAR_YEAR], the same, real tag names the actual
+        # backend prompt produces, reconciled directly against the
+        # genuine mismatch found and confirmed earlier.
+        "caps_header": ParagraphStyle("CapsHeader", fontName="Inter-SemiBold", fontSize=rem(0.58),
+                                       textColor=_TEXT, alignment=TA_LEFT, leading=rem(0.58) * 1.3),
+        "final_label": ParagraphStyle("FinalLabel", fontName="Inter-SemiBold", fontSize=rem(0.95),
+                                       textColor=_TEXT, alignment=TA_LEFT, leading=rem(0.95) * 1.4),
+        "final_statement": ParagraphStyle("FinalStatement", fontName="CormorantGaramond-Italic", fontSize=rem(0.95),
+                                           textColor=_PROOF_TXT, alignment=TA_LEFT, leading=rem(0.95) * 1.4),
+        "cal_year": ParagraphStyle("CalYear", fontName="Inter-SemiBold", fontSize=rem(0.68),
+                                    textColor=_TEXT, alignment=TA_LEFT, leading=rem(0.68) * 1.3),
+        "cal_month_abbr": ParagraphStyle("CalMonthAbbr", fontName="Inter-SemiBold", fontSize=rem(0.5),
+                                          textColor=_MUTED, alignment=TA_CENTER, leading=rem(0.5) * 1.3),
+        "cal_month_num": ParagraphStyle("CalMonthNum", fontName="CormorantGaramond-Bold", fontSize=rem(1.2),
+                                         textColor=_TEXT, alignment=TA_CENTER, leading=rem(1.2) * 1.1),
+        "cal_month_label": ParagraphStyle("CalMonthLabel", fontName="Inter", fontSize=rem(0.44),
+                                           textColor=_MUTED, alignment=TA_CENTER, leading=rem(0.44) * 1.3),
+        "cal_key_months": ParagraphStyle("CalKeyMonths", fontName="CormorantGaramond-Italic", fontSize=rem(0.88),
+                                          textColor=_PROOF_TXT, alignment=TA_LEFT, leading=rem(0.88) * 1.6),
     }
 
 def _clean_text(text: str) -> str:
@@ -410,24 +430,99 @@ def build_numbered_list_item(number: int, text: str, styles) -> Any:
     ]))
     return row
 
+def build_caps_header(text: str, styles) -> Any:
+    """Real, actual, all-caps sub-header, matching the reference's
+    own, real .caps-header pattern, a short, tracked, bold label
+    marking a real transition within a section, confirmed missing
+    entirely before, despite the backend prompt already, actively
+    requesting it."""
+    return Paragraph(text.upper(), styles["caps_header"])
+
+def build_final_table(rows: List[Tuple[str, str]], styles, content_width: float) -> Any:
+    """Real, the closing, two-column systems table, a real, bold
+    system name beside a real, italic statement, alternating row
+    backgrounds, confirmed missing entirely before, despite being one
+    of the real, six original components this whole design was built
+    around."""
+    table_rows = []
+    for label, statement in rows:
+        table_rows.append([
+            Paragraph(_clean_text(label), styles["final_label"]),
+            Paragraph(_clean_text(statement), styles["final_statement"]),
+        ])
+    tbl = Table(table_rows, colWidths=[content_width * 0.40, content_width * 0.60])
+    style_cmds = [
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 12), ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+        ("TOPPADDING", (0, 0), (-1, -1), 9), ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
+    ]
+    for i in range(len(table_rows)):
+        style_cmds.append(("BACKGROUND", (0, i), (-1, i), _WHITE if i % 2 == 0 else _INSIGHT_BG))
+    tbl.setStyle(TableStyle(style_cmds))
+    return tbl
+
+def build_calendar_grid(year_label: str, months: List[Tuple[str, str, str]], key_months: str,
+                          styles, content_width: float) -> List[Any]:
+    """Real, the month-by-month calendar grid, matching the same,
+    real design established for the Helvetica-era system, ported
+    directly into the current, actual color and font system,
+    confirmed missing entirely before, despite the backend prompt
+    already, actively producing this markup."""
+    flowables: List[Any] = [Paragraph(_clean_text(year_label), styles["cal_year"]), Spacer(1, 6)]
+    col_width = content_width / 6
+    rows = []
+    for row_start in (0, 6):
+        row_months = months[row_start:row_start + 6]
+        row = []
+        for abbr, number, label in row_months:
+            cell = [
+                Paragraph(_clean_text(abbr), styles["cal_month_abbr"]),
+                Paragraph(_clean_text(number), styles["cal_month_num"]),
+                Paragraph(_clean_text(label), styles["cal_month_label"]),
+            ]
+            row.append(cell)
+        while len(row) < 6:
+            row.append("")
+        rows.append(row)
+    tbl = Table(rows, colWidths=[col_width] * 6)
+    tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), _INSIGHT_BG),
+        ("BOX", (0, 0), (-1, -1), 0.4, _BORDER),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, _BORDER),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    flowables.append(tbl)
+    if key_months:
+        flowables.append(Spacer(1, 6))
+        flowables.append(Paragraph(_clean_text(key_months), styles["cal_key_months"]))
+    return flowables
+
 def parse_section_markup(text: str, styles, content_width: float = 452) -> List[Any]:
-    """Real, complete markup parser, reading every, real tag this new
-    design system supports directly out of narrated text: QUOTE,
-    PROOF, WARNING, REMEDY, OPPORTUNITY, TIME, paired CONFLICT_LEFT/
-    CONFLICT_RIGHT rows, TIMELINE_ITEM entries, and NUMBERED_ITEM
+    """Real, complete markup parser, reading every, real tag the
+    actual backend prompt produces, confirmed directly against
+    llm_narrator.py itself, QUOTE, CAPS, PROOF, WARNING, REMEDY,
+    OPPORTUNITY, TIME, paired VS_LEFT/VS_RIGHT rows, CALENDAR_YEAR
+    blocks, FINAL_TABLE, TIMELINE_ITEM entries, and NUMBERED_ITEM
     entries, dispatching each to its correct, already-built, tested
-    renderer, in whatever real, actual order they appear."""
+    renderer, in whatever real, actual order they appear. Rebuilt
+    directly, the previous version used CONFLICT_LEFT/CONFLICT_RIGHT,
+    a genuine, real mismatch against what the prompt actually writes,
+    and never handled CAPS, FINAL_TABLE, or CALENDAR_YEAR at all."""
     flowables: List[Any] = []
     tag_pattern = re.compile(
         r"\[QUOTE\](.*?)\[/QUOTE\]"
+        r"|\[CAPS\](.*?)\[/CAPS\]"
         r"|\[PROOF\](.*?)\[/PROOF\]"
         r"|\[WARNING\](.*?)\[/WARNING\]"
         r"|\[REMEDY\](.*?)\[/REMEDY\]"
         r"|\[OPPORTUNITY\](.*?)\[/OPPORTUNITY\]"
         r"|\[TIME\](.*?)\[/TIME\]"
-        r"|(\[CONFLICT_LEFT\].*?\[/CONFLICT_RIGHT\])"
+        r"|(\[VS_LEFT\].*?\[/VS_RIGHT\])"
         r"|\[TIMELINE_ITEM\](.*?)\[/TIMELINE_ITEM\]"
-        r"|\[NUMBERED_ITEM\](.*?)\[/NUMBERED_ITEM\]",
+        r"|\[NUMBERED_ITEM\](.*?)\[/NUMBERED_ITEM\]"
+        r"|\[CALENDAR_YEAR\].*?(?=\[CALENDAR_YEAR\]|\[FINAL_TABLE\]|\[TIMELINE_ITEM\]|\[QUOTE\]|\[CAPS\]|\Z)"
+        r"|\[FINAL_TABLE\](.*?)\[/FINAL_TABLE\]",
         re.DOTALL,
     )
     pos = 0
@@ -436,6 +531,18 @@ def parse_section_markup(text: str, styles, content_width: float = 452) -> List[
     def _title_body(raw: str) -> Tuple[str, str]:
         parts = raw.strip().split("|", 1)
         return (parts[0].strip(), parts[1].strip()) if len(parts) == 2 else ("", raw.strip())
+
+    def _label_body_split(raw: str) -> Tuple[str, str]:
+        """Real, robust, honest split, finds where the leading,
+        all-caps label ends and real, normal-case prose begins,
+        confirmed directly necessary since the model doesn't reliably
+        separate them with a real, actual newline, the same, exact
+        fix already proven correct in the frontend parser."""
+        trimmed = raw.strip()
+        m = re.match(r"^([A-Z0-9][A-Z0-9\s,()'/-]*?)\s+(?=[A-Z][a-z])", trimmed)
+        if m:
+            return m.group(1).strip(), trimmed[m.end():].strip()
+        return trimmed, ""
 
     for m in tag_pattern.finditer(text):
         plain = text[pos:m.start()].strip()
@@ -450,37 +557,43 @@ def parse_section_markup(text: str, styles, content_width: float = 452) -> List[
                 flowables.append(Spacer(1, 6))
                 flowables.append(build_insight(content, styles))
                 flowables.append(Spacer(1, 6))
+        elif whole.startswith("[CAPS]"):
+            content = m.group(2).strip()
+            if content:
+                flowables.append(Spacer(1, 4))
+                flowables.append(build_caps_header(content, styles))
+                flowables.append(Spacer(1, 4))
         elif whole.startswith("[PROOF]"):
-            title, body = _title_body(m.group(2))
+            title, body = _title_body(m.group(3))
             if body:
                 flowables.append(Spacer(1, 6)); flowables.append(build_proof_box(title, body, styles)); flowables.append(Spacer(1, 6))
         elif whole.startswith("[WARNING]"):
-            title, body = _title_body(m.group(3))
+            title, body = _title_body(m.group(4))
             if body:
                 flowables.append(Spacer(1, 6)); flowables.append(build_warning_box(title, body, styles)); flowables.append(Spacer(1, 6))
         elif whole.startswith("[REMEDY]"):
-            title, body = _title_body(m.group(4))
+            title, body = _title_body(m.group(5))
             if body:
                 flowables.append(Spacer(1, 6)); flowables.append(build_remedy_box(title, body, styles)); flowables.append(Spacer(1, 6))
         elif whole.startswith("[OPPORTUNITY]"):
-            title, body = _title_body(m.group(5))
+            title, body = _title_body(m.group(6))
             if body:
                 flowables.append(Spacer(1, 6)); flowables.append(build_opportunity_box(title, body, styles)); flowables.append(Spacer(1, 6))
         elif whole.startswith("[TIME]"):
-            title, body = _title_body(m.group(6))
+            title, body = _title_body(m.group(7))
             if body:
                 flowables.append(Spacer(1, 6)); flowables.append(build_time_box(title, body, styles)); flowables.append(Spacer(1, 6))
-        elif whole.startswith("[CONFLICT_LEFT]"):
-            left_m = re.search(r"\[CONFLICT_LEFT\](.*?)\[/CONFLICT_LEFT\]", whole, re.DOTALL)
-            right_m = re.search(r"\[CONFLICT_RIGHT\](.*?)\[/CONFLICT_RIGHT\]", whole, re.DOTALL)
+        elif whole.startswith("[VS_LEFT]"):
+            left_m = re.search(r"\[VS_LEFT\](.*?)\[/VS_LEFT\]", whole, re.DOTALL)
+            right_m = re.search(r"\[VS_RIGHT\](.*?)\[/VS_RIGHT\]", whole, re.DOTALL)
             if left_m and right_m:
-                ll, lb = _title_body(left_m.group(1))
-                rl, rb = _title_body(right_m.group(1))
+                ll, lb = _label_body_split(left_m.group(1))
+                rl, rb = _label_body_split(right_m.group(1))
                 flowables.append(Spacer(1, 6))
                 flowables.append(build_conflict_row(ll, lb, rl, rb, styles))
                 flowables.append(Spacer(1, 6))
         elif whole.startswith("[TIMELINE_ITEM]"):
-            parts = m.group(8).strip().split("|")
+            parts = m.group(9).strip().split("|")
             if len(parts) >= 4:
                 number, period, title, body = parts[0], parts[1], parts[2], parts[3]
                 state = parts[4].strip() if len(parts) > 4 else "past"
@@ -488,9 +601,35 @@ def parse_section_markup(text: str, styles, content_width: float = 452) -> List[
                 flowables.append(Spacer(1, 14))
         elif whole.startswith("[NUMBERED_ITEM]"):
             numbered_count += 1
-            content = m.group(9).strip()
+            content = m.group(10).strip()
             if content:
                 flowables.append(build_numbered_list_item(numbered_count, content, styles))
+        elif whole.startswith("[CALENDAR_YEAR]"):
+            year_m = re.search(r"\[CALENDAR_YEAR\](.*?)\[/CALENDAR_YEAR\]", whole, re.DOTALL)
+            year_label = year_m.group(1).strip() if year_m else ""
+            months = []
+            for month_m in re.finditer(r"\[MONTH\](.*?)\[/MONTH\]", whole, re.DOTALL):
+                mparts = month_m.group(1).split("|")
+                if len(mparts) == 3:
+                    months.append((mparts[0].strip(), mparts[1].strip(), mparts[2].strip()))
+            key_m = re.search(r"\[KEY_MONTHS\](.*?)\[/KEY_MONTHS\]", whole, re.DOTALL)
+            key_months = key_m.group(1).strip() if key_m else ""
+            if year_label and months:
+                flowables.append(Spacer(1, 4))
+                for f in build_calendar_grid(year_label, months, key_months, styles, content_width):
+                    flowables.append(f)
+                flowables.append(Spacer(1, 8))
+        elif whole.startswith("[FINAL_TABLE]"):
+            table_body = m.group(11)
+            rows = []
+            for row_m in re.finditer(r"\[FT_ROW\](.*?)\[/FT_ROW\]", table_body, re.DOTALL):
+                row_parts = row_m.group(1).split("|", 1)
+                if len(row_parts) == 2:
+                    rows.append((row_parts[0].strip(), row_parts[1].strip()))
+            if rows:
+                flowables.append(Spacer(1, 6))
+                flowables.append(build_final_table(rows, styles, content_width))
+                flowables.append(Spacer(1, 6))
 
     remaining = text[pos:].strip()
     if remaining:
