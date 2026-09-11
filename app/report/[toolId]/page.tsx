@@ -387,16 +387,30 @@ export default function ReportPage() {
   // and rendering each as a genuine, styled React element, a real,
   // gold-bordered pull quote, a real, tracked caps sub-header,
   // instead of leaving the literal tag text visible on the page.
+  // Real, actual hex pairs matching each, real domain's existing
+  // Tailwind gradient classes exactly, confirmed directly from
+  // domainConfigs above, used for the real, actual [HOOK] opening
+  // block, so it uses the tool's own, genuine domain identity
+  // instead of one, fixed color regardless of subject.
+  const domainGradientHex: Record<string, [string, string]> = {
+    'omni-seer':             ['#4f46e5', '#9333ea'],
+    'love-relationships':    ['#dc2626', '#db2777'],
+    'wealth-career':         ['#059669', '#0d9488'],
+    'wellness-spirituality': ['#9333ea', '#4f46e5'],
+    'life-path-destiny':     ['#d97706', '#ea580c'],
+  }
+  const [hookFrom, hookTo] = domainGradientHex[domain] || domainGradientHex['omni-seer']
+
   const renderSectionMarkup = (text: string, keyPrefix: string) => {
     if (!text) return null
     // Real, complete parser, case-insensitive throughout, recognizing
     // every, real tag the backend prompt can produce, QUOTE, CAPS,
     // paired VS_LEFT/VS_RIGHT, PROOF, WARNING, REMEDY, OPPORTUNITY,
-    // TIME, TIMELINE_ITEM, NUMBERED_ITEM, and FINAL_TABLE, each
-    // rendered using the real, verified Kayal design classes, tested
+    // TIME, TIMELINE_ITEM, NUMBERED_ITEM, FINAL_TABLE, and now HOOK,
+    // each rendered using the real, verified Kayal design classes, tested
     // first as a static mockup before being wired in here.
     const parts = text.split(
-      /(\[QUOTE\][\s\S]*?\[\/QUOTE\]|\[CAPS\][\s\S]*?\[\/CAPS\]|\[VS_LEFT\][\s\S]*?\[\/VS_RIGHT\]|\[PROOF\][\s\S]*?\[\/PROOF\]|\[WARNING\][\s\S]*?\[\/WARNING\]|\[REMEDY\][\s\S]*?\[\/REMEDY\]|\[OPPORTUNITY\][\s\S]*?\[\/OPPORTUNITY\]|\[TIME\][\s\S]*?\[\/TIME\]|\[TIMELINE_ITEM\][\s\S]*?\[\/TIMELINE_ITEM\]|\[NUMBERED_ITEM\][\s\S]*?\[\/NUMBERED_ITEM\]|\[FINAL_TABLE\][\s\S]*?\[\/FINAL_TABLE\])/gi
+      /(\[QUOTE\][\s\S]*?\[\/QUOTE\]|\[CAPS\][\s\S]*?\[\/CAPS\]|\[VS_LEFT\][\s\S]*?\[\/VS_RIGHT\]|\[PROOF\][\s\S]*?\[\/PROOF\]|\[WARNING\][\s\S]*?\[\/WARNING\]|\[REMEDY\][\s\S]*?\[\/REMEDY\]|\[OPPORTUNITY\][\s\S]*?\[\/OPPORTUNITY\]|\[TIME\][\s\S]*?\[\/TIME\]|\[TIMELINE_ITEM\][\s\S]*?\[\/TIMELINE_ITEM\]|\[NUMBERED_ITEM\][\s\S]*?\[\/NUMBERED_ITEM\]|\[FINAL_TABLE\][\s\S]*?\[\/FINAL_TABLE\]|\[HOOK\][\s\S]*?\[\/HOOK\])/gi
     )
     let numberedCount = 0
     return parts.map((part, i) => {
@@ -405,6 +419,15 @@ export default function ReportPage() {
         return (
           <div key={`${keyPrefix}-${i}`} className="kayal-insight">
             <p>“{quoteMatch[1].trim()}”</p>
+          </div>
+        )
+      }
+      const hookMatch = part.match(/^\[HOOK\]([\s\S]*?)\[\/HOOK\]$/i)
+      if (hookMatch) {
+        return (
+          <div key={`${keyPrefix}-${i}`} className="kayal-hook"
+               style={{ background: `linear-gradient(135deg, ${hookFrom}, ${hookTo})` }}>
+            <p>{hookMatch[1].trim()}</p>
           </div>
         )
       }
@@ -544,6 +567,8 @@ export default function ReportPage() {
         .kayal-chapter-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: clamp(22px, 6vw, 28px); color: var(--k-text); margin: 0 0 18px; line-height: 1.25; text-align: center; }
         .kayal-body { font-size: 15.5px; line-height: 1.8; margin: 0 0 22px; text-align: justify; color: var(--k-text-p); }
         .kayal-insight { border-left: 3px solid var(--k-gold); background: var(--k-insight-bg); padding: 14px 16px; margin: 22px 0; }
+        .kayal-hook { padding: 22px 24px; margin: 4px 0 26px; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+        .kayal-hook p { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 600; font-size: 19px; color: #fdfbf5; margin: 0; line-height: 1.6; text-align: left; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
         .kayal-insight p { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 16px; color: var(--k-insight-txt); margin: 0; line-height: 1.7; text-align: justify; }
         .kayal-caps { background: #f7ecd1; padding: 8px 14px; font-weight: 700; font-size: 10.5px; letter-spacing: 1px; color: var(--k-text); margin: 24px 0 12px; }
         .kayal-box { border: 1px solid var(--k-border); background: #fff; padding: 14px 16px; margin: 22px 0; }
