@@ -170,24 +170,33 @@ def _words_per_section_for_price(price: float) -> Tuple[int, int]:
             return lo, hi
     return _SECTION_WORD_TIERS[-1][1], _SECTION_WORD_TIERS[-1][2]
 
-def _detect_comparison_fit(item_text: str) -> bool:
-    """Real, honest, keyword-based check, does this specific section's
-    own, actual promise genuinely describe a real tension or conflict
-    between two things, the kind [VS_LEFT]/[VS_RIGHT] markup exists
-    for. Never forced onto sections that don't actually call for it."""
+def _detect_comparison_fit(item_text: str, shared_context: str = "") -> bool:
+    """Real, honest check, does this specific section's own, actual
+    promise genuinely describe a real tension or conflict between two
+    things, the kind [VS_LEFT]/[VS_RIGHT] markup exists for. Checks
+    the real, actual "Tension:" label in shared_context first, since
+    that reflects a genuine, computed disagreement the resolver
+    already found, either resolved by domain priority or by Hermetic
+    Polarity, not a guess. Falls back to keyword matching on the
+    promise text only when that real, richer signal isn't present."""
+    if re.search(r"Tension:\s*\S", shared_context):
+        return True
     triggers = [
         "tension between", "conflict", "clash", "at odds", "versus",
         "pulls against", "pulling in different directions", "contradicts",
         "where they conflict", "gift and.*challenge", "opposing",
+        "they disagree", "systems disagree", "where.*disagree",
+        "what.*tension", "that tension",
     ]
     lowered = item_text.lower()
     return any(re.search(t, lowered) for t in triggers)
 
-def _detect_calendar_fit(item_text: str) -> bool:
+def _detect_calendar_fit(item_text: str, shared_context: str = "") -> bool:
     """Real, honest, keyword-based check, does this section's own,
     actual promise genuinely describe a month-by-month or calendar-
     style forecast, the kind [CALENDAR_YEAR]/[MONTH] markup exists
-    for."""
+    for. No real, equivalent structured label exists for this in
+    shared_context, so this stays keyword-based on the promise text."""
     triggers = [
         "month by month", "month-by-month", "monthly forecast",
         "each month", "calendar", "month-to-month",
@@ -195,27 +204,37 @@ def _detect_calendar_fit(item_text: str) -> bool:
     lowered = item_text.lower()
     return any(t in lowered for t in triggers)
 
-def _detect_synthesis_fit(item_text: str) -> bool:
-    """Real, honest, keyword-based check, does this section's own,
-    actual promise genuinely describe multiple, independent systems
-    converging on the same findings, the kind [SYNTHESIS_ITEM] markup
-    exists for."""
+def _detect_synthesis_fit(item_text: str, shared_context: str = "") -> bool:
+    """Real, honest check, does this section's own, actual promise
+    genuinely describe multiple, independent systems converging on
+    the same finding, the kind [SYNTHESIS_ITEM] markup exists for.
+    Checks the real, actual "Convergence:" label in shared_context
+    first, three_system or four_system convergence is a genuine,
+    computed fact from the weigher, not a guess. Falls back to
+    keyword matching on the promise text otherwise."""
+    if re.search(r"Convergence:\s*(three_system|four_system)", shared_context):
+        return True
     triggers = [
         "every system", "all systems agree", "systems confirm",
         "independent systems", "convergence", "systems that inform",
-        "agree across", "cross-referencing",
+        "agree across", "cross-referencing", "multiple systems agree",
+        "systems agree", "where.*agree",
     ]
     lowered = item_text.lower()
     return any(t in lowered for t in triggers)
 
-def _detect_final_table_fit(item_text: str, is_last_section: bool) -> bool:
+def _detect_final_table_fit(item_text: str, is_last_section: bool, shared_context: str = "") -> bool:
     """Real, honest check, [FINAL_TABLE] is a genuine, closing summary
     of the whole reading, not a single finding, so it's only ever
     offered on the real, actual last section, and only when that
     section's own promise genuinely describes a closing or summary
-    role."""
+    role, or the real, actual "Overall Theme" label is present in
+    shared_context, confirming a genuine, whole-reading synthesis
+    exists to summarize."""
     if not is_last_section:
         return False
+    if "[Overall Theme]" in shared_context:
+        return True
     triggers = ["final word", "closing", "brings it together", "summary", "what every"]
     lowered = item_text.lower()
     return any(t in lowered for t in triggers)
@@ -242,7 +261,7 @@ def _build_item_section_prompt(
     section's own, actual promise genuinely calls for one, matching the
     established, real principle, never forced onto every section."""
     special_instructions = []
-    if _detect_comparison_fit(item_text):
+    if _detect_comparison_fit(item_text, shared_context):
         special_instructions.append(
             "This section genuinely describes a real tension between two things. "
             "Present that tension as two, real, opposing positions, using this exact "
@@ -252,7 +271,7 @@ def _build_item_section_prompt(
             "You may include two or three of these real, paired blocks if the "
             "section genuinely contains that many distinct tensions."
         )
-    if _detect_calendar_fit(item_text):
+    if _detect_calendar_fit(item_text, shared_context):
         special_instructions.append(
             "This section genuinely describes a month-by-month forecast. Present it "
             "using this exact format: [CALENDAR_YEAR]YEAR (Personal Year N: short "
@@ -261,7 +280,7 @@ def _build_item_section_prompt(
             "single [KEY_MONTHS]one sentence naming the two or three months that "
             "matter most.[/KEY_MONTHS] line."
         )
-    if _detect_synthesis_fit(item_text):
+    if _detect_synthesis_fit(item_text, shared_context):
         special_instructions.append(
             "This section genuinely describes multiple, independent systems "
             "converging on the same finding. Present each, real, distinct finding "
@@ -271,7 +290,7 @@ def _build_item_section_prompt(
             "systems agree and what they agree on.[/SYNTHESIS_BODY][/SYNTHESIS_ITEM], "
             "incrementing the number for each additional, real finding."
         )
-    if _detect_final_table_fit(item_text, item_index == item_total):
+    if _detect_final_table_fit(item_text, item_index == item_total, shared_context):
         special_instructions.append(
             "This is the real, final, closing section. Include one, real, genuine "
             "closing table using this exact format: [FINAL_TABLE] followed by three "
@@ -289,6 +308,23 @@ def _build_item_section_prompt(
         f"SIGNAL DATA AVAILABLE FOR THIS READING:\n{shared_context}\n\n"
         f"Use whatever signals above are genuinely relevant to this specific promise. "
         f"Do not force in signals that do not actually serve this section's job.\n\n"
+        f"HOW TO READ THE LABELS ABOVE, they are not raw notes, each one is a real, "
+        f"already-computed finding, use it precisely for what it actually says. "
+        f"\"Convergence: three_system\" or \"four_system\" means multiple, real, "
+        f"independent systems already, genuinely agree, say so plainly and "
+        f"specifically, this is rare and worth stating directly, do not invent a "
+        f"convergence claim when the label says \"single\" instead. \"Tension:\" "
+        f"means two, real systems were found to genuinely disagree, and it has "
+        f"already been resolved, either one system's finding was determined to "
+        f"carry more weight for this specific domain, or the disagreement itself "
+        f"was found to be two honest sides of one, real truth, use whichever "
+        f"\"Resolution:\" says actually happened, never invent your own, separate "
+        f"resolution. \"Remedy:\" is a real, already-selected, culturally-matched "
+        f"practice, use its real, actual content directly, never invent a "
+        f"generic, different remedy when a real one is already given. \"Growth "
+        f"edge:\" is real, already-computed guidance for where this specific "
+        f"person's reading needs honest balance, use it to shape tone, not just "
+        f"content.\n\n"
         f"THIS IS A PAID PRODUCT THE PERSON HAS ALREADY PURCHASED, NOT A SALES PAGE. "
         f"Name every real methodology, system, number, and placement directly, "
         f"numerology, astrology, Life Path, Soul Urge, Personal Year, specific "

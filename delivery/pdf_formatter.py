@@ -972,116 +972,70 @@ def _generate_tool_reportlab(
     partner_name:  Optional[str],
     generated:     Optional[str],
 ) -> bytes:
-    """Real, complete rebuild, matching the actual, real design
-    specification directly, using the shared, already-correct
-    palette, styles, and page decorator this file already defines for
-    the plain fallback path, rather than the separate, simpler, local
-    styling this function used before. Confirmed, directly, by
-    rendering real, actual content and viewing every page, not
-    assumed to match the spec just because the code looks similar."""
+    """Real, complete rebuild, now matching the actual, confirmed
+    reference design (ayeyi_full_report.html) directly, replacing the
+    earlier, Helvetica-based system entirely, per direct, explicit
+    confirmation. Cormorant Garamond and Inter, properly, genuinely
+    embedded as real, static font instances, not an approximation.
+    Confirmed, directly, by rendering real, actual content through
+    every, individual component and the complete, combined parser,
+    not assumed to match the reference just because the code looks
+    similar."""
+    import kayal_design_v2 as kd
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import ParagraphStyle
-    from reportlab.lib.enums import TA_LEFT, TA_CENTER
-    from reportlab.platypus import (
-        SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
-        KeepTogether, PageBreak,
-    )
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 
-    palette = _rgb_palette()
-    styles  = _build_styles(palette)
-    navy, gold, med = palette["navy"], palette["gold"], palette["med"]
+    kd.register_fonts()
+    styles = kd.build_styles()
 
     buffer = io.BytesIO()
-    page_w, page_h = A4
-    _on_page = _make_page_decorator(job_id, palette, page_w, page_h, person_name=user_name or "")
-
     doc = SimpleDocTemplate(
         buffer, pagesize=A4,
-        leftMargin=MARGIN_LEFT, rightMargin=MARGIN_RIGHT,
-        topMargin=MARGIN_TOP + 20, bottomMargin=MARGIN_BOTTOM,
+        leftMargin=54, rightMargin=54, topMargin=50, bottomMargin=50,
     )
 
     story: List[Any] = []
 
-    # ── Cover page, matching the real, actual spec precisely ───────
-    story.append(Spacer(1, 60))
-    # Real, wide letter-spacing, applied directly to the text itself,
-    # since reportlab's ParagraphStyle has no real tracking property.
-    tracked_brand = "\u00a0".join("KAYAL") + "\u00a0\u00a0\u00a0\u00a0" + "\u00a0".join("SOULPATH")
-    story.append(Paragraph(tracked_brand, styles["brand"]))
-    story.append(Spacer(1, 30))
-    story.append(Paragraph((user_name or tool_name).upper(), styles["title"]))
-    story.append(Spacer(1, 4))
-    story.append(HRFlowable(width="55%", thickness=1.5, color=gold, hAlign="CENTER", spaceAfter=10))
-    story.append(Paragraph(tool_name, styles["tagline"]))
-
-    story.append(Spacer(1, 8))
-    meta_parts = []
-    if birth_data:
-        meta_parts.append(birth_data)
-    if meta_parts:
-        story.append(Paragraph("  |  ".join(_clean_text(m) for m in meta_parts), styles["meta"]))
-
-    prepared_parts = []
+    birth_line = _clean_text(birth_data) if birth_data else ""
+    prepared_line = "Confidential"
     if generated:
         try:
             dt = datetime.fromisoformat(generated.replace("Z", "+00:00"))
-            prepared_parts.append(f"Prepared: {dt.strftime('%-d %B %Y')}")
+            prepared_line = f"Prepared: {dt.strftime('%-d %B %Y')}  \u00b7  Confidential"
         except Exception:
             pass
-    prepared_parts.append("Confidential")
-    story.append(Paragraph("  |  ".join(_clean_text(m) for m in prepared_parts), styles["meta"]))
 
-    story.append(Spacer(1, 28))
-    if tagline:
-        story.append(Paragraph(_clean_text(tagline), styles["opening"]))
+    story += kd.build_cover(
+        person_name  = user_name or tool_name,
+        birth_line   = birth_line,
+        prepared_line = prepared_line,
+        intro_text   = tagline or "",
+        styles       = styles,
+    )
 
-    # Real, the table of contents lives on the cover page itself, per
-    # the actual, real spec, not as its own, separate page.
-    if len(what_you_get) > 1:
-        story.append(Spacer(1, 24))
-        for i, item in enumerate(what_you_get, start=1):
-            title = _derive_section_title(item)
-            story.append(Paragraph(f"{i:02d}  ·  {title}", styles["toc_item"]))
+    chapter_titles = []
+    for i, item in enumerate(what_you_get):
+        chapter_titles.append(_derive_section_title(item, max_words=10) if item else f"Section {i + 1}")
+    if len(chapter_titles) > 1:
+        story += kd.build_toc(chapter_titles, styles)
 
-    story.append(PageBreak())
-
-    # ── Sections, each a real heading block, matching the actual
-    # spec's visual rhythm, a small, gold marker above the title,
-    # without the word "chapter", this is a real reading, not a
-    # thesis ─────────────────────────────────────────────────────
     for i, (key, text) in enumerate(section_texts.items()):
         if not text or not text.strip():
             continue
-        promise = what_you_get[i] if i < len(what_you_get) else ""
-        title = _derive_section_title(promise, max_words=10) if promise else f"Section {i + 1}"
-
         if i > 0:
             story.append(PageBreak())
+        title = chapter_titles[i] if i < len(chapter_titles) else f"Section {i + 1}"
+        story += kd.build_chapter_heading(i + 1, title, styles)
+        story += kd.parse_section_markup(text, styles, content_width=doc.width)
 
-        chapter_block = [
-            Paragraph(f"{i + 1:02d}", styles["chapter_label"]),
-            Paragraph(title, styles["chapter_title"]),
-        ]
-        story.append(KeepTogether(chapter_block))
-
-        for flowable in _parse_section_markup(text, palette, styles, doc.width, highlight_opening=True):
-            story.append(flowable)
-
-    # ── Closing ──────────────────────────────────────────────────
-    story.append(Spacer(1, 10))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=gold, spaceBefore=8, spaceAfter=16))
+    story.append(Spacer(1, 20))
     story.append(Paragraph(
-        _clean_text(
-            "This reading reflects your pattern as it stands today. What is named here is a "
-            "starting point for awareness, not a fixed outcome. What you do with it is yours to decide."
-        ),
+        "This reading reflects your pattern as it stands today. What is named here is a "
+        "starting point for awareness, not a fixed outcome. What you do with it is yours to decide.",
         styles["body"],
     ))
-    story.append(Spacer(1, 8))
-    story.append(Paragraph("KAYAL SoulPath  ·  kayalsoulpath.com", styles["meta"]))
 
-    doc.build(story, onFirstPage=_on_page, onLaterPages=_on_page)
+    doc.build(story)
     return buffer.getvalue()
 
 # ─────────────────────────────────────────────
