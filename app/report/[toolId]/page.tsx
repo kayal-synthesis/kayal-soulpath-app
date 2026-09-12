@@ -332,6 +332,7 @@ export default function ReportPage() {
         .map(([key, t], idx) => {
           const title = deriveTitle(whatYouGet[idx] || '', `Section ${idx + 1}`)
           const clean = (t as string)
+            .replace(/\[TITLE_HIGHLIGHT\][\s\S]*?\[\/TITLE_HIGHLIGHT\]\s*/gi, '')
             .replace(/\[QUOTE\]([\s\S]*?)\[\/QUOTE\]/gi, '\n\n"$1"\n\n')
             .replace(/\[CAPS\]([\s\S]*?)\[\/CAPS\]/gi, '\n\n$1\n\n')
             .replace(/\[VS_LEFT\]([\s\S]*?)\[\/VS_LEFT\]\s*\[VS_RIGHT\]([\s\S]*?)\[\/VS_RIGHT\]/gi,
@@ -392,14 +393,14 @@ export default function ReportPage() {
   // domainConfigs above, used for the real, actual [HOOK] opening
   // block, so it uses the tool's own, genuine domain identity
   // instead of one, fixed color regardless of subject.
-  const domainGradientHex: Record<string, [string, string]> = {
-    'omni-seer':             ['#4f46e5', '#9333ea'],
-    'love-relationships':    ['#dc2626', '#db2777'],
-    'wealth-career':         ['#059669', '#0d9488'],
-    'wellness-spirituality': ['#9333ea', '#4f46e5'],
-    'life-path-destiny':     ['#d97706', '#ea580c'],
+  const domainHookColors: Record<string, { bg: string; accent: string }> = {
+    'omni-seer':             { bg: '#f3f0fd', accent: '#4f46e5' },
+    'love-relationships':    { bg: '#fdf1f3', accent: '#dc2626' },
+    'wealth-career':         { bg: '#eefdf6', accent: '#059669' },
+    'wellness-spirituality': { bg: '#f6f0fe', accent: '#7c3aed' },
+    'life-path-destiny':     { bg: '#fff6ec', accent: '#d97706' },
   }
-  const [hookFrom, hookTo] = domainGradientHex[domain] || domainGradientHex['omni-seer']
+  const hookColors = domainHookColors[domain] || domainHookColors['omni-seer']
 
   const renderSectionMarkup = (text: string, keyPrefix: string) => {
     if (!text) return null
@@ -426,7 +427,8 @@ export default function ReportPage() {
       if (hookMatch) {
         return (
           <div key={`${keyPrefix}-${i}`} className="kayal-hook"
-               style={{ background: `linear-gradient(135deg, ${hookFrom}, ${hookTo})` }}>
+               style={{ background: hookColors.bg, borderColor: hookColors.accent }}>
+            <div className="kayal-hook-label" style={{ color: hookColors.accent }}>What This Reading Is About</div>
             <p>{hookMatch[1].trim()}</p>
           </div>
         )
@@ -565,10 +567,12 @@ export default function ReportPage() {
         .kayal-chapter-label { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1px; color: var(--k-gold); display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
         .kayal-chapter-label::before, .kayal-chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--k-border); max-width: 60px; }
         .kayal-chapter-title { font-family: 'Cormorant Garamond'; font-weight: 700; font-size: clamp(22px, 6vw, 28px); color: var(--k-text); margin: 0 0 18px; line-height: 1.25; text-align: center; }
+        .kayal-title-highlight { color: var(--k-gold); font-style: italic; }
         .kayal-body { font-size: 15.5px; line-height: 1.8; margin: 0 0 22px; text-align: justify; color: var(--k-text-p); }
         .kayal-insight { border-left: 3px solid var(--k-gold); background: var(--k-insight-bg); padding: 14px 16px; margin: 22px 0; }
-        .kayal-hook { padding: 22px 24px; margin: 4px 0 26px; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
-        .kayal-hook p { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 600; font-size: 19px; color: #fdfbf5; margin: 0; line-height: 1.6; text-align: left; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+        .kayal-hook { padding: 20px 24px; margin: 4px 0 26px; border-radius: 4px; border-left: 4px solid; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .kayal-hook-label { font-family: 'Inter'; font-weight: 600; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+        .kayal-hook p { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 600; font-size: 19px; color: var(--k-text); margin: 0; line-height: 1.6; text-align: left; }
         .kayal-insight p { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 16px; color: var(--k-insight-txt); margin: 0; line-height: 1.7; text-align: justify; }
         .kayal-caps { background: #f7ecd1; padding: 8px 14px; font-weight: 700; font-size: 10.5px; letter-spacing: 1px; color: var(--k-text); margin: 24px 0 12px; }
         .kayal-box { border: 1px solid var(--k-border); background: #fff; padding: 14px 16px; margin: 22px 0; }
@@ -703,14 +707,31 @@ export default function ReportPage() {
                 genuinely don't have this real, structured data yet. */}
             {hasRealSections && (
               <div className="mb-10">
-                {Object.entries(sectionTexts).map(([key, text], idx) => {
-                  if (!text || typeof text !== 'string' || !text.trim()) return null
+                {Object.entries(sectionTexts).map(([key, rawText], idx) => {
+                  if (!rawText || typeof rawText !== 'string' || !rawText.trim()) return null
                   const promise = whatYouGet[idx] || ''
                   const title = deriveTitle(promise, `Section ${idx + 1}`)
+                  // Real, extracts the model's own, actual choice of
+                  // which word or phrase in this title deserves the
+                  // gold highlight, confirmed missing entirely before,
+                  // matching the reference's own, real, consistent
+                  // pattern across every chapter title.
+                  const hookRe = /^\s*\[TITLE_HIGHLIGHT\]([\s\S]*?)\[\/TITLE_HIGHLIGHT\]\s*/i
+                  const hlMatch = rawText.match(hookRe)
+                  const highlightWord = hlMatch ? hlMatch[1].trim() : ''
+                  const text = hlMatch ? rawText.slice(hlMatch[0].length) : rawText
+                  const titleIdx = highlightWord ? title.indexOf(highlightWord) : -1
+                  const titleNode = titleIdx >= 0 ? (
+                    <>
+                      {title.slice(0, titleIdx)}
+                      <span className="kayal-title-highlight">{highlightWord}</span>
+                      {title.slice(titleIdx + highlightWord.length)}
+                    </>
+                  ) : title
                   return (
                     <div key={key} className="mb-10">
                       <div className="kayal-chapter-label">{String(idx + 1).padStart(2, '0')}</div>
-                      <h2 className="kayal-chapter-title">{title}</h2>
+                      <h2 className="kayal-chapter-title">{titleNode}</h2>
                       {renderSectionMarkup(text, key)}
                     </div>
                   )

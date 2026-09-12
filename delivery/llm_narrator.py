@@ -499,6 +499,15 @@ def _build_item_section_prompt(
         f"name or a restatement of the promise itself. Be concrete and specific to "
         f"what the signals actually show, not generic. End with what this means "
         f"for {name} going forward, not a summary.\n\n"
+        f"TITLE HIGHLIGHT, this is the very first thing in your entire response, "
+        f"before anything else. This section's title is exactly this text: "
+        f"\"{item_text}\". Choose the single, real word or short phrase within "
+        f"that exact title that carries the most weight, the one word or phrase a "
+        f"reader's eye should land on first. Output it, copied exactly, character "
+        f"for character, as it appears in the title above, wrapped in "
+        f"[TITLE_HIGHLIGHT] and [/TITLE_HIGHLIGHT], before writing anything else. "
+        f"This must be a genuine, exact substring of the title itself, never a "
+        f"word that does not actually appear there.\n\n"
         f"FORMATTING, use these real, exact markers where they genuinely fit. "
         f"[QUOTE] IS REQUIRED, not optional, every section must include at least "
         f"one, real, genuinely powerful sentence set apart this way, and that "
@@ -565,6 +574,7 @@ def _narrate_tool_section(
             logger.warning(f"Section retry failed [item {item_index}]: {e}")
 
     text = _clean_tool_section_text(text)
+    text = _enforce_paragraph_breaks(text)
     return text, tokens, retried
 
 async def _narrate_tool_section_async(
@@ -636,6 +646,7 @@ async def _narrate_tool_section_async(
             logger.warning(f"Async section retry failed [item {item_index}]: {e}")
 
     text = _clean_tool_section_text(text)
+    text = _enforce_paragraph_breaks(text)
     return text, tokens, retried
 
 def _build_shared_context(payload: Dict) -> str:
@@ -1474,6 +1485,62 @@ def _strip_methodology_labels(text: str) -> str:
     text = text.replace("–", ", ")
 
     return text.strip()
+
+def _enforce_paragraph_breaks(text: str, target_words: int = 130) -> str:
+    """Real, deterministic safety net, confirmed directly necessary
+    against genuine, live output, the model reliably follows explicit,
+    tag-based formatting, QUOTE, VS_LEFT, and so on, but does not
+    reliably follow a purely textual instruction to insert real, blank
+    lines between ordinary paragraphs, even when that instruction
+    includes a real, concrete example. Rather than trust a longer,
+    more repeated prompt instruction to eventually work, this
+    guarantees the real, actual structure directly, in code, splitting
+    any, real, untouched wall of prose into genuine paragraphs of
+    roughly target_words each, at real sentence boundaries, without
+    ever touching the content inside any, real, bracketed tag block,
+    confirmed directly by testing tagged content survives intact."""
+    tag_pattern = re.compile(
+        r"\[QUOTE\].*?\[/QUOTE\]|\[CAPS\].*?\[/CAPS\]|\[PROOF\].*?\[/PROOF\]"
+        r"|\[WARNING\].*?\[/WARNING\]|\[REMEDY\].*?\[/REMEDY\]|\[OPPORTUNITY\].*?\[/OPPORTUNITY\]"
+        r"|\[TIME\].*?\[/TIME\]|\[VS_LEFT\].*?\[/VS_RIGHT\]|\[HOOK\].*?\[/HOOK\]"
+        r"|\[FINAL_TABLE\].*?\[/FINAL_TABLE\]|\[TIMELINE_ITEM\].*?\[/TIMELINE_ITEM\]"
+        r"|\[NUMBERED_ITEM\].*?\[/NUMBERED_ITEM\]|\[CALENDAR_YEAR\].*?\[/KEY_MONTHS\]"
+        r"|\[TITLE_HIGHLIGHT\].*?\[/TITLE_HIGHLIGHT\]",
+        re.DOTALL,
+    )
+
+    def _break_prose(segment: str) -> str:
+        segment = segment.strip()
+        if not segment:
+            return segment
+        # Real, if genuine, actual paragraph breaks already exist,
+        # honor them as-is, never override real, existing structure
+        # the model already got right on its own.
+        if "\n\n" in segment:
+            return segment
+        sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', segment)
+        paragraphs: List[str] = []
+        current: List[str] = []
+        current_words = 0
+        for sentence in sentences:
+            current.append(sentence)
+            current_words += len(sentence.split())
+            if current_words >= target_words:
+                paragraphs.append(" ".join(current))
+                current = []
+                current_words = 0
+        if current:
+            paragraphs.append(" ".join(current))
+        return "\n\n".join(paragraphs)
+
+    result: List[str] = []
+    pos = 0
+    for m in tag_pattern.finditer(text):
+        result.append(_break_prose(text[pos:m.start()]))
+        result.append(m.group(0))
+        pos = m.end()
+    result.append(_break_prose(text[pos:]))
+    return "\n\n".join(p for p in result if p.strip())
 
 def _clean_tool_section_text(text: str) -> str:
     """Real, actual, honest cleanup for the tool-aware narration path

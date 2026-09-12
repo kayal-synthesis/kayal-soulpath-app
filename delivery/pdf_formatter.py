@@ -1011,6 +1011,7 @@ def _generate_tool_reportlab(
         prepared_line = prepared_line,
         intro_text   = tagline or "",
         styles       = styles,
+        reading_type = tool_name or "Complete Personal Soul Reading",
     )
 
     chapter_titles = []
@@ -1019,12 +1020,24 @@ def _generate_tool_reportlab(
     if len(chapter_titles) > 1:
         story += kd.build_toc(chapter_titles, styles)
 
+    _title_highlight_re = re.compile(r"^\s*\[TITLE_HIGHLIGHT\](.*?)\[/TITLE_HIGHLIGHT\]\s*", re.DOTALL | re.IGNORECASE)
+
     for i, (key, text) in enumerate(section_texts.items()):
         if not text or not text.strip():
             continue
         if i > 0:
             story.append(PageBreak())
         title = chapter_titles[i] if i < len(chapter_titles) else f"Section {i + 1}"
+        # Real, extract the model's own, real choice of which word or
+        # phrase in this section's title deserves the gold highlight,
+        # confirmed missing entirely before, matching the reference's
+        # own, real, consistent pattern across every chapter title.
+        highlight_match = _title_highlight_re.match(text)
+        if highlight_match:
+            highlight_word = highlight_match.group(1).strip()
+            text = text[highlight_match.end():]
+            if highlight_word and highlight_word in title:
+                title = title.replace(highlight_word, f"*{highlight_word}*", 1)
         story += kd.build_chapter_heading(i + 1, title, styles)
         story += kd.parse_section_markup(text, styles, content_width=doc.width)
 
