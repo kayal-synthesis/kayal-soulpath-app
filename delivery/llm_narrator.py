@@ -196,11 +196,9 @@ def _detect_comparison_fit(item_text: str, shared_context: str = "") -> bool:
     if re.search(r"Tension:\s*\S", shared_context):
         return True
     triggers = [
-        "tension between", "conflict", "clash", "at odds", "versus",
-        "pulls against", "pulling in different directions", "contradicts",
-        "where they conflict", "gift and.*challenge", "opposing",
-        "they disagree", "systems disagree", "where.*disagree",
-        "what.*tension", "that tension",
+        "tension between", "pulls against", "pulling in different directions",
+        "gift and.*challenge", "they disagree", "systems disagree",
+        "where.*disagree", "what.*tension", "that tension",
     ]
     lowered = item_text.lower()
     return any(re.search(t, lowered) for t in triggers)
@@ -327,13 +325,21 @@ def _build_item_section_prompt(
     special_instructions = []
     if _detect_comparison_fit(item_text, shared_context):
         special_instructions.append(
-            "This section genuinely describes a real tension between two things. "
-            "Present that tension as two, real, opposing positions, using this exact "
-            "format: [VS_LEFT]SHORT LABEL IN CAPS\\nOne to two sentences stating that "
-            "position.[/VS_LEFT] immediately followed by [VS_RIGHT]SHORT LABEL IN "
-            "CAPS\\nOne to two sentences stating the opposing position.[/VS_RIGHT]. "
-            "You may include two or three of these real, paired blocks if the "
-            "section genuinely contains that many distinct tensions."
+            "This section genuinely describes a real tension between two things, and "
+            "only include this if the tension is genuinely central to this section's "
+            "own job, not a minor, passing point. Present it as two, real, opposing "
+            "positions, using this exact format, with no text of any kind between "
+            "the closing [/VS_LEFT] and the opening [VS_RIGHT]: "
+            "[VS_LEFT]SHORT LABEL IN CAPS\\nOne to two real, complete sentences "
+            "stating that position, all of it inside this same tag.[/VS_LEFT]"
+            "[VS_RIGHT]SHORT LABEL IN CAPS\\nOne to two real, complete sentences "
+            "stating the opposing position, all of it inside this same tag."
+            "[/VS_RIGHT]. Never close [/VS_LEFT] right after the label alone, the "
+            "real, actual sentences describing that position belong inside the tag, "
+            "before the closing bracket, not written afterward as separate, "
+            "ordinary prose. Use at most two of these real, paired blocks in the "
+            "whole section, and only the second if the section genuinely contains a "
+            "second, distinct tension, never as decoration."
         )
     if _detect_calendar_fit(item_text, shared_context):
         special_instructions.append(

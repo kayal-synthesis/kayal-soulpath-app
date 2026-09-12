@@ -525,7 +525,12 @@ export default function ReportPage() {
           </div>
         )
       }
-      const trimmed = part.trim()
+      // Real, final, defensive safety net, confirmed necessary
+      // directly against a genuine, live case where the model closed
+      // a tag prematurely and the real content leaked out as plain
+      // prose alongside a stray, unmatched bracket. Strips any
+      // leftover, literal tag brackets rather than showing them.
+      const trimmed = part.trim().replace(/\[\/?[A-Z_]+\]/g, '').replace(/[ \t]{2,}/g, ' ').trim()
       if (!trimmed) return null
       return trimmed.split(/\n\n+/).map((para, j) => (
         <p key={`${keyPrefix}-${i}-${j}`} className="kayal-body">{para.trim()}</p>

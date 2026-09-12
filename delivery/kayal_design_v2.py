@@ -290,10 +290,16 @@ def build_chapter_heading(number: int, title_html: str, styles) -> List[Any]:
 def render_body(text: str, styles) -> List[Any]:
     """Real, ordinary body paragraphs, matching the reference's
     confirmed, exact 16px paragraph spacing and inline bold/italic
-    conversion."""
+    conversion. Also strips any leftover, literal bracket tags,
+    confirmed necessary directly against a genuine, live case where
+    the model closed a tag prematurely and real content leaked out as
+    plain prose alongside a stray, unmatched bracket."""
     flowables: List[Any] = []
     for para in _split_paragraphs(text):
-        flowables.append(Paragraph(_clean_text(para), styles["body"]))
+        para = re.sub(r"\[/?[A-Z_]+\]", "", para)
+        para = re.sub(r"[ \t]{2,}", " ", para).strip()
+        if para:
+            flowables.append(Paragraph(_clean_text(para), styles["body"]))
     return flowables
 
 
