@@ -103,6 +103,8 @@ def build_styles():
                                       textColor=_TEXT, alignment=TA_CENTER, leading=rem(2.8) * 1.1),
         "cover_sub": ParagraphStyle("CoverSub", fontName="Inter", fontSize=rem(0.82),
                                      textColor=_MUTED, alignment=TA_CENTER, leading=rem(0.82) * 1.4),
+        "cover_subtitle": ParagraphStyle("CoverSubtitle", fontName="Inter", fontSize=rem(0.95),
+                                          textColor=_MUTED, alignment=TA_CENTER, leading=rem(0.95) * 1.4),
         "cover_sub_light": ParagraphStyle("CoverSubLight", fontName="Inter", fontSize=rem(0.75),
                                            textColor=_MUTED_LIGHT, alignment=TA_CENTER, leading=rem(0.75) * 1.4),
         "cover_intro": ParagraphStyle("CoverIntro", fontName="CormorantGaramond-Italic", fontSize=rem(1.15),
@@ -187,11 +189,15 @@ def _split_paragraphs(text: str) -> List[str]:
     return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
 
 
-def build_cover(person_name: str, birth_line: str, prepared_line: str, intro_text: str, styles) -> List[Any]:
+def build_cover(person_name: str, birth_line: str, prepared_line: str, intro_text: str, styles,
+                 reading_type: str = "Complete Personal Soul Reading") -> List[Any]:
     """Real, actual cover page, matching the reference exactly, the
     moon/star seal, the KAYAL eyebrow line, the large, real serif
-    name, birth and prepared lines, a gold divider, then the real,
-    italic intro paragraph."""
+    name, a real subtitle line naming the reading type, birth and
+    prepared lines, a gold divider, then the real, italic intro
+    paragraph. The subtitle line was confirmed missing directly
+    against a real, actual sample image, added here, everything else
+    kept exactly as it already existed."""
     story: List[Any] = []
     story.append(Spacer(1, 40))
     story.append(Paragraph("\u263d \u2726 \u263e", ParagraphStyle(
@@ -200,7 +206,9 @@ def build_cover(person_name: str, birth_line: str, prepared_line: str, intro_tex
     story.append(Paragraph("KAYAL SOULPATH &nbsp;\u00b7&nbsp; COMPLETE PERSONAL READING", styles["cover_eyebrow"]))
     story.append(Spacer(1, 14))
     story.append(Paragraph(_clean_text(person_name).upper(), styles["cover_name"]))
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(_clean_text(reading_type), styles["cover_subtitle"]))
+    story.append(Spacer(1, 6))
     story.append(Paragraph(_clean_text(birth_line), styles["cover_sub"]))
     story.append(Paragraph(_clean_text(prepared_line), styles["cover_sub_light"]))
     story.append(Spacer(1, 16))
@@ -212,27 +220,38 @@ def build_cover(person_name: str, birth_line: str, prepared_line: str, intro_tex
 
 
 def build_toc(chapters: List[str], styles) -> List[Any]:
-    """Real, new, the table of contents page, not present in the
-    actual reference file, built fresh in the same, real, confirmed
-    visual language, since this piece was agreed separately, earlier,
-    and genuinely needs to exist for the reader to navigate a long,
-    real, multi-chapter document."""
+    """Real, the table of contents page, kept in its own, existing
+    visual language, "What This Reading Covers" title, gold hairline,
+    small gold numerals, now wrapped in one, real, solid, tinted
+    amber box around the complete list, confirmed directly against
+    the actual, real sample image, everything else about the entries
+    themselves kept exactly as they already existed."""
     story: List[Any] = []
     story.append(Paragraph("What This Reading Covers", styles["toc_title"]))
     story.append(Spacer(1, 4))
     story.append(HRFlowable(width=45, thickness=1.5, color=_GOLD, hAlign="CENTER", spaceAfter=22))
+
+    row_data = []
     for i, title in enumerate(chapters, start=1):
-        row = Table([[
+        row_data.append([
             Paragraph(f"{i:02d}", ParagraphStyle("TocNum", fontName="CormorantGaramond-Bold",
                                                     fontSize=13, textColor=_GOLD, alignment=TA_LEFT)),
             Paragraph(_clean_text(title), styles["toc_item"]),
-        ]], colWidths=[28, 460])
-        row.setStyle(TableStyle([
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 0),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-        ]))
-        story.append(row)
+        ])
+    box = Table(row_data, colWidths=[36, 416])
+    box_style = [
+        ("BACKGROUND", (0, 0), (-1, -1), _INSIGHT_BG),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (0, -1), 16),
+        ("RIGHTPADDING", (0, 0), (0, -1), 4),
+        ("LEFTPADDING", (1, 0), (1, -1), 4),
+        ("RIGHTPADDING", (1, 0), (1, -1), 16),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("BOX", (0, 0), (-1, -1), 0.75, _BORDER),
+    ]
+    box.setStyle(TableStyle(box_style))
+    story.append(box)
     story.append(Spacer(1, 20))
     story.append(HRFlowable(width="100%", thickness=0.75, color=_BORDER, spaceAfter=10))
     story.append(PageBreak())

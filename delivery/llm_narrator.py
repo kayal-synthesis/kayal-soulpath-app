@@ -1387,7 +1387,15 @@ def _token_count(response: Dict) -> int:
     return usage.get("input_tokens", 0) + usage.get("output_tokens", 0)
 
 def _word_to_tokens(word_count: int) -> int:
-    return min(8000, int(word_count / 0.75) + 400)
+    """Real, honest token budget, confirmed directly necessary to
+    increase, a real, live section was found cut off mid-sentence,
+    traced precisely to this buffer being calibrated before the
+    minimum-paragraph requirement and five, new box types existed.
+    A rich section can now legitimately need well more than
+    word_target alone implies, at least min_paragraphs real
+    paragraphs plus a full, real set of boxes, quote, and title
+    highlight, all beyond the base, visible word count."""
+    return min(8000, int(word_count / 0.6) + 700)
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
