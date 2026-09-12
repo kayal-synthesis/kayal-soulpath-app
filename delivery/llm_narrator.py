@@ -384,13 +384,24 @@ def _build_item_section_prompt(
             "sentences naming the real, specific pattern and where it tends to "
             "show up.[/WARNING]"
         )
-    if _detect_remedy_fit(item_text, shared_context):
+    is_last_section = (item_index == item_total)
+    if _detect_remedy_fit(item_text, shared_context) and is_last_section:
         special_instructions.append(
-            "A real, already-selected remedy exists for this section, in the "
-            "\"Remedy:\" line above. Present it, once, using this exact format: "
-            "[REMEDY]A short, real title for this practice|The real, actual remedy "
-            "content from the \"Remedy:\" line, in full, not shortened or "
-            "genericized.[/REMEDY]"
+            "A real, already-selected remedy exists for this reading, in the "
+            "\"Remedy:\" line above. This reading gives only one, real remedy in "
+            "total, and it belongs here, at the close, as a genuine, final "
+            "practice, not folded into the middle of a specific finding. "
+            "Present it, once, near the end of this section, using this exact "
+            "format: [REMEDY]A short, real title for this practice|The real, "
+            "actual remedy content from the \"Remedy:\" line, in full, not "
+            "shortened or genericized.[/REMEDY]"
+        )
+    elif _detect_remedy_fit(item_text, shared_context) and not is_last_section:
+        special_instructions.append(
+            "Real remedy content is available above, but this reading's one, "
+            "real remedy always belongs in the final section, as a closing "
+            "practice, never here. Do not include a [REMEDY] block in this "
+            "section."
         )
     if _detect_opportunity_fit(item_text, shared_context):
         special_instructions.append(
