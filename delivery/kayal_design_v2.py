@@ -562,8 +562,15 @@ def parse_section_markup(text: str, styles, content_width: float = 452) -> List[
         all-caps label ends and real, normal-case prose begins,
         confirmed directly necessary since the model doesn't reliably
         separate them with a real, actual newline, the same, exact
-        fix already proven correct in the frontend parser."""
+        fix already proven correct in the frontend parser. Now also
+        checks for a real, actual pipe separator first, confirmed
+        directly necessary against a genuine, live reading where the
+        model used the same "Title|Body" convention here too, which
+        the original, whitespace-only detection could not handle."""
         trimmed = raw.strip()
+        if "|" in trimmed:
+            label, body = trimmed.split("|", 1)
+            return label.strip(), body.strip()
         m = re.match(r"^([A-Z0-9][A-Z0-9\s,()'/-]*?)\s+(?=[A-Z][a-z])", trimmed)
         if m:
             return m.group(1).strip(), trimmed[m.end():].strip()

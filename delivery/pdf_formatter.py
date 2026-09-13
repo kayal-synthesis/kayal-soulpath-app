@@ -812,6 +812,7 @@ async def generate_pdf(
     life_path: Optional[int]            = None,
     sun_sign:  Optional[str]            = None,
     generated: Optional[str]            = None,
+    user_name: Optional[str]            = None,
 ) -> bytes:
     """
     Plain PDF generator, restored, for readings that fell back to the
@@ -824,9 +825,6 @@ async def generate_pdf(
     instead. This is the same real, deployed situation, not a
     hypothetical edge case.
 
-    Matches main.py's actual, existing call signature exactly, no
-    change needed on that side beyond fixing the import itself.
-
     Args:
         job_id:    Reading job ID (used in footer)
         tool_name: The tool's display name
@@ -838,6 +836,10 @@ async def generate_pdf(
         life_path: Optional, shown as a small signature line if present
         sun_sign:  Optional, shown alongside life_path if present
         generated: ISO timestamp
+        user_name: Real, actual customer name, confirmed missing
+                   entirely before, this path had no way at all to
+                   show who the reading was actually for, only the
+                   tool's own name, an honest gap now closed.
 
     Returns:
         PDF as bytes
@@ -847,7 +849,7 @@ async def generate_pdf(
             job_id=job_id, tool_name=_clean_text(tool_name), reading=_clean_text(reading),
             sections={k: _clean_text(v) for k, v in (sections or {}).items()},
             life_path=life_path, sun_sign=_clean_text(sun_sign) if sun_sign else None,
-            generated=generated,
+            generated=generated, user_name=_clean_text(user_name) if user_name else None,
         )
     except ImportError:
         logger.warning("reportlab not installed, generating plain text PDF fallback")
@@ -864,6 +866,7 @@ def _generate_plain_reportlab(
     life_path: Optional[int],
     sun_sign:  Optional[str],
     generated: Optional[str],
+    user_name: Optional[str] = None,
 ) -> bytes:
     """Real reportlab renderer for the plain, non-tool-aware case: cover, reading text, optional labeled sections, closing."""
     from reportlab.lib.pagesizes import A4
@@ -891,7 +894,10 @@ def _generate_plain_reportlab(
     story.append(Spacer(1, 40))
     story.append(Paragraph("KAYAL SOULPATH", styles["meta"]))
     story.append(Spacer(1, 30))
-    story.append(Paragraph(tool_name or "Your Reading", styles["title"]))
+    story.append(Paragraph(_clean_text(user_name).upper() if user_name else (tool_name or "Your Reading"), styles["title"]))
+    if user_name and tool_name:
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(_clean_text(tool_name), styles["meta"]))
     story.append(Spacer(1, 4))
     story.append(HRFlowable(width="60%", thickness=1.5, color=gold, hAlign="CENTER", spaceAfter=12))
 

@@ -443,9 +443,16 @@ export default function ReportPage() {
         // all-caps label ends and real, normal-case prose begins,
         // confirmed directly necessary since the model doesn't
         // reliably separate them with an actual newline, which the
-        // previous version assumed and silently failed on.
+        // previous version assumed and silently failed on. Now also
+        // checks for a real, actual pipe separator first, confirmed
+        // necessary against a genuine, live reading using the same
+        // "Title|Body" convention here too.
         const splitLabelBody = (raw: string): [string, string] => {
           const trimmed = raw.trim()
+          if (trimmed.includes('|')) {
+            const idx = trimmed.indexOf('|')
+            return [trimmed.slice(0, idx).trim(), trimmed.slice(idx + 1).trim()]
+          }
           const m = trimmed.match(/^([A-Z0-9][A-Z0-9\s,()'/-]*?)\s+(?=[A-Z][a-z])/)
           return m ? [m[1].trim(), trimmed.slice(m[0].length).trim()] : [trimmed, '']
         }

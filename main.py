@@ -2999,6 +2999,7 @@ async def reading_pdf(job_id: str):
                 life_path = result.get("life_path"),
                 sun_sign  = result.get("sun_sign"),
                 generated = result.get("generated_at", ""),
+                user_name = result.get("user_name"),
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
