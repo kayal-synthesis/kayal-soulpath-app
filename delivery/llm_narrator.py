@@ -301,6 +301,32 @@ def _detect_time_fit(item_text: str, shared_context: str) -> bool:
     produces for computed timing data."""
     return bool(re.search(r"Past:\s*\S", shared_context))
 
+_OPENING_APPROACHES = [
+    "Open by naming the real, specific finding directly, in the first sentence, "
+    "no windup, no framing device, just the actual thing the signals show.",
+    "Open with why this specific question matters to the person, the real, "
+    "honest stakes of getting it wrong, before naming what the signals show.",
+    "Open with a direct, second-person question that the rest of the section "
+    "then genuinely answers, not a rhetorical one.",
+    "Open by naming a real, common, wrong assumption people make about this "
+    "exact topic, then correct it, varying your own, actual wording each "
+    "time rather than reaching for the same, memorized opening phrase.",
+    "Open with a real, specific, concrete moment or scenario the person would "
+    "recognize from their own life, then connect it directly to the finding.",
+    "Open by stating plainly what this section is NOT about, a real, honest "
+    "contrast, before naming what it actually is about.",
+]
+
+def _opening_instruction_for(item_index: int) -> str:
+    """Real, deterministic rotation through genuinely distinct opening
+    approaches, confirmed directly necessary, the model was defaulting
+    to the exact same "most people assume X" structure in nearly every
+    section, across nearly every reading, and that repetition is what
+    makes the writing feel machine-made once several sections are read
+    together, even though any single section reads well in isolation."""
+    approach = _OPENING_APPROACHES[(item_index - 1) % len(_OPENING_APPROACHES)]
+    return f"{approach} Do not restate the promise itself as the opening line."
+
 def _build_item_section_prompt(
     item_text:      str,
     item_index:     int,
@@ -472,6 +498,34 @@ def _build_item_section_prompt(
         f"numerology, astrology, Life Path, Soul Urge, Personal Year, specific "
         f"planets and signs, whatever the actual signal data above genuinely "
         f"supports. Do not hide or avoid naming these.\n\n"
+        f"PHRASING VARIETY, this is a real, direct requirement, not a stylistic "
+        f"nicety. The same, real placement or number will come up across many "
+        f"different tools for the same person over time, and reusing the exact "
+        f"same, memorized description every time is a genuine, real risk, someone "
+        f"who buys more than one reading will notice identical sentences. Never "
+        f"reach for a single, fixed epithet as the default description of a "
+        f"placement, Sun in Sagittarius does not have to be \"the Explorer\" every "
+        f"time you write it, and a Life Path 5 does not have to be introduced the "
+        f"same, exact way every time either. Find your own, direct, real words for "
+        f"what this specific placement means in this specific context, the "
+        f"underlying astrological or numerological fact stays fixed, real, and "
+        f"accurate, but the actual, real sentence describing it should not read "
+        f"like a memorized line recited the same way every time.\n\n"
+        f"HIDDEN SYSTEMS, some of the real, actual computation behind this "
+        f"reading comes from systems that are never named to the reader, ever, "
+        f"regardless of their background, the same, honest way a kitchen's "
+        f"ingredients matter without the customer needing the supplier's name. "
+        f"The I Ching specifically, and any of its own, real terminology, "
+        f"hexagram, cauldron, trigram, or any other named image or concept from "
+        f"it, must never appear in the text, for any reader, of any background. "
+        f"If a real, genuine timing or transformation insight in the signal data "
+        f"above traces back to this system, translate it fully into plain, "
+        f"universal language describing what it means for {name} directly, the "
+        f"same, honest way this reading already translates Kabbalistic concepts "
+        f"into plain insight without ever naming Sephiroth or Hermetic "
+        f"principles. Name astrology, numerology, and their placements directly, "
+        f"as instructed above, that instruction does not extend to this system.\n\n"
+        f"memorized line recited the same way every time.\n\n"
         f"ACCESSIBILITY, this matters as much as naming things directly, and it is "
         f"NOT the same as teaching astrology or numerology as a subject. This "
         f"reading is a synthesis across several systems, not a lesson in any one "
@@ -511,9 +565,8 @@ def _build_item_section_prompt(
         f"requirement above, no matter how long or how well-covered the content is. "
         f"Every, single one of the {min_paragraphs}+ required paragraphs must be "
         f"visibly, actually separated this way.\n\n"
-        f"Write approximately {word_target} words in total for this section. Open "
-        f"with why this specific question matters to {name}, not with a system "
-        f"name or a restatement of the promise itself. Be concrete and specific to "
+        f"Write approximately {word_target} words in total for this section. "
+        f"{_opening_instruction_for(item_index)} Be concrete and specific to "
         f"what the signals actually show, not generic. End with what this means "
         f"for {name} going forward, not a summary.\n\n"
         f"TITLE HIGHLIGHT, this is the very first thing in your entire response, "
