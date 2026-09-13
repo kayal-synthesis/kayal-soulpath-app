@@ -116,6 +116,7 @@ export default function ReportPage() {
   const [error,         setError]         = useState<string | null>(null)
   const [content,       setContent]       = useState<any>(null)
   const [tool,          setTool]          = useState<any>(null)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [domain,        setDomain]        = useState('omni-seer')
   const [isSaved,       setIsSaved]       = useState(false)
   const [copied,        setCopied]        = useState(false)
@@ -319,44 +320,36 @@ export default function ReportPage() {
     setShowShareMenu(false)
   }
 
-  const handleDownload = () => {
-    // Real, when section_texts exists, build a genuine, real, clean
-    // document from it directly, stripping the [QUOTE]/[CAPS] markup
-    // rather than leaving the literal tags visible in the downloaded
-    // file. Falls back to the raw reading text for older readings
-    // that don't have this real, structured data yet.
-    let text = ''
-    if (hasRealSections) {
-      text = Object.entries(sectionTexts)
-        .filter(([, t]) => typeof t === 'string' && (t as string).trim())
-        .map(([key, t], idx) => {
-          const title = deriveTitle(whatYouGet[idx] || '', `Section ${idx + 1}`)
-          const clean = (t as string)
-            .replace(/\[TITLE_HIGHLIGHT\][\s\S]*?\[\/TITLE_HIGHLIGHT\]\s*/gi, '')
-            .replace(/\[QUOTE\]([\s\S]*?)\[\/QUOTE\]/gi, '\n\n"$1"\n\n')
-            .replace(/\[CAPS\]([\s\S]*?)\[\/CAPS\]/gi, '\n\n$1\n\n')
-            .replace(/\[VS_LEFT\]([\s\S]*?)\[\/VS_LEFT\]\s*\[VS_RIGHT\]([\s\S]*?)\[\/VS_RIGHT\]/gi,
-              (_m, left, right) => `\n\n${left.trim()}\n\nversus\n\n${right.trim()}\n\n`)
-            .replace(/\[FINAL_TABLE\]([\s\S]*?)\[\/FINAL_TABLE\]/gi, (_m, inner) => {
-              const rows = [...(inner as string).matchAll(/\[FT_ROW\]([\s\S]*?)\[\/FT_ROW\]/gi)]
-                .map(rm => rm[1].split('|').map(s => s.trim()).join(' — '))
-              return '\n\n' + rows.join('\n') + '\n\n'
-            })
-          return `${title.toUpperCase()}\n\n${clean.trim()}`
-        })
-        .join('\n\n\n')
-    } else {
-      text = content?.reading || (typeof content === 'string' ? content : JSON.stringify(content, null, 2))
+  const handleDownload = async () => {
+    if (!jobId) {
+      alert('No reading ID found, cannot download the PDF.')
+      return
     }
-    const blob = new Blob([text], { type: 'text/plain' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = tool.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_reading.txt'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    setDownloadingPdf(true)
+    try {
+      // Real, actual PDF fetch, matching the same, established,
+      // relative API-route pattern this file already uses for job
+      // status, this proxies to the real, backend /reading/pdf/{id}
+      // endpoint that renders the complete, actual Kayal design.
+      const res = await fetch(`/api/reading/pdf/${jobId}`)
+      if (!res.ok) {
+        throw new Error(`Real, actual server error, status ${res.status}`)
+      }
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = tool.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_reading.pdf'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Real, actual PDF download failed:', err)
+      alert('Something went wrong generating your PDF. Please try again in a moment.')
+    } finally {
+      setDownloadingPdf(false)
+    }
   }
 
   const handlePrint = () => window.print()
@@ -661,8 +654,11 @@ export default function ReportPage() {
             <button onClick={handlePrint}    className="p-2 rounded-lg hover:bg-neutral-100">
               <Printer  className="w-5 h-5 text-neutral-500" />
             </button>
-            <button onClick={handleDownload} className="p-2 rounded-lg hover:bg-neutral-100">
-              <Download className="w-5 h-5 text-neutral-500" />
+            <button onClick={handleDownload} disabled={downloadingPdf}
+              className="p-2 rounded-lg hover:bg-neutral-100 disabled:opacity-50">
+              {downloadingPdf
+                ? <Loader2 className="w-5 h-5 text-neutral-500 animate-spin" />
+                : <Download className="w-5 h-5 text-neutral-500" />}
             </button>
             <div className="relative">
               <button onClick={() => setShowShareMenu(!showShareMenu)}
@@ -805,9 +801,11 @@ export default function ReportPage() {
             {/* Download CTA */}
             <div className={`mt-12 p-6 bg-gradient-to-r ${config.lightGradient}
                              rounded-lg text-center`}>
-              <Button onClick={handleDownload}
-                className={`bg-gradient-to-r ${config.gradient} text-white mx-auto`}>
-                <DownloadCloud className="w-4 h-4 mr-2" /> Download Reading
+              <Button onClick={handleDownload} disabled={downloadingPdf}
+                className={`bg-gradient-to-r ${config.gradient} text-white mx-auto disabled:opacity-60`}>
+                {downloadingPdf
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Preparing your PDF...</>
+                  : <><DownloadCloud className="w-4 h-4 mr-2" /> Download Reading</>}
               </Button>
             </div>
 

@@ -624,6 +624,14 @@ def parse_section_markup(text: str, styles, content_width: float = 452) -> List[
                 flowables.append(Spacer(1, 6))
                 flowables.append(build_conflict_row(ll, lb, rl, rb, styles))
                 flowables.append(Spacer(1, 6))
+            else:
+                # Real, honest fallback, confirmed necessary directly,
+                # a genuine, live case had mismatched opening and
+                # closing tags, and the extraction above silently
+                # found nothing, which was dropping real, actual
+                # content entirely rather than showing it plainly.
+                salvaged = re.sub(r"\[/?VS_(LEFT|RIGHT)\]", "", whole)
+                flowables.extend(render_body(salvaged, styles))
         elif whole.startswith("[TIMELINE_ITEM]"):
             parts = m.group(9).strip().split("|")
             if len(parts) >= 4:
