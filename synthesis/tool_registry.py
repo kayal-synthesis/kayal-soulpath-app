@@ -92,7 +92,7 @@ LOVE_TOOLS: list[ToolMeta] = [
         "upsell_id": "complete-love-synthesis",
         "delivery_minutes": 20,
         "emoji": "⚖️",
-        "tagline": "Why you keep hitting the same wall in love, and how to actually break it",
+        "tagline": "The wall you keep hitting in love, and how to actually break it",
         "what_you_get": [
             "The specific pattern you carried into this life, before your own history began shaping it further",
             "The number pattern underneath this debt, and what it has meant for others who carry it",
@@ -643,7 +643,7 @@ WELLNESS_TOOLS: list[ToolMeta] = [
         "upsell_id": "spiritual-scribe",
         "delivery_minutes": 15,
         "emoji": "✨",
-        "tagline": "What you're naturally built to do well, and how to actually use it",
+        "tagline": "What you're built to do well, and how to actually use it",
         "what_you_get": [
             "The specific gift you arrived with, named clearly",
             "Why you have likely underused this gift, and what got in the way",
@@ -664,7 +664,7 @@ WELLNESS_TOOLS: list[ToolMeta] = [
         "upsell_id": "spiritual-scribe",
         "delivery_minutes": 25,
         "emoji": "🕯️",
-        "tagline": "The pattern you arrived already carrying, and how it's shaping your life now",
+        "tagline": "The pattern you arrived carrying, still shaping you now",
         "what_you_get": [
             "The specific pattern you most likely carried into this life",
             "The fear or pull that makes little sense given your actual history",
@@ -705,7 +705,7 @@ WELLNESS_TOOLS: list[ToolMeta] = [
         "upsell_id": "spiritual-scribe",
         "delivery_minutes": 25,
         "emoji": "🌒",
-        "tagline": "A guided reading built for the season that's actually breaking you right now",
+        "tagline": "Built for the season that's actually breaking you right now",
         "what_you_get": [
             "Exactly where you are right now inside this hard season",
             "What is genuinely ending, not just what feels unstable",
@@ -1507,7 +1507,7 @@ VOICE_TOOLS: list[ToolMeta] = [
         "upsell_id": "oracle-deep-dive-session",
         "delivery_minutes": 20,
         "emoji": "🎙️",
-        "tagline": "A live call where you ask anything, and we already know your whole story",
+        "tagline": "A live call, your whole story already on the table",
         "what_you_get": [
             "A live spoken call, not a written reading, with your full pattern already loaded in",
             "Ask anything, in the moment, not from a fixed list of questions",
@@ -1528,7 +1528,7 @@ VOICE_TOOLS: list[ToolMeta] = [
         "upsell_id": "oracle-voice-unlimited",
         "delivery_minutes": 40,
         "emoji": "🌊",
-        "tagline": "An extended call for the questions that need real time, not a quick answer",
+        "tagline": "More time, more depth, for the questions that need it",
         "what_you_get": [
             "A much longer live call, built for questions with real layers to them",
             "Room to circle back and revisit something from earlier in the same call",
@@ -1549,7 +1549,7 @@ VOICE_TOOLS: list[ToolMeta] = [
         "upsell_id": "oracle-voice-unlimited",
         "delivery_minutes": 20,
         "emoji": "💗",
-        "tagline": "A live call about your love life, built around everything we already know about you",
+        "tagline": "A live call about your love life",
         "what_you_get": [
             "A live spoken call focused only on your love life",
             "Your relationship pattern already loaded in before the call starts",
@@ -1570,7 +1570,7 @@ VOICE_TOOLS: list[ToolMeta] = [
         "upsell_id": "oracle-voice-unlimited",
         "delivery_minutes": 20,
         "emoji": "📈",
-        "tagline": "A live call about your money, built around everything we already know about you",
+        "tagline": "A live call about your money",
         "what_you_get": [
             "A live spoken call focused only on money and career questions",
             "Your earning pattern already loaded in before the call starts",
@@ -1591,7 +1591,7 @@ VOICE_TOOLS: list[ToolMeta] = [
         "upsell_id": "oracle-voice-unlimited",
         "delivery_minutes": 20,
         "emoji": "🔥",
-        "tagline": "A live call about purpose and direction, built around everything we already know about you",
+        "tagline": "A live call about purpose and direction",
         "what_you_get": [
             "A live spoken call focused only on purpose and direction",
             "Your full pattern already loaded in before the call starts",
@@ -1633,7 +1633,7 @@ VOICE_TOOLS: list[ToolMeta] = [
         "upsell_id": "oracle-voice-unlimited",
         "delivery_minutes": 20,
         "emoji": "🤝",
-        "tagline": "A live call focused on one, specific relationship in your life",
+        "tagline": "A live call about one relationship, start to finish",
         "what_you_get": [
             "A live spoken call focused on one specific relationship, not relationships in general",
             "The real history of that relationship held in view for the call",
@@ -1654,7 +1654,7 @@ VOICE_TOOLS: list[ToolMeta] = [
         "upsell_id": "oracle-voice-unlimited",
         "delivery_minutes": 20,
         "emoji": "🕊️",
-        "tagline": "A live call for the bigger questions, built around everything we already know about you",
+        "tagline": "A live call for the questions that don't fit anywhere else",
         "what_you_get": [
             "A live spoken call focused only on spiritual questions",
             "Your full spiritual pattern already loaded in before the call starts",
@@ -2113,7 +2113,7 @@ OMNI_SELF_PURPOSE_TOOLS: list[ToolMeta] = [
         "upsell_id": "spiritual-scribe",
         "delivery_minutes": 35,
         "emoji": "⛓️",
-        "tagline": "The specific pattern you keep repeating, named directly, and what actually breaks it",
+        "tagline": "The pattern you keep repeating, named directly, and what breaks it",
         "what_you_get": [
             "The specific pattern you keep living out, named clearly across your life",
             "The unfinished business this pattern represents, not a punishment",
