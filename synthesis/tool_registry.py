@@ -820,13 +820,13 @@ WELLNESS_TOOLS: list[ToolMeta] = [
     },
     {
         "id": "spirit-attachment-reading",
-        "name": "The Energetic Ties You Didn't Choose",
+        "name": "The Ties You Can't Shake",
         "domain": "wellness",
         "price": 34,
         "upsell_id": "spiritual-scribe",
         "delivery_minutes": 20,
         "emoji": "🔗",
-        "tagline": "The energetic connections you're still carrying, and what they're actually here for",
+        "tagline": "The connections you're still carrying, and what they're actually there for",
         "what_you_get": [
             "The specific ties you are still carrying, named clearly",
             "Where each one most likely started, in family, an old event, or something further back",
@@ -840,13 +840,13 @@ WELLNESS_TOOLS: list[ToolMeta] = [
     },
     {
         "id": "unresolved-vow-reading",
-        "name": "The Promise You Made in Another Life",
+        "name": "The Promise You Don't Remember Making",
         "domain": "wellness",
         "price": 34,
         "upsell_id": "spiritual-scribe",
         "delivery_minutes": 20,
         "emoji": "🕊️",
-        "tagline": "The vow you're still unconsciously keeping, and what renegotiating it actually looks like",
+        "tagline": "The promise you're still unconsciously keeping, and how to let it go",
         "what_you_get": [
             "The specific promise you appear to still be unconsciously keeping",
             "What kind of situation this promise most likely came from",
@@ -1881,7 +1881,7 @@ OMNI_RELATIONSHIP_TOOLS: list[ToolMeta] = [
         "upsell_id": "health-scribe",
         "delivery_minutes": 30,
         "emoji": "💗",
-        "tagline": "A synastry reading of how this specific relationship is actually affecting your physical and emotional health",
+        "tagline": "A direct reading of how this specific relationship is actually affecting your physical and emotional health",
         "what_you_get": [
             "What this relationship is genuinely doing to your health right now",
             "The specific area most affected, sleep, energy, appetite, or your nervous system",
