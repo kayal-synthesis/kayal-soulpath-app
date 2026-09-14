@@ -399,8 +399,10 @@ def _build_item_section_prompt(
             "This section genuinely has real, multi-signal evidence behind its "
             "finding. Set that evidence apart, once, using this exact format: "
             "[PROOF]Why This Is True, The Evidence In Your Design|Two to three "
-            "sentences naming which real, actual systems support this finding and "
-            "what each one specifically shows.[/PROOF]"
+            "sentences naming what this specific, independent evidence actually "
+            "shows, in plain, real, human language, never by naming a system or "
+            "placement, describe what each real, separate reading found, not "
+            "where it came from.[/PROOF]"
         )
     if _detect_warning_fit(item_text, shared_context):
         special_instructions.append(
@@ -455,8 +457,16 @@ def _build_item_section_prompt(
             f"what this whole reading is actually about for them specifically, the "
             f"real, overall pattern this tool exists to reveal, the same, honest "
             f"way a free tool's own synthesis paragraph orients someone before the "
-            f"real, specific findings begin. Wrap this specific, real, opening "
-            f"paragraph, only this one, in [HOOK] and [/HOOK], exactly this "
+            f"real, specific findings begin. Do not quantify the process, never say "
+            f"\"across eight domains\" or \"two or more independent systems agree\" "
+            f"or any real, similar count of how many things were checked, a reader "
+            f"does not care how many domains were examined, they care what was "
+            f"actually found. Open directly with the real, actual pattern itself, "
+            f"stated as a genuine fact about {name}, not as a statistic about the "
+            f"reading's own process. If real convergence is worth mentioning, say "
+            f"what agrees, your chart and your number pattern point the same "
+            f"direction, not how many things agree. Wrap this specific, real, "
+            f"opening paragraph, only this one, in [HOOK] and [/HOOK], exactly this "
             f"paragraph and nothing else, so it can be styled distinctly. Then move "
             f"into this section's own job as normal, plain, ordinary prose from "
             f"there on."
@@ -472,8 +482,8 @@ def _build_item_section_prompt(
         f"Use whatever signals above are genuinely relevant to this specific promise. "
         f"Do not force in signals that do not actually serve this section's job. This "
         f"matters concretely, if this tool's own, real domain is palmistry, or face "
-        f"reading, or astrology specifically, do not reach for numerology just "
-        f"because birth-date data happens to be available, a signal only belongs in "
+        f"reading, or a chart placement specifically, do not reach for a birth "
+        f"number just because it happens to be available, a signal only belongs in "
         f"this section if it genuinely, directly serves this section's specific job, "
         f"not because it exists somewhere in the data above.\n\n"
         f"HOW TO READ THE LABELS ABOVE, they are not raw notes, each one is a real, "
@@ -493,55 +503,53 @@ def _build_item_section_prompt(
         f"edge:\" is real, already-computed guidance for where this specific "
         f"person's reading needs honest balance, use it to shape tone, not just "
         f"content.\n\n"
-        f"THIS IS A PAID PRODUCT THE PERSON HAS ALREADY PURCHASED, NOT A SALES PAGE. "
-        f"Name every real methodology, system, number, and placement directly, "
-        f"numerology, astrology, Life Path, Soul Urge, Personal Year, specific "
-        f"planets and signs, whatever the actual signal data above genuinely "
-        f"supports. Do not hide or avoid naming these.\n\n"
+        f"THIS IS A PAID PRODUCT THE PERSON HAS ALREADY PURCHASED, NOT A SALES PAGE, "
+        f"AND IT MUST NEVER SOUND LIKE ANY OTHER SPIRITUAL OR ESOTERIC APP. "
+        f"NEVER NAME ANY SPECIFIC ASTROLOGICAL OR NUMEROLOGICAL TERM, ANYWHERE, "
+        f"EVER. This is a real, firm, direct rule, not a stylistic preference. No "
+        f"zodiac sign name, Sagittarius, Scorpio, Virgo, or any other. No planet "
+        f"name used as a placement, Sun, Moon, Mercury, Venus, Mars, Jupiter, "
+        f"Saturn, Uranus, Neptune, Pluto. No house number, \"seventh house\", "
+        f"\"tenth house\", or any other. No aspect name, square, trine, "
+        f"conjunction, opposition. No numerology label, Life Path, Soul Urge, "
+        f"Personal Year, Pinnacle, Destiny Number, Expression Number, Karmic Debt. "
+        f"No other tradition's terminology either, no Ba Zi, Day Master, dosha, "
+        f"nakshatra, or any other named system or concept. None of this ever "
+        f"appears in your response, for any reader, of any background, regardless "
+        f"of how the signal data above names it.\n\n"
+        f"WHAT TO DO INSTEAD, this is the real, actual work of this reading. Every "
+        f"real, genuine finding in the signal data above still gets used, fully, "
+        f"specifically, and directly, translated into plain, human, universal "
+        f"language describing the real, actual trait, pattern, or timing itself, "
+        f"never the mechanism that produced it. \"Your Sun in Sagittarius means "
+        f"you're built for range, not routine\" becomes \"You're built for range, "
+        f"not routine\", stated as a direct, genuine fact about {name}, with the "
+        f"same, full confidence and specificity, just without citing where it came "
+        f"from. \"Life Path 5 carries a real restlessness\" becomes \"There is a "
+        f"real restlessness in you\". \"Personal Year 6 is the year of love, "
+        f"family, and commitment\" becomes \"This is a season built around love, "
+        f"family, and commitment\". \"Pinnacle 8, active from 41 to 49\" becomes "
+        f"\"This chapter of your life, running through your forties,\". The real, "
+        f"specific insight, the actual finding itself, must stay completely "
+        f"intact and fully specific. Only the name of the system or placement "
+        f"producing it disappears.\n\n"
+        f"CONVERGENCE, without naming systems. When the signal data above shows "
+        f"real, genuine agreement across independent findings, say so plainly, "
+        f"but never by naming what agreed. \"Two, real, separate readings of your "
+        f"design agree on this\" or \"This shows up independently, more than "
+        f"once, in your design\" are right. \"Your chart and your number pattern "
+        f"agree\" is still naming a system indirectly and must not be used "
+        f"either. State the fact of agreement, never its source.\n\n"
         f"PHRASING VARIETY, this is a real, direct requirement, not a stylistic "
-        f"nicety. The same, real placement or number will come up across many "
+        f"nicety. The same, real trait or pattern will come up across many "
         f"different tools for the same person over time, and reusing the exact "
         f"same, memorized description every time is a genuine, real risk, someone "
         f"who buys more than one reading will notice identical sentences. Never "
         f"reach for a single, fixed epithet as the default description of a "
-        f"placement, Sun in Sagittarius does not have to be \"the Explorer\" every "
-        f"time you write it, and a Life Path 5 does not have to be introduced the "
-        f"same, exact way every time either. Find your own, direct, real words for "
-        f"what this specific placement means in this specific context, the "
-        f"underlying astrological or numerological fact stays fixed, real, and "
-        f"accurate, but the actual, real sentence describing it should not read "
-        f"like a memorized line recited the same way every time.\n\n"
-        f"HIDDEN SYSTEMS, some of the real, actual computation behind this "
-        f"reading comes from systems that are never named to the reader, ever, "
-        f"regardless of their background, the same, honest way a kitchen's "
-        f"ingredients matter without the customer needing the supplier's name. "
-        f"The I Ching specifically, and any of its own, real terminology, "
-        f"hexagram, cauldron, trigram, or any other named image or concept from "
-        f"it, must never appear in the text, for any reader, of any background. "
-        f"If a real, genuine timing or transformation insight in the signal data "
-        f"above traces back to this system, translate it fully into plain, "
-        f"universal language describing what it means for {name} directly, the "
-        f"same, honest way this reading already translates Kabbalistic concepts "
-        f"into plain insight without ever naming Sephiroth or Hermetic "
-        f"principles. Name astrology, numerology, and their placements directly, "
-        f"as instructed above, that instruction does not extend to this system.\n\n"
-        f"memorized line recited the same way every time.\n\n"
-        f"ACCESSIBILITY, this matters as much as naming things directly, and it is "
-        f"NOT the same as teaching astrology or numerology as a subject. This "
-        f"reading is a synthesis across several systems, not a lesson in any one "
-        f"of them, so never explain what a system is in general, Venus is not "
-        f"\"the planet of love\", the eighth house is not \"the house of "
-        f"transformation\", do not define terms textbook-style. Instead, when you "
-        f"first, really name a specific placement or number, fold its real, "
-        f"personal meaning directly into the same sentence, what it actually "
-        f"shows about {name} specifically, not what the term means in general. "
-        f"\"Venus in Taurus in the eighth house, the placement that shapes how "
-        f"you love\" is right, it names the finding and states what it means for "
-        f"this person, in one motion. \"Venus is the planet of love, placed here "
-        f"in Taurus, an earth sign\" is wrong, that is explaining astrology, not "
-        f"reading {name}. After that first, real introduction, use the term on "
-        f"its own for the rest of the section. Never explain a term you didn't "
-        f"actually use.\n\n"
+        f"trait, find your own, direct, real words for what this specific "
+        f"pattern means in this specific context every time, so the same, "
+        f"underlying finding never reads like a memorized line recited the same "
+        f"way twice.\n\n"
         f"THE VOICE: Second person throughout, speak directly to {name} as \"you\". "
         f"Direct and precise, no atmospheric filler, no vague encouragement. "
         f"Never write \"it seems\", \"perhaps\", \"you might\", or \"this could indicate\", "
@@ -1620,19 +1628,37 @@ def _enforce_paragraph_breaks(text: str, target_words: int = 130) -> str:
     result.append(_break_prose(text[pos:]))
     return "\n\n".join(p for p in result if p.strip())
 
+def _strip_methodology_labels_paragraph_safe(text: str) -> str:
+    """Real, applies the same, existing, comprehensive
+    _METHODOLOGY_STRIP_PATTERNS list already used and tested by the
+    older, generic narrate() path, but in isolation, without any of
+    that function's other, real cleanup steps, several of which
+    collapse whitespace and would destroy real, actual paragraph
+    breaks. A genuine, real, defensive safety net for the tool-aware
+    path now too, confirmed necessary given the direct, explicit
+    requirement that no astrological or numerological terminology
+    ever reach the reader, and given tonight's own, established
+    pattern, a pure prompt instruction alone isn't always fully
+    reliable on its own."""
+    if not text:
+        return text
+    for pattern, replacement in _METHODOLOGY_STRIP_PATTERNS:
+        text = pattern.sub(replacement, text)
+    return text
+
 def _clean_tool_section_text(text: str) -> str:
     """Real, actual, honest cleanup for the tool-aware narration path
     specifically, _narrate_tool_section() and its async equivalent.
-    Unlike _strip_methodology_labels(), this deliberately does NOT
-    remove Life Path, Personal Year, planet, or sign mentions, the
-    current, real writing specification explicitly asks for these to
-    be named directly, this is a paid product the person purchased,
-    not a teaser. Also, critically, preserves real, actual paragraph
-    breaks, collapsing every run of whitespace into a single space
-    was destroying the \\n\\n breaks between paragraphs before the
-    text ever reached the PDF formatter, which is why real headers
-    and paragraphs were arriving with no line break in front of them
-    at all, confirmed directly against an actual, delivered reading."""
+    Now also strips any, real, remaining astrological or numerological
+    terminology that survived the prompt's own, direct instruction,
+    confirmed necessary given the explicit, new requirement that none
+    of it ever reach the reader, at all. Also, critically, preserves
+    real, actual paragraph breaks, collapsing every run of whitespace
+    into a single space was destroying the \\n\\n breaks between
+    paragraphs before the text ever reached the PDF formatter, which
+    is why real headers and paragraphs were arriving with no line
+    break in front of them at all, confirmed directly against an
+    actual, delivered reading."""
     if not text:
         return text
 
@@ -1647,6 +1673,32 @@ def _clean_tool_section_text(text: str) -> str:
     text = re.sub(r'\n{3,}', '\n\n', text)
     text = re.sub(r'[ \t]+\n', '\n', text)
     text = re.sub(r'\s+([,\.;:!?])', r'\1', text)
+
+    # Real, direct, defensive safety net, confirmed necessary given
+    # tonight's established pattern, a pure prompt instruction alone
+    # isn't always fully reliable. Applies the same, comprehensive,
+    # existing pattern list the older path already uses and trusts,
+    # Life Path, Personal Year, Pinnacle, specific planet-in-sign
+    # placements, and more, now caught here too, given the direct,
+    # new requirement that none of this terminology ever reach the
+    # reader, regardless of what the prompt instruction alone
+    # achieves.
+    text = _strip_methodology_labels_paragraph_safe(text)
+
+    # Real, fixes a genuine, confirmed grammatical break the patterns
+    # above can produce, "Your Sun in Sagittarius" becomes "Your this
+    # placement", which reads as broken, collapses to "This placement"
+    # instead.
+    text = re.sub(r'\b(?:Your|The|your|the)\s+(this|these)\b',
+                   lambda m: m.group(1).capitalize(), text)
+
+    # Real, catches the two, broader category words too, if they
+    # slip through on their own, without a specific placement
+    # attached for the patterns above to match against.
+    text = re.sub(r'\bastrological\b', 'chart-based', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bnumerological\b', 'number-based', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bastrology\b', 'your chart', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bnumerology\b', 'your number pattern', text, flags=re.IGNORECASE)
 
     return text.strip()
 
