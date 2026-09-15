@@ -101,7 +101,7 @@ export const wellnessTools: WellnessTool[] = [
   {
     id: 'spiritual-gifts-reading',
     name: 'Your Natural Gifts',
-    tagline: 'What you're built to do well, and how to actually use it',
+    tagline: 'The gifts you were given, and how to actually use them,
     emoji: '✨',
     price: 29,
     domain: 'wellness',
