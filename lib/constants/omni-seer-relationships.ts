@@ -127,7 +127,7 @@ export const omniRelationshipTools: OmniSeerTool[] = [
       'Whether this pattern shows up more in how the family handles conflict, money, or closeness',
       'What the next generation would inherit instead, if this pattern genuinely shifted',
     ],
-    upsell: { id: 'spiritual-scribe', name: 'The Spiritual Scribe', price: 24 },
+    upsell: { id: 'spiritual-scribe', name: 'The Pattern Journal', price: 24 },
   },
   {
     id: 'child-blueprint',
@@ -199,7 +199,7 @@ export const omniRelationshipTools: OmniSeerTool[] = [
   {
     id: 'synastry-health-cross-impact',
     name: 'How This Relationship Affects Your Health',
-    tagline: 'A synastry reading of how this specific relationship is actually affecting your physical and emotional health',
+    tagline: 'A direct reading of how this specific relationship is actually affecting your physical and emotional health',
     emoji: '💗',
     price: 59,
     domain: 'oracle-temple',

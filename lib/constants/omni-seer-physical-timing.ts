@@ -231,7 +231,7 @@ export const omniPhysicalTimingTools: OmniSeerTool[] = [
       'Whether the traits that differ most are ones you have actively worked on, or ones that just happened',
       'Whether the gap is generally widening or closing at this point in your life',
     ],
-    upsell: { id: 'spiritual-scribe', name: 'The Spiritual Scribe', price: 24 },
+    upsell: { id: 'spiritual-scribe', name: 'The Pattern Journal', price: 24 },
   },
   {
     id: 'palm-trust-pattern-reading',
@@ -256,8 +256,8 @@ export const omniPhysicalTimingTools: OmniSeerTool[] = [
   },
   {
     id: 'annual-destiny-forecast',
-    name: 'The Annual Destiny Forecast',
-    tagline: 'A complete annual forecast synthesized across every relevant discipline',
+    name: 'Your Year, Unlocked',
+    tagline: 'Your complete year ahead, mapped out before it happens',
     emoji: '🔮',
     price: 69,
     domain: 'oracle-temple',

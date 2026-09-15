@@ -150,8 +150,8 @@ export const omniSelfPurposeTools: OmniSeerTool[] = [
   },
   {
     id: 'complete-spiritual-synthesis',
-    name: 'The Spiritual Layer Beneath the Surface',
-    tagline: 'A full spiritual synthesis, going beneath the surface of any single-discipline reading',
+    name: 'Beneath the Surface',
+    tagline: 'The full picture, going deeper than any single reading ever could',
     emoji: '🕯️',
     price: 79,
     domain: 'oracle-temple',
@@ -170,7 +170,7 @@ export const omniSelfPurposeTools: OmniSeerTool[] = [
       'The next real threshold ahead in your spiritual life',
       'Whether this pattern has felt consistent for years, or is shifting right now',
     ],
-    upsell: { id: 'spiritual-scribe', name: 'The Spiritual Scribe', price: 24 },
+    upsell: { id: 'spiritual-scribe', name: 'The Pattern Journal', price: 24 },
   },
   {
     id: 'complete-purpose-synthesis',
@@ -199,8 +199,8 @@ export const omniSelfPurposeTools: OmniSeerTool[] = [
   },
   {
     id: 'pattern-breaker',
-    name: 'The Karmic Pattern You Keep Living',
-    tagline: 'A reading that names the specific pattern you keep living out, and what actually breaks it',
+    name: 'The Repeat',
+    tagline: 'The pattern you keep repeating, named directly, and what breaks it',
     emoji: '⛓️',
     price: 69,
     domain: 'oracle-temple',
@@ -219,7 +219,7 @@ export const omniSelfPurposeTools: OmniSeerTool[] = [
       'What your life would look like a year from now if this pattern finally resolved',
       'Whether this pattern has gotten stronger or weaker over the years',
     ],
-    upsell: { id: 'spiritual-scribe', name: 'The Spiritual Scribe', price: 24 },
+    upsell: { id: 'spiritual-scribe', name: 'The Pattern Journal', price: 24 },
   },
   {
     id: 'creative-genius-synthesis',

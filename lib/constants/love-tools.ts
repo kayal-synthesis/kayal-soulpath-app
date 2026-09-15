@@ -80,12 +80,12 @@ export const loveTools: LoveTool[] = [
   },
   {
     id: 'karmic-love-debt',
-    name: 'The Karmic Debt Love Left You',
-    tagline: 'The pattern you brought into this life before you ever fell in love the first time',
+    name: 'The Love Loop',
+    tagline: 'Why you keep hitting the same wall in love, and how to actually break it',
     emoji: '⚖️',
     price: 34,
     domain: 'love',
-    hook: 'Some love patterns did not start with you. This reading names the karmic debt behind your love life, whether it is easing or still heavy, and one clear way to finally pay it off.',
+    hook: 'Some love patterns did not start with you. This reading names the pattern behind your love life, whether it is easing or still heavy, and one clear way to finally break it.',
     whatYouGet: [
       'The specific pattern you carried into this life, before your own history began shaping it further',
       'The number pattern underneath this debt, and what it has meant for others who carry it',

@@ -183,8 +183,8 @@ export const sacredScriptTools: SacredScriptTool[] = [
   },
   {
     id: 'spiritual-scribe',
-    name: 'The Spiritual Scribe',
-    tagline: 'An ongoing dialogue for spiritual questions, holding your full synthesis in permanent context',
+    name: 'The Pattern Journal',
+    tagline: 'An ongoing conversation that remembers everything, so you never start from zero',
     emoji: '🕊️',
     price: 24,
     domain: 'sacred-script',
@@ -203,7 +203,7 @@ export const sacredScriptTools: SacredScriptTool[] = [
       'A steady space to sit with something difficult, without needing to explain the backstory',
       'Continuity across seasons of doubt, growth, and everything harder to name',
     ],
-    upsell: { id: 'complete-spiritual-synthesis', name: 'The Spiritual Layer Beneath the Surface', price: 79 },
+    upsell: { id: 'complete-spiritual-synthesis', name: 'Beneath the Surface', price: 79 },
     limits: buildLimits('spiritual-scribe'),
   },
   {

@@ -56,8 +56,8 @@ export const lifePathTools: LifePathTool[] = [
   },
   {
     id: 'soul-contract-reading',
-    name: 'The Agreement Your Soul Made Before You Were Born',
-    tagline: "What you came into this life carrying, and what it's actually asking of you",
+    name: 'The Deal You Made',
+    tagline: 'The real terms you arrived with, and what they\'re asking of you now',
     emoji: '📜',
     price: 44,
     domain: 'life-path',
