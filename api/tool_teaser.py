@@ -1,5 +1,5 @@
 """
-Tool Teaser API — KAYAL Synthesis Platform
+Tool Teaser API, KAYAL Synthesis Platform
 ==========================================
 POST /tool-teaser
 Called from the sales page BEFORE purchase.
@@ -8,40 +8,43 @@ and receives a hyper-personalised preview of exactly
 what that specific tool would reveal about them.
 
 Seven private synthesis engines power every reading.
-Visitors see only the output — never the engine logic.
+Visitors see only the output, never the engine logic.
 
 Author: KAYAL Engineering
-Version: 3.0.0, two real, deliberate changes, at direct request:
+Version: 4.0.0, the reading-craft update.
 
-1. _TOOL_META is no longer a hand-maintained dictionary. Checked
-   directly against tool_registry.py, the real, current, 113-tool
-   catalog, this file's own version had drifted badly, dozens of
-   stale, pre-restructure ids with a "-os" suffix that no longer match
-   anything real, several tools missing entirely (spirit-attachment-
-   reading, birth-time-rectification, legacy-reading, numerology-
-   compatibility-check, and others), and several dozen entries for
-   tools that don't exist in the real catalog at all. Rather than
-   hand-correct each one, which would leave the same drift risk in
-   place for next time, _TOOL_META is now built directly from
-   tool_registry.py's own real, current data at import time, the
-   single source of truth, structurally preventing these two files
-   from silently diverging again.
-
-2. Every Anthropic/Haiku reference removed entirely, at direct
-   request, DeepSeek only, matching the real, live product exactly.
-   The original generate_tool_teaser() referenced _call_haiku() and
-   _parse_paragraphs(), neither of which was actually defined anywhere
-   in this file, a real, pre-existing gap, confirmed directly, not
-   guessed at. Both are now replaced: paragraph generation calls
-   api.agency.chat's own, already-fixed _call_deepseek() directly, and
-   a real, working _parse_paragraphs() is written here, matching
-   exactly the JSON array format the prompt itself already specifies.
+What changed at direct request:
+- Six-paragraph structure, replacing the previous four. Six small
+  blocks read better on mobile than four dense ones, every job in the
+  teaser now gets its own paragraph with real breathing room.
+- Numbers are never written. The previous version still wrote
+  "a 9 your core pattern", which the frontend sanitize map then had
+  to patch, producing broken grammar. The prompt now forbids writing
+  the number at all. Describe what the pattern produces, not what the
+  number is.
+- The reader's age is never stated. Sam already knows he is 35.
+  Naming it makes the reading feel automated.
+- Paragraph titles describe the person, not the offering. Never
+  "What the Full Reading Will Show You", always "What the Calm Has
+  Been Hiding".
+- "Reading" mentioned at most once, in the final paragraph.
+- Paragraphs capped at 45-55 words. Total teaser 250-320 words.
+- Sentence rhythm varies. Every paragraph contains at least one
+  sentence of 12 words or fewer.
+- The teaser opens by naming the reader's unasked question in their
+  own words. This is the highest-impact line in the whole teaser.
+- The teaser ends on a short landing line under 15 words.
+- No em-dashes, no en-dashes, anywhere. Three-layer enforcement:
+  prompt instruction, backend _strip_dashes cleanup, frontend
+  sanitize map.
+- No methodology names anywhere. No numbers. No chart types. No
+  discipline names. The reading speaks as a reader who sees the
+  person, not a system explaining itself.
 """
 from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
@@ -49,7 +52,7 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────
-# Paragraph styles — matches frontend icon set
+# Paragraph styles, matches frontend icon set
 # ─────────────────────────────────────────────────────────────
 _PARAGRAPH_STYLES = [
     {"icon": "Star",     "bg": "bg-primary-50",   "border": "border-primary-100",   "iconBg": "bg-primary-100"},
@@ -62,7 +65,7 @@ _PARAGRAPH_STYLES = [
 ]
 
 # ─────────────────────────────────────────────────────────────
-# Numerology — KAYAL formulas
+# Numerology, KAYAL formulas
 # ─────────────────────────────────────────────────────────────
 def _reduce(n: int) -> int:
     if n in (11, 22, 33): return n
@@ -113,11 +116,11 @@ def _pinnacle_current(day: int, month: int, year: int, current_year: int) -> Dic
     first_end = 36 - lp
     age = current_year - year
     if age <= first_end:
-        return {"number": p1, "period": f"ages 0–{first_end}"}
+        return {"number": p1, "period": f"ages 0-{first_end}"}
     elif age <= first_end + 9:
-        return {"number": p2, "period": f"ages {first_end+1}–{first_end+9}"}
+        return {"number": p2, "period": f"ages {first_end+1}-{first_end+9}"}
     elif age <= first_end + 18:
-        return {"number": p3, "period": f"ages {first_end+10}–{first_end+18}"}
+        return {"number": p3, "period": f"ages {first_end+10}-{first_end+18}"}
     else:
         return {"number": p4, "period": f"ages {first_end+19}+"}
 
@@ -141,7 +144,36 @@ _SIGN_ELEMENT = {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Domain hooks — all 8 domains, aligned with tool_registry.py
+# Real em-dash and en-dash cleanup, backend layer
+# ─────────────────────────────────────────────────────────────
+def _strip_dashes(text: Optional[str]) -> str:
+    """
+    Real, honest cleanup, backend layer. Applied to every paragraph
+    title and content after the model returns, before the response
+    leaves this file. Catches the case where the model ignores the
+    prompt-level instruction, so the frontend sanitize map is a
+    backup, not the only defense.
+    """
+    if not text:
+        return ""
+    # Em-dash with surrounding whitespace becomes a comma
+    text = re.sub(r"\s+—\s+", ", ", text)
+    # Bare em-dash becomes a comma
+    text = text.replace("—", ", ")
+    # En-dash with surrounding whitespace becomes a comma
+    text = re.sub(r"\s+–\s+", ", ", text)
+    # Bare en-dash becomes a space
+    text = text.replace("–", " ")
+    # Cleanup any doubled punctuation from the substitutions
+    text = re.sub(r",\s*,", ",", text)
+    text = re.sub(r"\s+,", ",", text)
+    text = re.sub(r",\s*\.", ".", text)
+    text = re.sub(r"\.\s*\.", ".", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+# ─────────────────────────────────────────────────────────────
+# Domain hooks, all 8 domains, aligned with tool_registry.py
 # ─────────────────────────────────────────────────────────────
 _DOMAIN_HOOKS = {
     "love": {
@@ -189,15 +221,6 @@ _DOMAIN_HOOKS = {
 # ─────────────────────────────────────────────────────────────
 # Tool metadata, real, current 113-tool catalog, derived directly
 # from tool_registry.py at import time, not hand-maintained here.
-#
-# focus:   what this specific tool is looking at, built from the
-#          catalog's own real tagline, already-approved copy, not
-#          invented separately here.
-# reveals: what the full reading would show, built from the catalog's
-#          own real what_you_get items, the same real promises
-#          narrate_tool() itself is held to for the actual, paid
-#          reading, so the teaser can never promise something the real
-#          product doesn't also deliver.
 # ─────────────────────────────────────────────────────────────
 def _build_tool_meta() -> Dict[str, Dict]:
     try:
@@ -223,9 +246,6 @@ def _build_tool_meta() -> Dict[str, Dict]:
 
 _TOOL_META: Dict[str, Dict] = _build_tool_meta()
 
-# Real, direct derivation from the same, single source of truth, not a
-# second, separately hand-maintained list that could drift from the
-# real catalog the same way _TOOL_META itself already had.
 _SUBSCRIPTION_TOOL_IDS: frozenset[str] = frozenset(
     tid for tid, meta in _TOOL_META.items() if meta.get("is_subscription")
 )
@@ -246,19 +266,12 @@ def is_chat_or_voice_tool(tool_id: str) -> bool:
 
 # ─────────────────────────────────────────────────────────────
 # Real paragraph parser, matching exactly the JSON array format
-# _build_teaser_prompt() itself specifies. The original file
-# referenced a _parse_paragraphs() function that was never actually
-# defined anywhere, confirmed directly, not assumed, this replaces it
-# with a real, working implementation rather than continuing to point
-# at a function that didn't exist.
+# _build_teaser_prompt() itself specifies.
 # ─────────────────────────────────────────────────────────────
 def _parse_paragraphs(raw: Optional[str], styles: List[Dict]) -> List[Dict]:
     if not raw:
         return []
     cleaned = raw.strip()
-    # Strip markdown code fences, a model occasionally wraps JSON in
-    # ```json ... ``` even when told not to, handled defensively
-    # rather than trusting the instruction alone.
     if cleaned.startswith("```"):
         cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
         cleaned = re.sub(r"\s*```$", "", cleaned)
@@ -273,9 +286,10 @@ def _parse_paragraphs(raw: Optional[str], styles: List[Dict]) -> List[Dict]:
     for i, item in enumerate(data):
         if not isinstance(item, dict):
             continue
-        title   = item.get("title", "").strip()
-        content = item.get("content", "").strip()
+        title   = _strip_dashes(item.get("title", "").strip())
+        content = _strip_dashes(item.get("content", "").strip())
         if not title or not content:
+            logger.warning(f"Dropped paragraph {i}: missing title or content after cleanup")
             continue
         style = styles[i % len(styles)]
         result.append({
@@ -289,7 +303,7 @@ def _parse_paragraphs(raw: Optional[str], styles: List[Dict]) -> List[Dict]:
     return result
 
 # ─────────────────────────────────────────────────────────────
-# Prompt builder, static-paragraph teaser
+# Prompt builder, static-paragraph teaser, six paragraphs
 # ─────────────────────────────────────────────────────────────
 def _build_teaser_prompt(
     name:          str,
@@ -312,10 +326,9 @@ def _build_teaser_prompt(
     first_name    = name.strip().split()[0]
     sign_element  = _SIGN_ELEMENT.get(sun_sign, "Earth")
     py_master     = personal_year in (11, 22, 33)
-    py_label      = f"Master {personal_year}" if py_master else str(personal_year)
     pinnacle_num  = pinnacle.get("number", 0)
     pinnacle_period = pinnacle.get("period", "")
-    partner_line  = f"\n  Partner name:  {partner_name}" if partner_name else ""
+    partner_line  = f"\n  Partner name: {partner_name}" if partner_name else ""
 
     cta_frame = (
         "Begin your subscription" if is_subscription
@@ -324,46 +337,176 @@ def _build_teaser_prompt(
 
     return f"""You are a master reader for KAYAL, a private synthesis platform.
 You write hyper-personalised, specific, warm reading previews.
-You never mention the names of the engines, disciplines, or methodology behind a reading.
-You speak entirely in patterns, observations, and what you see, never in methodology.
+You speak in the voice of a reader who already sees the person, not a system
+explaining itself. You never name a discipline, a methodology, an engine, or
+any terminology from the ancient sciences.
 
-Write a personalised teaser for {first_name} for the "{tool_name}" tool.
+You are writing to {first_name}. This is a preview of a "{tool_name}" reading.
+The reading's theme is: {focus}
+What the full version will reveal: {reveals}
 
-This tool focuses on: {focus}
-The full reading reveals: {reveals}
+REAL DATA ABOUT {first_name.upper()}. Use this to understand the person, not to
+display. The numbers below are for you. {first_name} must never see any of them.
 
-{first_name}'s data, every number is real, use them:
   Life Path:        {life_path}
   Sun Sign:         {sun_sign} ({sign_element})
-  Personal Year:    {py_label} {"(Master year, rare and significant)" if py_master else ""}
+  Personal Year:    {personal_year}{" (master year, rare)" if py_master else ""}
   Destiny number:   {destiny}
   Soul Urge:        {soul_urge}
   Current Pinnacle: {pinnacle_num} ({pinnacle_period})
   Age:              {age}
   Birth location:   {birth_location or "not provided"}{partner_line}
 
-Write EXACTLY 4 paragraphs as a JSON array:
-{{
-  "title": "short compelling title (5-8 words)",
-  "content": "2-3 sentences. Personal. Specific. Uses their actual numbers. Ends pulling them forward."
-}}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE MOST IMPORTANT RULE IN THIS ENTIRE PROMPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{first_name} must never see a number, a chart name, a discipline name, or
+any term from the ancient sciences. The numbers above are your guide to what
+to say. They are not content. They are not evidence to display. They are
+what you translate into plain human language.
 
-Paragraph structure:
-1. Open with {first_name}'s name. What their core pattern shows in the context of {focus}.
-2. Something specific this reading has detected that most people never notice about a Life Path {life_path} in a Personal Year {py_label}.
-3. Why right now specifically matters, their Pinnacle {pinnacle_num}, Personal Year {py_label}, and what this timing window means for {focus}.
-4. What the full "{tool_name}" reveals, make it feel unmissable. End with "{cta_frame}."
+If you were tempted to write "your Life Path 9", write instead what a 9
+actually produces in a person's life: the tendency to carry what others
+cannot, the sense of completion that arrives before a chapter closes, the
+quiet weight of being the one everyone leans on. Describe the effect, never
+the number.
 
-Rules, non-negotiable:
-- Never name a discipline, engine, or methodology. No "numerology says", "astrology shows", "palmistry reveals".
-- Every sentence must feel written for {first_name} specifically. Nothing generic.
-- Speak as a reader who already sees them, not as a system explaining itself.
-- Do not promise certainties, speak in patterns, tendencies, and what the reading sees.
-- Respond ONLY with the JSON array. No preamble. No explanation.
+If you were tempted to write "a Personal Year 9", write instead "this closing
+chapter", "this season of release", "the year that is finishing something in
+you". Describe the chapter, never the number.
+
+If you were tempted to write "your Pinnacle 7", write instead "this period of
+depth", "the quiet decade", "the season built for inner reckoning". Describe
+the season, never the number.
+
+If you were tempted to write "your Sun in Leo", write instead "the way you
+naturally take up space", "the warmth you carry into a room", "the presence
+people feel before you speak". Describe the quality, never the placement.
+
+This is the single most important discipline in your writing. Get it right
+and the reading feels like it was written by someone who sees {first_name}.
+Get it wrong and the reading feels like a machine that is trying to hide what
+it is.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BANNED WORDS AND PHRASES, NEVER USE THESE IN YOUR OUTPUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Numbers as content: "9", "7", "11", "6", "22", "33", and any other single or
+double digit used as evidence. You may use a number only if it is part of
+normal English prose (for example "one thing", "two paths"), never as a
+pattern reference.
+
+Discipline names: numerology, astrological, astrologer, palmistry, palmist,
+physiognomy, physiognomist, tarot, horoscope, natal chart, birth chart,
+synastry, vedic, veda, bazi, four pillars, i ching, feng shui, human design.
+
+Component terms: Life Path, Personal Year, Personal Month, Destiny Number,
+Soul Urge, Master Number, Personality Number, Birthday Number, Pinnacle,
+Saturn Return, Jupiter Return, Rahu, Ketu, Atmakaraka, house placement,
+transit, ascendant, rising sign, chart of any kind.
+
+Positional phrasing: "Sun in", "Moon in", "Mars in", "Venus in", "Jupiter in",
+"Saturn in", "Mercury in" followed by a sign name. Never write these.
+
+Product names: "Heavy Life Reading", the specific tool name beyond the first
+use, "this reading" as a recurring phrase. Mention the reading at most once,
+in the final paragraph.
+
+The reader's age: never state {first_name}'s age as a number. {first_name}
+already knows how old they are. Saying it makes the reading feel automated.
+Describe the life stage directly: "you are standing in a chapter built for
+depth", not "you are {age}".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PUNCTUATION, NON-NEGOTIABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Never use an em-dash (—) or en-dash (–) anywhere in your output, in titles or
+content. When you would use a dash, use a comma, a period, a colon, or the
+word "and" instead. Review your output before returning it. If you produced
+any dash, rewrite that sentence without it.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRUCTURE, EXACTLY SIX PARAGRAPHS AS A JSON ARRAY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Each paragraph is:
+  {{
+    "title": "short title, 4 to 7 words, describes the person not the product",
+    "content": "45 to 55 words across 2 to 3 sentences"
+  }}
+
+Paragraph 1, THE QUESTION. 45 to 55 words.
+  Name the question {first_name} has not been able to ask out loud. Put it in
+  their own words. It is not "you carry weight". It is something like "why does
+  everything feel like it rests on you when no one else seems to notice". Name
+  the question before you describe anything else. This is the single most
+  important paragraph in the teaser. End it by beginning to answer.
+
+Paragraph 2, WHAT THE PATTERN SHOWS. 45 to 55 words.
+  Describe what the reading sees about {first_name} specifically. Use the real
+  numbers to understand what to describe, never to display. Speak in plain
+  language: what the pattern produces in their daily life, not what the pattern
+  is called.
+
+Paragraph 3, WHAT OTHERS MISS. 45 to 55 words.
+  Name the thing about {first_name} that the people around them do not see.
+  Not because those people do not care, but because they were not built to see
+  it. This paragraph makes {first_name} feel seen at a level they have not been
+  seen at before.
+
+Paragraph 4, WHY THIS WINDOW. 45 to 55 words.
+  Explain why right now specifically matters for {first_name}. Draw on the
+  pinnacle and personal year to understand what window they are in, but never
+  name the numbers. Describe the chapter. Say what it is asking of them.
+
+Paragraph 5, WHAT THE FULL VERSION SHOWS. 45 to 55 words.
+  Point to what the full reading reveals. This is the only paragraph where you
+  may mention "the full reading". Everything else stays in the voice of a
+  reader describing what they see.
+
+Paragraph 6, THE LANDING. 20 to 30 words total.
+  A closing statement under 15 words that echoes the emotional theme opened in
+  paragraph 1. It must land. It must feel complete. After the closing line,
+  add "{cta_frame}."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SENTENCE RHYTHM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Vary sentence length. Every paragraph must contain at least one sentence of
+12 words or fewer. No paragraph should have three sentences all over 20 words.
+The reader is on a phone. Short sentences land. Long sentences blur.
+
+Titles must describe the person, not the offering. Never write "What the Full
+Reading Will Show You". Write something like "What the Calm Has Been Hiding".
+A title should read like the name of a chapter in a book about {first_name},
+not like a table of contents entry for a product.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VOICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Speak directly to {first_name}, use their name once in paragraph 1, naturally.
+- Be specific, using what you understand from the numbers above. Generic is a
+  failure here.
+- Be honest, even where something is hard to hear.
+- Do not claim to be AI. Stay in the voice of the reader.
+- Do not use phrases like "Great question" or "That is interesting".
+- Do not promise certainties. Speak in patterns, tendencies, and what the
+  reading sees.
+- The reader is 18 to 35. They are not here to learn a system. They are here
+  to feel seen and understood. Write for that.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Respond with the JSON array ONLY. No preamble. No explanation. No markdown
+code fences. Just the array, starting with "[" and ending with "]".
 
 [
   {{"title": "...", "content": "..."}},
-  ...
+  {{"title": "...", "content": "..."}},
+  {{"title": "...", "content": "..."}},
+  {{"title": "...", "content": "..."}},
+  {{"title": "...", "content": "..."}},
+  {{"title": "...", "content": "..."}}
 ]"""
 
 # ─────────────────────────────────────────────────────────────
@@ -386,20 +529,17 @@ def _build_chat_teaser_system_prompt(
 ) -> str:
     """
     Real, tool-scoped system prompt for the one-message preview.
-    Built from this file's own, now registry-derived focus/reveals
-    metadata, not from chat.py's separately drifted VOICE_TOOL_SCOPE
-    dictionary, confirmed to use a different, stale set of tool ids
-    entirely, a separate, real gap, not touched here.
+    Updated to match the same no-methodology, no-numbers, no-age,
+    no-em-dash discipline as the static teaser prompt above.
     """
     first_name   = name.strip().split()[0] if name.strip() else "Seeker"
     sign_element = _SIGN_ELEMENT.get(sun_sign, "Earth")
     py_master    = personal_year in (11, 22, 33)
-    py_label     = f"Master {personal_year}" if py_master else str(personal_year)
     pinnacle_num = pinnacle.get("number", 0)
 
     format_note = (
-        "Respond in natural spoken sentences, no bullet points, no headers, no markdown, "
-        "this will be read aloud."
+        "Respond in natural spoken sentences, no bullet points, no headers, "
+        "no markdown, this will be read aloud."
         if is_voice else
         "Write in short paragraphs. No bullet points unless genuinely necessary. "
         "Speak as a reader, not a document."
@@ -408,50 +548,61 @@ def _build_chat_teaser_system_prompt(
     return f"""You are a deeply wise oracle and reader, warm, direct, and specific.
 You are speaking with {first_name}, who has not yet subscribed to "{tool_name}".
 
-REAL, IMPORTANT CONTEXT ABOUT THIS EXCHANGE:
-This is a one-message, free preview, not the real, ongoing subscription. {first_name}
-gets exactly one real question answered, using their real details below, so this
-answer must be genuinely complete and valuable on its own, not a teaser that
-withholds. Give a real, honest, specific answer to what they actually ask.
+REAL, IMPORTANT CONTEXT ABOUT THIS EXCHANGE
+This is a one-message free preview, not the real, ongoing subscription.
+{first_name} gets exactly one real question answered, using their real details
+below. Give a real, honest, specific answer to what they actually ask.
 
-This tool focuses on: {focus}
+The reading's theme is: {focus}
 What the full, ongoing subscription offers beyond this one exchange: {reveals}
 
-{first_name}'s real data, use it specifically, not generically:
-  Life Path:        {life_path}
-  Sun Sign:          {sun_sign} ({sign_element})
-  Personal Year:     {py_label}
-  Destiny number:    {destiny}
-  Soul Urge:         {soul_urge}
-  Current Pinnacle:  {pinnacle_num}
-  Age:               {age}
-  Birth location:    {birth_location or "not provided"}
+REAL DATA ABOUT {first_name.upper()}. Use this to understand the person, not
+to display. {first_name} must never see any number below.
 
-SCOPE BOUNDARY, real, required, matches the actual subscription this tool
-sells:
+  Life Path:        {life_path}
+  Sun Sign:         {sun_sign} ({sign_element})
+  Personal Year:    {personal_year}{" (master year, rare)" if py_master else ""}
+  Destiny number:   {destiny}
+  Soul Urge:        {soul_urge}
+  Current Pinnacle: {pinnacle_num}
+  Age:              {age}
+  Birth location:   {birth_location or "not provided"}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE DISCIPLINE RULES, SAME AS THE STATIC TEASER, NON-NEGOTIABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Never name a discipline, an engine, a methodology, or any term from the
+  ancient sciences. No "numerology", "astrology", "palmistry", "tarot",
+  "natal chart", "Life Path", "Personal Year", "Sun in [sign]", and so on.
+- Never state {first_name}'s age as a number.
+- Never use an em-dash or en-dash. Use a comma, a period, a colon, or "and".
+- Speak as a reader who sees {first_name}, not as a system explaining itself.
+- Every sentence must feel written for {first_name} specifically. Generic is a
+  failure here.
+- The reader is 18 to 35. They want to feel seen, not to learn a system.
+
+SCOPE BOUNDARY, REQUIRED
 This tool answers questions about {focus} and what it reveals, {reveals}. If
 {first_name}'s question falls genuinely outside that, do not answer it as if
-it were in scope. Instead, briefly and warmly acknowledge the question,
-explain that "{tool_name}" specifically focuses on {focus}, and note that a
-tool built for their actual question exists elsewhere on KAYAL. Never refuse
-harshly, always redirect with warmth. This is the same real boundary the
-actual, paid subscription holds itself to, not a stricter or looser rule for
-this preview.
+it were in scope. Briefly and warmly acknowledge the question, explain that
+"{tool_name}" specifically focuses on {focus}, and note that a tool built for
+their actual question exists elsewhere on KAYAL. Never refuse harshly, always
+redirect with warmth.
 
-YOUR VOICE:
-- Speak directly to {first_name}, using their name once, naturally, not repeatedly.
-- Be specific, using their real numbers above. Generic answers are a failure here.
+YOUR VOICE
+- Speak directly to {first_name}, use their name once, naturally.
+- Be specific, using their real details above. Generic answers fail here.
 - Be honest and direct, even where something is hard to hear.
-- Do not claim to be AI. You are the oracle. Stay in that voice.
-- Do not use phrases like "Great question!" or "That's so interesting."
-- When you don't know something, say so, guessing is worse than honesty.
+- Do not claim to be AI. Stay in the oracle's voice.
+- Do not use phrases like "Great question" or "That's so interesting".
+- When you don't know something, say so. Guessing is worse than honesty.
 
 {format_note}
 
-LENGTH: 2 to 4 sentences of a real, direct answer, this is a preview, not the full
-depth of an ongoing subscription, but it must still be genuinely useful on its own,
-never a stall or a non-answer. If the question is out of scope, the redirect itself
-should still be this length, warm and complete, not a curt one-liner.
+LENGTH: 2 to 4 sentences of a real, direct answer. This is a preview, not the
+full depth of an ongoing subscription, but it must still be genuinely useful
+on its own, never a stall or a non-answer. If the question is out of scope,
+the redirect itself should still be this length, warm and complete.
 
 After the real answer, or the redirect, close with one natural, brief sentence
 inviting {first_name} to subscribe to "{tool_name}" for ongoing, remembered
@@ -467,20 +618,7 @@ async def generate_chat_teaser_reply(
 ) -> Dict[str, Any]:
     """
     Real, single-exchange preview for a chat or voice subscription
-    tool. Calls DeepSeek, the same, real pipeline the actual, live
-    product uses, via api.agency.chat's own, already-fixed
-    _call_deepseek(), the only model this file now calls anywhere.
-
-    Deliberately stateless: no subscription check, the visitor hasn't
-    purchased anything yet, no saved history, no monthly-limit
-    tracking, none of that applies before a real purchase exists.
-
-    Honest, real limitation, not hidden: the "one exchange only" limit
-    is enforced on the frontend, by locking the input after the first
-    real reply, not by a hard, server-side block. This endpoint is
-    stateless and has no way to know if it's been called before for
-    the same visitor without inventing session tracking that doesn't
-    exist anywhere else in this pre-purchase flow.
+    tool. Calls DeepSeek via api.agency.chat's own _call_deepseek.
     """
     tool_meta = _TOOL_META.get(tool_id)
     if not tool_meta:
@@ -535,13 +673,8 @@ async def generate_chat_teaser_reply(
             "tool_id":      tool_id,
         }
 
-    # Same, real, honest detection already trusted for the live
-    # product in chat.py's own handle_chat(), not a stricter or
-    # separately invented check for this preview specifically. This
-    # can't independently verify the answer truly stayed on-topic,
-    # only whether the model's own redirect language shows up, the
-    # same real, acknowledged limitation the actual subscription
-    # already lives with.
+    response_text = _strip_dashes(response_text)
+
     in_scope = not any(
         phrase in response_text.lower()
         for phrase in ["outside the scope", "focuses on", "redirect"]
@@ -569,27 +702,7 @@ async def generate_tool_teaser(
 ) -> Dict[str, Any]:
     """
     Generate a hyper-personalised tool teaser for the sales page.
-    Real, single DeepSeek call now, no other model referenced
-    anywhere in this file.
-
-    Args:
-        name:           Full birth name
-        dob:            Date of birth "YYYY-MM-DD"
-        tool_id:        Tool ID, matches tool_registry.py exactly
-        birth_time:     Optional "HH:MM"
-        birth_location: Optional "City, Country"
-        partner_name:   Optional partner name for compatibility tools
-        session_id:     Frontend session ID
-
-    Returns:
-        {
-            tool_id, tool_name, domain,
-            life_path, sun_sign, personal_year, personal_month,
-            destiny, soul_urge, pinnacle, age,
-            paragraphs: [{icon, title, content, bg, border, iconBg}],
-            cta_text, is_subscription, session_id
-        }
-        On failure: {error, tool_id, tool_name, session_id}
+    Six paragraphs, no methodology, no numbers, no age, no em-dashes.
     """
     tool_meta = _TOOL_META.get(tool_id)
     if not tool_meta:
@@ -645,25 +758,18 @@ async def generate_tool_teaser(
         partner_name   = partner_name,
     )
 
-    # Real, single DeepSeek call, replacing the previous, undefined
-    # _call_haiku() reference, see file header, matching the real,
-    # only-DeepSeek requirement.
     from api.agency.chat import _call_deepseek
 
-    # Real, temporary diagnostic, matching the exact, same, real
-    # check just added to llm_narrator.py, approximating the actual,
-    # combined input size using the real, confirmed ratio verified
-    # directly against DeepSeek's own tokenizer earlier tonight.
     _approx_input_tokens = int(len(prompt.split()) * 1.37)
     logger.error(
         f"TEASER PROMPT SIZE CHECK [{tool_id}]: ~{_approx_input_tokens} "
-        f"estimated input tokens, max_tokens=800 requested for output, "
+        f"estimated input tokens, max_tokens=1000 requested for output, "
         f"combined against a 16384 total context window"
     )
 
     raw, error_reason = await _call_deepseek(
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=800,
+        max_tokens=1000,
     )
     paragraphs = _parse_paragraphs(raw, _PARAGRAPH_STYLES) if raw else []
 
