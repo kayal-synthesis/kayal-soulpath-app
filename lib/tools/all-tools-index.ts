@@ -177,7 +177,7 @@ const wellnessDomain: Domain = {
       features:         toFeatures(t),
       price:            t.price,
       duration:         toDuration(t),
-      category:         'spiritual',
+      category:         'wellness',
       domain:           'Wellness & Spirituality',
       isPopular:        t.isPopular,
       isBestSeller:     t.isBestSeller,
@@ -405,13 +405,13 @@ export function getPersonalisedDashboardTools(
   if (indicators.personalYearNumber) {
     const forecast = getToolById('annual-destiny-forecast')
     if (forecast) selected.push(forecast)
-    const cycle    = getToolById('nine-year-cycle-reading')
+    const cycle    = getToolById('life-cycle-reading')
     if (cycle)     selected.push(cycle)
   }
 
   // Karmic debt holders always see the cleanser
   if (indicators.hasKarmicDebts) {
-    const debt = getToolById('karmic-lessons-reading')
+    const debt = getToolById('returning-lessons-reading')
     if (debt) selected.push(debt)
   }
 
